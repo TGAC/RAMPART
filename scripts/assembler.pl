@@ -1,10 +1,15 @@
 #!/usr/bin/perl
 
 use Getopt::Long;
+use Pod::Usage;
 use File::Basename;
 use Cwd;
 
 my %args;
+
+# Now
+($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 
 # Assembler constants
 $A_ABYSS = "abyss";
@@ -23,126 +28,125 @@ $DEF_THREADS=8;
 $DEF_MEM=60;
 $MIN_MEM=5;
 
+# Project constants
+$DEF_PROJECT_NAME = "AssemblerMultiKmer_" . $NOW;
+$JOB_PREFIX = $ENV{'USER'} . "-assembler-";
+
+# Queueing system constants
+$SUBMIT = "bsub";
+
 # Other constants
 $QUOTE = "\"";
-$USAGE="\nassembler [-help] [-p project_name] [-kmin val] [-kmax val] [-a assembler] [-t threads] -i input_file -o output_dir -- script to run an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.  Requests 60GB RAM per assembly.\n\n" . 
-"where:\n" .
-"   -help  show this help text\n" .
-"   -a     assembler.  Valid options: " . $A_ABYSS . "... actually it's just abyss so far! (default = " . $DEF_ASSEMBLER . ")\n" .
-"   -p     project name for marking the LSF jobs\n" .
-"   -kmin  minimum k-mer value in run.  Constraints: " . $KMER_MIN . " <= kmin <= " . $KMER_MAX . "; Last digit must be a '1' or a '5'; Must be <= -kmax. (default = " . $DEF_KMER_MIN . ")\n" .
-"   -kmax  maximum k-mer value in run. Constraints: " . $KMER_MIN . " <= kmax <= " . $KMER_MAX . "; Last digit must be a '1' or a '5'; Must be >= -kmin. (default = " . $DEF_KMER_MAX . ")\n" .
-"   -t     number of threads (default = " . $DEF_THREADS . ")\n" .
-"   -m     memory usage in GB (default = " . $DEF_MEM . "GB)\n" .
-"   -i     list of input files to assemble\n" .
-"   -o     output directory\n\n";
-
-# TODO consider using POD2USAGE to handle help information instead.
-
-
-
-# Main script variables
-
-$job_prefix = $ENV{'USER'} . "-assembler-";
-$assembler = "abyss";
-($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-$project_name = "AssemblerMultiKmer_" . $year . $mon . $mday . "_" . $hr . $min . $sec;
-$in_files;
-$out_dir;
-$help = 0;
-$kmin = $DEF_KMER_MIN;
-$kmax = $DEF_KMER_MAX;
-$threads = $DEF_THREADS;
-$mem = $DEF_MEM;
-$verbose = 0;
-
-
+$PWD = getcwd;
 
 
 # Assign any command line options to variables
+my (%opt) = (	"assembler", 	$DEF_ASSEMBLER,
+		"project", 	$DEF_PROJECT_NAME,
+		"kmin", 	$DEF_KMER_MIN,
+		"kmax", 	$DEF_KMER_MAX,
+		"threads", 	$DEF_THREADS,
+		"memory",	$DEF_MEM,
+		"output", 	$PWD);
 
-$result = GetOptions (	"a=s"    => \$assembler,
-			"p=s"    => \$project_name,
-			"kmin=i" => \$kmin,
-			"kmax=i" => \$kmax,
-			"t=i"    => \$threads,
-			"m=i"    => \$mem,
-			"i=s"    => \$in_files,
-			"o=s"    => \$out_dir,
-			"v"      => \$verbose,
-			"help"   => \$help );
+GetOptions (
+	\%opt,
+	'assembler|a=s',
+	'project|p=s',
+	'kmin=i',
+	'kmax=i',
+	'threads|t=i',
+	'memory|mem|m=i',
+	'output|out|o=s',
+	'simulate|sim|s',
+	'verbose|v',
+	'help|usage|h|?',
+	'man'
+)
+or pod2usage( "Try '$0 --help' for more information." );
 
 
 
-# Print usage information if requested
+# Display usage message or manual information if required
+pod2usage( -verbose => 1 ) if $opt{help};
+pod2usage( -verbose => 2 ) if $opt{man};
 
-if ($help) {
-	print $USAGE;
-	exit 0;
-}
+
+# Get input files
+@in_files = @ARGV;
+$input_files = join " ", @in_files;
+
+print "\n";
+print "Command line arguments gathered\n\n" if $opt{verbose};
 
 
 # Argument Validation
 
-die "Error: No input files specified\n\n" . $USAGE unless $in_files;
-die "Error: No output directory specified\n\n" . $USAGE unless $out_dir;
+die "Error: No input files specified\n\n" . $USAGE unless @in_files;
+foreach(@in_files) {
+        die "Error: Input file does not exist: " . $_ . "\n\n" . $USAGE unless (-e $_);
+}
 
-die "Error: K-mer limits must be >= " . $KMER_MIN . "nt\n\n" . $USAGE unless ($kmin >= $KMER_MIN && $kmax >= $KMER_MIN);
-die "Error: K-mer limits must be <= " . $KMER_MAX . "nt\n\n" . $USAGE unless ($kmin <= $KMER_MAX && $kmax <= $KMER_MAX);
-die "Error: Min K-mer value must be <= Max K-mer value\n\n" . $USAGE unless ($kmin <= $kmax);
+die "Error: No output directory specified\n\n" . $USAGE unless $opt{output};
 
-die "Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.\n\n" . $USAGE unless (validKmer($kmin) && validKmer($kmax));
+die "Error: K-mer limits must be >= " . $KMER_MIN . "nt\n\n" . $USAGE unless ($opt{kmin} >= $KMER_MIN && $opt{kmax} >= $KMER_MIN);
+die "Error: K-mer limits must be <= " . $KMER_MAX . "nt\n\n" . $USAGE unless ($opt{kmin} <= $KMER_MAX && $opt{kmax} <= $KMER_MAX);
+die "Error: Min K-mer value must be <= Max K-mer value\n\n" . $USAGE unless ($opt{kmin} <= $opt{kmax});
+die "Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.\n\n" . $USAGE unless (validKmer($opt{kmin}) && validKmer($opt{kmax}));
 
-die "Error: Invalid assembler requested.  Known assemblers are: 'abyss'.\n\n" . $USAGE unless ($assembler eq "abyss");
+die "Error: Invalid assembler requested.  Known assemblers are: 'abyss'.\n\n" . $USAGE unless ($opt{assembler} eq "abyss");
 
-die "Error: Invalid number of cores requested.  Must request at least 1 core per assembly.\n\n" .$USAGE unless ($threads >= 1);
+die "Error: Invalid number of cores requested.  Must request at least 1 core per assembly.\n\n" .$USAGE unless ($opt{threads} >= 1);
 
-die "Error: Invalid memory setting.  Must request at least " . $MIN_MEM . "GB.\n\n" .$USAGE unless ($mem >= $MIN_MEM);
+die "Error: Invalid memory setting.  Must request at least " . $MIN_MEM . "GB.\n\n" . $USAGE unless ($opt{memory} >= $MIN_MEM);
 
-# Record current working directory.  The cwd gets restored after the job loop has completed.
 
-$pwd = getcwd;
-$mem_mb = $mem * 1000;
+print "Validated arguments\n\n" if $opt{verbose};
+print "Input files: " . $in_files . "\n" if $opt{verbose};
+if ($opt{verbose}) {
+	print "Options:\n";
+	foreach (keys %opt) {
+		print "\t'$_' => " . $opt{$_} . "\n";
+	}
+	print "\n";
+}
+
 
 
 # Assembly job loop
 
+$mem_mb = $opt{memory} * 1000;
 $j = 0;
-for($i=$kmin; $i<=$kmax;) {
+for($i=$opt{kmin}; $i<=$opt{kmax};) {
 
-  	$i_dir = $out_dir . "/" . $i;
-	$job_name = $job_prefix . $i;
-	
-	$bsub = "bsub";
+	$i_dir = $opt{output} . "/" . $i;
+	$job_name = $JOB_PREFIX . $i;
 	$job_arg = "-J " . $job_name;
-	$project_arg = "-P " . $project_name;
+	$project_arg = "-P " . $opt{project};
 	$queue_arg = "-q production";
 	$openmpi_arg = "-a openmpi";
-	$rusage_arg = "-R rusage[mem=" . $mem_mb . "] space[ptile=" . $abyss_threads . "]";
+	$rusage_arg = "-R rusage[mem=" . $mem_mb . "] space[ptile=" . $opt{threads} . "]";
 	$threads_arg = "-n 8";
-	$bsub_args= $job_arg . " " . $project_arg . " " . $queue_arg . " " . $open_mpi_arg . " " . $rusage_arg . " " . $threads_arg;
+	$bsub_args= $job_arg . " " . $project_arg . " " . $queue_arg . " " . $openmpi_arg . " " . $rusage_arg . " " . $threads_arg;
 	
-	if ($assembler eq $A_ABYSS) {
+	if ($opt{assembler} eq $A_ABYSS) {
 		$abyss_bin = "abyss-pe";
 		$abyss_core_args = "n=10 mpirun=mpirun.lsf";
-		$abyss_threads = "np=" . $threads;
+		$abyss_threads = "np=" . $opt{threads};
 		$abyss_kmer = "k=" . $i;
 		$abyss_name = "name=Abyss-mpi-k" . $i;
-		$abyss_in = "in='" . $in_files . "'";
+		$abyss_in = "in='" . $input_files . "'";
 		$cmd = $abyss_bin . " " . $abyss_threads . " " . $abyss_core_args . " " . $abyss_kmer . " " . $abyss_name . " " . $abyss_in;
 	}
 	else {
 		die "Error: Invalid assembler requested.  Also, the script should not have got this far!!!.\n\n" . $USAGE;
 	}
 
-	system("mkdir", $i_dir);
+	system("mkdir", $i_dir) unless (-e $i_dir);
   	chdir $i_dir;
 
-	if ($verbose) {
-		print "Executing on cluster: " . $bsub . " " . $bsub_args . " " . $QUOTE . $cmd . $QUOTE . "\n\n";
-	}
-
-	system($bsub, $job_arg, $project_arg, $queue_arg, $openmpi_arg, $rusage_arg, $threads_arg, $cmd);
+	print "Executing on cluster: " . $bsub . " " . $bsub_args . " " . $QUOTE . $cmd . $QUOTE . "\n\n" if ($opt{verbose});
+	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $openmpi_arg, $rusage_arg, $threads_arg, $cmd) unless ($opt{simulate});
 
 	if ($j % 2) {
 		$i += 6;
@@ -178,3 +182,48 @@ sub validKmer {
 		return 0;
 	}
 }
+
+__END__
+
+=pod
+
+=head1 NAME
+
+  assembler.pl
+
+
+=head1 SYNOPSIS
+
+  assembler.pl [options] <input_files>
+
+  For full list of options type: "assembler.pl --man"
+
+
+=head1 DESCRIPTION
+
+  Runs an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.
+
+
+=head1 OPTIONS
+
+  assembler|a      The assembly program to use.
+  project|p        The project name for marking the LSF jobs.
+  kmin             The minimum k-mer value to run.
+  kmax             The maximum k-mer value in run.
+  threads|t        The number of threads each assembly job should use.
+  memory|mem|m     The amount of memory each assembly job should use in GB.
+  output|out|o=s   The output directory.
+  simulate|sim|s   Runs the script as normal except that the assembly jobs are not submitted.
+  verbose|v        Print extra status information during run.
+  help|usage|h|?   Print usage message and then exit.
+  man              Display manual.
+
+
+
+=head1 AUTHORS
+
+  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+  Nizar Drou <nizar.drou@tgac.ac.uk>
+
+=cut
+
