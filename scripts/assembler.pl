@@ -17,7 +17,7 @@ $DEF_KMER_MIN = 41;
 $DEF_KMER_MAX = 95;
 
 # Threads constants
-$DEF_THREADS
+$DEF_THREADS=8;
 
 # Other constants
 $QUOTE = "\"";
@@ -67,7 +67,7 @@ $result = GetOptions (	"a=s"    => \$assembler,
 # Print usage information if requested
 
 if ($help) {
-	print $usage;
+	print $USAGE;
 	exit 0;
 }
 
