@@ -38,8 +38,7 @@ else {
 $PWD = getcwd;
 
 # Assign any command line options to variables
-my (%opt) = (   "assembler",    $DEF_ASSEMBLER,
-		"output",       $PWD);
+my (%opt) = (   "assembler",    $DEF_ASSEMBLER);
 
 $opt{seq_info} = $SEQ_INFO_PATH if ($SEQ_INFO_PATH);
 
@@ -47,7 +46,6 @@ GetOptions (
         \%opt,
         'assembler|a=s',
 	'seq_info|si=s',
-	'output|out|o=s',
         'verbose|v',
         'help|usage|h|?',
         'man'
@@ -73,8 +71,6 @@ die "Error: No input files specified\n\n" . $USAGE unless @in_dir;
 die "Error: Can only analyse one assembly group at a time\n\n" . $USAGE unless (@in_dir == 1);
 die "Error: Input directory does not exist: " . $input_dir . "\n\n" . $USAGE unless (-e $input_dir);
 
-die "Error: No output directory specified\n\n" . $USAGE unless $opt{output};
-
 die "Error: Could not find sequence_info binary file\n\n" unless $opt{seq_info};
 
 print "Validated arguments\n\n" if $opt{verbose};
@@ -95,6 +91,7 @@ if ($opt{verbose}) {
 sub wanted { push @assemblies, $File::Find::name };
 find(\&wanted, $input_dir);
 @filtered_assemblies = grep(/-scaffolds.fa/, @assemblies);
+@filtered_assemblies = sort(@filtered_assemblies);
 
 print "Found these files in the input directory:\n" if $opt{verbose};
 print (join "\n", @filtered_assemblies) . "\n\n" if $opt{verbose};
@@ -116,14 +113,10 @@ foreach(@filtered_assemblies) {
 
 
 
+
 print "\nStatistics:\n" if $opt{verbose};
-print "kmer|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglength|n50\n";
+print "kmer|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n50\n";
 print (join "", @table) . "\n";
-
-
-
-
-
 
 
 
@@ -184,7 +177,6 @@ __END__
 =head1 OPTIONS
 
   assembler|a      The assembly program to use.
-  output|out|o=s   The output directory.
   verbose|v        Print extra status information during run.
   help|usage|h|?   Print usage message and then exit.
   man              Display manual.
