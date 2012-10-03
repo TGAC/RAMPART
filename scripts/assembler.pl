@@ -196,7 +196,7 @@ __END__
 
   assembler.pl [options] <input_files>
 
-  For full list of options type: "assembler.pl --man"
+  For full documentation type: "assembler.pl --man"
 
 
 =head1 DESCRIPTION
