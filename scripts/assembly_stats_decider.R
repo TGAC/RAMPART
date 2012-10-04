@@ -7,7 +7,7 @@
 # 4 - output directory
 
 args <- commandArgs(trailingOnly = TRUE)
-print(args)
+#print(args)
 
 raw_stats <- args[1]
 qt_stats <- args[2]
@@ -26,6 +26,29 @@ raw$dataset <- "raw"
 qt$dataset <- "qt"
 merged <- merge(raw, qt, all = TRUE)
 
+# Output
+out_file = paste(output_dir, "merged.tab", sep="/");
+#print(out_file)
+write.table(merged, out_file, sep= "|", quote=FALSE)
+
+
+
+# Normalise merged table
+scores <- merged
+
+scores$nbcontigs <- scores$nbcontigs - min(scores$nbcontigs)
+scores$total <- scores$total - approx_genome_size
+scores$minlen <- scores$minlen - min(scores$minlen)
+scores$avglen <- scores$avglen - min(scores$avglen)
+scores$maxlen <- scores$maxlen - min(scores$maxlen)
+scores$n50 <- scores$n50 - min(scores$n50)
+
+scores$nbcontigs <- 1.0 - (scores$nbcontigs / max(scores$nbcontigs))
+scores$total <- ( abs(scores$total) / approx_genome_size )
+scores$minlen <- scores$minlen / max(scores$minlen)
+scores$avglen <- scores$avglen / max(scores$avglen)
+scores$maxlen <- scores$maxlen / max(scores$maxlen)
+scores$n50 <- scores$n50 / max(scores$n50)
 
 
 
