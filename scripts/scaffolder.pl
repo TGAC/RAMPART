@@ -16,9 +16,6 @@ my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 my $DEF_PROJECT_NAME = "Scaffolder_" . $NOW;
 my $JOB_NAME = $ENV{'USER'} . "-scaffolder-" . $NOW;
 
-# Read length constants
-my $DEF_READ_LENGTH = "155";
-
 # Scaffolder constants
 my $S_SSPACE = "sspace";
 my $DEF_SCAFFOLDER = $S_SSPACE;
@@ -32,16 +29,15 @@ my $QUOTE = "\"";
 my $PWD = getcwd;
 
 
-my (%opt) = (	"scaffolder",	$DEF_SCAFFOLDER,
-		"readlen", 	$DEF_READ_LENGTH,
-		"sspace",	$DEF_SSPACE_PATH,
-		"output",	$PWD );
+my (%opt) = (	"scaffolder",		$DEF_SCAFFOLDER,
+		"scaffolder_path",	$DEF_SSPACE_PATH,
+		"output",		$PWD );
 
 GetOptions (
 	\%opt,
 	'scaffolder|s=s',
+	'scaffolder_path|sp|p=s',
 	'project|p=s',
-	'readlen|rl|r=i',
 	'input|in|i=s',
 	'config|c=s',
 	'output|out|o=s',
@@ -61,13 +57,12 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 die "Error: No input file specified\n\n" unless $opt{input};
 die "Error: No output directory specified\n\n" unless $opt{output};
-die "Error: No SSPACE library config file specified\n\n" unless $opt{config};
+die "Error: No library config file specified\n\n" unless $opt{config};
 
 
 if ($opt{verbose}) {
 	print "Output Directory: ". $opt{output} . "\n";
 	print "Project Name: " . $opt{project} . "\n";
-	print "Read Length: " . $opt{readlen} . "\n";
 }
 
 my $job_arg = "-J " . $JOB_NAME;
@@ -131,13 +126,13 @@ __END__
 
 =head1 OPTIONS
 
-  scaffolder|s     The scaffolding tool to use.
-  project|p        The project name for marking the LSF jobs.
-  readlen|rl|r     The length of the reads used to build the assembly.
-  output|out|o=s   The output directory.
-  verbose|v        Print extra status information during run.
-  help|usage|h|?   Print usage message and then exit.
-  man              Display manual.
+  scaffolder|s          The scaffolding tool to use.
+  scaffolder_path|sp|p  The path to the scaffolding tool (in case this script does not know where to find it)
+  project|p             The project name for marking the LSF jobs.
+  output|out|o=s        The output directory.
+  verbose|v             Print extra status information during run.
+  help|usage|h|?        Print usage message and then exit.
+  man                   Display manual.
 
 
 =head1 AUTHORS
