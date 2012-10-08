@@ -1,41 +1,42 @@
 #!/usr/bin/perl
 
+use strict;
 
 use Getopt::Long;
 use Pod::Usage;
 use File::Find;
 use Cwd;
-
-my %args;
+use Cwd 'abs_path';
+use File::Basename;
 
 
 # Assembler constants
-$A_ABYSS = "abyss";
-$DEF_ASSEMBLER = $A_ABYSS;
+my $A_ABYSS = "abyss";
+my $DEF_ASSEMBLER = $A_ABYSS;
 
 # Sequence info path
-$SEQ_INFO_ON_PATH = which('sequence_info');
-$PURNIMA_SEQ_INFO_PATH = '/usr/users/tgac/pachorip/clc/clc-ngs-cell-3.0.0beta2-linux_64/sequence_info';
-$SEQ_INFO_PATH;
+my $SEQ_INFO_ON_PATH = which('sequence_info');
+my $PURNIMA_SEQ_INFO_PATH = '/usr/users/tgac/pachorip/clc/clc-ngs-cell-3.0.0beta2-linux_64/sequence_info';
+my $SEQ_INFO_PATH;
 if(-e 'sequence_info') {
 	$SEQ_INFO_PATH = 'sequence_info';
-	print "Found sequence_info binary in current directory\n\n" if $opt{verbose};
+#	print "Found sequence_info binary in current directory\n\n" if $opt{verbose};
 }
 elsif(&which('sequence_info')) {
 	$SEQ_INFO_PATH = 'sequence_info';
-	print "Found sequence_info binary on path\n\n" if $opt{verbose};
+#	print "Found sequence_info binary on path\n\n" if $opt{verbose};
 }
 elsif(-e $PURNIMA_SEQ_INFO_PATH ) {
 	$SEQ_INFO_PATH = $PURNIMA_SEQ_INFO_PATH;
-	print "Found sequence_info binary in Purnima's directory\n\n" if $opt{verbose};
+#	print "Found sequence_info binary in Purnima's directory\n\n" if $opt{verbose};
 }
 else {
-	print "Couldn't find sequence_info binary.  User must specify location via 'seq_info' option.\n\n" if $opt{verbose};
+#	print "Couldn't find sequence_info binary.  User must specify location via 'seq_info' option.\n\n" if $opt{verbose};
 };
 
 
 # Other constants
-$PWD = getcwd;
+my $PWD = getcwd;
 
 # Assign any command line options to variables
 my (%opt) = (   "assembler",    $DEF_ASSEMBLER);
@@ -58,8 +59,8 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 
 # Get input directory
-@in_dir = @ARGV;
-$input_dir = join " ", @in_dir;
+my @in_dir = @ARGV;
+my $input_dir = join " ", @in_dir;
 
 print "\n" if $opt{verbose};
 print "Command line arguments gathered\n\n" if $opt{verbose};
@@ -67,9 +68,9 @@ print "Command line arguments gathered\n\n" if $opt{verbose};
 
 # Argument Validation
 
-die "Error: No input files specified\n\n" . $USAGE unless @in_dir;
-die "Error: Can only analyse one assembly group at a time\n\n" . $USAGE unless (@in_dir == 1);
-die "Error: Input directory does not exist: " . $input_dir . "\n\n" . $USAGE unless (-e $input_dir);
+die "Error: No input files specified\n\n" unless @in_dir;
+die "Error: Can only analyse one assembly group at a time\n\n" unless (@in_dir == 1);
+die "Error: Input directory does not exist: " . $input_dir . "\n\n" unless (-e $input_dir);
 
 die "Error: Could not find sequence_info binary file\n\n" unless $opt{seq_info};
 
@@ -86,12 +87,12 @@ if ($opt{verbose}) {
 
 # Find all appropriate files in input directory
 
-@assemblies;
+my @assemblies;
 
 sub wanted { push @assemblies, $File::Find::name };
 find(\&wanted, $input_dir);
-@filtered_assemblies = grep(/-scaffolds.fa/, @assemblies);
-@filtered_assemblies = sort(@filtered_assemblies);
+my @filtered_assemblies = grep(/-scaffolds.fa$/, @assemblies);
+my @filtered_assemblies = sort(@filtered_assemblies);
 
 print "Found these files in the input directory:\n" if $opt{verbose};
 print (join "\n", @filtered_assemblies) . "\n\n" if $opt{verbose};
@@ -100,14 +101,15 @@ print "\n\n" if $opt{verbose};
 
 # Run sequence_info on each and pipe into tabulateor
 #$seq_info_cmd = $opt{seq_info} . "-n -r";
-@table;
+my @table;
 foreach(@filtered_assemblies) {
-	$tabulate_cmd = $opt{seq_info} . " -n -r " . $_ . " | ./assembly_stats_formatter.pl --notitle";
-	$output = `$tabulate_cmd`;
-	$matchstr = $output;
+	my ($name, $dir) = fileparse(abs_path($0));
+	my $tabulate_cmd = $opt{seq_info} . " -n -r " . $_ . " | " . $dir . "/assembly_stats_formatter.pl --notitle";
+	my $output = `$tabulate_cmd`;
+	my $matchstr = $output;
 	$matchstr =~ m/-k(\d\d)-scaffolds/;
 	print "k" . $1 . $2 . "\n" if $opt{verbose};
-	print $output "\n";
+	print $output . "\n";
 	push @table, $1 . $2 . "|" . $output;
 }
 
@@ -124,13 +126,13 @@ print (join "", @table) . "\n";
 sub which {
 
 # Get the passed value
-  $program = shift;
+  my $program = shift;
 
 # Return if nothing is provided
   return if (not defined($program));
 
 # Load the path
-  $path = $ENV{PATH};
+  my $path = $ENV{PATH};
 
 # Let's replace all \ by /
   $path =~ s/\\/\//g;
@@ -139,7 +141,7 @@ sub which {
   $path =~ s/\/;/;/g;
 
 # Now make an array
-  @path = split(/;/,$path);
+  my @path = split(/;/,$path);
 
 # Loop and find if the file is in one of the paths
   foreach (@path) {
