@@ -18,8 +18,10 @@ my $JOB_NAME = $ENV{'USER'} . "-scaffolder-" . $NOW;
 
 # Scaffolder constants
 my $S_SSPACE = "sspace";
+my $S_GRASS = "grass";
 my $DEF_SCAFFOLDER = $S_SSPACE;
 my $DEF_SSPACE_PATH = "/common/software/SSPACE-BASIC-2.0/x86_64/bin/SSPACE_Basic_v2.0.pl";
+my $DEF_GRASS_PATH = "grass";
 
 # Queueing system constants
 my $SUBMIT = "bsub";
@@ -90,6 +92,11 @@ if ($opt{scaffolder} eq $S_SSPACE) {
 	$cmd_line = $sspace_exe . " -l " . $opt{config} . " -s " . $opt{input} . " -x 1 -T 2 -b " . $sspace_scaffolds;
 
 }
+elsif ($opt{scaffolder) eq $S_GRASS) {
+	my $grass_exe = $DEF_GRASS_PATH;
+
+	die "Error: Grass not implemented yet.\n\n";
+}
 else {
 	die "Error: Invalid scaffolder requested.  Also, the script should not have got this far!!!.\n\n";
 }
@@ -126,7 +133,7 @@ __END__
 
 =head1 OPTIONS
 
-  scaffolder|s          The scaffolding tool to use.
+  scaffolder|s          The scaffolding tool to use (sspace, grass).
   scaffolder_path|sp|p  The path to the scaffolding tool (in case this script does not know where to find it)
   project|p             The project name for marking the LSF jobs.
   output|out|o=s        The output directory.
