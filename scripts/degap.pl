@@ -13,15 +13,17 @@ my ($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 
 # Project constants
-my $DEF_PROJECT_NAME = "gap_closer_" . $NOW;
-my $JOB_NAME = $ENV{'USER'} . "-gap_closer-" . $NOW;
+my $DEF_PROJECT_NAME = "de_gap_" . $NOW;
+my $JOB_NAME = $ENV{'USER'} . "-de_gap-" . $NOW;
 
 # Gap closing constants
-my $GC_GAP_CLOSER = "gapcloser";
-my $GC_IMAGE = "image"
-my $DEF_GC = $GC_GAP_CLOSER;
+my $DG_GAP_CLOSER = "gapcloser";
+my $DG_IMAGE = "image"
+my $DG_GAP_FILLER = "gapfiller";
+my $DEF_DG = $DG_GAP_CLOSER;
 my $DEF_GC_PATH = "GapCloser";
 my $DEF_IMAGE_PATH = "grass";
+my $DEF_GF_PATH = "gapfiller";
 
 # Read length constants
 my $DEF_READ_LENGTH = 155;
@@ -34,15 +36,15 @@ my $QUOTE = "\"";
 my $PWD = getcwd;
 
 
-my (%opt) = (   "gap_closer",   $DEF_GC,
+my (%opt) = (   "gap_closer",   $DEF_DG,
                 "gc_path",      $DEF_GC_PATH,
 		"readlen",	$DEF_READ_LENGTH,
                 "output",       $PWD );
 
 GetOptions (
         \%opt,
-        'gap_closer|gc|g=s',
-	'gap_closer_path|gcp=s',
+        'tool|t=s',
+	'tool_path|tp=s',
         'project|p=s',
 	'readlen|rl|r=i',
 	'wait_job|wj|w=s',
@@ -85,10 +87,10 @@ if ($opt{verbose}) {
 
 # Select the gap closer and build the command line
 
-if ($opt{gap_closer} eq $GC_GAP_CLOSER) {
+if ($opt{tool} eq $DG_GAP_CLOSER) {
 
 	my $gc_exe = $DEF_GC_PATH;
-	my $gc_scaffolds = $opt{output} . "/gc_scaffolds.fa";
+	my $gc_scaffolds = $opt{output} . "/gc-scaffolds.fa";
 	$cmd_line = $gc_exe . " -a \"" . $opt{input} . "\" -b \"" . $opt{config} . "\" -o \"" . $gc_scaffolds . "\" -l " . $opt{readlen} . " -p 61";
 
 	if ($opt{verbose}) {
@@ -97,13 +99,21 @@ if ($opt{gap_closer} eq $GC_GAP_CLOSER) {
 	}
 
 }
-elsif ($opt{image} eq $GC_IMAGE) {
+elsif ($opt{tool} eq $DG_IMAGE) {
 
 	my $image_exe = $DEF_IMAGE_PATH;
-	my $image_scaffolds = $opt{output} . "/image_scaffolds.fa";
+	my $image_scaffolds = $opt{output} . "/image-scaffolds.fa";
 	$cmd_line = $image_exe;
 
 	die "Error: IMAGE (Iterative Mapping and Assembly for Gap Elimination) tool not implemented in this script yet.\n\n";
+}
+elsif ($opt{tool} eq $DG_GAP_FILLER) {
+
+	my $gf_exe = $DEF_IMAGE_PATH;
+	my $gf_scaffolds = $opt{output} . "/gf-scaffolds.fa";
+	$cmd_line = $gf_exe;
+
+	die "Error: Gap filler tool not implemented in this script yet.\n\n";
 }
 else {
         die "Error: Invalid gap closing tool requested.  Also, the script should not have got this far!!!.\n\n";
@@ -124,17 +134,17 @@ __END__
 
 =head1 NAME
 
-  gap_closer.pl
+  degap.pl
 
 
 =head1 SYNOPSIS
 
-  gap_closer.pl [options] -i contigs_file -c config_file
+  degap.pl [options] -i contigs_file -c config_file
 
   input|in|i       The path to the input contigs file.
   config|cfg|c     The scaffolder library configuration file.
 
-  For full documentation type: "gap_closer.pl --man"
+  For full documentation type: "degap.pl --man"
 
 
 =head1 DESCRIPTION
@@ -144,8 +154,8 @@ __END__
 
 =head1 OPTIONS
 
-  gap_closer|gc|g      The gap closing tool to use (gapcloser, image).
-  gap_closer_path|gcp  The path to the gap closing tool to use.
+  tool|t               The gap closing tool to use (gapcloser, image).
+  tool_path|tp         The path to the gap closing tool to use.
   project|p            The project name for marking the LSF jobs.
   readlen|rl|r         The length of the reads used to build the assembly.
   wait_job|wj|w        If specified, gap closing will not start until this job is completed.
