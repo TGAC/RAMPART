@@ -42,6 +42,7 @@ $PWD = getcwd;
 
 # Assign any command line options to variables
 my (%opt) = (	"assembler", 	$DEF_ASSEMBLER,
+		"job_prefix",	$DEF_JOB_PREFIX,
 		"project", 	$DEF_PROJECT_NAME,
 		"kmin", 	$DEF_KMER_MIN,
 		"kmax", 	$DEF_KMER_MAX,
@@ -52,6 +53,7 @@ my (%opt) = (	"assembler", 	$DEF_ASSEMBLER,
 GetOptions (
 	\%opt,
 	'assembler|a=s',
+	'job_prefix|job|j=s',
 	'project|p=s',
 	'kmin=i',
 	'kmax=i',
@@ -120,7 +122,7 @@ $j = 0;
 for($i=$opt{kmin}; $i<=$opt{kmax};) {
 
 	$i_dir = $opt{output} . "/" . $i;
-	$job_name = $JOB_PREFIX . $i;
+	$job_name = $opt{job_prefix} . $i;
 	$job_arg = "-J " . $job_name;
 	$project_arg = "-P " . $opt{project};
 	$queue_arg = "-q production";
@@ -207,6 +209,7 @@ __END__
 =head1 OPTIONS
 
   assembler|a      The assembly program to use.
+  job_prefix|job|j The prefix string for each job.
   project|p        The project name for marking the LSF jobs.
   kmin             The minimum k-mer value to run.
   kmax             The maximum k-mer value in run.
