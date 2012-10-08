@@ -40,6 +40,7 @@ GetOptions (
 	'scaffolder|s=s',
 	'scaffolder_path|sp|p=s',
 	'project|p=s',
+	'wait_job|wj=s',
 	'input|in|i=s',
 	'config|c=s',
 	'output|out|o=s',
@@ -70,6 +71,7 @@ if ($opt{verbose}) {
 my $job_arg = "-J " . $JOB_NAME;
 my $project_arg = "-P " . $opt{project};
 my $queue_arg = "-q production";
+my $wait_arg = "-w \"done(" . $opt{wait_job} . ")\"";
 my $cmd_line = "";
 
 
@@ -103,7 +105,11 @@ else {
 
 
 # Submit the scaffolding job
-system($SUBMIT, $job_arg, $project_arg, $queue_arg, $cmd_line);
+if ($opt{wait_job}) {
+	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $wait_arg, $cmd_line);
+else {
+	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $cmd_line);
+}
 
 
 
@@ -136,7 +142,8 @@ __END__
   scaffolder|s          The scaffolding tool to use (sspace, grass).
   scaffolder_path|sp|p  The path to the scaffolding tool (in case this script does not know where to find it)
   project|p             The project name for marking the LSF jobs.
-  output|out|o=s        The output directory.
+  wait_job|wj           If specified, the scaffolder will not run until this job has finished.
+  output|out|o          The output directory.
   verbose|v             Print extra status information during run.
   help|usage|h|?        Print usage message and then exit.
   man                   Display manual.
