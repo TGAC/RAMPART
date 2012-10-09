@@ -35,6 +35,7 @@ my $DEF_JOB_PREFIX = $ENV{'USER'} . "-assembler-";
 
 # Queueing system constants
 my $SUBMIT = "bsub";
+my $DEF_QUEUE_ARGS = "-q production";
 
 # Other constants
 my $QUOTE = "\"";
@@ -42,20 +43,22 @@ my $PWD = getcwd;
 
 
 # Assign any command line options to variables
-my (%opt) = (	"assembler", 	$DEF_ASSEMBLER,
-		"job_prefix",	$DEF_JOB_PREFIX,
-		"project", 	$DEF_PROJECT_NAME,
-		"kmin", 	$DEF_KMER_MIN,
-		"kmax", 	$DEF_KMER_MAX,
-		"threads", 	$DEF_THREADS,
-		"memory",	$DEF_MEM,
-		"output", 	$PWD);
+my (%opt) = (	"assembler", 		$DEF_ASSEMBLER,
+		"job_prefix",		$DEF_JOB_PREFIX,
+		"project", 		$DEF_PROJECT_NAME,
+		"extra_queue_args",	$DEF_QUEUE_ARGS,
+		"kmin", 		$DEF_KMER_MIN,
+		"kmax", 		$DEF_KMER_MAX,
+		"threads", 		$DEF_THREADS,
+		"memory",		$DEF_MEM,
+		"output", 		$PWD);
 
 GetOptions (
 	\%opt,
 	'assembler|a=s',
 	'job_prefix|job|j=s',
 	'project|p=s',
+	'extra_queue_args|eqa|q=s',
 	'kmin=i',
 	'kmax=i',
 	'threads|t=i',
@@ -126,9 +129,9 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	my $job_name = $opt{job_prefix} . $i;
 	my $job_arg = "-J " . $job_name;
 	my $project_arg = "-P " . $opt{project};
-	my $queue_arg = "-q production";
+	my $queue_arg = $opt{extra_queue_args};
 	my $openmpi_arg = "-a openmpi";
-	my $rusage_arg = "-R rusage[mem=" . $mem_mb . "] space[ptile=" . $opt{threads} . "]";
+	my $rusage_arg = "-R rusage[mem=" . $mem_mb . "] space[ptile=8]";
 	my $threads_arg = "-n 8";
 	my $bsub_args= $job_arg . " " . $project_arg . " " . $queue_arg . " " . $openmpi_arg . " " . $rusage_arg . " " . $threads_arg;
 	my $cmd_line;
@@ -210,18 +213,19 @@ __END__
 
 =head1 OPTIONS
 
-  assembler|a      The assembly program to use.
-  job_prefix|job|j The prefix string for each job.
-  project|p        The project name for marking the LSF jobs.
-  kmin             The minimum k-mer value to run.
-  kmax             The maximum k-mer value in run.
-  threads|t        The number of threads each assembly job should use.
-  memory|mem|m     The amount of memory each assembly job should use in GB.
-  output|out|o=s   The output directory.
-  simulate|sim|s   Runs the script as normal except that the assembly jobs are not submitted.
-  verbose|v        Print extra status information during run.
-  help|usage|h|?   Print usage message and then exit.
-  man              Display manual.
+  assembler|a              The assembly program to use.
+  job_prefix|job|j         The prefix string for each job.
+  project|p                The project name for marking the LSF jobs.
+  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for each assembly job.
+  kmin                     The minimum k-mer value to run.
+  kmax                     The maximum k-mer value in run.
+  threads|t                The number of threads each assembly job should use.
+  memory|mem|m             The amount of memory each assembly job should use in GB.
+  output|out|o=s           The output directory.
+  simulate|sim|s           Runs the script as normal except that the assembly jobs are not submitted.
+  verbose|v                Print extra status information during run.
+  help|usage|h|?           Print usage message and then exit.
+  man                      Display manual.
 
 
 
