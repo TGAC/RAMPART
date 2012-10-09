@@ -6,6 +6,7 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
 use Cwd;
+use Cwd 'abs_path';
 
 
 # Now
@@ -40,6 +41,8 @@ my $DEF_QUEUE_ARGS = "-q production";
 # Other constants
 my $QUOTE = "\"";
 my $PWD = getcwd;
+my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
+
 
 
 # Assign any command line options to variables
@@ -61,6 +64,7 @@ GetOptions (
 	'extra_queue_args|eqa|q=s',
 	'kmin=i',
 	'kmax=i',
+	'stats',
 	'threads|t=i',
 	'memory|mem|m=i',
 	'output|out|o=s',
@@ -121,14 +125,14 @@ if ($opt{verbose}) {
 
 # Assembly job loop
 
+my $project_arg = "-P" . $opt{project};
 my $mem_mb = $opt{memory} * 1000;
 my $j = 0;
 for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 
 	my $i_dir = $opt{output} . "/" . $i;
 	my $job_name = $opt{job_prefix} . $i;
-	my $job_arg = "-J " . $job_name;
-	my $project_arg = "-P " . $opt{project};
+	my $job_arg = "-J" . $job_name;
 	my $queue_arg = $opt{extra_queue_args};
 	my $openmpi_arg = "-a openmpi";
 	my $rusage_arg = "-R rusage[mem=" . $mem_mb . "] space[ptile=8]";
@@ -170,7 +174,41 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 chdir $PWD;
 
 
-# Script finished successfully... but the jobs 
+# If requested, produce statistics and graphs for this run
+if ($opt{stats}) {
+
+	my $stats_gatherer_path = $RAMPART_DIR . "/assembly_stats_gatherer.pl";
+        my $sg_wait_arg = "-w 'done(" . $opt{job_prefix} . "*)'";
+        my $sg_wait_arg = "-K";
+	my $sg_job_name = $opt{job_prefix} . "stat_gather";
+        my $sg_job_arg = "-J" . $sg_job_name;
+	my $stat_file = $opt{output} . "/stats.txt";
+        my $sg_cmd_line = $stats_gatherer_path . " " . $opt{output} . " > " . $stat_file;
+
+	if ($opt{simulate}) {
+		print "Executing stat gatherer on cluster immediately.\n\n" if ($opt{verbose});
+		system($SUBMIT, $project_arg, $sg_job_arg, $opt{extra_queue_args}, $sg_cmd_line);
+	}
+	else {
+		print "Will execute stat gatherer on cluster after assemblies have completed.\n\n" if ($opt{verbose});
+		system($SUBMIT, $project_arg, $sg_job_arg, $sg_wait_arg, $opt{extra_queue_args}, $sg_cmd_line);
+	}
+
+	my $stats_plotter_path = $RAMPART_DIR . "/assembly_stats_plotter.pl";
+	my $sp_job_name = $opt{job_prefix} . "stat_plot";
+	my $sp_job_arg = "-J" . $sp_job_name;
+	my $sp_wait_arg = "-w " . $sg_job_name;
+	#my $sp_wait_arg = "-w 'done(" . $sg_job_name . ")'";
+	#my $sp_wait_arg = "-K";
+	my $sp_cmd_line = $stats_plotter_path . " " . $stat_file . " > stat_plotter.rout";
+
+	print "Will execute stat plotter after stat gatherer has completed.\n\n" if ($opt{verbose});
+	system($SUBMIT, $project_arg, $sp_job_arg, $sp_wait_arg, $opt{extra_queue_args}, $sp_cmd_line);
+}
+
+
+
+# Script finished successfully... but the jobs will still be running
 
 exit 0;
 
@@ -219,6 +257,7 @@ __END__
   extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for each assembly job.
   kmin                     The minimum k-mer value to run.
   kmax                     The maximum k-mer value in run.
+  stats                    Produces output statistics and graphs comparing each assembly job produced.
   threads|t                The number of threads each assembly job should use.
   memory|mem|m             The amount of memory each assembly job should use in GB.
   output|out|o=s           The output directory.
