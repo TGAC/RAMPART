@@ -12,6 +12,7 @@ apc <- t1[,c('kmer','a.pc')]
 cpc <- t1[,c('kmer','c.pc')]
 gpc <- t1[,c('kmer','g.pc')]
 tpc <- t1[,c('kmer','t.pc')]
+npc <- t1[,c('kmer','n.pc')]
 total <- t1[,c('kmer','total')]
 minlen <- t1[,c('kmer','minlen')]
 maxlen <- t1[,c('kmer','maxlen')]
@@ -23,6 +24,7 @@ plot(nbcontigs, type="o")
 plot(apc, type="o")
 plot(cpc, type="o")
 plot(gpc, type="o")
+plot(npc, type="o")
 plot(total, type="o")
 plot(minlen, type="o")
 plot(maxlen, type="o")
