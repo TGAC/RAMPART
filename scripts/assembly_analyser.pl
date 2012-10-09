@@ -1,24 +1,23 @@
 #!/usr/bin/perl
 
+use strict;
+
 use Getopt::Long;
 use Pod::Usage;
 use File::Find;
 use Cwd;
 
-my %args;
-
-
 # Assembler constants
-$A_ABYSS = "abyss";
-$DEF_ASSEMBLER = $A_ABYSS;
+my $A_ABYSS = "abyss";
+my $DEF_ASSEMBLER = $A_ABYSS;
 
 # Assembly stats gathering constants
-$STATS_GATHERER = "./assembly_stats_gatherer.pl";
-$STATS_PLOTTER = "./assembly_stats_plotter.R";
+my $STATS_GATHERER = "./assembly_stats_gatherer.pl";
+my $STATS_PLOTTER = "./assembly_stats_plotter.R";
 
 
 # Other constants
-$PWD = getcwd;
+my $PWD = getcwd;
 
 # Assign any command line options to variables
 my (%opt) = (   "assembler",    $DEF_ASSEMBLER,
@@ -43,18 +42,18 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 
-die "Error: The raw assemblies directory was not specified\n\n" . $USAGE unless $opt{raw};
-die "Error: The quality trimmed assemblies directory was not specified\n\n" . $USAGE unless $opt{qt};
+die "Error: The raw assemblies directory was not specified\n\n" unless $opt{raw};
+die "Error: The quality trimmed assemblies directory was not specified\n\n" unless $opt{qt};
 
-die "Error: The raw assemblies directory does not exist: " . $opt{raw} . "\n\n" . $USAGE unless (-e $opt{raw});
-die "Error: The quality trimmed assemblies directory does not exist: " . $opt{qt} . "\n\n" . $USAGE unless (-e $opt{qt});
+die "Error: The raw assemblies directory does not exist: " . $opt{raw} . "\n\n" unless (-e $opt{raw});
+die "Error: The quality trimmed assemblies directory does not exist: " . $opt{qt} . "\n\n" unless (-e $opt{qt});
 
 
 
 # Get produce stats and graphs for raw dataset
 
-$raw_stats_out = $opt{output} . "/raw.stats";
-$qt_stats_out = $opt{output} . "/qt.stats";
+my $raw_stats_out = $opt{output} . "/raw.stats";
+my $qt_stats_out = $opt{output} . "/qt.stats";
 
 system($STATS_GATHERER . " " . $opt{raw} . " > " . $raw_stats_out);
 system($STATS_GATHERER . " " . $opt{qt} . " > " . $qt_stats_out);
