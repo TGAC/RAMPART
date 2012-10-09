@@ -107,19 +107,23 @@ foreach(@filtered_assemblies) {
 	my $tabulate_cmd = $opt{seq_info} . " -n -r " . $_ . " | " . $dir . "/assembly_stats_formatter.pl --notitle";
 	my $output = `$tabulate_cmd`;
 	my $matchstr = $output;
-	$matchstr =~ m/-k(\d\d)-scaffolds/;
-	print "k" . $1 . $2 . "\n" if $opt{verbose};
-	print $output . "\n";
-	push @table, $1 . $2 . "|" . $output;
+	$matchstr =~ m/-k(\d+)-scaffolds/;
+	print "k" . $1 . "\n" if $opt{verbose};
+	print $output . "\n" if $opt{verbose};
+	push @table, $1 . "|" . $output;
 }
 
 
+# Need to do some extra sorting here to numberically order by kmer size
+my @s_table = sort {
+	my @name_pair = map { /^(\d+)(\|.*)/; $1 } ($a, $b);
+	$name_pair[0] <=> $name_pair[1];
+} @table;
 
 
 print "\nStatistics:\n" if $opt{verbose};
 print "kmer|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n50\n";
-print (join "", @table) . "\n";
-
+print (join "", @s_table) . "\n";
 
 
 
