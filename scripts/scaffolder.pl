@@ -25,6 +25,7 @@ my $DEF_GRASS_PATH = "grass";
 
 # Queueing system constants
 my $SUBMIT = "bsub";
+my $DEF_QUEUE_ARGS = "-q production";
 
 # Other constants
 my $QUOTE = "\"";
@@ -33,6 +34,7 @@ my $PWD = getcwd;
 
 my (%opt) = (	"scaffolder",		$DEF_SCAFFOLDER,
 		"scaffolder_path",	$DEF_SSPACE_PATH,
+		"extra_queue_args",     $DEF_QUEUE_ARGS,
 		"output",		$PWD );
 
 GetOptions (
@@ -40,6 +42,7 @@ GetOptions (
 	'scaffolder|s=s',
 	'scaffolder_path|sp|p=s',
 	'project|p=s',
+	'extra_queue_args|eqa|q=s',
 	'wait_job|wj=s',
 	'input|in|i=s',
 	'config|c=s',
@@ -68,9 +71,9 @@ if ($opt{verbose}) {
 	print "Project Name: " . $opt{project} . "\n";
 }
 
-my $job_arg = "-J " . $JOB_NAME;
-my $project_arg = "-P " . $opt{project};
-my $queue_arg = "-q production";
+my $job_arg = "-J" . $JOB_NAME;
+my $project_arg = "-P" . $opt{project};
+my $queue_arg = $opt{extra_queue_args};
 my $wait_arg = "-w \"done(" . $opt{wait_job} . ")\"";
 my $cmd_line = "";
 
@@ -139,14 +142,15 @@ __END__
 
 =head1 OPTIONS
 
-  scaffolder|s          The scaffolding tool to use (sspace, grass).
-  scaffolder_path|sp|p  The path to the scaffolding tool (in case this script does not know where to find it)
-  project|p             The project name for marking the LSF jobs.
-  wait_job|wj           If specified, the scaffolder will not run until this job has finished.
-  output|out|o          The output directory.
-  verbose|v             Print extra status information during run.
-  help|usage|h|?        Print usage message and then exit.
-  man                   Display manual.
+  scaffolder|s             The scaffolding tool to use (sspace, grass).
+  scaffolder_path|sp|p     The path to the scaffolding tool (in case this script does not know where to find it)
+  project|p                The project name for marking the LSF jobs.
+  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for the scaffolding job.
+  wait_job|wj              If specified, the scaffolder will not run until this job has finished.
+  output|out|o             The output directory.
+  verbose|v                Print extra status information during run.
+  help|usage|h|?           Print usage message and then exit.
+  man                      Display manual.
 
 
 =head1 AUTHORS

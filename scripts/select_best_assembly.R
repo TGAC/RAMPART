@@ -1,4 +1,4 @@
-# This script processes the tables produced from teh raw and quality trimmed datasets and then determines the best assembly to use for the subsequent scaffolding process
+# This script processes the tables produced from the raw and quality trimmed datasets and then determines the best assembly to use for the subsequent scaffolding process
 
 # Get command like arguments.  Expects 4:
 # 1 - raw statistics file
@@ -28,8 +28,8 @@ merged <- merge(raw, qt, all = TRUE)
 
 # Output
 merged_file <- paste(output_dir, "merged.tab", sep="/")
-write.table(merged, merged_file, sep= "|", quote=FALSE)
-print(paste("Written merged table to:", merged_file, "\n"))
+write.table(merged, merged_file, sep= "|", quote=FALSE, row.names=FALSE)
+print(paste("Written merged table to: ", merged_file))
 
 
 # Normalise merged table
@@ -51,8 +51,8 @@ score_tab$maxlen <- score_tab$maxlen / max(score_tab$maxlen)
 score_tab$n50 <- score_tab$n50 / max(score_tab$n50)
 
 score_tab_file <- paste(output_dir, "score.tab", sep="/")
-write.table(score_tab, score_tab_file, sep="|", quote=FALSE)
-print(paste("Written score_tab table to:", score_tab_file, "\n"))
+write.table(score_tab, score_tab_file, sep="|", quote=FALSE, row.names=FALSE)
+print(paste("Written score_tab table to: ", score_tab_file))
 
 
 
@@ -84,8 +84,8 @@ temp <- weighting_tab[,c('nbcontigs','total','minlen','avglen','maxlen','n50')]
 weighting_tab$score <- apply(temp, 1, sum)
 
 weighting_file <- paste(output_dir, "weighting.tab", sep="/")
-write.table(weighting_tab, weighting_file, sep="|", quote=FALSE)
-print(paste("Written score_tab table to:", weighting_file, "\n"))
+write.table(weighting_tab, weighting_file, sep="|", quote=FALSE, row.names=FALSE)
+print(paste("Written score_tab table to: ", weighting_file))
 
 
 
@@ -93,8 +93,13 @@ print(paste("Written score_tab table to:", weighting_file, "\n"))
 
 best <- weighting_tab[weighting_tab$score == max(weighting_tab$score),]
 best_file <- paste(output_dir, "best.tab", sep="/")
-write.table(best, best_file, sep="|", quote=FALSE)
-print(paste("Written best table to:", best_file, "\n"))
+write.table(best, best_file, sep="|", quote=FALSE, row.names=FALSE)
+print(paste("Written best table to: ", best_file, "\n"))
 
+best_path <- best[1,c('file')]
+best_path_file <- paste(output_dir, "best.path.txt", sep="/");
+print(best_path);
 
+write.table(best[1,c('file')], file=best_path_file, sep="", quote=FALSE, row.names=FALSE, col.names=FALSE);
+print(paste("Written best assembly file path to:", best_path_file));
 

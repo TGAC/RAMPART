@@ -35,6 +35,9 @@ my $QUOTE = "\"";
 my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 
+# Assembly stats gathering constants
+my $SELECT_BEST_ASSEMBLY_PATH = $RAMPART_DIR . "/select_best_assembly.pl";
+
 
 # Gather Command Line options and set defaults
 my (%opt) = (	"assembler_path",	$DEF_ASSEMBLER_PATH,
@@ -45,16 +48,15 @@ my (%opt) = (	"assembler_path",	$DEF_ASSEMBLER_PATH,
 GetOptions (
 	\%opt,
 	'assembler|a=s',
-	'assembler_path|ap=s',
-	'scaffolder|s=s',
-	'scaffolder_path|sp=s',
-	'degap|dg=s',
-	'degap_path|dgp=s',
+	'extra_assembler_args|ea_args|eaa=s',
+	'approx_genome_size|ags=i',
+	'improver|i',
+	'extra_improver_args|ei_args|eia=s',
 	'project|p=s',
+	'job_prefix|job|j=s',
+	'extra_queue_args|eqa=s',
 	'raw_config|rc=s',
 	'qt_config|qtc=s',
-	'kmin=i',
-	'kmax=i',
 	'output|out|o=s',
 	'verbose|v',
 	'help|usage|h|?',
@@ -76,17 +78,17 @@ pod2usage( -verbose => 2 ) if $opt{man};
 die "Error: No output directory specified\n\n" unless $opt{output};me, $dir) = fileparse(abs_path($0));
 die "Error: No raw library config file specified\n\n" unless $opt{raw_config};
 die "Error: No quality trimmed library config file specified\n\n" unless $opt{qt_config};
+die "Error: Approximate genome size not specified\n\n" unless $opt{approx_genome_size};
 
 
 # Interpret config files
 
 
 #### Process (all steps to be controlled via cmd line options)
-my $project_arg = "-P " . $opt{project};
-my $ass_job_prefix = $JOB_PREFIX . $opt{assembler} . "-";
-my $sg_job_prefix = $JOB_PREFIX . "stat_gatherer-";
-my $scf_job_name = $JOB_PREFIX . $opt{scaffolder};
-my $dg_job_name = $JOB_PREFIX . $opt{degap};
+my $qs_project_arg = "-P" . $opt{project};
+my $script_project_arg = "--project " . $opt{project};
+my $ass_job_prefix = $opt{job_prefix} . $opt{assembler} . "-";
+my $asd_job_name = $opt{job_prefix} . "assembly_selector";
 my $best_ass;
 
 
@@ -103,8 +105,8 @@ if ($opt{assembler}) {
 	my $qt_ass_dir = $ass_dir . "/qt";
 	mkdir $qt_ass_dir;
 
-	my $raw_input = 1;	# Need to gather from config file
-	my $qt_input = 1;	# Need to gather from config file
+	my $raw_input = 1;	# Need to gather raw_dir from config file
+	my $qt_input = 1;	# Need to gather qt_dir from config file
 	my $raw_ass_job_prefix = $ass_job_prefix . "raw-";
 	my $qt_ass_job_prefix = $ass_job_prefix . "qt-";
 
@@ -113,86 +115,41 @@ if ($opt{assembler}) {
 	run_assembler($qt_input, $qt_ass_job_prefix, $qt_ass_dir);
 
 
+	# Run best assembly selector to find "best" assembly (assembler will produce stats automatically for us to use here)
+	my $raw_stats_file = $raw_ass_dir . "/stats.txt";
+	my $qt_stats_file = $qt_ass_dir . "/stats.txt";
+	my $asd_wait_arg = "-w 'done(" . $ass_job_prefix . "*)'";
+	my $asd_job_arg = "-J" . $asd_job_name;
 
-	# Generate stats for each assembly
-	my $raw_sg_job_name = $sg_job_prefix . "raw";
-	my $qt_sg_job_name = $sq_job_prefix . "qt";
+	my $raw_stats_arg = "--raw_stats_file " . $raw_stats_file;
+	my $qt_stats_arg = "--qt_stats_file " . $qt_stats_file;
+	my $gen_size_arg = "--approx_genome_size " . $opt{approx_genome_size};
+	my $best_ass_file = "--output " . $ass_dir . "/best.path.txt";
 
-	run_stater($raw_ass_dir, $raw_sg_job_name);
-	run_stater($qt_ass_dir, $qt_sg_job_name);
+	my $asd_cmd_line = $SELECT_BEST_ASSEMBLY_PATH .  . $raw_stats_arg . " " . $qt_stats_arg . " " . $gen_size_arg . " " . $best_ass_file;
 
-	# Run decider
+	system($SUBMIT, $qs_project_arg, $asd_job_arg, $asd_wait_arg, $opt{extra_queue_args}, $asd_cmd_line;
 
-
+	# Extract best assembly from file
+	# This bit isn't going to work yet as we need to do this after the previous job has completed
+	#open(BA_FILE, $best_ass_file) or die "Can't read " . $best_ass_file . "\n";
+	#$best_ass = <BA_FILE>;
+	#close (BA_FILE);
 }
 
 
 
 ## Improve best assembly
 
-# Run scaffolding step
-if ($opt{scaffolder}) {
+if ($opt{improve} && $best_ass) {
 
-	my $scf_dir = $opt{output} . "/scaffolds";
-	mkdir $scf_dir;
 
-	my $scf_path = $RAMPART_DIR . "/scaffolder.pl";
-	my $scf_wait_arg = $opt{assembler} ? "--wait_job " . $ass_job_prefix . "*" : "";
-	my $scf_job_arg = "--job_name " . $scf_job_name;
-	my $scf_out_arg = "--output " . $scf_dir;
-	my $scf_in_arg = "--input " . $best_ass; # Need to get the actual file here from either cmd option or assembly output
-	my $scf_config_arg = "--config " . $scf_cfg_path; # Somehow need to have this available.
+	$improver_cmd = $improver_path . " " . $improver_args . " " . $best_assembly;
 
-	my $scf_args = $scf_wait_arg . " " $scf_job_name . " " . $project_arg . " " . $scf_out_arg;
-
-	system($scf_path, $scf_args, $scf_in_arg, $scf_config_arg);
+	system($SUBMIT, $qs_project_arg, $imp_wait_arg, $improver_cmd);
 }
 
 
-# Run gap closing step
-if ($opt{degap}) {
-
-	my $dg_dir = $opt{output} . "/degapped";
-	mkdir $dg_dir;
-
-	my $dg_path = $RAMPART_DIR . "/degap.pl";
-	my $dg_wait_arg = $opt{scaffolder} ? "--wait_job " . $scf_job_name : "";
-	my $dg_job_arg = "--job_name " . $dg_job_name;
-	my $dg_out_arg = "--output " . $dg_dir;
-	my $dg_in_arg = "--input " . $scf_out; # Need to either get the input scaffolds from the user or the scaffolder tool
-	my $dg_config_arg = "--config " . $scf_cfg_path; # Somehow need to make this available.
-
-	my $dg_args = $dg_wait_arg . " " . $dg_job_name . " " . $project_arg . " " . $dg_out_arg;
-
-	system($dg_path, $dg_args, $dg_in_arg, $dg_config_arg);
-}
-
-
-
-## Generate final stats (maybe!!)
-
-
-
-## Remove contigs under 1KB
-
-
-
-## Remove PhiX???
-
-
-
-
-
-
-sub run_stater {
-
-	my $stats_gatherer_path = $RAMPART_DIR . "/assembly_stats_gatherer.pl";
-	my $sg_wait_arg = "-w \"done(" . $ass_job_prefix . "*)\"";
-	my $sg_job_name = "-J " . $_[1];
-	my $sg_cmd_line = $stats_gatherer_path . " " . $_[0];
-
-	system($SUBMIT, $sg_job_name, $sg_wait_arg, $sg_cmd_line);
-}
 
 
 
@@ -201,13 +158,55 @@ sub run_assembler {
 	my $assembler_path = $RAMPART_DIR . "/assembler.pl";
 	my $assembler_arg = "--assembler " . $opt{assembler};
 	my $job_prefix_arg = "--job_prefix " . $_[1];
-	my $kmin_arg = "--kmin " . $opt{kmin} if $opt{kmin};
-	my $kmax_arg = "--kmax " . $opt{kmax} if $opt{kmax};
 	my $out_dir = "--output " . $_[2];
 
-	my $assembly_args = $job_prefix_arg . " " . $project_arg . " " . $assembler_arg . " " . $kmin_arg . " " $kmax_arg . " " . $out_dir;
+	my $assembly_args = $job_prefix_arg . " " . $project_arg . " " . $assembler_arg . " " . $opt{extra_assembler_args} . " --stats " . $out_dir;
 
 	system($assembler_path, $assembly_args, $_[0]);
 }
+
+__END__
+
+=pod
+
+=head1 NAME
+
+  rampart.pl
+
+
+=head1 SYNOPSIS
+
+  rampart.pl [options] --raw_config <file> --qt_config <file>
+
+  For full documentation type: "rampart.pl --man"
+
+
+=head1 DESCRIPTION
+
+  Runs an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.
+
+
+=head1 OPTIONS
+
+  job_prefix|job|j                    The prefix string for all rampart child jobs.
+  project|p                           The project name for marking the job.
+  extra_queue_args|eqa|q              Extra arguments to pass to the queueing system for each child job.  E.g. "-q normal" to move jobs from the production (default) queue to the normal queue.
+  assembler|a                         The assembly program to use.
+  extra_assembler_args|ea_args|eaa    Any additional arguments to pass to the assembler script.  Type assembler.pl --man for more information.  This script will automatically invoke the assembler script with the project, job_prefix, threads, memory, stats, in_dir, and out_dir settings.  Assembler arguments such as --kmin and --kmax should be set via this argument for example.
+  approx_genome_size|ags              The approximate genome size for the organism that is being sequenced.  Used for determining best assembly.
+  improver|i
+  output|out|o=s                      The output directory.
+  verbose|v                           Print extra status information during run.
+  help|usage|h|?                      Print usage message and then exit.
+  man                                 Display manual.
+
+
+
+=head1 AUTHORS
+
+  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+  Nizar Drou <nizar.drou@tgac.ac.uk>
+
+=cut
 
 

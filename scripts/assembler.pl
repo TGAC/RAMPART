@@ -179,7 +179,6 @@ if ($opt{stats}) {
 
 	my $stats_gatherer_path = $RAMPART_DIR . "/assembly_stats_gatherer.pl";
         my $sg_wait_arg = "-w 'done(" . $opt{job_prefix} . "*)'";
-        my $sg_wait_arg = "-K";
 	my $sg_job_name = $opt{job_prefix} . "stat_gather";
         my $sg_job_arg = "-J" . $sg_job_name;
 	my $stat_file = $opt{output} . "/stats.txt";
@@ -197,9 +196,7 @@ if ($opt{stats}) {
 	my $stats_plotter_path = $RAMPART_DIR . "/assembly_stats_plotter.pl";
 	my $sp_job_name = $opt{job_prefix} . "stat_plot";
 	my $sp_job_arg = "-J" . $sp_job_name;
-	my $sp_wait_arg = "-w " . $sg_job_name;
-	#my $sp_wait_arg = "-w 'done(" . $sg_job_name . ")'";
-	#my $sp_wait_arg = "-K";
+	my $sp_wait_arg = "-w 'done(" . $sg_job_name . ")'";
 	my $sp_cmd_line = $stats_plotter_path . " " . $stat_file . " > stat_plotter.rout";
 
 	print "Will execute stat plotter after stat gatherer has completed.\n\n" if ($opt{verbose});

@@ -22,7 +22,7 @@ my $DG_IMAGE = "image"
 my $DG_GAP_FILLER = "gapfiller";
 my $DEF_DG = $DG_GAP_CLOSER;
 my $DEF_GC_PATH = "GapCloser";
-my $DEF_IMAGE_PATH = "grass";
+my $DEF_IMAGE_PATH = "image";
 my $DEF_GF_PATH = "gapfiller";
 
 # Read length constants
@@ -30,22 +30,26 @@ my $DEF_READ_LENGTH = 155;
 
 # Queueing system constants
 my $SUBMIT = "bsub";
+my $DEF_QUEUE_ARGS = "-q production";
 
 # Other constants
 my $QUOTE = "\"";
 my $PWD = getcwd;
 
 
-my (%opt) = (   "gap_closer",   $DEF_DG,
-                "gc_path",      $DEF_GC_PATH,
-		"readlen",	$DEF_READ_LENGTH,
-                "output",       $PWD );
+my (%opt) = (   "gap_closer",   	$DEF_DG,
+                "gc_path",      	$DEF_GC_PATH,
+		"project",              $DEF_PROJECT_NAME,
+		"extra_queue_args",     $DEF_QUEUE_ARGS,
+		"readlen",		$DEF_READ_LENGTH,
+                "output",       	$PWD );
 
 GetOptions (
         \%opt,
         'tool|t=s',
 	'tool_path|tp=s',
         'project|p=s',
+	'extra_queue_args|eqa|q=s',
 	'readlen|rl|r=i',
 	'wait_job|wj|w=s',
         'input|in|i=s',
@@ -69,11 +73,11 @@ die "Error: No output directory specified\n\n" unless ($opt{output} && -e $opt{o
 die "Error: No library config file specified\n\n" unless ($opt{config} && -e $opt{config});
 
 
-my $job_arg = "-J " . $JOB_NAME;
-my $project_arg = "-P " . $opt{project};
-my $queue_arg = "-q production";
+my $job_arg = "-J" . $JOB_NAME;
+my $project_arg = "-P" . $opt{project};
+my $queue_arg = $opt{extra_queue_args};
 my $cmd_line = "";
-my $wait_arg = "-w 'ended(\"" . $opt{wait_job} . "\")'" if $opt{wait_job};
+my $wait_arg = "-w 'done(\"" . $opt{wait_job} . "\")'" if $opt{wait_job};
 
 
 if ($opt{verbose}) {
@@ -154,15 +158,16 @@ __END__
 
 =head1 OPTIONS
 
-  tool|t               The gap closing tool to use (gapcloser, image).
-  tool_path|tp         The path to the gap closing tool to use.
-  project|p            The project name for marking the LSF jobs.
-  readlen|rl|r         The length of the reads used to build the assembly.
-  wait_job|wj|w        If specified, gap closing will not start until this job is completed.
-  output|out|o=s       The output directory.
-  verbose|v            Print extra status information during run.
-  help|usage|h|?       Print usage message and then exit.
-  man                  Display manual.
+  tool|t                   The gap closing tool to use (gapcloser, image).
+  tool_path|tp             The path to the gap closing tool to use.
+  project|p                The project name for marking the LSF jobs.
+  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for each assembly job.
+  readlen|rl|r             The length of the reads used to build the assembly.
+  wait_job|wj|w            If specified, gap closing will not start until this job is completed.
+  output|out|o=s           The output directory.
+  verbose|v                Print extra status information during run.
+  help|usage|h|?           Print usage message and then exit.
+  man                      Display manual.
 
 
 =head1 AUTHORS
