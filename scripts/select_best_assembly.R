@@ -62,10 +62,10 @@ print(paste("Written score_tab table to: ", score_tab_file))
 weightings <- data.frame(
 	nbcontigs = c(20),
 	total = c(30),
-	minlen = c(5),
-	avglen = c(15),
-	maxlen = c(15),
-	n50 = c(15))
+	minlen = c(0),
+	avglen = c(5),
+	maxlen = c(20),
+	n50 = c(25))
 
 weighting_tab <- score_tab
 
