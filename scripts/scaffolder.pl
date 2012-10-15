@@ -13,8 +13,8 @@ my ($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 
 # Project constants
-my $DEF_PROJECT_NAME = "Scaffolder_" . $NOW;
-my $JOB_NAME = $ENV{'USER'} . "-scaffolder-" . $NOW;
+my $DEF_PROJECT_NAME = "Scaffolder";
+my $DEF_JOB_NAME = $ENV{'USER'} . "-scaffolder-" . $NOW;
 
 # Scaffolder constants
 my $S_SSPACE = "sspace";
@@ -26,6 +26,8 @@ my $DEF_GRASS_PATH = "grass";
 # Queueing system constants
 my $SUBMIT = "bsub";
 my $DEF_QUEUE_ARGS = "-q production";
+my $SSPACE_SOURCE_CMD = "source SSPACE-BASIC-2.0;";
+my $PERL_SOURCE_CMD = "source perl-5.16.1;";
 
 # Other constants
 my $QUOTE = "\"";
@@ -35,6 +37,8 @@ my $PWD = getcwd;
 my (%opt) = (	"scaffolder",		$DEF_SCAFFOLDER,
 		"scaffolder_path",	$DEF_SSPACE_PATH,
 		"extra_queue_args",     $DEF_QUEUE_ARGS,
+		"project",		$DEF_PROJECT_NAME,
+		"job_name",		$DEF_JOB_NAME,
 		"output",		$PWD );
 
 GetOptions (
@@ -42,6 +46,7 @@ GetOptions (
 	'scaffolder|s=s',
 	'scaffolder_path|sp|p=s',
 	'project|p=s',
+	'job_name|job|j=s',
 	'extra_queue_args|eqa|q=s',
 	'wait_job|wj=s',
 	'input|in|i=s',
@@ -67,15 +72,20 @@ die "Error: No library config file specified\n\n" unless $opt{config};
 
 
 if ($opt{verbose}) {
+	print "Scaffolder: " . $opt{scaffolder} . "\n";
 	print "Output Directory: ". $opt{output} . "\n";
 	print "Project Name: " . $opt{project} . "\n";
+	print "Job Name: " . $opt{job_name} . "\n";
+	print "Extra Queue Args: " . $opt{extra_queue_args} . "\n";
+	print "Wait condition: " . $opt{wait_job} . "\n";
 }
 
-my $job_arg = "-J" . $JOB_NAME;
+my $job_arg = "-J" . $opt{job_name};
 my $project_arg = "-P" . $opt{project};
 my $queue_arg = $opt{extra_queue_args};
-my $wait_arg = "-w \"done(" . $opt{wait_job} . ")\"";
+my $wait_arg = "-wended(" . $opt{wait_job} . ")";
 my $cmd_line = "";
+my $cd = 0;
 
 
 # Select the scaffolder and build the command line
@@ -86,18 +96,18 @@ if ($opt{scaffolder} eq $S_SSPACE) {
 	my $sspace_scaffolds = "scaffolder";
 
 	if ($opt{verbose}) {
-		print "\n";
-		print "Running SSPACE:\n";
-		print " - SSPACE: Script location: " . $sspace_exe . "\n";
-		print " - SSPACE: Library file: " . $opt{config} . "\n";
-		print " - SSPACE: Input scaffold: " . $opt{input} . "\n";
-		print " - SSPACE: Scaffold location: " . $sspace_scaffolds . "\n";
+		print "SSPACE Script location: " . $sspace_exe . "\n";
+		print "SSPACE Library file: " . $opt{config} . "\n";
+		print "SSPACE Input scaffold: " . $opt{input} . "\n";
+		print "SSPACE Scaffold location: " . $sspace_scaffolds . "\n";
 	}
 
-	$cmd_line = $sspace_exe . " -l " . $opt{config} . " -s " . $opt{input} . " -x 1 -T 2 -b " . $sspace_scaffolds;
+	$cd = 1;
+
+	$cmd_line = $PERL_SOURCE_CMD . " " . $SSPACE_SOURCE_CMD . " " . $sspace_exe . " -l " . $opt{config} . " -s " . $opt{input} . " -x 1 -T 2 -b " . $sspace_scaffolds;
 
 }
-elsif ($opt{scaffolder) eq $S_GRASS) {
+elsif ($opt{scaffolder} eq $S_GRASS) {
 	my $grass_exe = $DEF_GRASS_PATH;
 
 	die "Error: Grass not implemented yet.\n\n";
@@ -107,14 +117,17 @@ else {
 }
 
 
+chdir $opt{output} if $cd;
+
 # Submit the scaffolding job
 if ($opt{wait_job}) {
 	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $wait_arg, $cmd_line);
+}
 else {
 	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $cmd_line);
 }
 
-
+chdir $PWD if $cd;
 
 __END__
 
