@@ -37,6 +37,7 @@ my $DEF_JOB_PREFIX = $ENV{'USER'} . "-assembler-";
 # Queueing system constants
 my $SUBMIT = "bsub";
 my $DEF_QUEUE_ARGS = "-q production";
+my $ABYSS_SOURCE_CMD = "source abyss_upTo127-1.3.4;";
 
 # Other constants
 my $QUOTE = "\"";
@@ -147,7 +148,7 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		my $abyss_kmer = "k=" . $i;
 		my $abyss_name = "name=Abyss-mpi-k" . $i;
 		my $abyss_in = "in='" . $input_files . "'";
-		$cmd_line = $abyss_bin . " " . $abyss_threads . " " . $abyss_core_args . " " . $abyss_kmer . " " . $abyss_name . " " . $abyss_in;
+		$cmd_line = $ABYSS_SOURCE_CMD . " " . $abyss_bin . " " . $abyss_threads . " " . $abyss_core_args . " " . $abyss_kmer . " " . $abyss_name . " " . $abyss_in;
 	}
 	else {
 		die "Error: Invalid assembler requested.  Also, the script should not have got this far!!!.\n\n";
