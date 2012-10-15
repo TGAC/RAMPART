@@ -15,8 +15,9 @@ my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 my $DEF_OUT = $PWD . "/plotter.rout";
 
 
-# Assembly stats gathering constants
+# Assembly stats plotting constants
 my $STATS_PLOTTER_SCRIPT = $RAMPART_DIR . "/assembly_stats_plotter.R";
+my $R_SOURCE_CMD = "source R-2.15.0;";
 
 
 # Assign any command line options to variables
@@ -51,7 +52,7 @@ die "Error: Was only expecting a single file to process\n\n" unless @in_files ==
 
 # Get produce stats and graphs for raw dataset
 
-system("R CMD BATCH '--args " . $input_file . "' " . $STATS_PLOTTER_SCRIPT . " " .  $opt{output});
+system($R_SOURCE_CMD . " R CMD BATCH '--args " . $input_file . "' " . $STATS_PLOTTER_SCRIPT . " " .  $opt{output});
 
 print "Plotted graphs from raw and qt datasets.\n" if $opt{verbose};
 
