@@ -14,13 +14,13 @@ my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 
 # Project constants
 my $DEF_PROJECT_NAME = "de_gap_" . $NOW;
-my $JOB_NAME = $ENV{'USER'} . "-de_gap-" . $NOW;
+my $DEF_JOB_NAME = $ENV{'USER'} . "-de_gap-" . $NOW;
 
 # Gap closing constants
 my $DG_GAP_CLOSER = "gapcloser";
-my $DG_IMAGE = "image"
+my $DG_IMAGE = "image";
 my $DG_GAP_FILLER = "gapfiller";
-my $DEF_DG = $DG_GAP_CLOSER;
+my $DEF_TOOL = $DG_GAP_CLOSER;
 my $DEF_GC_PATH = "GapCloser";
 my $DEF_IMAGE_PATH = "image";
 my $DEF_GF_PATH = "gapfiller";
@@ -31,15 +31,17 @@ my $DEF_READ_LENGTH = 155;
 # Queueing system constants
 my $SUBMIT = "bsub";
 my $DEF_QUEUE_ARGS = "-q production";
+my $GC_SOURCE_CMD = "source GapCloser-1.12;";
 
 # Other constants
 my $QUOTE = "\"";
 my $PWD = getcwd;
 
 
-my (%opt) = (   "gap_closer",   	$DEF_DG,
+my (%opt) = (   "tool",		   	$DEF_TOOL,
                 "gc_path",      	$DEF_GC_PATH,
 		"project",              $DEF_PROJECT_NAME,
+		"job_name",		$DEF_JOB_NAME,
 		"extra_queue_args",     $DEF_QUEUE_ARGS,
 		"readlen",		$DEF_READ_LENGTH,
                 "output",       	$PWD );
@@ -49,6 +51,7 @@ GetOptions (
         'tool|t=s',
 	'tool_path|tp=s',
         'project|p=s',
+	'job_name|job|j=s',
 	'extra_queue_args|eqa|q=s',
 	'readlen|rl|r=i',
 	'wait_job|wj|w=s',
@@ -68,16 +71,16 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 
-die "Error: No input file specified\n\n" unless ($opt{input} && -e $opt{input});
-die "Error: No output directory specified\n\n" unless ($opt{output} && -e $opt{output});
-die "Error: No library config file specified\n\n" unless ($opt{config} && -e $opt{config});
+die "Error: No input file specified\n\n" unless $opt{input};
+die "Error: No output directory specified\n\n" unless $opt{output};
+die "Error: No library config file specified\n\n" unless $opt{config};
 
 
-my $job_arg = "-J" . $JOB_NAME;
+my $job_arg = "-J" . $opt{job_name};
 my $project_arg = "-P" . $opt{project};
 my $queue_arg = $opt{extra_queue_args};
 my $cmd_line = "";
-my $wait_arg = "-w 'done(\"" . $opt{wait_job} . "\")'" if $opt{wait_job};
+my $wait_arg = "-wdone(" . $opt{wait_job} . ")" if $opt{wait_job};
 
 
 if ($opt{verbose}) {
@@ -95,7 +98,7 @@ if ($opt{tool} eq $DG_GAP_CLOSER) {
 
 	my $gc_exe = $DEF_GC_PATH;
 	my $gc_scaffolds = $opt{output} . "/gc-scaffolds.fa";
-	$cmd_line = $gc_exe . " -a \"" . $opt{input} . "\" -b \"" . $opt{config} . "\" -o \"" . $gc_scaffolds . "\" -l " . $opt{readlen} . " -p 61";
+	$cmd_line = $GC_SOURCE_CMD . " " . $gc_exe . " -a \"" . $opt{input} . "\" -b \"" . $opt{config} . "\" -o \"" . $gc_scaffolds . "\" -l " . $opt{readlen} . " -p 61";
 
 	if ($opt{verbose}) {
 		print "\n";
@@ -125,6 +128,7 @@ else {
 
 if ($opt{wait_job}) {
 	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $wait_arg, $cmd_line);
+}
 else {
 	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $cmd_line);
 }
@@ -146,7 +150,7 @@ __END__
   degap.pl [options] -i contigs_file -c config_file
 
   input|in|i       The path to the input contigs file.
-  config|cfg|c     The scaffolder library configuration file.
+  config|cfg|c     The degapping library configuration file.
 
   For full documentation type: "degap.pl --man"
 
