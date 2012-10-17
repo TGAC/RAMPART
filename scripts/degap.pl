@@ -1,36 +1,31 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use Getopt::Long;
+Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
+use LsfJobSubmitter;
 
-
-# Now
-my ($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
-
-# Project constants
-my $DEF_PROJECT_NAME = "de_gap_" . $NOW;
-my $DEF_JOB_NAME = $ENV{'USER'} . "-de_gap-" . $NOW;
 
 # Gap closing constants
-my $DG_GAP_CLOSER = "gapcloser";
-my $DG_IMAGE = "image";
-my $DG_GAP_FILLER = "gapfiller";
-my $DEF_TOOL = $DG_GAP_CLOSER;
-my $DEF_GC_PATH = "GapCloser";
-my $DEF_IMAGE_PATH = "image";
-my $DEF_GF_PATH = "gapfiller";
+my $T_GAP_CLOSER = "gapcloser";
+my $T_IMAGE = "image";
+my $T_GAP_FILLER = "gapfiller";
+my $DEF_TOOL = $T_GAP_CLOSER;
+
+my $TP_GAP_CLOSER = "GapCloser";
+my $TP_IMAGE = "image";
+my $TP_GAP_FILLER = "gapfiller";
+my $DEF_TOOL_PATH = $TP_GC_PATH;
 
 # Read length constants
 my $DEF_READ_LENGTH = 155;
 
-# Queueing system constants
-my $SUBMIT = "bsub";
-my $DEF_QUEUE_ARGS = "-q production";
+# Command constants
 my $GC_SOURCE_CMD = "source GapCloser-1.12;";
 
 # Other constants
@@ -38,27 +33,18 @@ my $QUOTE = "\"";
 my $PWD = getcwd;
 
 
-my (%opt) = (   "tool",		   	$DEF_TOOL,
-                "gc_path",      	$DEF_GC_PATH,
-		"project",              $DEF_PROJECT_NAME,
-		"job_name",		$DEF_JOB_NAME,
-		"extra_queue_args",     $DEF_QUEUE_ARGS,
-		"readlen",		$DEF_READ_LENGTH,
-                "output",       	$PWD );
+# Parse generic queueing tool options
+my $qst = new QsTool($DEF_TOOL, $DEF_TOOL_PATH);
+$qst->parseOptions();
+
+
+# Parse tool specific options
+my (%opt) = (  	"read_length",	$DEF_READ_LENGTH );
 
 GetOptions (
         \%opt,
-        'tool|t=s',
-	'tool_path|tp=s',
-        'project|p=s',
-	'job_name|job|j=s',
-	'extra_queue_args|eqa|q=s',
-	'readlen|rl|r=i',
-	'wait_job|wj|w=s',
-        'input|in|i=s',
+	'read_length|readlen|rl|r=i',
         'config|c=s',
-        'output|out|o=s',
-        'verbose|v',
         'help|usage|h|?',
         'man'
 )
@@ -71,54 +57,42 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 
-die "Error: No input file specified\n\n" unless $opt{input};
-die "Error: No output directory specified\n\n" unless $opt{output};
-die "Error: No library config file specified\n\n" unless $opt{config};
+die "Error: No config file specified\n\n" unless $opt{config};
 
 
-my $job_arg = "-J" . $opt{job_name};
-my $project_arg = "-P" . $opt{project};
-my $queue_arg = $opt{extra_queue_args};
 my $cmd_line = "";
-my $wait_arg = "-wdone(" . $opt{wait_job} . ")" if $opt{wait_job};
 
 
-if ($opt{verbose}) {
-	print "Input Scaffold File: " . $opt{input} . "\n";
-        print "Output Directory: ". $opt{output} . "\n";
-        print "Project Arg: " . $project_arg . "\n";
-	print "Queue Arg: " . $queue_arg . "\n";
-	print "Wait Arg: " . $wait_arg . "\n";
-}
+
+# Display configuration settings if requested.
+print "\n\n" if $qst->isVerbose();
+$qst->display() if $qst->isVerbose();
+print "Config: " . $opt{config} . "\n" if $qst->isVerbose();
+print "Read Length: " . $opt{read_length} . "\n\n" if $qst->isVerbose();
+
+
 
 
 # Select the gap closer and build the command line
+my $tool = $qst->getTool();
+if ($tool eq $T_GAP_CLOSER) {
 
-if ($opt{tool} eq $DG_GAP_CLOSER) {
-
-	my $gc_exe = $DEF_GC_PATH;
 	my $gc_scaffolds = $opt{output} . "/gc-scaffolds.fa";
-	$cmd_line = $GC_SOURCE_CMD . " " . $gc_exe . " -a \"" . $opt{input} . "\" -b \"" . $opt{config} . "\" -o \"" . $gc_scaffolds . "\" -l " . $opt{readlen} . " -p 61";
+	my $gc_other_args = "-p 61";
 
-	if ($opt{verbose}) {
-		print "\n";
-		print "Initiating GapCloser job: " . $cmd_line . "\n";
-	}
-
+	$cmd_line = $GC_SOURCE_CMD . " " . $TP_GAP_CLOSER . " -a \"" . $qst->getInput() . "\" -b \"" . $opt{config} . "\" -o \"" . $gc_scaffolds . "\" -l " . $opt{read_length} . " " . $gc_other_args;
 }
-elsif ($opt{tool} eq $DG_IMAGE) {
+elsif ($tool eq $T_IMAGE) {
 
-	my $image_exe = $DEF_IMAGE_PATH;
 	my $image_scaffolds = $opt{output} . "/image-scaffolds.fa";
-	$cmd_line = $image_exe;
+	$cmd_line = "";
 
 	die "Error: IMAGE (Iterative Mapping and Assembly for Gap Elimination) tool not implemented in this script yet.\n\n";
 }
-elsif ($opt{tool} eq $DG_GAP_FILLER) {
+elsif ($tool eq $T_GAP_FILLER) {
 
-	my $gf_exe = $DEF_IMAGE_PATH;
 	my $gf_scaffolds = $opt{output} . "/gf-scaffolds.fa";
-	$cmd_line = $gf_exe;
+	$cmd_line = "";
 
 	die "Error: Gap filler tool not implemented in this script yet.\n\n";
 }
@@ -126,14 +100,8 @@ else {
         die "Error: Invalid gap closing tool requested.  Also, the script should not have got this far!!!.\n\n";
 }
 
-if ($opt{wait_job}) {
-	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $wait_arg, $cmd_line);
-}
-else {
-	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $cmd_line);
-}
-
-
+# Submit the scaffolding job
+$qst->submit($cmd_line);
 
 
 __END__

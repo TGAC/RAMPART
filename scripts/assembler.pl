@@ -3,19 +3,25 @@
 use strict;
 
 use Getopt::Long;
+Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
+use QsTool;
 
 
-# Now
-my ($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
+# Tool names
+my $T_ABYSS = "abyss";
+my $T_VELVET = "velvet";
+my $T_SOAP = "soap";
+my $DEF_TOOL = $A_ABYSS;
 
-# Assembler constants
-my $A_ABYSS = "abyss";
-my $DEF_ASSEMBLER = $A_ABYSS;
+# Tool path constants
+my $TP_ABYSS = "abyss-pe";
+my $TP_VELVET = "velvet";
+my $TP_SOAP = "soapdenovo";
+my $DEF_TOOL_PATH = $TP_ABYSS;
 
 # Kmer constants
 my $KMER_MIN = 11;
@@ -30,13 +36,7 @@ my $DEF_THREADS=8;
 my $DEF_MEM=60;
 my $MIN_MEM=5;
 
-# Project constants
-my $DEF_PROJECT_NAME = "AssemblerMultiKmer_" . $NOW;
-my $DEF_JOB_PREFIX = $ENV{'USER'} . "-assembler-";
-
-# Queueing system constants
-my $SUBMIT = "bsub";
-my $DEF_QUEUE_ARGS = "-q production";
+# Source command constants
 my $ABYSS_SOURCE_CMD = "source abyss_upTo127-1.3.4;";
 
 # Other constants
@@ -45,32 +45,23 @@ my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 
 
+# Parse generic queueing tool options
+my $qst = new QsTool();
+$qst->setMemory(60);
+$qst->setThreads(8);
+$qst->parseOptions();
+
 
 # Assign any command line options to variables
-my (%opt) = (	"assembler", 		$DEF_ASSEMBLER,
-		"job_prefix",		$DEF_JOB_PREFIX,
-		"project", 		$DEF_PROJECT_NAME,
-		"extra_queue_args",	$DEF_QUEUE_ARGS,
-		"kmin", 		$DEF_KMER_MIN,
-		"kmax", 		$DEF_KMER_MAX,
-		"threads", 		$DEF_THREADS,
-		"memory",		$DEF_MEM,
-		"output", 		$PWD);
+my (%opt) = (	"kmin", 		$DEF_KMER_MIN,
+		"kmax", 		$DEF_KMER_MAX);
 
 GetOptions (
 	\%opt,
-	'assembler|a=s',
-	'job_prefix|job|j=s',
-	'project|p=s',
-	'extra_queue_args|eqa|q=s',
 	'kmin=i',
 	'kmax=i',
 	'stats',
-	'threads|t=i',
-	'memory|mem|m=i',
-	'output|out|o=s',
 	'simulate|sim|s',
-	'verbose|v',
 	'help|usage|h|?',
 	'man'
 )
@@ -105,8 +96,6 @@ die "Error: K-mer limits must be <= " . $KMER_MAX . "nt\n\n" unless ($opt{kmin} 
 die "Error: Min K-mer value must be <= Max K-mer value\n\n" unless ($opt{kmin} <= $opt{kmax});
 die "Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.\n\n" unless (validKmer($opt{kmin}) && validKmer($opt{kmax}));
 
-die "Error: Invalid assembler requested.  Known assemblers are: 'abyss'.\n\n" unless ($opt{assembler} eq "abyss");
-
 die "Error: Invalid number of cores requested.  Must request at least 1 core per assembly.\n\n" unless ($opt{threads} >= 1);
 
 die "Error: Invalid memory setting.  Must request at least " . $MIN_MEM . "GB.\n\n" unless ($opt{memory} >= $MIN_MEM);
@@ -124,41 +113,60 @@ if ($opt{verbose}) {
 
 
 
+# Build up static args which is to be used by all child jobs
+my $queueing_system = $qst->getQueueingSystem() ? "--queueing_system " . $qst->getQueueingSystem() : "";
+my $project_arg = $qst->getProjectName() ? "--project_name " . $qst->getProjectName() : "";
+my $queue_arg = $qst->getQueue() ? "--queue " . $qst->getQueue : "";
+my $extra_args = $qst->getExtraArgs() ? "--extra_args \"" . $qst->getExtraArgs . "\"" : "";
+my $verbose_arg = $qst->isVerbose() ? "--verbose" : "";
+my $static_args = $queueing_system . " " . $project_arg . " " . $extra_args . " " . $queue_arg . " " . $verbose_arg;
+
+
+# These variables get varied for each run.
+my $job_prefix = $qst->getJobName();
+my $output_dir = $qst->getOutput();
+
+
 # Assembly job loop
 
-my $project_arg = "-P" . $opt{project};
-my $mem_mb = $opt{memory} * 1000;
+my $tool = $qst->getTool();
 my $j = 0;
+
+
 for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 
-	my $i_dir = $opt{output} . "/" . $i;
-	my $job_name = $opt{job_prefix} . $i;
-	my $job_arg = "-J" . $job_name;
-	my $queue_arg = $opt{extra_queue_args};
-	my $openmpi_arg = "-a openmpi";
-	my $rusage_arg = "-R rusage[mem=" . $mem_mb . "] space[ptile=8]";
-	my $threads_arg = "-n 8";
-	my $bsub_args= $job_arg . " " . $project_arg . " " . $queue_arg . " " . $openmpi_arg . " " . $rusage_arg . " " . $threads_arg;
+	my $i_dir = $output_dir . "/" . $i;
+	$qst->setOutput($i_dir);
+
+	my $job_name = $job_prefix . $i;
+	$qst->setJobName($job_name);
+
 	my $cmd_line;
 	
-	if ($opt{assembler} eq $A_ABYSS) {
-		my $abyss_bin = "abyss-pe";
+	if ($tool eq $A_ABYSS) {
 		my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
-		my $abyss_threads = "np=" . $opt{threads};
+		my $abyss_threads = "np=" . $qst->getThreads();
 		my $abyss_kmer = "k=" . $i;
-		my $abyss_name = "name=Abyss-mpi-k" . $i;
+		my $abyss_out_prefix = "name=Abyss-mpi-k" . $i;
 		my $abyss_in = "in='" . $input_files . "'";
-		$cmd_line = $ABYSS_SOURCE_CMD . " " . $abyss_bin . " " . $abyss_threads . " " . $abyss_core_args . " " . $abyss_kmer . " " . $abyss_name . " " . $abyss_in;
+		$cmd_line = $ABYSS_SOURCE_CMD . " " . $TP_ABYSS . " " . $abyss_threads . " " . $abyss_core_args . " " . $abyss_kmer . " " . $abyss_out_prefix . " " . $abyss_in;
+	}
+	elsif ($tool eq $T_VELVET) {
+		die "Error: Velvet not implemented yet\n\n";
+	}
+	else ($tool eq $T_SOAP) {
+		die "Error: SOAP de novo not implemented yet\n\n";
 	}
 	else {
 		die "Error: Invalid assembler requested.  Also, the script should not have got this far!!!.\n\n";
 	}
 
+	# Make the output directory for this child job and go into it
 	system("mkdir", $i_dir) unless (-e $i_dir);
   	chdir $i_dir;
 
-	print "Executing on cluster: " . $SUBMIT . " " . $bsub_args . " " . $QUOTE . $cmd_line . $QUOTE . "\n\n" if ($opt{verbose});
-	system($SUBMIT, $job_arg, $project_arg, $queue_arg, $openmpi_arg, $rusage_arg, $threads_arg, $cmd_line) unless ($opt{simulate});
+	# Submit the job
+	$qst->submit($cmd_line) unless $opt{simulate};
 
 	if ($j % 2) {
 		$i += 6;
@@ -180,7 +188,7 @@ if ($opt{stats}) {
 
 	my $stats_gatherer_path = $RAMPART_DIR . "/assembly_stats_gatherer.pl";
         my $sg_wait_arg = "-w 'done(" . $opt{job_prefix} . "*)'";
-	my $sg_job_name = $opt{job_prefix} . "stat_gather";
+	my $sg_job_name = $job_prefix . "stat_gather";
         my $sg_job_arg = "-J" . $sg_job_name;
 	my $stat_file = $opt{output} . "/stats.txt";
         my $sg_cmd_line = $stats_gatherer_path . " " . $opt{output} . " > " . $stat_file;

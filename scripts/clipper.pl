@@ -8,22 +8,20 @@ Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
-use LsfJobSubmitter;
 use QsTool;
 
 # Tool constants
-my $T_SSPACE = "sspace";
-my $T_GRASS = "grass";
-my $DEF_TOOL = $T_SSPACE;
+my $T_FASTX = "fastx";
+my $T_NIZAR = "nizar";
+my $DEF_TOOL = $T_NIZAR;
 
 # Tool path constants
-my $TP_SSPACE = "/common/software/SSPACE-BASIC-2.0/x86_64/bin/SSPACE_Basic_v2.0.pl";
-my $TP_GRASS = "grass";
-my $DEF_TOOL_PATH = $TP_SSPACE;
+my $TP_FASTX = "fastx_clipper";
+my $TP_NIZAR = "~droun/bin/length_extract_fasta";
+my $DEF_TOOL_PATH = $TP_NIZAR;
 
-# Command constants
-my $SSPACE_SOURCE_CMD = "source SSPACE-BASIC-2.0;";
-my $PERL_SOURCE_CMD = "source perl-5.16.1;";
+# Sourceing constants
+my $SOURCE_FASTX = "source fastx_toolkit-0.0.13;";
 
 # Other constants
 my $QUOTE = "\"";
@@ -38,10 +36,10 @@ $qst->parseOptions();
 # Parse tool specific options
 my %opt;
 GetOptions (
-	\%opt,
-	'config|c=s',
-	'help|usage|h|?',
-	'man'
+        \%opt,
+        'min_length|minlen=i',
+        'help|usage|h|?',
+        'man'
 )
 or pod2usage( "Try '$0 --help' for more information." );
 
@@ -53,48 +51,36 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 
 my $cmd_line = "";
-my $cd = 0;
 
 
 # Validation
-die "Error: Config file not specified.\n\n" unless $opt{config};
+die "Error: Minimum length not specified.\n\n" unless $opt{config};
 
 
 # Display configuration settings if requested.
 print "\n\n" if $qst->isVerbose();
 $qst->display() if $qst->isVerbose();
-print "Config: " . $opt{config} . "\n\n" if $qst->isVerbose();
+print "Minimum Length: " . $opt{minimum_length} . "\n\n" if $qst->isVerbose();
 
-my $tool = $qst->getTool();
 
 # Select the scaffolder and build the command line
-if ($tool eq $T_SSPACE) {
-
-	my $sspace_output_prefix = "scaffolder";
-	my $other_args = "-x 1 -T 2";
-
-	$cd = 1;
-
-	$cmd_line = $PERL_SOURCE_CMD . " " . $SSPACE_SOURCE_CMD . " " . $TP_SSPACE . " -l " . $opt{config} . " -s " . $qst->getInput() . " " . $other_args . " -b " . $sspace_output_prefix;
-
+my $tool = $qst->getTool();
+if ($tool eq $T_FASTX) {
+	$cmd_line = $FASTX_SOURCE_CMD . " " . $TP_FASTX . " -l " . $opt{min_length} . " -i " . $qst->getInput() . " -o " . $qst->getOutput();
+	die "Error: FastX clipper does not work correctly yet!\n\n";
 }
-elsif ($tool eq $T_GRASS) {
-
-	die "Error: Grass not implemented yet.\n\n";
+elsif ($tool eq $T_NIZAR) {
+	$cmd_line = $TP_NIZAR . " " . $opt{min_length} . " " . $qst->getInput() . " > " . $qst->getOutput();
 }
 else {
-	die "Error: Invalid scaffolder requested.  Also, the script should not have got this far!!!.\n\n";
+	die "Error: Invalid tool requested.  Also, the script should not have got this far!!!.\n\n";
 }
 
-
-# Change dir to output directory if required for the specific tool
-chdir $qst->getOutput() if $cd;
 
 # Submit the scaffolding job
 $qst->submit($cmd_line);
 
-# Change dir to original dir
-chdir $PWD if $cd;
+
 
 __END__
 
@@ -139,5 +125,4 @@ __END__
   Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
-
 
