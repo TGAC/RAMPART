@@ -104,7 +104,7 @@ print "\n\n" if $opt{verbose};
 my @table;
 foreach(@filtered_assemblies) {
 	my ($name, $dir) = fileparse(abs_path($0));
-	my $tabulate_cmd = $opt{seq_info} . " -n -r " . $_ . " | " . $dir . "/assembly_stats_formatter.pl --notitle";
+	my $tabulate_cmd = $opt{seq_info} . " -n -r " . $_ . " | " . $dir . "/mass_formatter.pl --notitle";
 	my $output = `$tabulate_cmd`;
 	my $matchstr = $output;
 	$matchstr =~ m/-k(\d+)-scaffolds/;
@@ -165,19 +165,19 @@ __END__
 
 =head1 NAME
 
-  assembly_stats_gatherer.pl
+  mass_gatherer.pl
 
 
 =head1 SYNOPSIS
 
-  assembly_stats_gatherer.pl [options] <input_directory>
+  mass_gatherer.pl [options] <input_directory>
 
-  For full documentation type: "assembly_stats_gatherer.pl --man"
+  For full documentation type: "mass_gatherer.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Assesses a group of assemblies and produces tables and graphs.
+  Multiple Assembly Statistics Gatherer.  Assesses a group of assemblies and produces a table of assembly statistics.
 
 
 =head1 OPTIONS

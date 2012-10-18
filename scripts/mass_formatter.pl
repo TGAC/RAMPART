@@ -100,19 +100,19 @@ __END__
 
 =head1 NAME
 
-  assembly_stats_formatter.pl
+  mass_formatter.pl
 
 
 =head1 SYNOPSIS
 
-  assembly_stats_formatter.pl [options] <input_directory>
+  mass_formatter.pl [options] <input_directory>
 
-  For full documentation type: "assembly_stats_formatter.pl --man"
+  For full documentation type: "mass_formatter.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Consumes statistics from a fasta file and presents it as a pipe delimited string.
+  Consumes assembly statistics produced from a fasta file and presents it as a pipe delimited string.
 
 
 =head1 OPTIONS

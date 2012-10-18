@@ -38,6 +38,7 @@ my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 my $SCAFFOLDER_PATH = $RAMPART_DIR . "scaffolder.pl";
 my $DEGAPPER_PATH = $RAMPART_DIR . "degap.pl";
 my $CLIPPER_PATH = $RAMPART_DIR . "clipper.pl";
+my $MASS_GP_PATH = $RAMPART_DIR . "mass_gp.pl";
 
 
 # Parse generic queueing tool options
@@ -204,16 +205,19 @@ if (0) {
 		# Link to each scaffold file from scaffolding and gap closing
 	}
 
-	my $stats_path = $RAMPART_DIR . "/assembly_stats_gatherer.pl";
-	my $stats_job_arg = "-J" . $stats_job_name;
-	my $stats_wait_arg = "-wdone(" . $last_job . ")";
-	my $stats_file = "stats.txt";
-	my $stats_cmd_line = $stats_path . " " . $stats_dir . " > " . $stats_file;
-	my $plotter_path = $RAMPART_DIR . "/assembly_stats_plotter.pl";
-	my $plotter_cmd_line = "R CMD BATCH '--args " . $stats_file . "' " . $plotter_path . " " . $stats_file . "rout";
-	my $cmd_line = $stats_cmd_line . "; " . $plotter_cmd_line;
+	my $qst_gp = new QsTool();
+        $qst_gp->setQueueingSystem($qst->getQueueingSystem());
+        $qst_gp->setProjectName($qst->getProjectName());
+        $qst_gp->setQueue($qst->getQueue());
+        $qst_gp->setWaitCondition("done(\"" . $last_job . "\")"); # This presumes an LSF wait condition.
+        $qst_gp->setJobName($job_prefix . "stats");
+        $qst_gp->setVerbose($qst->isVerbose());
 
-#	system($SUBMIT, $opt{extra_queue_args}, $queue_project_arg, $stats_job_arg, $stats_wait_arg, $cmd_line) unless $opt{simulate};
+        my $mgp_cmd_line = $MASS_GP_PATH . " --output " . $stats_dir . " " . $stats_dir;
+
+        $qst_gp->submit($mgp_cmd_line);
+
+	$last_job = $clip_job_name;
 }}
 
 

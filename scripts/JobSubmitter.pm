@@ -18,6 +18,7 @@ sub new {
 		_cmd_queue => shift,
 		_cmd_memory => shift,
 		_cmd_threads => shift,
+		_cmd_openmpi => shift,
 		_extra_args => shift,
 		_verbose => shift
 	};
@@ -27,11 +28,6 @@ sub new {
 
 
 # Submission method
-# Overloads allowed:
-# 1- jobname, wait_condition, queue, resources, extra_args, cmd_line
-# 2- jobname, wait_condition, queue, cmd_line
-# 3- jobname, queue, cmd_line
-# 4- cmd_line
 sub submit {
 
 	my ( $self, $cmd_line ) = @_;
@@ -42,8 +38,9 @@ sub submit {
 	my $queue_arg = $self->{_cmd_queue} ? $self->{_cmd_queue} : "";
 	my $memory_arg = $self->{_cmd_memory} ? $self->{_cmd_memory} : "";
 	my $threads_arg = $self->{_cmd_threads} ? $self->{_cmd_threads} : "";
+	my $openmpi_arg = $self->{_cmd_openmpi} ? $self->{_cmd_openmpi} : "";
 	my $extra_args = $self->{_extra_args} ? $self->{_extra_args} : "";
-	my $qs_args = $project_arg . " " . $job_arg . " " . $wait_arg . " " . $queue_arg . " " . $memory_arg . " " . $threads_arg;
+	my $qs_args = $project_arg . " " . $job_arg . " " . $wait_arg . " " . $queue_arg . " " . $memory_arg . " " . $openmpi_arg . " " . $threads_arg . " " . $extra_args;
 
 	print "\nJob Submission:\n" if $self->{_verbose};
 	print "Submitting with: " . $self->{_cmd_submit} . "\n" if $self->{_verbose};
@@ -53,10 +50,12 @@ sub submit {
 	my @args;
 	push @args, $self->{_cmd_submit};
 	push @args, $project_arg if $self->{_cmd_project_name};
+	push @args, $job_arg if $self->{_cmd_job_name};
 	push @args, $wait_arg if $self->{_cmd_wait_condition};
 	push @args, $queue_arg if $self->{_cmd_queue};
 	push @args, $memory_arg if $self->{_cmd_memory};
 	push @args, $threads_arg if $self->{_cmd_threads};
+	push @args, $openmpi_arg if $self->{_cmd_openmpi};
 	push @args, $extra_args if $self->{_extra_args};
 	push @args, $cmd_line;
 

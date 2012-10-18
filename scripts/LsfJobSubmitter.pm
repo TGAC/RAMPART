@@ -14,17 +14,20 @@ sub new {
         my $CMD_SUBMIT = "bsub";
         my $CMD_PROJECT = $qst->{_project_name} ? ("-P" . $qst->{_project_name}) : undef;
         my $CMD_JOB = $qst->{_job_name} ? ("-J" . $qst->{_job_name}) : undef;
-        my $CMD_WAIT = $qst->{_wait_condition} ? ("-w '" . $qst->{_wait_condition} . "'") : undef;
+        my $CMD_WAIT = $qst->{_wait_condition} ? ("-w" . $qst->{_wait_condition}) : undef;
         my $CMD_QUEUE = $qst->{_queue} ? ("-q" . $qst->{_queue}) : undef;
+
 	my $CMD_MEMORY;
 	if ($qst->{_memory}) {
 		my $mem_mb = $qst->{_memory} * 1000;
-		$CMD_MEMORY = "-R rusage[mem=" . $mem_mb . "]";
+		$CMD_MEMORY = "-R rusage[mem=" . $mem_mb . "] space[ptile=8]";
 	}
 	else {
 		$CMD_MEMORY = undef;
 	}
-	my $CMD_THREADS = $qst->{_threads} ? ("-a openmpi -n " . $qst->{threads}) : undef;
+
+	my $CMD_THREADS = ($qst->{_threads} && $qst->{_threads} > 1) ? ("-n " . $qst->{_threads}) : undef;
+	my $CMD_OPENMPI = $qst->{_threads} ? "-a openmpi" : undef;
 
         # Call base class constructor
         my $self = $class->SUPER::new(
@@ -35,6 +38,7 @@ sub new {
                                 $CMD_QUEUE,
 				$CMD_MEMORY,
 				$CMD_THREADS,
+				$CMD_OPENMPI,
 				$qst->{_extra_args},
                                 $qst->{_verbose});
         bless $self, $class;

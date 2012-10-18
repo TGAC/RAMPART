@@ -1,9 +1,10 @@
 args <- commandArgs(trailingOnly = TRUE)
 print(args)
 
-name <- args[1]
+infile <- args[1]
+outfile <- args[2]
 
-t1 <- read.table(name, header = TRUE, sep="|", quote = "");
+t1 <- read.table(infile, header = TRUE, sep="|", quote = "");
 
 # Get individual features
 
@@ -19,7 +20,7 @@ maxlen <- t1[,c('kmer','maxlen')]
 avglen <- t1[,c('kmer','avglen')]
 n50 <- t1[,c('kmer','n50')]
 
-pdf(paste(name,".pdf",sep=""))
+pdf(paste(outfile,sep=""))
 plot(nbcontigs, type="o")
 plot(apc, type="o")
 plot(cpc, type="o")

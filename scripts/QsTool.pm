@@ -8,6 +8,7 @@ use warnings;
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;
+use LsfJobSubmitter;
 
 
 # Now
@@ -69,7 +70,8 @@ sub parseOptions {
 
 	# Set defaults if not already set
 	$self->{_project_name} = $self->{_tool} unless $self->{_project_name};
-	$self->{_job_name} = $ENV{'USER'} . "-" . $self->{_tool} . "-" . $NOW unless $self->{_job_name};
+	my $tool_str = $self->{_tool} ? ($self->{_tool} . "-") : "";
+	$self->{_job_name} = $ENV{'USER'} . "-" . $tool_str . $NOW unless $self->{_job_name};
 }
 
 
@@ -127,6 +129,16 @@ sub setQueueingSystem {
         $self->{_queueing_system} = $queueing_system;
 }
 
+sub setTool {
+	my ( $self, $tool ) = @_;
+        $self->{_tool} = $tool;
+}
+
+sub setToolPath {
+	my ( $self, $tool_path ) = @_;
+        $self->{_tool_path} = $tool_path;
+}
+
 sub setProjectName {
         my ( $self, $project_name ) = @_;
         $self->{_project_name} = $project_name;
@@ -135,6 +147,16 @@ sub setProjectName {
 sub setJobName {
 	my ( $self, $job_name ) = @_;
         $self->{_job_name} = $job_name;
+}
+
+sub setWaitCondition {
+	my ( $self, $wait_condition ) = @_;
+        $self->{_wait_condition} = $wait_condition;
+}
+
+sub setQueue {
+	my ( $self, $queue ) = @_;
+        $self->{_queue} = $queue;
 }
 
 sub setMemory {
@@ -152,7 +174,10 @@ sub setOutput {
 	$self->{_output} = $output;
 }
 
-
+sub setVerbose {
+	my ( $self, $verbose ) = @_;
+	$self->{_verbose} = $verbose;
+}
 
 
 
@@ -203,6 +228,11 @@ sub getResources {
 sub getMemoryGB {
         my ( $self ) = @_;
         return $self->{_memory};
+}
+
+sub getMemoryMB {
+	my ( $self ) = @_;
+	return $self->{_memory} * 1000;
 }
 
 sub getThreads {
