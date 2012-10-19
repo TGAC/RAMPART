@@ -9,7 +9,7 @@ use Pod::Usage;
 use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
-use QsTool;
+use QsOptions;
 
 
 
@@ -22,7 +22,7 @@ my $MASS_PLOTTER_PATH = $RAMPART_DIR . "mass_plotter.pl";
 
 
 # Handle generic queueing system arguments here
-my $qst = new QsTool();
+my $qst = new QsOptions();
 $qst->parseOptions();
 
 

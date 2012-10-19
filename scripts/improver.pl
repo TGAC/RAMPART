@@ -234,26 +234,18 @@ __END__
 
 =head1 SYNOPSIS
 
-  improver.pl [options] <input_files>
+  improver.pl [options] -i <input_file>
 
   For full documentation type: "improver.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.
+  Runs an sequence of programs that attempt to improve the scaffold quality of the input file.  It does this by doing a user defined number of scaffolding and gap fillings steps.  This script uses additional reads specified by the user in the configuration file to do this. After enhancing the user can optionally discard shorter scaffolds from file.  Finally, the user can optionally request assembly statistics to be produced at each step in the process.
 
 
 =head1 OPTIONS
 
-  scaffold|s               Whether to scaffold the input contigs.
-  scaffold_args|s_args     Additional arguments to the scaffolding tool.
-  degap|d                  Whether to degap the input contigs.
-  degap_args|dg_args       Additional arguments to the degapping tool.
-  job_prefix|job|j         The prefix string for each job.
-  project|p                The project name for marking the LSF jobs.
-  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for each assembly job.
-  min_len|min              Removes scaffolds shorter than this from the final assembly.
   iterations|i             The number of scaffolding and degapping iterations to run.
   simulate                 Runs the script without sending any jobs to the queue.
   stats                    Outputs statistics and plots for all scaffold files produced in the improvement process.

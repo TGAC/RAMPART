@@ -21,7 +21,7 @@ avglen <- t1[,c('kmer','avglen')]
 n50 <- t1[,c('kmer','n50')]
 
 pdf(paste(outfile,sep=""))
-plot(nbcontigs, type="o")
+plot(nbcontigs, type="o", ylim=c(0,max_y))
 plot(apc, type="o")
 plot(cpc, type="o")
 plot(gpc, type="o")

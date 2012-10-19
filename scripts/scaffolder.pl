@@ -9,7 +9,7 @@ use Pod::Usage;
 use File::Basename;
 use Cwd;
 use LsfJobSubmitter;
-use QsTool;
+use QsOptions;
 
 # Tool constants
 my $T_SSPACE = "sspace";
@@ -31,7 +31,9 @@ my $PWD = getcwd;
 
 
 # Parse generic queueing tool options
-my $qst = new QsTool($DEF_TOOL, $DEF_TOOL_PATH);
+my $qst = new QsOptions();
+$qst->setTool($DEF_TOOL);
+$qst->setToolPath($DEF_TOOL_PATH);
 $qst->parseOptions();
 
 

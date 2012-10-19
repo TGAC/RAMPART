@@ -7,28 +7,15 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
 use Cwd;
+use QsOptions;
 
 
 #### Constants
-
-# Now
-my ($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
-
 
 # Project constants
 $DEF_PROJECT_NAME = "Rampart_" . $NOW;
 $JOB_PREFIX = $ENV{'USER'} . "-rampart-";
 
-
-# Tool paths
-$DEF_ASSEMBLER_PATH = "abyss-pe";
-$DEF_SCAFFOLDER_PATH = "sspace";
-$DEF_DEGAP_PATH = "GapCloser";
-
-
-# Queueing system constants
-my $SUBMIT = "bsub";
 
 # Other constants
 my $QUOTE = "\"";
@@ -36,7 +23,10 @@ my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 
 # Assembly stats gathering constants
-my $SELECT_BEST_ASSEMBLY_PATH = $RAMPART_DIR . "/select_best_assembly.pl";
+my $MASS_PATH = $RAMPART_DIR . "mass.pl";
+my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
+my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
+
 
 
 # Gather Command Line options and set defaults
@@ -52,13 +42,8 @@ GetOptions (
 	'approx_genome_size|ags=i',
 	'improver|i',
 	'extra_improver_args|ei_args|eia=s',
-	'project|p=s',
-	'job_prefix|job|j=s',
-	'extra_queue_args|eqa=s',
 	'raw_config|rc=s',
 	'qt_config|qtc=s',
-	'output|out|o=s',
-	'verbose|v',
 	'help|usage|h|?',
 	'man'
 )
@@ -75,7 +60,6 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 #### Validation
 
-die "Error: No output directory specified\n\n" unless $opt{output};me, $dir) = fileparse(abs_path($0));
 die "Error: No raw library config file specified\n\n" unless $opt{raw_config};
 die "Error: No quality trimmed library config file specified\n\n" unless $opt{qt_config};
 die "Error: Approximate genome size not specified\n\n" unless $opt{approx_genome_size};
@@ -93,7 +77,7 @@ my $best_ass;
 
 
 ## Run assemblies for both raw and qt datasets
-if ($opt{assembler}) {
+if ($opt{mass}) {
 
 	# Make assemblies output directories
 	my $ass_dir = $opt{output} . "/assemblies";
@@ -115,20 +99,22 @@ if ($opt{assembler}) {
 	run_assembler($qt_input, $qt_ass_job_prefix, $qt_ass_dir);
 
 
-	# Run best assembly selector to find "best" assembly (assembler will produce stats automatically for us to use here)
+	# Run best assembly selector to find "best" assembly (mass will produce stats automatically for us to use here)
 	my $raw_stats_file = $raw_ass_dir . "/stats.txt";
 	my $qt_stats_file = $qt_ass_dir . "/stats.txt";
-	my $asd_wait_arg = "-w 'done(" . $ass_job_prefix . "*)'";
-	my $asd_job_arg = "-J" . $asd_job_name;
 
-	my $raw_stats_arg = "--raw_stats_file " . $raw_stats_file;
-	my $qt_stats_arg = "--qt_stats_file " . $qt_stats_file;
-	my $gen_size_arg = "--approx_genome_size " . $opt{approx_genome_size};
-	my $best_ass_file = "--output " . $ass_dir . "/best.path.txt";
+	my @ms_args = (	$qst->getQueueingSystemAsParam(),
+			$qst->getProjectNameAsParam(),
+			"--job_name " . $asd_job_name,
+			"--wait_condition done(" . $ass_job_prefix . "*)",
+			$qst->getQueueAsParam(),
+			"--output " . $ass_dir . "/best.path.txt",
+			$qst->isVerboseAsParam(),
+			"--raw_stats_file " . $raw_stats_file,
+			"--qt_stats_file " . $qt_stats_file,
+			"--approx_genome_size " . $opt{approx_genome_size} );
 
-	my $asd_cmd_line = $SELECT_BEST_ASSEMBLY_PATH .  . $raw_stats_arg . " " . $qt_stats_arg . " " . $gen_size_arg . " " . $best_ass_file;
-
-	system($SUBMIT, $qs_project_arg, $asd_job_arg, $asd_wait_arg, $opt{extra_queue_args}, $asd_cmd_line;
+	system($MASS_SELECTOR_PATH, join(" ", @ms_args);
 
 	# Extract best assembly from file
 	# This bit isn't going to work yet as we need to do this after the previous job has completed
@@ -143,7 +129,6 @@ if ($opt{assembler}) {
 
 if ($opt{improve} && $best_ass) {
 
-
 	$improver_cmd = $improver_path . " " . $improver_args . " " . $best_assembly;
 
 	system($SUBMIT, $qs_project_arg, $imp_wait_arg, $improver_cmd);
@@ -153,16 +138,18 @@ if ($opt{improve} && $best_ass) {
 
 
 
-sub run_assembler {
+sub run_mass {
 
-	my $assembler_path = $RAMPART_DIR . "/assembler.pl";
-	my $assembler_arg = "--assembler " . $opt{assembler};
-	my $job_prefix_arg = "--job_prefix " . $_[1];
-	my $out_dir = "--output " . $_[2];
+	my @mass_args = (	$qst->getQueueingSystemAsParam(),
+	                        $qst->getProjectNameAsParam(),
+				"--job_name " . $_[1],
+				$qst->getQueueAsParam(),
+				"--output " . $_[2],
+				$qst->isVerboseAsParam(),
+				$opt{extra_mass_args},
+				"--stats" );
 
-	my $assembly_args = $job_prefix_arg . " " . $project_arg . " " . $assembler_arg . " " . $opt{extra_assembler_args} . " --stats " . $out_dir;
-
-	system($assembler_path, $assembly_args, $_[0]);
+	system($MASS_PATH, join(" ", @mass_args), $_[0]);
 }
 
 __END__

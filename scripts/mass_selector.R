@@ -26,6 +26,7 @@ raw$dataset <- "raw"
 qt$dataset <- "qt"
 merged <- merge(raw, qt, all = TRUE)
 
+
 # Output
 merged_file <- paste(output_dir, "merged.tab", sep="/")
 write.table(merged, merged_file, sep= "|", quote=FALSE, row.names=FALSE)

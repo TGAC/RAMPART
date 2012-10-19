@@ -8,7 +8,8 @@ Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
-use QsTool;
+use QsOptions;
+use SubmitJob;
 
 # Tool constants
 my $T_FASTX = "fastx";
@@ -78,7 +79,7 @@ else {
 
 
 # Submit the scaffolding job
-$qst->submit($cmd_line);
+submit($qst, $cmd_line);
 
 
 
@@ -88,31 +89,26 @@ __END__
 
 =head1 NAME
 
-  scaffolder.pl
+  clipper.pl
 
 
 =head1 SYNOPSIS
 
-  scaffolder.pl [options] -i contigs_file -c config_file
+  clipper.pl [options] --minlen <minimum_length> -i <input_file>
 
-  input|in|i       The path to the input contigs file.
-  config|cfg|c     The scaffolder library configuration file.
+  min_length|minlen    The minimum length for scaffolds to be kept in the output file.
+  input|in|i           The path to the input scaffolds file.
 
-  For full documentation type: "scaffolder.pl --man"
+  For full documentation type: "clipper.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs a scaffolding program.
+  Runs a clipping program that removes scaffolds less than a user specified length.
 
 
 =head1 OPTIONS
 
-  scaffolder|s             The scaffolding tool to use (sspace, grass).
-  scaffolder_path|sp|p     The path to the scaffolding tool (in case this script does not know where to find it)
-  project|p                The project name for marking the LSF jobs.
-  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for the scaffolding job.
-  wait_job|wj              If specified, the scaffolder will not run until this job has finished.
   output|out|o             The output directory.
   verbose|v                Print extra status information during run.
   help|usage|h|?           Print usage message and then exit.

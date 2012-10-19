@@ -5,7 +5,7 @@ use warnings;
 
 use Test::More tests => 12;
 
-use QsTool;
+use QsOptions;
 
 
 # Constants

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package QsTool;
+package QsOptions;
 
 use strict;
 use warnings;
@@ -59,8 +59,8 @@ sub parseOptions {
 		'wait_condition|wait|w=s'	=> \$self->{_wait_condition},
 		'queue|q=s'			=> \$self->{_queue},
 		'memory|mem|m=i'		=> \$self->{_memory},
-		'threads'			=> \$self->{_threads},
-		'extra_args|ea|q=s'		=> \$self->{_extra_args},
+		'threads|n=i'			=> \$self->{_threads},
+		'extra_args|ea=s'		=> \$self->{_extra_args},
 		'input|in|i=s'			=> \$self->{_input},
 		'output|out|o=s'		=> \$self->{_output},
 		'verbose|v'			=> \$self->{_verbose}
@@ -95,27 +95,6 @@ sub toString {
 		        "Output: ". $self->{_output} . "\n";
 
 	return $string;
-}
-
-
-
-sub submit {
-
-	my ( $self, $cmd_line ) = @_;
-
-
-	if ($self->{_queueing_system} eq "LSF") {
-	#	my $lqs = new LsfJobSubmitter($self->{_verbose}, $self->{_project_name});
-	#	$lqs->submit($self->{_job_name}, $self->{_wait_condition}, $self->{_queue}, $self->{_memory}, $self->{_threads), $self->{_extra_args}, $cmd_line);
-		my $lqs = new LsfJobSubmitter($self);
-		$lqs->submit($cmd_line);
-	}
-	elsif ($self->{_queueing_system} eq "PBS") {
-		print "PBS not implemented yet.  No job submitted.\n";
-	}
-	else {
-		print "Unknown queueing system requested.  No job submitted.\n";
-	}
 }
 
 
@@ -262,5 +241,156 @@ sub isVerbose {
 
 
 
+# **** Param Getters ****
+
+
+sub getQueueingSystemAsParam {
+	my ( $self ) = @_;
+	return $self->{_queueing_system} ? ("--queueing_system " . $self->{_queueing_system}) : "";
+}
+
+sub getToolAsParam {
+        my ( $self ) = @_;
+        return $self->{_tool} ? ("--tool " . $self->{_tool}) : "";
+}
+
+sub getToolPathAsParam {
+        my ( $self ) = @_;
+        return $self->{_tool_path} ? ("--tool_path " . $self->{_tool_path}) : "";
+}
+
+sub getProjectNameAsParam {
+        my ( $self ) = @_;
+        return $self->{_project_name} ? ("--project_name " . $self->{_project_name}) : "";
+}
+
+sub getJobNameAsParam {
+        my ( $self ) = @_;
+        return $self->{_job_name} ? ("--job_name " . $self->{_job_name}) : "";
+}
+
+sub getWaitConditionAsParam {
+        my ( $self ) = @_;
+        return $self->{_wait_condition} ? ("--wait_condition " . $self->{_wait_condition}) : "";
+}
+
+sub getQueueAsParam {
+        my ( $self ) = @_;
+        return $self->{_queue} ? ("--queue " . $self->{_queue}) : "";
+}
+
+sub getResourcesAsParam {
+        my ( $self ) = @_;
+        return $self->{_resources} ? ("--resources " . $self->{_resources}) : "";
+}
+
+sub getMemoryAsParam {
+        my ( $self ) = @_;
+        return $self->{_memory} ? ("--memory " . $self->{_memory}) : "";
+}
+
+sub getThreadsAsParam {
+        my ( $self ) = @_;
+        return $self->{_threads} ? ("--threads " . $self->{_threads}) : "";
+}
+
+sub getExtraArgsAsParam {
+        my ( $self ) = @_;
+        return $self->{_extra_args} ? ("--extra_args " . $self->{_extra_args}) : "";
+}
+
+sub getInputAsParam {
+	my ( $self ) = @_;
+        return $self->{_input} ? ("--input " . $self->{_input}) : "";
+}
+
+sub getOutputAsParam {
+        my ( $self ) = @_;
+        return $self->{_output} ? ("--output " . $self->{_output}) : "";
+}
+
+sub isVerboseAsParam {
+        my ( $self ) = @_;
+        return $self->{_verbose} ? "--verbose" : "";
+}
+
+
+
 
 1;
+
+
+
+# Note that this pod is not intended to be used directly but rather as a template for tools that make use of QsTool.
+
+
+__END__
+
+=pod
+
+=head1 NAME
+
+  <script_name>.pl
+
+
+=head1 SYNOPSIS
+
+  <script_name>.pl [options] -i <input_file>
+
+  For full documentation type: "<script_name>.pl --man"
+
+
+=head1 DESCRIPTION
+
+  <Script description>.  This script is designed to execute jobs on a queueing system.
+
+
+=head1 OPTIONS
+
+  --queueing_system      --qs
+              The queueing system to use.  Currently "LSF" and "PBS" are supported.
+
+  --tool                 -t
+              If this script supports multiple tools to do the same job you can specify that tool using this parameter.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the queueing system.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the queueing system.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --threads              -n
+              The number of threads that this job is likely to use.  This is used to reserve cores from the queueing system.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the queueing system.
+
+  --input                --in                -i
+              The input file(s) for this job.
+
+  --output               --out               -o
+              The output file/dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
+
+
+=head1 AUTHORS
+
+  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+  Nizar Drou <nizar.drou@tgac.ac.uk>
+
+=cut
+

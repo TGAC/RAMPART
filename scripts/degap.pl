@@ -9,6 +9,7 @@ use Pod::Usage;
 use File::Basename;
 use Cwd;
 use LsfJobSubmitter;
+use QsOptions;
 
 
 # Gap closing constants
@@ -34,7 +35,9 @@ my $PWD = getcwd;
 
 
 # Parse generic queueing tool options
-my $qst = new QsTool($DEF_TOOL, $DEF_TOOL_PATH);
+my $qst = new QsOptions();
+$qst->setTool($DEF_TOOL);
+$qst->setToolPath($DEF_TOOL_PATH);
 $qst->parseOptions();
 
 
@@ -115,7 +118,7 @@ __END__
 
 =head1 SYNOPSIS
 
-  degap.pl [options] -i contigs_file -c config_file
+  degap.pl [options] -i <input_file> -c <config_file>
 
   input|in|i       The path to the input contigs file.
   config|cfg|c     The degapping library configuration file.
@@ -130,12 +133,6 @@ __END__
 
 =head1 OPTIONS
 
-  tool|t                   The gap closing tool to use (gapcloser, image).
-  tool_path|tp             The path to the gap closing tool to use.
-  project|p                The project name for marking the LSF jobs.
-  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for each assembly job.
-  readlen|rl|r             The length of the reads used to build the assembly.
-  wait_job|wj|w            If specified, gap closing will not start until this job is completed.
   output|out|o=s           The output directory.
   verbose|v                Print extra status information during run.
   help|usage|h|?           Print usage message and then exit.

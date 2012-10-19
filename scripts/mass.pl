@@ -9,7 +9,7 @@ use Pod::Usage;
 use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
-use QsTool;
+use QsOptions;
 
 
 # Tool names
@@ -48,7 +48,7 @@ my $MASS_GP_PATH = $RAMPART_DIR . "mass_gp.pl";
 
 
 # Parse generic queueing tool options
-my $qst = new QsTool();
+my $qst = new QsOptions();
 $qst->setTool($DEF_TOOL);
 $qst->setToolPath($DEF_TOOL_PATH);
 $qst->setMemory(60);
@@ -259,20 +259,62 @@ __END__
 
 =head1 OPTIONS
 
-  assembler|a              The assembly program to use.
-  job_prefix|job|j         The prefix string for each job.
-  project|p                The project name for marking the LSF jobs.
-  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for each assembly job.
-  kmin                     The minimum k-mer value to run.
-  kmax                     The maximum k-mer value in run.
-  stats                    Produces output statistics and graphs comparing each assembly job produced.
-  threads|t                The number of threads each assembly job should use.
-  memory|mem|m             The amount of memory each assembly job should use in GB.
-  output|out|o=s           The output directory.
-  simulate|sim|s           Runs the script as normal except that the assembly jobs are not submitted.
-  verbose|v                Print extra status information during run.
-  help|usage|h|?           Print usage message and then exit.
-  man                      Display manual.
+  --queueing_system      --qs
+              The queueing system to use.  Currently "LSF" and "PBS" are supported.
+
+  --tool                 -t
+              If this script supports multiple tools to do the same job you can specify that tool using this parameter.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the queueing system.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the queueing system.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --threads              -n
+              The number of threads that this job is likely to use.  This is used to reserve cores from the queueing system.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the queueing system.
+
+  --input                --in                -i
+              The input file(s) for this job.
+
+  --output               --out               -o
+              The output file/dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
+
+  --kmin
+              The minimum k-mer value to run.
+
+  --kmax
+              The maximum k-mer value in run.
+
+  --stats
+              Produces output statistics and graphs comparing each assembly job produced.
+
+  --simulate             --sim              -s
+              Runs the script as normal except that the assembly jobs are not submitted.
+
+  --help                 --usage            -h             -?
+              Print usage message and then exit.
+
+  --man
+              Display manual.
 
 
 
