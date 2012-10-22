@@ -75,6 +75,8 @@ my $stats_job_name = $job_prefix . "-stats";
 ## Improve best assembly
 my $current_scaffold = $qst->getInput();
 my $last_job         = $qst->getWaitCondition();
+my @assemblies;
+push @assemblies, $current_scaffold;
 
 # Make output directories
 my $output_dir = $qst->getOutput();
@@ -108,6 +110,7 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 
 	$current_scaffold = $scf_dir_i . "/scaffolder.final.scaffolds.fasta";
 	$last_job         = $scf_job_name;
+	push @assemblies, $current_scaffold;
 
 	# Run gap closing step
 
@@ -129,6 +132,7 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 
 	$current_scaffold = $dg_dir_i . "/gc-scaffolds.fa";
 	$last_job         = $dg_job_name;
+	push @assemblies, $current_scaffold;
 }
 
 ## Remove contigs under a user specified length
@@ -138,7 +142,8 @@ if ( $opt{clip} ) {
 	my $clip_dir = $qst->getOutput() . "/clipped";
 	mkdir $clip_dir;
 
-	my $clip_out_arg = "--output " . $clip_dir . "/clipped-scaffolds.fa";
+	my $clip_scf_file = $clip_dir . "/clipped-scaffolds.fa";
+	my $clip_out_arg = "--output " . $clip_scf_file;
 	my $clip_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
 
 	my @clip_args = grep {$_} (
@@ -152,8 +157,9 @@ if ( $opt{clip} ) {
 
 	system(join " ", @clip_args) unless $opt{simulate};
 
-	$current_scaffold = $clip_out_arg;
+	$current_scaffold = $clip_scf_file;
 	$last_job         = $clip_job_name;
+	push @assemblies, $current_scaffold;
 }
 
 ## Remove PhiX??? (This step shouldn't be required in a normal run as the data should be screened already)
@@ -164,32 +170,33 @@ if ( $opt{clip} ) {
 
 # Will need to make soft links to all scaffold files in same directory and then use stats_gatherer on this.
 if ( $opt{stats} ) {
-	if (0) {
-		my $stats_dir = $opt{output} . "/stats";
-		mkdir $stats_dir;
 
-		for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
+	my $stats_dir = $opt{output} . "/stats";
+	mkdir $stats_dir;
 
-			# Link to each scaffold file from each stage of this process
-		}
-
-		my $mgp_wait_arg = "--wait_condition 'done(" . $last_job . ")'";
-
-		my @mgp_args = grep {$_} (
-			$MASS_GP_PATH,
-			$qst->getQueueingSystemAsParam(),
-			$qst->getProjectNameAsParam(),
-			$qst->getQueueAsParam(),
-			$stats_job_name,
-			$mgp_wait_arg,
-			$qst->isVerboseAsParam(),
-			"--output " . $stats_dir,
-			"--input " . $stats_dir	);
-
-		system(join " ", @mgp_args);
-
-		$last_job = $clip_job_name;
+	# Link to each scaffold file from each stage of this process
+	my $j = 1;
+	foreach ( @assemblies ) {
+		system("ln -s " . $_ . " " . $j . ".fa");
+		$j++;
 	}
+
+	my $mgp_wait_arg = "--wait_condition 'done(" . $last_job . ")'";
+
+	my @mgp_args = grep {$_} (
+		$MASS_GP_PATH,
+		$qst->getQueueingSystemAsParam(),
+		$qst->getProjectNameAsParam(),
+		$qst->getQueueAsParam(),
+		"--job_name " . $stats_job_name,
+		$mgp_wait_arg,
+		$qst->isVerboseAsParam(),
+		"--output " . $stats_dir,
+		"--input " . $stats_dir	);
+
+	system(join " ", @mgp_args);
+
+	$last_job = $clip_job_name;
 }
 
 __END__
