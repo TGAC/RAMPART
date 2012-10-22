@@ -10,218 +10,187 @@ use Pod::Usage;
 use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
-use QsTool;
-
+use QsOptions;
 
 #### Constants
 
-# Tool names
-my $DEF_SCAFFOLDER = "sspace";
-my $DEF_DEGAP = "gapcloser";
-my $DEF_CLIPPER = "nizar";
-my $DEDUP_BIN = "";
-
-
 # Scaffold Improver constants
-my $DEF_ITERATIONS = 3;
+my $DEF_ITERATIONS = 1;
 
 # Clipping constants
 my $DEF_MIN_LEN = 1000;
 
-
 # Other constants
 my $QUOTE = "\"";
-my $PWD = getcwd;
+my $PWD   = getcwd;
 
 # Script locations
-my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
+my ( $RAMPART, $RAMPART_DIR ) = fileparse( abs_path($0) );
 my $SCAFFOLDER_PATH = $RAMPART_DIR . "scaffolder.pl";
-my $DEGAPPER_PATH = $RAMPART_DIR . "degap.pl";
-my $CLIPPER_PATH = $RAMPART_DIR . "clipper.pl";
-my $MASS_GP_PATH = $RAMPART_DIR . "mass_gp.pl";
-
+my $DEGAPPER_PATH   = $RAMPART_DIR . "degap.pl";
+my $CLIPPER_PATH    = $RAMPART_DIR . "clipper.pl";
+my $MASS_GP_PATH    = $RAMPART_DIR . "mass_gp.pl";
 
 # Parse generic queueing tool options
-my $qst = new QsTool();
+my $qst = new QsOptions();
 $qst->parseOptions();
 
-
 # Gather Command Line options and set defaults
-my (%opt) = (	"clip_args",	"--min_length " . $DEF_MIN_LEN	);
+my (%opt) = ( 	"clip_args", 	"--min_length " . $DEF_MIN_LEN,
+				"iterations", 	$DEF_ITERATIONS );
 
-GetOptions (
-	\%opt,
-	'scaffold_args|s_args=s',
-	'degap_args|dg_args=s',
-	'clip|c',
-	'clip_args',
-	'iterations|i=i',
-	'stats',
-	'simulate|sim',
-	'help|usage|h|?',
-	'man'
-)
-or pod2usage( "Try '$0 --help' for more information." );
-
-
+GetOptions( \%opt, 'scaffolder_args|s_args=s', 'degap_args|dg_args=s', 'clip|c',
+	'clip_args', 'iterations|i=i', 'stats', 'simulate|sim', 'help|usage|h|?',
+	'man' )
+  or pod2usage("Try '$0 --help' for more information.");
 
 # Display usage message or manual information if required
 pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
-
 # Validation
-die "Error: No input file specified\n\n" unless $qst->getInput();
+die "Error: No input file specified\n\n"       unless $qst->getInput();
 die "Error: No output directory specified\n\n" unless $qst->getOutput();
-
 
 # Interpret config files
 
-
-
-
-
-
 #### Process (all steps to be controlled via cmd line options)
 
-
 # Build up static args which is to be used by all child jobs
-my $queueing_system = $qst->getQueueingSystem() ? "--queueing_system " . $qst->getQueueingSystem() : "";
-my $project_arg = $qst->getProjectName() ? "--project_name " . $qst->getProjectName() : "";
-my $queue_arg = $qst->getQueue() ? "--queue " . $qst->getQueue : "";
-my $extra_args = $qst->getExtraArgs() ? "--extra_args \"" . $qst->getExtraArgs . "\"" : "";
-my $verbose_arg = $qst->isVerbose() ? "--verbose" : "";
-my $static_args = $queueing_system . " " . $project_arg . " " . $extra_args . " " . $queue_arg . " " . $verbose_arg;
+my @static_args = grep {$_} (
+    $qst->getQueueingSystemAsParam(),
+	$qst->getProjectNameAsParam(),
+	$qst->getExtraArgsAsParam(),
+	$qst->getQueueAsParam(),
+	$qst->isVerboseAsParam() );
 
 # Make all job name/prefix strings
-my $job_prefix = $qst->getJobName();
-my $sg_job_prefix = $job_prefix . "stat_gatherer-";
-my $scf_job_prefix = $job_prefix . "scaffold-";
-my $dg_job_prefix = $job_prefix . "degap-";
-my $clip_job_name = $job_prefix . "clip";
-my $stats_job_name = $job_prefix . "stats";
-
+my $job_prefix     = $qst->getJobName();
+my $sg_job_prefix  = $job_prefix . "-stat_gatherer-";
+my $scf_job_prefix = $job_prefix . "-scaffold-";
+my $dg_job_prefix  = $job_prefix . "-degap-";
+my $clip_job_name  = $job_prefix . "-clip";
+my $stats_job_name = $job_prefix . "-stats";
 
 ## Improve best assembly
 my $current_scaffold = $qst->getInput();
-my $last_job = $qst->getWaitCondition();
+my $last_job         = $qst->getWaitCondition();
 
 # Make output directories
 my $output_dir = $qst->getOutput();
-my $scf_dir = $output_dir . "/scaffolds";
-my $dg_dir = $output_dir . "/degap";
-mkdir $scf_dir if $opt{scaffold};
-mkdir $dg_dir if $opt{degap};
+my $scf_dir    = $output_dir . "/scaffolds";
+my $dg_dir     = $output_dir . "/degap";
+mkdir $scf_dir;
+mkdir $dg_dir;
 
-for(my $i = 1; $i <= $opt{iterations}; $i++) {
+for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 
 	my $scf_job_name = $scf_job_prefix . $i;
-	my $dg_job_name = $dg_job_prefix . $i;
+	my $dg_job_name  = $dg_job_prefix . $i;
 
 	# Run scaffolding step
 
 	my $scf_dir_i = $scf_dir . "/" . $i;
 	mkdir $scf_dir_i;
 
-	my $scf_wait_arg = $last_job ? ("--wait_condition ended(" . $last_job . ")") : "";
-	my $scf_job_arg = "--job_name " . $scf_job_name;
-	my $scf_out_arg = "--output " . $scf_dir_i;
-	my $scf_in_arg = "--input " . $current_scaffold;
-	my $scf_args = $opt{scaffolder_args} ? $opt{scaffolder_args} : "";
+	my $scf_wait_arg = $last_job ? ( "--wait_condition 'ended(" . $last_job . ")'" ) : "";
 
-	my $scf_cmd_line = $SCAFFOLDER_PATH . " " . $static_args . " " . $scf_wait_arg . " " . $scf_job_arg . " " . $scf_args . " " . $scf_out_arg . " " . $scf_in_arg;
+	my @scf_args = grep {$_} (
+		$SCAFFOLDER_PATH,
+		@static_args,
+		$scf_wait_arg,
+		"--job_name " . $scf_job_name,
+		$opt{scaffolder_args} ? $opt{scaffolder_args} : "",
+		"--output " . $scf_dir_i,
+		"--input " . $current_scaffold );
 
-	system($scf_cmd_line) unless $opt{simulate};
+	system(join " ", @scf_args) unless $opt{simulate};
 
 	$current_scaffold = $scf_dir_i . "/scaffolder.final.scaffolds.fasta";
-	$last_job = $scf_job_name;
-
-
+	$last_job         = $scf_job_name;
 
 	# Run gap closing step
 
 	my $dg_dir_i = $dg_dir . "/" . $i;
 	mkdir $dg_dir_i;
 
-	my $dg_wait_arg = $last_job ? "--wait_condition done(" . $last_job . ")" : "";
-	my $dg_job_arg = "--job_name " . $dg_job_name;
-	my $dg_out_arg = "--output " . $dg_dir_i;
-	my $dg_in_arg = "--input " . $current_scaffold;
-	my $dg_args = $opt{degap_args} ? $opt{degap_args} : "";
+	my $dg_wait_arg = $last_job ? "--wait_condition 'done(" . $last_job . ")'" : "";
 
-	my $dg_cmd_line = $DEGAPPER_PATH . " " . $static_args . " " . $dg_wait_arg . " " . $dg_job_arg . " " . $dg_out_arg . " " . $dg_in_arg . " " . $dg_args;
+	my @dg_args = grep {$_} (
+		$DEGAPPER_PATH,
+		@static_args,
+		$dg_wait_arg,
+		"--job_name " . $dg_job_name,
+		"--output " . $dg_dir_i,
+		"--input " . $current_scaffold,
+		$opt{degap_args} ? $opt{degap_args} : "" );
 
-	system($dg_cmd_line) unless $opt{simulate};
+	system(join " ", @dg_args ) unless $opt{simulate};
 
 	$current_scaffold = $dg_dir_i . "/gc-scaffolds.fa";
-	$last_job = $dg_job_name;
+	$last_job         = $dg_job_name;
 }
-
-
-
 
 ## Remove contigs under a user specified length
 
-if ($opt{clip}) {
+if ( $opt{clip} ) {
 
-	my $clip_dir = $opt{output} . "/clipped";
+	my $clip_dir = $qst->getOutput() . "/clipped";
 	mkdir $clip_dir;
 
-	my $clip_in_arg = "--input " . $current_scaffold;
 	my $clip_out_arg = "--output " . $clip_dir . "/clipped-scaffolds.fa";
+	my $clip_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
 
-	my $clip_job_arg = "--job_name " . $clip_job_name;
-	my $clip_wait_arg = "--wait_condition ended(" . $last_job . ")";
-	my $clip_args = $opt{clip_args} ? $opt{clip_args} : "";
+	my @clip_args = grep {$_} (
+		$CLIPPER_PATH,
+		@static_args,
+		"--job_name " . $clip_job_name,
+		$clip_wait_arg,
+		$opt{clip_args} ? $opt{clip_args} : "",
+		"--input " . $current_scaffold,
+		$clip_out_arg );
 
-	my $clip_cmd_line = $CLIPPER_PATH . " " . $static_args . " " . $clip_job_arg . " " . $clip_wait_arg . " " . $clip_args . " " . $clip_in_arg . " " . $clip_out_arg;
-
-	system($clip_cmd_line) unless $opt{simulate};
+	system(join " ", @clip_args) unless $opt{simulate};
 
 	$current_scaffold = $clip_out_arg;
-	$last_job = $clip_job_name;
+	$last_job         = $clip_job_name;
 }
-
 
 ## Remove PhiX??? (This step shouldn't be required in a normal run as the data should be screened already)
 
-
-
-
 ## Remove duplicates???
-
-
-
 
 ## Generate final stats (maybe!!)
 
 # Will need to make soft links to all scaffold files in same directory and then use stats_gatherer on this.
-if ($opt{stats}) {
-if (0) {
-	my $stats_dir = $opt{output} . "/stats";
-	mkdir $stats_dir;
+if ( $opt{stats} ) {
+	if (0) {
+		my $stats_dir = $opt{output} . "/stats";
+		mkdir $stats_dir;
 
-	for(my $i=1; $i<=$opt{iterations}; $i++) {
-		# Link to each scaffold file from scaffolding and gap closing
+		for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
+
+			# Link to each scaffold file from each stage of this process
+		}
+
+		my $mgp_wait_arg = "--wait_condition 'done(" . $last_job . ")'";
+
+		my @mgp_args = grep {$_} (
+			$MASS_GP_PATH,
+			$qst->getQueueingSystemAsParam(),
+			$qst->getProjectNameAsParam(),
+			$qst->getQueueAsParam(),
+			$stats_job_name,
+			$mgp_wait_arg,
+			$qst->isVerboseAsParam(),
+			"--output " . $stats_dir,
+			"--input " . $stats_dir	);
+
+		system(join " ", @mgp_args);
+
+		$last_job = $clip_job_name;
 	}
-
-	my $qst_gp = new QsTool();
-        $qst_gp->setQueueingSystem($qst->getQueueingSystem());
-        $qst_gp->setProjectName($qst->getProjectName());
-        $qst_gp->setQueue($qst->getQueue());
-        $qst_gp->setWaitCondition("done(\"" . $last_job . "\")"); # This presumes an LSF wait condition.
-        $qst_gp->setJobName($job_prefix . "stats");
-        $qst_gp->setVerbose($qst->isVerbose());
-
-        my $mgp_cmd_line = $MASS_GP_PATH . " --output " . $stats_dir . " " . $stats_dir;
-
-        $qst_gp->submit($mgp_cmd_line);
-
-	$last_job = $clip_job_name;
-}}
-
-
-
+}
 
 __END__
 

@@ -42,10 +42,12 @@ sub submit {
 	my $extra_args = $self->{_extra_args} ? $self->{_extra_args} : "";
 	my $qs_args = $project_arg . " " . $job_arg . " " . $wait_arg . " " . $queue_arg . " " . $memory_arg . " " . $openmpi_arg . " " . $threads_arg . " " . $extra_args;
 
-	print "\nJob Submission:\n" if $self->{_verbose};
-	print "Submitting with: " . $self->{_cmd_submit} . "\n" if $self->{_verbose};
-	print "Queueing System Args: " . $qs_args . "\n" if $self->{_verbose};
-	print "Command to execute: " . $cmd_line . "\n\n" if $self->{_verbose};
+	if ($self->{_verbose}) {
+		print 	"\nJob Submission:\n" .
+				"Submitting with: " . $self->{_cmd_submit} . "\n" .
+				"Queueing System Args: " . $qs_args . "\n" .
+				"Command to execute: " . $cmd_line . "\n\n";
+	}
 
 	my @args;
 	push @args, $self->{_cmd_submit};

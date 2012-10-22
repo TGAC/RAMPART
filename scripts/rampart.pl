@@ -13,8 +13,8 @@ use QsOptions;
 #### Constants
 
 # Project constants
-$DEF_PROJECT_NAME = "Rampart_" . $NOW;
-$JOB_PREFIX = $ENV{'USER'} . "-rampart-";
+#my $DEF_PROJECT_NAME = "Rampart_" . $NOW;
+my $JOB_PREFIX = $ENV{'USER'} . "-rampart-";
 
 
 # Other constants
@@ -27,13 +27,12 @@ my $MASS_PATH = $RAMPART_DIR . "mass.pl";
 my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
 
-
+# Parse generic queueing tool options
+my $qst = new QsOptions();
+$qst->parseOptions();
 
 # Gather Command Line options and set defaults
-my (%opt) = (	"assembler_path",	$DEF_ASSEMBLER_PATH,
-		"scaffolder_path",	$DEF_SCAFFOLDER_PATH,
-		"degap_path",		$DEF_DG_PATH,
-		"output",		$PWD );
+my %opt;
 
 GetOptions (
 	\%opt,
@@ -95,8 +94,8 @@ if ($opt{mass}) {
 	my $qt_ass_job_prefix = $ass_job_prefix . "qt-";
 
 	# Run the assembler script for each dataset
-	run_assembler($raw_input, $raw_ass_job_prefix, $raw_ass_dir);
-	run_assembler($qt_input, $qt_ass_job_prefix, $qt_ass_dir);
+	run_mass($raw_input, $raw_ass_job_prefix, $raw_ass_dir);
+	run_mass($qt_input, $qt_ass_job_prefix, $qt_ass_dir);
 
 
 	# Run best assembly selector to find "best" assembly (mass will produce stats automatically for us to use here)
@@ -114,7 +113,7 @@ if ($opt{mass}) {
 			"--qt_stats_file " . $qt_stats_file,
 			"--approx_genome_size " . $opt{approx_genome_size} );
 
-	system($MASS_SELECTOR_PATH, join(" ", @ms_args);
+	system($MASS_SELECTOR_PATH, join(" ", @ms_args));
 
 	# Extract best assembly from file
 	# This bit isn't going to work yet as we need to do this after the previous job has completed
@@ -129,9 +128,10 @@ if ($opt{mass}) {
 
 if ($opt{improve} && $best_ass) {
 
-	$improver_cmd = $improver_path . " " . $improver_args . " " . $best_assembly;
+	my $improver_cmd = $IMPROVER_PATH . " " ;#. $improver_args . " " . $best_ass;
+	my $imp_wait_arg = "";
 
-	system($SUBMIT, $qs_project_arg, $imp_wait_arg, $improver_cmd);
+	system($IMPROVER_PATH, $script_project_arg, $imp_wait_arg, $improver_cmd);
 }
 
 
@@ -141,13 +141,13 @@ if ($opt{improve} && $best_ass) {
 sub run_mass {
 
 	my @mass_args = (	$qst->getQueueingSystemAsParam(),
-	                        $qst->getProjectNameAsParam(),
-				"--job_name " . $_[1],
-				$qst->getQueueAsParam(),
-				"--output " . $_[2],
-				$qst->isVerboseAsParam(),
-				$opt{extra_mass_args},
-				"--stats" );
+						$qst->getProjectNameAsParam(),
+						"--job_name " . $_[1],
+						$qst->getQueueAsParam(),
+						"--output " . $_[2],
+						$qst->isVerboseAsParam(),
+						$opt{extra_mass_args},
+						"--stats" );
 
 	system($MASS_PATH, join(" ", @mass_args), $_[0]);
 }

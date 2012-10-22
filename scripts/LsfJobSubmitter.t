@@ -6,12 +6,12 @@ use warnings;
 use Test::More tests => 3;
 
 use LsfJobSubmitter;
-use QsTool;
+use QsOptions;
 
 my $PROJECT_NAME = "Test";
 my $LSF_PROJECT_CMD = "-PTest";
 
-my $qst = new QsTool();
+my $qst = new QsOptions();
 $qst->setQueueingSystem("LSF");
 $qst->setProjectName($PROJECT_NAME);
 my $job = new LsfJobSubmitter($qst);

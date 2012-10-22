@@ -10,6 +10,7 @@ use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
+use SubmitJob;
 
 
 # Tool names
@@ -83,7 +84,7 @@ my @in_files = @ARGV;
 my $input_files = join " ", @in_files;
 
 print "\n";
-print "Command line arguments gathered\n\n" if $opt{verbose};
+print "Command line arguments gathered\n\n" if $qst->isVerbose();
 
 
 # Argument Validation
@@ -114,16 +115,6 @@ if ($opt{verbose}) {
 }
 
 
-
-# Build up static args which is to be used by all child jobs
-my $queueing_system = $qst->getQueueingSystem() ? "--queueing_system " . $qst->getQueueingSystem() : "";
-my $project_arg = $qst->getProjectName() ? "--project_name " . $qst->getProjectName() : "";
-my $queue_arg = $qst->getQueue() ? "--queue " . $qst->getQueue : "";
-my $extra_args = $qst->getExtraArgs() ? "--extra_args \"" . $qst->getExtraArgs . "\"" : "";
-my $verbose_arg = $qst->isVerbose() ? "--verbose" : "";
-my $static_args = $queueing_system . " " . $project_arg . " " . $extra_args . " " . $queue_arg . " " . $verbose_arg;
-
-
 # These variables get varied for each run.
 my $job_prefix = $qst->getJobName();
 my $output_dir = $qst->getOutput();
@@ -138,9 +129,9 @@ my $j = 0;
 for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 
 	my $i_dir = $output_dir . "/" . $i;
-	my $job_name = $job_prefix . "k" . $i;
+	my $job_name = $job_prefix . "-k" . $i;
 
-	my $qst_ass = new QsTool();
+	my $qst_ass = new QsOptions();
 	$qst_ass->setQueueingSystem($qst->getQueueingSystem());
 	$qst_ass->setTool($qst->getTool());
 	$qst_ass->setToolPath($qst->getToolPath());
@@ -179,7 +170,7 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
   	chdir $i_dir;
 
 	# Submit the job
-	$qst_ass->submit($cmd_line) unless $opt{simulate};
+	SubmitJob::submit($qst_ass, $cmd_line) unless $opt{simulate};
 
 	if ($j % 2) {
 		$i += 6;
@@ -199,17 +190,22 @@ chdir $PWD;
 # If requested, produce statistics and graphs for this run
 if ($opt{stats}) {
 
-	my $gp_qs_arg = "--queueing_system " . $qst->getQueueingSystem();
 	my $gp_tool_arg = "--tool mass_gp";
-	my $gp_project_arg = "--project " . $qst->getProjectName();
-	my $gp_queue_arg = "--queue " . $qst->getQueue();
-	my $gp_wc_arg = "--wait_condition " . "'done(" . $job_prefix . "k*)'"; # This presumes an LSF wait condition.
-	my $gp_job_arg = "--job_name " . $job_prefix . "stats";
-	my $gp_verbose_arg = $qst->isVerbose() ? "--verbose" : "";
+	my $gp_wc_arg = "--wait_condition " . "'done(" . $job_prefix . "k*)'"; # This presumes an LSF wait condition, modify to handle this better in the future.
+	my $gp_job_arg = "--job_name " . $job_prefix . "-stats";
 	my $gp_input_arg = "--input " .  $qst->getOutput();
 	my $gp_output_arg = "--output " . $qst->getOutput();
 
-	my $mgp_cmd_line = $MASS_GP_PATH . " " . $gp_qs_arg . " " . $gp_tool_arg . " " . $gp_project_arg . " " . $gp_queue_arg . " " . $gp_wc_arg . " " . $gp_job_arg . " " . $gp_verbose_arg . " " . $gp_input_arg . " " . $gp_output_arg;
+	my $mgp_cmd_line = 	$MASS_GP_PATH . " " .
+						$qst->getQueueingSystemAsParam() . " " .
+						$gp_tool_arg . " " .
+						$qst->getProjectNameAsParam() . " " .
+						$qst->getQueueAsParam() . " " .
+						$gp_wc_arg . " " .
+						$gp_job_arg . " " .
+						$qst->isVerboseAsParam() . " " .
+						$gp_input_arg . " " .
+						$gp_output_arg;
 
 	system($mgp_cmd_line);
 }

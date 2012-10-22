@@ -8,8 +8,8 @@ Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
-use LsfJobSubmitter;
 use QsOptions;
+use SubmitJob;
 
 # Tool constants
 my $T_SSPACE = "sspace";
@@ -63,9 +63,11 @@ die "Error: Config file not specified.\n\n" unless $opt{config};
 
 
 # Display configuration settings if requested.
-print "\n\n" if $qst->isVerbose();
-$qst->display() if $qst->isVerbose();
-print "Config: " . $opt{config} . "\n\n" if $qst->isVerbose();
+if($qst->isVerbose()) {
+	print "\n\n" .
+	$qst->toString() .
+	"Config: " . $opt{config} . "\n\n";
+}
 
 my $tool = $qst->getTool();
 
@@ -93,10 +95,16 @@ else {
 chdir $qst->getOutput() if $cd;
 
 # Submit the scaffolding job
-$qst->submit($cmd_line);
+SubmitJob::submit($qst, $cmd_line);
 
 # Change dir to original dir
 chdir $PWD if $cd;
+
+# Notify user of job submission
+if ($qst->isVerbose()) {
+	print 	"\n" .
+			"Scaffolder has successfully submitted the scaffolding job to the grid engine.  You will be notified by email when the job has completed.\n";
+}
 
 __END__
 

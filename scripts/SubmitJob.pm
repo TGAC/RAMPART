@@ -1,21 +1,17 @@
 #!/usr/bin/perl
 
+package SubmitJob;
+
 use strict;
 use warnings;
 
-use QsTool;
-use LSFJobSubmitter;
-#use PBSJobSubmitter;
-
-
+# Static method that initiates a concrete instance of a JobSubmitter based on which queuing system is requested in the first parameter's QsOptions queueing system value.
 sub submit {
 
         my ( $qso, $cmd_line ) = @_;
 
 
         if ($qso->{_queueing_system} eq "LSF") {
-        #       my $lqs = new LsfJobSubmitter($self->{_verbose}, $self->{_project_name});
-        #       $lqs->submit($self->{_job_name}, $self->{_wait_condition}, $self->{_queue}, $self->{_memory}, $self->{_threads), $self->{_extra_args}, $cmd_line);
                 my $lqs = new LsfJobSubmitter($qso);
                 $lqs->submit($cmd_line);
         }
@@ -27,8 +23,4 @@ sub submit {
         }
 }
 
-
-
-
-
-
+1;

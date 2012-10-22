@@ -10,41 +10,29 @@ use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
-
-
+use SubmitJob;
 
 # Other constants
 my $QUOTE = "\"";
-my $PWD = getcwd;
-my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
+my $PWD   = getcwd;
+my ( $RAMPART, $RAMPART_DIR ) = fileparse( abs_path($0) );
 my $MASS_GATHERER_PATH = $RAMPART_DIR . "mass_gatherer.pl";
-my $MASS_PLOTTER_PATH = $RAMPART_DIR . "mass_plotter.pl";
-
+my $MASS_PLOTTER_PATH  = $RAMPART_DIR . "mass_plotter.pl";
 
 # Handle generic queueing system arguments here
 my $qst = new QsOptions();
 $qst->parseOptions();
 
-
 # Assign any command line options to variables
 my %opt;
-GetOptions (
-        \%opt,
-        'help|usage|h|?',
-        'man'
-)
-or pod2usage( "Try '$0 --help' for more information." );
-
-
+GetOptions( \%opt, 'help|usage|h|?', 'man' )
+  or pod2usage("Try '$0 --help' for more information.");
 
 # Display usage message or manual information if required
 pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
-
 die "Error: Input file not specified\n\n" unless $qst->getInput();
-
-
 
 # Combine gatherer and plotter into a single command and submit
 my $stat_file = $qst->getOutput() . "/stats.txt";
@@ -52,8 +40,7 @@ my $mg_cmd_line = $MASS_GATHERER_PATH . " " . $qst->getInput() . " > " . $stat_f
 my $mp_cmd_line = $MASS_PLOTTER_PATH . " --output " . $qst->getOutput() . " " . $stat_file;
 my $cmd_line = $mg_cmd_line . "; " . $mp_cmd_line;
 
-$qst->submit($cmd_line);
-
+SubmitJob::submit( $qst, $cmd_line );
 
 __END__
 

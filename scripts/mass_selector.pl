@@ -8,7 +8,7 @@ use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
-use SubmitJob;
+use JobSubmitter;
 
 
 # Other constants
@@ -59,7 +59,7 @@ my $r_script_args = $opt{raw_stats_file} . " " . $opt{qt_stats_file} . " " . $op
 
 my $r_cmd_line = "R CMD BATCH '--args " . $r_script_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
 
-submit($qso, $r_cmd_line);
+SubmitJob::submit($qso, $r_cmd_line);
 
 print "Selected best assembly from input stats.\n" if $qso->isVerbose();
 

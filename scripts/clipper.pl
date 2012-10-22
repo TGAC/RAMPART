@@ -30,7 +30,9 @@ my $PWD = getcwd;
 
 
 # Parse generic queueing tool options
-my $qst = new QsTool($DEF_TOOL, $DEF_TOOL_PATH);
+my $qst = new QsOptions();
+$qst->setTool($DEF_TOOL);
+$qst->setToolPath($DEF_TOOL_PATH);
 $qst->parseOptions();
 
 
@@ -55,19 +57,21 @@ my $cmd_line = "";
 
 
 # Validation
-die "Error: Minimum length not specified.\n\n" unless $opt{config};
+die "Error: Minimum length not specified.\n\n" unless $opt{min_length};
 
 
 # Display configuration settings if requested.
-print "\n\n" if $qst->isVerbose();
-$qst->display() if $qst->isVerbose();
-print "Minimum Length: " . $opt{minimum_length} . "\n\n" if $qst->isVerbose();
+if ($qst->isVerbose()) {
+	print	"\n\n" .
+			$qst->toString() .
+			"Minimum Length: " . $opt{min_length} . "\n\n";
+}
 
 
 # Select the scaffolder and build the command line
 my $tool = $qst->getTool();
 if ($tool eq $T_FASTX) {
-	$cmd_line = $FASTX_SOURCE_CMD . " " . $TP_FASTX . " -l " . $opt{min_length} . " -i " . $qst->getInput() . " -o " . $qst->getOutput();
+	$cmd_line = $SOURCE_FASTX . " " . $TP_FASTX . " -l " . $opt{min_length} . " -i " . $qst->getInput() . " -o " . $qst->getOutput();
 	die "Error: FastX clipper does not work correctly yet!\n\n";
 }
 elsif ($tool eq $T_NIZAR) {
@@ -79,9 +83,13 @@ else {
 
 
 # Submit the scaffolding job
-submit($qst, $cmd_line);
+SubmitJob::submit($qst, $cmd_line);
 
-
+# Notify user of job submission
+if ($qst->isVerbose()) {
+	print 	"\n" .
+			"Clipper has successfully submitted the clip job to the grid engine.  You will be notified by email when the clip job has completed.\n";
+}
 
 __END__
 
