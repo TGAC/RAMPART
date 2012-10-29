@@ -11,6 +11,7 @@ use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
 use Configuration;
+use SubmitJob;
 
 #### Constants
 
@@ -111,19 +112,21 @@ if (1) {
 			$qst->getQueueingSystemAsParam(),
 			$qst->getProjectNameAsParam(),
 			"--job_name " . $ms_job_name,
-			"--wait_condition done(" . $mass_job_prefix . "*)",
+			"--wait_condition 'done(" . $mass_job_prefix . "*)'",
 			$qst->getQueueAsParam(),
 			"--output " . $mass_dir,
 			$qst->isVerboseAsParam(),
 			"--raw_stats_file " . $raw_stats_file,
 			"--qt_stats_file " . $qt_stats_file,
 			$opt{approx_genome_size} ? "--approx_genome_size " . $opt{approx_genome_size} : "" );
+			
+	my $ms_cmd_line = join " ", @ms_args;
 
-	system(join " ", @ms_args);
+	system($ms_cmd_line);
 }
 
 
-my ($best_file, $best_dataset) = getBest($best_path_file, $best_dataset_file, $ms_job_name);
+my ($best_file, $best_dataset) = getBest($best_path_file, $best_dataset_file, $ms_job_name, $mass_job_prefix . "-getbest");
 
 
 ## Improve best assembly
@@ -161,18 +164,21 @@ if ($qst->isVerbose()) {
 
 sub run_mass {
 
-	my @mass_args = (	$MASS_PATH,
-						$qst->getQueueingSystemAsParam(),
-						$qst->getProjectNameAsParam(),
-						"--job_name " . $_[1],
-						$qst->getQueueAsParam(),
-						"--output " . $_[2],
-						$qst->isVerboseAsParam(),
-						$opt{mass_args},
-						"--stats",
-						$opt{simulate} ? "--simulate" : "" );
+	my @mass_args = grep {$_} (	
+		$MASS_PATH,
+		$qst->getQueueingSystemAsParam(),
+		$qst->getProjectNameAsParam(),
+		"--job_name " . $_[1],
+		$qst->getQueueAsParam(),
+		"--output " . $_[2],
+		$qst->isVerboseAsParam(),
+		$opt{mass_args},
+		"--stats",
+		$opt{simulate} ? "--simulate" : "",
+		$_[0] 
+	);
 
-	system(join(" ", @mass_args), $_[0]);
+	system(join " ", @mass_args);
 }
 
 sub getBest {
@@ -186,10 +192,10 @@ sub getBest {
 	my $best_wait = new QsOptions();
 	$best_wait->setQueueingSystem($qst->getQueueingSystem());
 	$best_wait->setProjectName($qst->getProjectName());
-	$best_wait->setJobName($$job_name);
+	$best_wait->setJobName($job_name);
 	$best_wait->setWaitCondition("ended(" . $wait_job . ")");
 	$best_wait->setExtraArgs("-I");	# This forces this job to stay connected to the terminal until the wait job has ended
-	SubmitJob::submit($best_wait, "");
+	SubmitJob::submit($best_wait, "sleep(1)");
 
 
 	# Now the the files exist read them and return the values they contain

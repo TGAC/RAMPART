@@ -65,6 +65,11 @@ if ($qst->isVerbose()) {
 my $tool = $qst->getTool();
 if ( $tool eq $T_GAP_CLOSER ) {
 
+	my $rampart_cfg = new Configuration( $opt{config} );
+	$rampart_cfg->validate();
+	my $gc_cfg_file = "gc.cfg";
+	write_sspace_cfg( $rampart_cfg, $gc_cfg_file);	
+	
 	my $gc_scaffolds  = $qst->getOutput() . "/gc-scaffolds.fa";
 	my $gc_other_args = "-p 61";
 
@@ -74,7 +79,7 @@ if ( $tool eq $T_GAP_CLOSER ) {
 	  . " -a \""
 	  . $qst->getInput()
 	  . "\" -b \""
-	  . $opt{config}
+	  . $gc_cfg_file
 	  . "\" -o \""
 	  . $gc_scaffolds
 	  . "\" -l "
@@ -107,6 +112,47 @@ if ($qst->isVerbose()) {
 	print 	"\n" .
 			"Degap has successfully submitted the degapping job to the grid engine.  You will be notified by email when the job has completed.\n";
 }
+
+
+
+sub write_soap_cfg {
+	
+	my ( $config, $out_file ) = @_;
+	
+	
+	open OUT, ">", $out_file;
+	
+	for( my $i = 1; $i <= $config->getNbSections(); $i++ ) {
+		
+		my $lib = $config->getSectionAt($i-1);
+		
+		my $ft = $lib->{q1};
+		my $file1 = $lib->{q1} ? $lib->{q1} : $lib->{f1} ? $lib->{f1} : undef;
+		my $file2 = $lib->{q2} ? $lib->{q2} : $lib->{f2} ? $lib->{f2} : undef;
+		
+		# We expect to have a valid configuration file here so don't bother throwing
+		# any errors from this point... sspace will error anyway if there is a problem.
+				
+		my @soap_args = (
+			"[LIB]",
+			"max_rd_len=" . $lib->{max_rd_len},
+			"avg_ins=" . $lib->{avg_ins},
+			"reverse_seq=" . $lib->{reverse_seq},
+			"asm_flags=3",
+			"rank=1",
+			($ft ? "q1=" : "f1=") . $file1,
+			($ft ? "q2=" : "f2=") . $file2
+		);
+		
+		my $line = join "\n", @soap_args;
+		
+		print OUT $line . "\n";
+	}
+	
+	close OUT;
+}
+
+
 
 __END__
 

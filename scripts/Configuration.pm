@@ -5,7 +5,7 @@ package Configuration;
 use strict;
 use warnings;
 
-use Config::IniFiles;
+use IniFiles;
 
 sub new {
 	my $class = shift;
@@ -69,6 +69,12 @@ sub getAllInputFiles {
 	}
 
 	return @fq_files;	
+}
+
+
+# Ensures that all the relevant information is in the configuration file
+sub validate {
+	
 }
 
 

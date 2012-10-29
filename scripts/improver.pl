@@ -116,6 +116,7 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 		@static_args,
 		$scf_wait_arg,
 		"--job_name " . $scf_job_name,
+		"--config " . $opt{config},
 		$opt{scaffolder_args} ? $opt{scaffolder_args} : "",
 		"--output " . $scf_dir_i,
 		"--input " . $current_scaffold );
@@ -138,6 +139,7 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 		@static_args,
 		$dg_wait_arg,
 		"--job_name " . $dg_job_name,
+		"--config " . $opt{config},
 		"--output " . $dg_dir_i,
 		"--input " . $current_scaffold,
 		$opt{degap_args} ? $opt{degap_args} : "" );

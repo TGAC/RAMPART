@@ -10,6 +10,7 @@ use File::Basename;
 use Cwd;
 use QsOptions;
 use SubmitJob;
+use Configuration;
 
 # Tool constants
 my $T_SSPACE = "sspace";
@@ -74,12 +75,17 @@ my $tool = $qst->getTool();
 # Select the scaffolder and build the command line
 if ($tool eq $T_SSPACE) {
 
+	my $rampart_cfg = new Configuration( $opt{config} );
+	$rampart_cfg->validate();
+	my $sspace_cfg_file = "sspace.cfg";
+	write_sspace_cfg( $rampart_cfg, $sspace_cfg_file);	
+	
 	my $sspace_output_prefix = "scaffolder";
 	my $other_args = "-x 1 -T 2";
 
 	$cd = 1;
 
-	$cmd_line = $PERL_SOURCE_CMD . " " . $SSPACE_SOURCE_CMD . " " . $TP_SSPACE . " -l " . $opt{config} . " -s " . $qst->getInput() . " " . $other_args . " -b " . $sspace_output_prefix;
+	$cmd_line = $PERL_SOURCE_CMD . " " . $SSPACE_SOURCE_CMD . " " . $TP_SSPACE . " -l " . $sspace_cfg_file . " -s " . $qst->getInput() . " " . $other_args . " -b " . $sspace_output_prefix;
 
 }
 elsif ($tool eq $T_GRASS) {
@@ -104,6 +110,42 @@ chdir $PWD if $cd;
 if ($qst->isVerbose()) {
 	print 	"\n" .
 			"Scaffolder has successfully submitted the scaffolding job to the grid engine.  You will be notified by email when the job has completed.\n";
+}
+
+
+
+sub write_sspace_cfg {
+	
+	my ( $config, $out_file ) = @_;
+	
+	
+	open OUT, ">", $out_file;
+	
+	for( my $i = 1; $i <= $config->getNbSections(); $i++ ) {
+		
+		my $lib = $config->getSectionAt($i-1);
+		
+		my $file1 = $lib->{q1} ? $lib->{q1} : $lib->{f1} ? $lib->{f1} : undef;
+		my $file2 = $lib->{q2} ? $lib->{q2} : $lib->{f2} ? $lib->{f2} : undef;
+		
+		# We expect to have a valid configuration file here so don't bother throwing
+		# any errors from this point... sspace will error anyway if there is a problem.
+				
+		my @sspace_args = (
+			"LIB" . $i,
+			$file1,
+			$file2,
+			$lib->{avg_ins},
+			$lib->{ins_err},
+			$lib->{reverse_seq} ? "FR" : "RF" 
+		);
+		
+		my $line = join " ", @sspace_args;
+		
+		print OUT $line . "\n";
+	}
+	
+	close OUT;
 }
 
 __END__

@@ -1,14 +1,16 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use Getopt::Long;
+Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
-use JobSubmitter;
+use SubmitJob;
 
 
 # Other constants
@@ -18,7 +20,7 @@ my $DEF_OUT = $PWD . "/mass_selector.rout";
 
 
 # R script constants
-my $MASS_SELECTOR_R = $RAMPART_DIR . "/mass_selector.R";
+my $MASS_SELECTOR_R = $RAMPART_DIR . "mass_selector.R";
 
 
 # Parse generic queueing tool options
@@ -31,8 +33,8 @@ $qso->parseOptions();
 my %opt;
 GetOptions (
         \%opt,
-	'raw_stats_file|raw=s',
-	'qt_stats_file|qt=s',
+		'raw_stats_file|raw=s',
+		'qt_stats_file|qt=s',
         'approx_genome_size|ags|s=i',
         'help|usage|h|?',
         'man'
@@ -49,15 +51,22 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 die "Error: No raw stats file was specified\n\n" unless $opt{raw_stats_file};
 die "Error: No qt stats file was specified\n\n" unless $opt{qt_stats_file};
-die "Error: Approximate genome size was not specified\n\n" unless $opt{approx_genome_size};
+#die "Error: Approximate genome size was not specified\n\n" unless $opt{approx_genome_size};
 
 
 
 # Get produce stats and graphs for raw dataset
 
-my $r_script_args = $opt{raw_stats_file} . " " . $opt{qt_stats_file} . " " . $opt{approx_genome_size} . " " . $qso->getOutput();
+my @r_script_args = (
+	$opt{raw_stats_file},
+	$opt{qt_stats_file},
+	$opt{approx_genome_size} ? $opt{approx_genome_size} : "0",
+	$qso->getOutput()
+);
 
-my $r_cmd_line = "R CMD BATCH '--args " . $r_script_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
+my $r_args = join " ", @r_script_args;
+
+my $r_cmd_line = "R CMD BATCH '--args " . $r_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
 
 SubmitJob::submit($qso, $r_cmd_line);
 

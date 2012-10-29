@@ -191,7 +191,7 @@ chdir $PWD;
 if ($opt{stats}) {
 
 	my $gp_tool_arg = "--tool mass_gp";
-	my $gp_wc_arg = "--wait_condition " . "'done(" . $job_prefix . "k*)'"; # This presumes an LSF wait condition, modify to handle this better in the future.
+	my $gp_wc_arg = "--wait_condition " . "'ended(" . $job_prefix . "-k*)'"; # This presumes an LSF wait condition, modify to handle this better in the future.
 	my $gp_job_arg = "--job_name " . $job_prefix . "-stats";
 	my $gp_input_arg = "--input " .  $qst->getOutput();
 	my $gp_output_arg = "--output " . $qst->getOutput();

@@ -20,14 +20,14 @@ sub new {
 	my $CMD_MEMORY;
 	if ($qst->{_memory}) {
 		my $mem_mb = $qst->{_memory} * 1000;
-		$CMD_MEMORY = "-R rusage[mem=" . $mem_mb . "] space[ptile=8]";
+		$CMD_MEMORY = "-Rrusage[mem=" . $mem_mb . "]space[ptile=8]";
 	}
 	else {
 		$CMD_MEMORY = undef;
 	}
 
-	my $CMD_THREADS = ($qst->{_threads} && $qst->{_threads} > 1) ? ("-n " . $qst->{_threads}) : undef;
-	my $CMD_OPENMPI = $qst->{_threads} ? "-a openmpi" : undef;
+	my $CMD_THREADS = ($qst->{_threads} && $qst->{_threads} > 1) ? ("-n" . $qst->{_threads}) : undef;
+	my $CMD_OPENMPI = $qst->{_threads} ? "-aopenmpi" : undef;
 
         # Call base class constructor
         my $self = $class->SUPER::new(
