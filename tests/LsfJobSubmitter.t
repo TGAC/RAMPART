@@ -5,8 +5,12 @@ use warnings;
 
 use Test::More tests => 3;
 
+use lib '../scripts';
+
 use LsfJobSubmitter;
 use QsOptions;
+
+
 
 my $PROJECT_NAME = "Test";
 my $LSF_PROJECT_CMD = "-PTest";

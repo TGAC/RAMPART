@@ -98,9 +98,13 @@ write.table(best, best_file, sep="|", quote=FALSE, row.names=FALSE)
 print(paste("Written best table to: ", best_file, "\n"))
 
 best_path <- best[1,c('file')]
-best_path_file <- paste(output_dir, "best.path.txt", sep="/");
-print(best_path);
+best_path_file <- paste(output_dir, "best.path.txt", sep="/")
+print(best_path)
 
-write.table(best[1,c('file')], file=best_path_file, sep="", quote=FALSE, row.names=FALSE, col.names=FALSE);
-print(paste("Written best assembly file path to:", best_path_file));
+write.table(best[1,c('file')], file=best_path_file, sep="", quote=FALSE, row.names=FALSE, col.names=FALSE)
+print(paste("Written best assembly file path to:", best_path_file))
+
+best_dataset_file <- paste(output_dir, "best.dataset.txt", sep="/")
+write.table(best[1,c('dataset')], file=best_path_file, sep="", quote=FALSE, row.names=FALSE, col.names=FALSE)
+print(paste("Written best dataset file path to:", best_dataset_file))
 

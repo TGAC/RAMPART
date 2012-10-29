@@ -39,8 +39,17 @@ $qst->parseOptions();
 my (%opt) = ( 	"clip_args", 	"--min_length " . $DEF_MIN_LEN,
 				"iterations", 	$DEF_ITERATIONS );
 
-GetOptions( \%opt, 'scaffolder_args|s_args=s', 'degap_args|dg_args=s', 'clip|c',
-	'clip_args', 'iterations|i=i', 'stats', 'simulate|sim', 'help|usage|h|?',
+GetOptions(
+	\%opt,
+	'scaffolder_args|s_args=s',
+	'degap_args|dg_args=s',
+	'clip|c',
+	'clip_args',
+	'config|cfg',
+	'iterations|i=i',
+	'stats',
+	'simulate|sim',
+	'help|usage|h|?',
 	'man' )
   or pod2usage("Try '$0 --help' for more information.");
 
@@ -72,9 +81,14 @@ my $dg_job_prefix  = $job_prefix . "-degap-";
 my $clip_job_name  = $job_prefix . "-clip";
 my $stats_job_name = $job_prefix . "-stats";
 
+
 ## Improve best assembly
 my $current_scaffold = $qst->getInput();
 my $last_job         = $qst->getWaitCondition();
+
+
+# Create an array which will store a record of all the assemblies created by this script.
+# Initialise it with the input file. 
 my @assemblies;
 push @assemblies, $current_scaffold;
 

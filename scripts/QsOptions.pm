@@ -148,6 +148,11 @@ sub setThreads {
 	$self->{_threads} = $threads;
 }
 
+sub setExtraArgs {
+	my ( $self, $ea ) = @_;
+	$self->{_extra_args} = $ea;
+}
+
 sub setOutput {
 	my ( $self, $output ) = @_;
 	$self->{_output} = $output;

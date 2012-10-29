@@ -5,6 +5,8 @@ use warnings;
 
 use Test::More tests => 14;
 
+use lib '../scripts';
+
 use QsOptions;
 
 
