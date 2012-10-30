@@ -20,7 +20,7 @@ sub new {
 	my $CMD_MEMORY;
 	if ($qst->{_memory}) {
 		my $mem_mb = $qst->{_memory} * 1000;
-		$CMD_MEMORY = "-Rrusage[mem=" . $mem_mb . "]space[ptile=8]";
+		$CMD_MEMORY = "-Rrusage[mem=" . $mem_mb . "]span[ptile=8]";
 	}
 	else {
 		$CMD_MEMORY = undef;

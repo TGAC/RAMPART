@@ -21,7 +21,7 @@ my $DEF_OUT = $PWD . "/mass_selector.rout";
 
 # R script constants
 my $MASS_SELECTOR_R = $RAMPART_DIR . "mass_selector.R";
-
+my $R_SOURCE_CMD = "source R-2.15.0;";
 
 # Parse generic queueing tool options
 my $qso = new QsOptions();
@@ -66,7 +66,7 @@ my @r_script_args = (
 
 my $r_args = join " ", @r_script_args;
 
-my $r_cmd_line = "R CMD BATCH '--args " . $r_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
+my $r_cmd_line = $R_SOURCE_CMD . " R CMD BATCH '--args " . $r_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
 
 SubmitJob::submit($qso, $r_cmd_line);
 

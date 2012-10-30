@@ -34,11 +34,17 @@ my $qst = new QsOptions();
 $qst->parseOptions();
 
 # Gather Command Line options and set defaults
-my %opt;
+my (%opt) = (	"mass", 			1,
+				"improver",			1,
+				"mass_selector", 	1 );
+	
 
 GetOptions (
 	\%opt,
+	'mass!',
 	'mass_args|ma=s',
+	'mass_selector!',
+	'improver!',
 	'improver_args|ia=s',
 	'raw_config|rc=s',
 	'qt_config|qtc=s',
@@ -73,22 +79,25 @@ my $qt_cfg = new Configuration( $opt{qt_config} );
 #### Process (all steps to be controlled via cmd line options)
 my $mass_job_prefix = $qst->getJobName() . "-mass";
 my $ms_job_name = $qst->getJobName() . "-ms";
+my $get_best_job_name = $mass_job_prefix . "-getbest";
 my $improver_job_prefix = $qst->getJobName() . "-improver";
-my $best_path_file;
-my $best_dataset_file;
+
+
+#Set locations of important assembly directories and files
+my $mass_dir = $qst->getOutput() . "/mass";
+my $raw_mass_dir = $mass_dir . "/raw";
+my $qt_mass_dir = $mass_dir . "/qt";
+my $raw_stats_file = $raw_mass_dir . "/stats.txt";
+my $qt_stats_file = $qt_mass_dir . "/stats.txt";
+my $best_path_file = $mass_dir . "/best.path.txt";
+my $best_dataset_file = $mass_dir . "/best.dataset.txt";
 
 
 ## Run assemblies for both raw and qt datasets
-if (1) {
+if ($opt{mass}) {
 
-	# Make assemblies output directories
-	my $mass_dir = $qst->getOutput() . "/mass";
-	mkdir $mass_dir;
-
-	my $raw_mass_dir = $mass_dir . "/raw";
-	mkdir $raw_mass_dir;
-
-	my $qt_mass_dir = $mass_dir . "/qt";
+	mkdir $mass_dir;	
+	mkdir $raw_mass_dir;	
 	mkdir $qt_mass_dir;
 
 	my $raw_input = join " ", $raw_cfg->getAllInputFiles();
@@ -99,21 +108,18 @@ if (1) {
 	# Run the assembler script for each dataset
 	run_mass($raw_input, $raw_mass_job_prefix, $raw_mass_dir);
 	run_mass($qt_input, $qt_mass_job_prefix, $qt_mass_dir);
+}
 
-
-	# Run best assembly selector to find "best" assembly (mass will produce stats automatically for us to use here)
-	my $raw_stats_file = $raw_mass_dir . "/stats.txt";
-	my $qt_stats_file = $qt_mass_dir . "/stats.txt";
-	$best_path_file = $mass_dir . "/best.path.txt";
-	$best_dataset_file = $mass_dir . "/best.dataset.txt";
-
+if ($opt{mass_selector}) {
+	
 	my @ms_args = grep {$_} (
 			$MASS_SELECTOR_PATH,
 			$qst->getQueueingSystemAsParam(),
 			$qst->getProjectNameAsParam(),
 			"--job_name " . $ms_job_name,
-			"--wait_condition 'done(" . $mass_job_prefix . "*)'",
+			$opt{mass} ? "--wait_condition 'ended(" . $mass_job_prefix . "*)'" : "",
 			$qst->getQueueAsParam(),
+			$qst->getExtraArgs(),
 			"--output " . $mass_dir,
 			$qst->isVerboseAsParam(),
 			"--raw_stats_file " . $raw_stats_file,
@@ -125,34 +131,46 @@ if (1) {
 	system($ms_cmd_line);
 }
 
+my ($best_file, $best_dataset) = getBest($best_path_file, $best_dataset_file, $ms_job_name, $get_best_job_name);
+my $best_config = (($best_dataset eq "raw") ? $opt{raw_config} : $opt{qt_config});
+my $best_config_data = (($best_dataset eq "raw") ? $raw_cfg : $qt_cfg);
 
-my ($best_file, $best_dataset) = getBest($best_path_file, $best_dataset_file, $ms_job_name, $mass_job_prefix . "-getbest");
-
+if ($qst->isVerbose()) {
+	print 	"\n" .
+			"Best assembly is: " . $best_file . "\n" .
+			"Best dataset is: " . $best_dataset . "\n" . 
+			"Best config file is: " . $best_config . "\n\n";
+}
 
 ## Improve best assembly
 
-if (1) {
+if ($opt{improver}) {
 
-	my $imp_dir = $opt{output} . "/improver";
+	my $imp_dir = $qst->getOutput() . "/improver";
 	mkdir $imp_dir;
+	
+	chdir $imp_dir;
 
 	my @imp_args = grep {$_} (
 			$IMPROVER_PATH,
 			$qst->getQueueingSystemAsParam(),
 			$qst->getProjectNameAsParam(),
 			"--job_name " . $improver_job_prefix,
-			"--wait_condition done(" . $ms_job_name . "*)",
+			"--wait_condition 'done(" . $get_best_job_name . ")'",
 			$qst->getQueueAsParam(),
+			$qst->getExtraArgs(),
 			"--output " . $imp_dir,
 			"--input " . $best_file,
-			"--config " . ($best_dataset eq "raw") ? $opt{raw_config} : $opt{qt_config},
-			"--get_best_mass_from_file",
+			"--config " . $best_config,
 			"--stats",
+			"--degap_args \"--read_length " . $best_config_data->getSectionAt(0)->{max_rd_len} . "\"",
 			$opt{simulate} ? "--simulate" : "",
 			$opt{improver_args},
 			$qst->isVerboseAsParam());
 
 	system(join " ", @imp_args);
+	
+	chdir $PWD;
 }
 
 # Notify user of job submission
@@ -170,6 +188,7 @@ sub run_mass {
 		$qst->getProjectNameAsParam(),
 		"--job_name " . $_[1],
 		$qst->getQueueAsParam(),
+		$qst->getExtraArgs(),
 		"--output " . $_[2],
 		$qst->isVerboseAsParam(),
 		$opt{mass_args},
@@ -193,10 +212,14 @@ sub getBest {
 	$best_wait->setQueueingSystem($qst->getQueueingSystem());
 	$best_wait->setProjectName($qst->getProjectName());
 	$best_wait->setJobName($job_name);
-	$best_wait->setWaitCondition("ended(" . $wait_job . ")");
+	$best_wait->setWaitCondition("ended(" . $wait_job . ")") if $opt{mass_selector};
 	$best_wait->setExtraArgs("-I");	# This forces this job to stay connected to the terminal until the wait job has ended
-	SubmitJob::submit($best_wait, "sleep(1)");
+	SubmitJob::submit($best_wait, "sleep 1");
 
+	if ($qst->isVerbose()) {
+		print 	"\n" . 
+				"Attempting to load best assembly file from: " . $best_path_file . "\n";
+	}
 
 	# Now the the files exist read them and return the values they contain
 
@@ -211,8 +234,11 @@ sub getBest {
 	die "Error: Was only expecting a single line.\n\n" unless (@bdlines == 1);
 	my $best_dataset = $bdlines[0];
 	close(BD);
+	
+	$best_path =~ s/\s+$//;
+	$best_dataset =~ s/\s+$//;
 
-	return ($best_file, $best_dataset);
+	return ($best_path, $best_dataset);
 }
 
 

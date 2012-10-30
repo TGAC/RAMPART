@@ -11,6 +11,7 @@ use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
+use Configuration;
 
 #### Constants
 
@@ -44,8 +45,8 @@ GetOptions(
 	'scaffolder_args|s_args=s',
 	'degap_args|dg_args=s',
 	'clip|c',
-	'clip_args',
-	'config|cfg',
+	'clip_args=s',
+	'config|cfg=s',
 	'iterations|i=i',
 	'stats',
 	'simulate|sim',
@@ -58,8 +59,9 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 # Validation
-die "Error: No input file specified\n\n"       unless $qst->getInput();
-die "Error: No output directory specified\n\n" unless $qst->getOutput();
+die "Error: No input file specified\n\n"       	unless $qst->getInput();
+die "Error: No output directory specified\n\n" 	unless $qst->getOutput();
+die "Error: No config file specified\n\n" 	   	unless $opt{config};
 
 # Interpret config files
 
@@ -84,7 +86,8 @@ my $stats_job_name = $job_prefix . "-stats";
 
 ## Improve best assembly
 my $current_scaffold = $qst->getInput();
-my $last_job         = $qst->getWaitCondition();
+my $first_wait = $qst->getWaitCondition() ? 1 : 0;
+my $last_job;
 
 
 # Create an array which will store a record of all the assemblies created by this script.
@@ -109,7 +112,18 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 	my $scf_dir_i = $scf_dir . "/" . $i;
 	mkdir $scf_dir_i;
 
-	my $scf_wait_arg = $last_job ? ( "--wait_condition 'ended(" . $last_job . ")'" ) : "";
+	my $scf_wait_arg;
+	
+	if ($first_wait) {
+		$scf_wait_arg = "--wait_condition '" . $qst->getWaitCondition() . "'";
+	}
+	elsif ($last_job) {
+		$scf_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
+	}
+	else {
+		$scf_wait_arg = "";
+	}
+	
 
 	my @scf_args = grep {$_} (
 		$SCAFFOLDER_PATH,
@@ -187,17 +201,17 @@ if ( $opt{clip} ) {
 # Will need to make soft links to all scaffold files in same directory and then use stats_gatherer on this.
 if ( $opt{stats} ) {
 
-	my $stats_dir = $opt{output} . "/stats";
+	my $stats_dir = $qst->getOutput() . "/stats";
 	mkdir $stats_dir;
 
 	# Link to each scaffold file from each stage of this process
 	my $j = 1;
 	foreach ( @assemblies ) {
-		system("ln -s " . $_ . " " . $j . ".fa");
+		system("ln -s " . $_ . " " . $stats_dir . "/" . $j . "-scaffolds.fa");
 		$j++;
 	}
 
-	my $mgp_wait_arg = "--wait_condition 'done(" . $last_job . ")'";
+	my $mgp_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
 
 	my @mgp_args = grep {$_} (
 		$MASS_GP_PATH,

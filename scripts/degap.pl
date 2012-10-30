@@ -9,6 +9,7 @@ use Pod::Usage;
 use File::Basename;
 use Cwd;
 use QsOptions;
+use Configuration;
 use SubmitJob;
 
 # Gap closing constants
@@ -21,9 +22,6 @@ my $TP_GAP_CLOSER = "GapCloser";
 my $TP_IMAGE      = "image";
 my $TP_GAP_FILLER = "gapfiller";
 my $DEF_TOOL_PATH = $TP_GAP_CLOSER;
-
-# Read length constants
-my $DEF_READ_LENGTH = 155;
 
 # Command constants
 my $GC_SOURCE_CMD = "source GapCloser-1.12;";
@@ -39,7 +37,7 @@ $qst->setToolPath($DEF_TOOL_PATH);
 $qst->parseOptions();
 
 # Parse tool specific options
-my (%opt) = ( "read_length", $DEF_READ_LENGTH );
+my (%opt) = ( );
 
 GetOptions( \%opt, 'read_length|readlen|rl|r=i', 'config|c=s', 'help|usage|h|?',
 	'man' )
@@ -67,8 +65,8 @@ if ( $tool eq $T_GAP_CLOSER ) {
 
 	my $rampart_cfg = new Configuration( $opt{config} );
 	$rampart_cfg->validate();
-	my $gc_cfg_file = "gc.cfg";
-	write_sspace_cfg( $rampart_cfg, $gc_cfg_file);	
+	my $gc_cfg_file = $qst->getOutput() . "/gc.cfg";
+	write_soap_cfg($rampart_cfg, $gc_cfg_file);	
 	
 	my $gc_scaffolds  = $qst->getOutput() . "/gc-scaffolds.fa";
 	my $gc_other_args = "-p 61";

@@ -77,7 +77,7 @@ if ($tool eq $T_SSPACE) {
 
 	my $rampart_cfg = new Configuration( $opt{config} );
 	$rampart_cfg->validate();
-	my $sspace_cfg_file = "sspace.cfg";
+	my $sspace_cfg_file = $qst->getOutput() . "/sspace.cfg";
 	write_sspace_cfg( $rampart_cfg, $sspace_cfg_file);	
 	
 	my $sspace_output_prefix = "scaffolder";
