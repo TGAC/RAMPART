@@ -225,6 +225,8 @@ if ( $opt{stats} ) {
 		"--input " . $stats_dir	);
 
 	system(join " ", @mgp_args);
+	
+	system("ln -s " . @assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
 
 	$last_job = $clip_job_name;
 }

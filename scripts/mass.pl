@@ -29,7 +29,7 @@ my $DEF_TOOL_PATH = $TP_ABYSS;
 my $KMER_MIN = 11;
 my $KMER_MAX = 125;
 my $DEF_KMER_MIN = 41;
-my $DEF_KMER_MAX = 95;
+my $DEF_KMER_MAX = 125;
 
 # Threads constants
 my $DEF_THREADS=8;
@@ -59,7 +59,7 @@ $qst->parseOptions();
 
 # Assign any command line options to variables
 my (%opt) = (	"kmin", 		$DEF_KMER_MIN,
-		"kmax", 		$DEF_KMER_MAX);
+				"kmax", 		$DEF_KMER_MAX);
 
 GetOptions (
 	\%opt,
