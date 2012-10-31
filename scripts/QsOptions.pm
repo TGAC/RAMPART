@@ -13,6 +13,10 @@ use LsfJobSubmitter;
 # Now
 my ( $sec, $min, $hr, $mday, $mon, $year, $wday, $yday, $isdst ) =
   localtime(time);
+  
+$year += 1900;	# First year is 1900
+$mon += 1; # 0 based so add 1 to get a month index that we understand
+  
 my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 
 my $DEFAULT_GRID_ENGINE = "LSF";
