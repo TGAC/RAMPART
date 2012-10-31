@@ -4,31 +4,20 @@ use strict;
 
 #### Packages
 use Getopt::Long;
+Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
-
+use Cwd 'abs_path';
+use QsOptions;
+use Configuration;
+use SubmitJob;
 
 #### Constants
 
-# Now
-my ($sec,$min,$hr,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
-
-
 # Project constants
-$DEF_PROJECT_NAME = "Rampart_" . $NOW;
-$JOB_PREFIX = $ENV{'USER'} . "-rampart-";
+my $JOB_PREFIX = $ENV{'USER'} . "-rampart-";
 
-
-# Tool paths
-$DEF_ASSEMBLER_PATH = "abyss-pe";
-$DEF_SCAFFOLDER_PATH = "sspace";
-$DEF_DEGAP_PATH = "GapCloser";
-
-
-# Queueing system constants
-my $SUBMIT = "bsub";
 
 # Other constants
 my $QUOTE = "\"";
@@ -36,29 +25,30 @@ my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 
 # Assembly stats gathering constants
-my $SELECT_BEST_ASSEMBLY_PATH = $RAMPART_DIR . "/select_best_assembly.pl";
+my $MASS_PATH = $RAMPART_DIR . "mass.pl";
+my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
+my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
 
+# Parse generic queueing tool options
+my $qst = new QsOptions();
+$qst->parseOptions();
 
 # Gather Command Line options and set defaults
-my (%opt) = (	"assembler_path",	$DEF_ASSEMBLER_PATH,
-		"scaffolder_path",	$DEF_SCAFFOLDER_PATH,
-		"degap_path",		$DEF_DG_PATH,
-		"output",		$PWD );
+my (%opt) = (	"mass", 			1,
+				"improver",			1,
+				"mass_selector", 	1 );
+	
 
 GetOptions (
 	\%opt,
-	'assembler|a=s',
-	'extra_assembler_args|ea_args|eaa=s',
-	'approx_genome_size|ags=i',
-	'improver|i',
-	'extra_improver_args|ei_args|eia=s',
-	'project|p=s',
-	'job_prefix|job|j=s',
-	'extra_queue_args|eqa=s',
+	'mass!',
+	'mass_args|ma=s',
+	'mass_selector!',
+	'improver!',
+	'improver_args|ia=s',
 	'raw_config|rc=s',
 	'qt_config|qtc=s',
-	'output|out|o=s',
-	'verbose|v',
+	'simulate|sim',
 	'help|usage|h|?',
 	'man'
 )
@@ -75,95 +65,185 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 #### Validation
 
-die "Error: No output directory specified\n\n" unless $opt{output};me, $dir) = fileparse(abs_path($0));
 die "Error: No raw library config file specified\n\n" unless $opt{raw_config};
 die "Error: No quality trimmed library config file specified\n\n" unless $opt{qt_config};
-die "Error: Approximate genome size not specified\n\n" unless $opt{approx_genome_size};
+#die "Error: Approximate genome size not specified\n\n" unless $opt{approx_genome_size};
 
 
 # Interpret config files
+my $raw_cfg = new Configuration( $opt{raw_config} );
+my $qt_cfg = new Configuration( $opt{qt_config} );
+
 
 
 #### Process (all steps to be controlled via cmd line options)
-my $qs_project_arg = "-P" . $opt{project};
-my $script_project_arg = "--project " . $opt{project};
-my $ass_job_prefix = $opt{job_prefix} . $opt{assembler} . "-";
-my $asd_job_name = $opt{job_prefix} . "assembly_selector";
-my $best_ass;
+my $mass_job_prefix = $qst->getJobName() . "-mass";
+my $ms_job_name = $qst->getJobName() . "-ms";
+my $get_best_job_name = $mass_job_prefix . "-getbest";
+my $improver_job_prefix = $qst->getJobName() . "-improver";
+
+
+#Set locations of important assembly directories and files
+my $mass_dir = $qst->getOutput() . "/mass";
+my $raw_mass_dir = $mass_dir . "/raw";
+my $qt_mass_dir = $mass_dir . "/qt";
+my $raw_stats_file = $raw_mass_dir . "/stats.txt";
+my $qt_stats_file = $qt_mass_dir . "/stats.txt";
+my $best_path_file = $mass_dir . "/best.path.txt";
+my $best_dataset_file = $mass_dir . "/best.dataset.txt";
 
 
 ## Run assemblies for both raw and qt datasets
-if ($opt{assembler}) {
+if ($opt{mass}) {
 
-	# Make assemblies output directories
-	my $ass_dir = $opt{output} . "/assemblies";
-	mkdir $ass_dir;
+	mkdir $mass_dir;	
+	mkdir $raw_mass_dir;	
+	mkdir $qt_mass_dir;
 
-	my $raw_ass_dir = $ass_dir . "/raw";
-	mkdir $raw_ass_dir;
-
-	my $qt_ass_dir = $ass_dir . "/qt";
-	mkdir $qt_ass_dir;
-
-	my $raw_input = 1;	# Need to gather raw_dir from config file
-	my $qt_input = 1;	# Need to gather qt_dir from config file
-	my $raw_ass_job_prefix = $ass_job_prefix . "raw-";
-	my $qt_ass_job_prefix = $ass_job_prefix . "qt-";
+	my $raw_input = join " ", $raw_cfg->getAllInputFiles();
+	my $qt_input = join " ", $qt_cfg->getAllInputFiles();
+	my $raw_mass_job_prefix = $mass_job_prefix . "-raw";
+	my $qt_mass_job_prefix = $mass_job_prefix . "-qt";
 
 	# Run the assembler script for each dataset
-	run_assembler($raw_input, $raw_ass_job_prefix, $raw_ass_dir);
-	run_assembler($qt_input, $qt_ass_job_prefix, $qt_ass_dir);
-
-
-	# Run best assembly selector to find "best" assembly (assembler will produce stats automatically for us to use here)
-	my $raw_stats_file = $raw_ass_dir . "/stats.txt";
-	my $qt_stats_file = $qt_ass_dir . "/stats.txt";
-	my $asd_wait_arg = "-w 'done(" . $ass_job_prefix . "*)'";
-	my $asd_job_arg = "-J" . $asd_job_name;
-
-	my $raw_stats_arg = "--raw_stats_file " . $raw_stats_file;
-	my $qt_stats_arg = "--qt_stats_file " . $qt_stats_file;
-	my $gen_size_arg = "--approx_genome_size " . $opt{approx_genome_size};
-	my $best_ass_file = "--output " . $ass_dir . "/best.path.txt";
-
-	my $asd_cmd_line = $SELECT_BEST_ASSEMBLY_PATH .  . $raw_stats_arg . " " . $qt_stats_arg . " " . $gen_size_arg . " " . $best_ass_file;
-
-	system($SUBMIT, $qs_project_arg, $asd_job_arg, $asd_wait_arg, $opt{extra_queue_args}, $asd_cmd_line;
-
-	# Extract best assembly from file
-	# This bit isn't going to work yet as we need to do this after the previous job has completed
-	#open(BA_FILE, $best_ass_file) or die "Can't read " . $best_ass_file . "\n";
-	#$best_ass = <BA_FILE>;
-	#close (BA_FILE);
+	run_mass($raw_input, $raw_mass_job_prefix, $raw_mass_dir);
+	run_mass($qt_input, $qt_mass_job_prefix, $qt_mass_dir);
 }
 
+if ($opt{mass_selector}) {
+	
+	my @ms_args = grep {$_} (
+			$MASS_SELECTOR_PATH,
+			$qst->getGridEngineAsParam(),
+			$qst->getProjectNameAsParam(),
+			"--job_name " . $ms_job_name,
+			$opt{mass} ? "--wait_condition 'ended(" . $mass_job_prefix . "*)'" : "",
+			$qst->getQueueAsParam(),
+			$qst->getExtraArgs(),
+			"--output " . $mass_dir,
+			$qst->isVerboseAsParam(),
+			"--raw_stats_file " . $raw_stats_file,
+			"--qt_stats_file " . $qt_stats_file,
+			$opt{approx_genome_size} ? "--approx_genome_size " . $opt{approx_genome_size} : "" );
+			
+	my $ms_cmd_line = join " ", @ms_args;
 
+	system($ms_cmd_line);
+}
 
 ## Improve best assembly
 
-if ($opt{improve} && $best_ass) {
+if ($opt{improver}) {
 
+	# First find the best assembly
+	my ($best_file, $best_dataset) = getBest($best_path_file, $best_dataset_file, $ms_job_name, $get_best_job_name);
+	my $best_config = (($best_dataset eq "raw") ? $opt{raw_config} : $opt{qt_config});
+	my $best_config_data = (($best_dataset eq "raw") ? $raw_cfg : $qt_cfg);
+	
+	if ($qst->isVerbose()) {
+		print 	"\n" .
+				"Best assembly is: " . $best_file . "\n" .
+				"Best dataset is: " . $best_dataset . "\n" . 
+				"Best config file is: " . $best_config . "\n\n";
+	}
 
-	$improver_cmd = $improver_path . " " . $improver_args . " " . $best_assembly;
+	# Then run improver.
+	my $imp_dir = $qst->getOutput() . "/improver";
+	mkdir $imp_dir;
+	
+	chdir $imp_dir;
 
-	system($SUBMIT, $qs_project_arg, $imp_wait_arg, $improver_cmd);
+	my @imp_args = grep {$_} (
+			$IMPROVER_PATH,
+			$qst->getGridEngineAsParam(),
+			$qst->getProjectNameAsParam(),
+			"--job_name " . $improver_job_prefix,
+			"--wait_condition 'done(" . $get_best_job_name . ")'",
+			$qst->getQueueAsParam(),
+			$qst->getExtraArgs(),
+			"--output " . $imp_dir,
+			"--input " . $best_file,
+			"--config " . $best_config,
+			"--stats",
+			"--degap_args \"--read_length " . $best_config_data->getSectionAt(0)->{max_rd_len} . "\"",
+			$opt{simulate} ? "--simulate" : "",
+			$opt{improver_args},
+			$qst->isVerboseAsParam());
+
+	system(join " ", @imp_args);
+	
+	chdir $PWD;
+}
+
+# Notify user of job submission
+if ($qst->isVerbose()) {
+	print 	"\n" .
+			"RAMPART has successfully submitted all child jobs to the grid engine.  You will be notified by email when the jobs have completed.\n";
 }
 
 
+sub run_mass {
 
+	my @mass_args = grep {$_} (	
+		$MASS_PATH,
+		$qst->getGridEngineAsParam(),
+		$qst->getProjectNameAsParam(),
+		"--job_name " . $_[1],
+		$qst->getQueueAsParam(),
+		$qst->getExtraArgs(),
+		"--output " . $_[2],
+		$qst->isVerboseAsParam(),
+		$opt{mass_args},
+		"--stats",
+		$opt{simulate} ? "--simulate" : "",
+		$_[0] 
+	);
 
-
-sub run_assembler {
-
-	my $assembler_path = $RAMPART_DIR . "/assembler.pl";
-	my $assembler_arg = "--assembler " . $opt{assembler};
-	my $job_prefix_arg = "--job_prefix " . $_[1];
-	my $out_dir = "--output " . $_[2];
-
-	my $assembly_args = $job_prefix_arg . " " . $project_arg . " " . $assembler_arg . " " . $opt{extra_assembler_args} . " --stats " . $out_dir;
-
-	system($assembler_path, $assembly_args, $_[0]);
+	system(join " ", @mass_args);
 }
+
+sub getBest {
+	my $best_path_file = shift;
+	my $best_dataset_file = shift;
+	my $wait_job = shift;
+	my $job_name = shift;
+
+
+	# Wait for mass selector to complete 
+	my $best_wait = new QsOptions();
+	$best_wait->setGridEngine($qst->getGridEngine());
+	$best_wait->setProjectName($qst->getProjectName());
+	$best_wait->setJobName($job_name);
+	$best_wait->setWaitCondition("ended(" . $wait_job . ")") if $opt{mass_selector};
+	$best_wait->setExtraArgs("-I");	# This forces this job to stay connected to the terminal until the wait job has ended
+	SubmitJob::submit($best_wait, "sleep 1");
+
+	if ($qst->isVerbose()) {
+		print 	"\n" . 
+				"Attempting to load best assembly file from: " . $best_path_file . "\n";
+	}
+
+	# Now the the files exist read them and return the values they contain
+
+	open BP, "<", $best_path_file or die "Error: Couldn't parse input file.\n\n";
+	my @bplines = <BP>;
+	die "Error: Was only expecting a single line.\n\n" unless (@bplines == 1);
+	my $best_path = $bplines[0];
+	close(BP);
+
+	open BD, "<", $best_dataset_file or die "Error: Couldn't parse input file.\n\n";
+	my @bdlines = <BD>;
+	die "Error: Was only expecting a single line.\n\n" unless (@bdlines == 1);
+	my $best_dataset = $bdlines[0];
+	close(BD);
+	
+	$best_path =~ s/\s+$//;
+	$best_dataset =~ s/\s+$//;
+
+	return ($best_path, $best_dataset);
+}
+
+
 
 __END__
 
@@ -190,7 +270,7 @@ __END__
 
   job_prefix|job|j                    The prefix string for all rampart child jobs.
   project|p                           The project name for marking the job.
-  extra_queue_args|eqa|q              Extra arguments to pass to the queueing system for each child job.  E.g. "-q normal" to move jobs from the production (default) queue to the normal queue.
+  extra_queue_args|eqa|q              Extra arguments to pass to the grid engine for each child job.  E.g. "-q normal" to move jobs from the production (default) queue to the normal queue.
   assembler|a                         The assembly program to use.
   extra_assembler_args|ea_args|eaa    Any additional arguments to pass to the assembler script.  Type assembler.pl --man for more information.  This script will automatically invoke the assembler script with the project, job_prefix, threads, memory, stats, in_dir, and out_dir settings.  Assembler arguments such as --kmin and --kmax should be set via this argument for example.
   approx_genome_size|ags              The approximate genome size for the organism that is being sequenced.  Used for determining best assembly.

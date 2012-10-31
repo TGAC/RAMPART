@@ -1,35 +1,41 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use Getopt::Long;
+Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
+use QsOptions;
+use SubmitJob;
 
 
 # Other constants
 my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
-my $DEF_OUT = $PWD . "/plotter.rout";
+my $DEF_OUT = $PWD . "/mass_selector.rout";
 
 
 # R script constants
-my $SELECT_BEST_ASSEMBLY_SCRIPT = $RAMPART_DIR . "/select_best_assembly.R";
+my $MASS_SELECTOR_R = $RAMPART_DIR . "mass_selector.R";
+my $R_SOURCE_CMD = "source R-2.15.0;";
+
+# Parse generic queueing tool options
+my $qso = new QsOptions();
+$qso->setOutput($DEF_OUT);
+$qso->parseOptions();
 
 
 # Assign any command line options to variables
-my (%opt) = (	"output",       $DEF_OUT);
-
-
+my %opt;
 GetOptions (
         \%opt,
-	'raw_stats_file|raw=s',
-	'qt_stats_file|qt=s',
+		'raw_stats_file|raw=s',
+		'qt_stats_file|qt=s',
         'approx_genome_size|ags|s=i',
-	'output|out|o=s',
-        'verbose|v',
         'help|usage|h|?',
         'man'
 )
@@ -45,20 +51,26 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 die "Error: No raw stats file was specified\n\n" unless $opt{raw_stats_file};
 die "Error: No qt stats file was specified\n\n" unless $opt{qt_stats_file};
-die "Error: Approximate genome size was not specified\n\n" unless $opt{approx_genome_size};
-
-die "Error: raw stats file does not exist\n\n" unless -e $opt{raw_stats_file};
-die "Error: qt stats file does not exist\n\n" unless -e $opt{qt_stats_file};
+#die "Error: Approximate genome size was not specified\n\n" unless $opt{approx_genome_size};
 
 
 
 # Get produce stats and graphs for raw dataset
 
-my $r_script_args = $opt{raw_stats_file} . " " . $opt{qt_stats_file} . " " . $opt{approx_genome_size} . " " . $opt{output};
+my @r_script_args = (
+	$opt{raw_stats_file},
+	$opt{qt_stats_file},
+	$opt{approx_genome_size} ? $opt{approx_genome_size} : "0",
+	$qso->getOutput()
+);
 
-system("R CMD BATCH '--args " . $r_script_args  . "' " . $SELECT_BEST_ASSEMBLY_SCRIPT . " " .  $opt{output} . "/log.rout");
+my $r_args = join " ", @r_script_args;
 
-print "Selected best assembly from input stats.\n" if $opt{verbose};
+my $r_cmd_line = $R_SOURCE_CMD . " R CMD BATCH '--args " . $r_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
+
+SubmitJob::submit($qso, $r_cmd_line);
+
+print "Selected best assembly from input stats.\n" if $qso->isVerbose();
 
 
 
@@ -68,14 +80,14 @@ __END__
 
 =head1 NAME
 
-  select_best_assembly.pl
+  mass_selector.pl
 
 
 =head1 SYNOPSIS
 
-  select_best_assembly.pl [options] <input_file>
+  mass_selector.pl [options] <input_file>
 
-  For full documentation type: "select_best_assembly.pl --man"
+  For full documentation type: "mass_selector.pl --man"
 
 
 =head1 DESCRIPTION

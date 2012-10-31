@@ -12,11 +12,11 @@ use Cwd 'abs_path';
 # Other constants
 my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
-my $DEF_OUT = $PWD . "/plotter.rout";
+my $DEF_OUT = $PWD;
 
 
 # Assembly stats plotting constants
-my $STATS_PLOTTER_SCRIPT = $RAMPART_DIR . "/assembly_stats_plotter.R";
+my $MASS_PLOTTER_SCRIPT = $RAMPART_DIR . "mass_plotter.R";
 my $R_SOURCE_CMD = "source R-2.15.0;";
 
 
@@ -52,7 +52,9 @@ die "Error: Was only expecting a single file to process\n\n" unless @in_files ==
 
 # Get produce stats and graphs for raw dataset
 
-system($R_SOURCE_CMD . " R CMD BATCH '--args " . $input_file . "' " . $STATS_PLOTTER_SCRIPT . " " .  $opt{output});
+my $output_log = $opt{output} . "/plotter.rout";
+my $output_plot = $opt{output} . "/stats.pdf";
+system($R_SOURCE_CMD . " R CMD BATCH '--args " . $input_file . " " . $output_plot . "' " . $MASS_PLOTTER_SCRIPT . " " .  $output_log);
 
 print "Plotted graphs from raw and qt datasets.\n" if $opt{verbose};
 
@@ -64,19 +66,19 @@ __END__
 
 =head1 NAME
 
-  assembly_stats_plotter.pl
+  mass_plotter.pl
 
 
 =head1 SYNOPSIS
 
-  assembly_stats_plotter.pl [options] <input_file>
+  mass_plotter.pl [options] <input_file>
 
-  For full documentation type: "assembly_stats_plotter.pl --man"
+  For full documentation type: "mass_plotter.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Simplifies the calling of an R script that plots assembly changes in assembly statistics across multiple assemblies.
+  Multiple Assembly Statistics Plotter.  Simplifies the calling of an R script that plots assembly changes in assembly statistics across multiple assemblies.
 
 =head1 OPTIONS
 
@@ -93,5 +95,6 @@ __END__
   Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
+
 
 
