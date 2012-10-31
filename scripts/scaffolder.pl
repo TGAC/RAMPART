@@ -159,30 +159,59 @@ __END__
 
 =head1 SYNOPSIS
 
-  scaffolder.pl [options] -i contigs_file -c config_file
-
-  input|in|i       The path to the input contigs file.
-  config|cfg|c     The scaffolder library configuration file.
+  scaffolder.pl [options] --config <config_file> -i <input_assembly>
 
   For full documentation type: "scaffolder.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs a scaffolding program.
+  Runs a scaffolding tool to in an attempt to improve a given assembly.  This script is designed to execute jobs on a grid engine.
 
 
 =head1 OPTIONS
 
-  scaffolder|s             The scaffolding tool to use (sspace, grass).
-  scaffolder_path|sp|p     The path to the scaffolding tool (in case this script does not know where to find it)
-  project|p                The project name for marking the LSF jobs.
-  extra_queue_args|eqa|q   Extra arguments to pass to the queueing system for the scaffolding job.
-  wait_job|wj              If specified, the scaffolder will not run until this job has finished.
-  output|out|o             The output directory.
-  verbose|v                Print extra status information during run.
-  help|usage|h|?           Print usage message and then exit.
-  man                      Display manual.
+  --config
+              REQUIRED: The rampart library configuration file to use, which describes the paired end / mate pair reads which are to be used to improve the assembly.
+
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+
+  --tool                 -t
+              Currently supported scaffolding tools: (sspace).  Default: sspace.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --threads              -n
+              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+
+  --input                --in                -i
+              REQUIRED: The assembly to improve.
+
+  --output               --out               -o
+              The output dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
 
 
 =head1 AUTHORS
@@ -191,5 +220,4 @@ __END__
   Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
-
 

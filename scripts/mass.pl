@@ -256,10 +256,10 @@ __END__
 =head1 OPTIONS
 
   --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.
+              The grid engine to use.  Currently "LSF" and "PBS" are supported. Default: LSF.
 
   --tool                 -t
-              If this script supports multiple tools to do the same job you can specify that tool using this parameter.
+              Currently these assemblers are supported (abyss).  Default: abyss.
 
   --tool_path            --tp
               The path to the tool, or name of the tool's binary file if on the path.
@@ -295,10 +295,10 @@ __END__
               Whether detailed debug information should be printed to STDOUT.
 
   --kmin
-              The minimum k-mer value to run.
+              The minimum k-mer value to run. DEfault: 41.
 
   --kmax
-              The maximum k-mer value in run.
+              The maximum k-mer value in run. Default: 125.
 
   --stats
               Produces output statistics and graphs comparing each assembly job produced.

@@ -99,3 +99,85 @@ if ($qst->isVerbose()) {
 	print 	"\n" .
 			"~Quality Trimmer has successfully submitted the trimming job to the grid engine.  You will be notified by email when the job has completed.\n";
 }
+
+
+
+__END__
+
+=pod
+
+=head1 NAME
+
+  qt.pl
+
+
+=head1 SYNOPSIS
+
+  qt.pl [options] --in1 <input_file1> --in2 <input_file2> --out1 <output_file1> --out2 <output_file2> --sout <singles_output_file>
+
+  For full documentation type: "qt.pl --man"
+
+
+=head1 DESCRIPTION
+
+  Quality trimming tool that allows the user to execute a quality trimmer on a grid engine.  Assumes the user wants to quality trim paired end or mate pair data.
+
+
+=head1 OPTIONS
+
+  --in1
+              REQUIRED: First input file.
+              
+  --in2
+              REQUIRED: Second input file.
+  
+  --out1
+              REQUIRED: First output file.
+  
+  --out2
+              REQUIRED: Second input file.
+  
+  --sout
+              REQUIRED: Singles output file.
+  
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+
+  --tool                 -t
+              Currently these quality trimming tools are supported: (sickle).  Default: sickle.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --threads              -n
+              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+  
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
+
+
+=head1 AUTHORS
+
+  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+  Nizar Drou <nizar.drou@tgac.ac.uk>
+
+=cut
+

@@ -58,23 +58,53 @@ __END__
 
 =head1 SYNOPSIS
 
-  mass_gp.pl [options] -input <input_dir>
+  mass_gp.pl [options] -i <input_dir>
 
   For full documentation type: "mass_gp.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Mass Assembly Statistics Gatherer and Plotter.  Runs mass_gatherer.pl and mass_plotter.pl automatically, producing statistics and graphs for a collection of assemblies.
+  This script is designed to execute mass_gatherer and mass_plotter together as a job on a grid engine.
 
 
 =head1 OPTIONS
 
-  index
-  verbose|v                Print extra status information during run.
-  help|usage|h|?           Print usage message and then exit.
-  man                      Display manual.
+  --index
+              Whether to prefix each row in the statistics table with the index of the scaffold file being analysed.
+  
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
+  --tool                 -t
+              If this script supports multiple tools to do the same job you can specify that tool using this parameter.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+
+  --input                --in                -i
+              REQUIRED: The input directory containing scaffold files for this job.
+
+  --output               --out               -o
+              The output file/dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
 
 
 =head1 AUTHORS

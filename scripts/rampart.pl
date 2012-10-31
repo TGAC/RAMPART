@@ -256,30 +256,66 @@ __END__
 
 =head1 SYNOPSIS
 
-  rampart.pl [options] --raw_config <file> --qt_config <file>
+  rampart.pl [options] --raw_config <raw_config_file> --qt_config <qt_config_file>
 
   For full documentation type: "rampart.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.
+  This script is designed to run mass on raw and quality trimmed datasets and gather the resulting statistics.  
+  It then selects the best assembly and then attempts to improve that assembly by doing additional scaffolding, gap closing and cleaning.
 
 
 =head1 OPTIONS
 
-  job_prefix|job|j                    The prefix string for all rampart child jobs.
-  project|p                           The project name for marking the job.
-  extra_queue_args|eqa|q              Extra arguments to pass to the grid engine for each child job.  E.g. "-q normal" to move jobs from the production (default) queue to the normal queue.
-  assembler|a                         The assembly program to use.
-  extra_assembler_args|ea_args|eaa    Any additional arguments to pass to the assembler script.  Type assembler.pl --man for more information.  This script will automatically invoke the assembler script with the project, job_prefix, threads, memory, stats, in_dir, and out_dir settings.  Assembler arguments such as --kmin and --kmax should be set via this argument for example.
-  approx_genome_size|ags              The approximate genome size for the organism that is being sequenced.  Used for determining best assembly.
-  improver|i
-  output|out|o=s                      The output directory.
-  verbose|v                           Print extra status information during run.
-  help|usage|h|?                      Print usage message and then exit.
-  man                                 Display manual.
+  --mass
+	          Whether or not to do the MASS step.  Use --nomass to disable.  Default: on.
+	          
+  --mass_args            --ma
+              Any additional arguments to pass to the MASS tool (e.g. --kmin and --kmax).
+	
+  --mass_selector
+              Whether to attempt to select the best assembly from a set of assemblies already created by rampart.  Use --nomass_selector to disable.  Default: on.
+	
+  --improver
+              Whether or not to run the assembly improver step.  Use --noimprover to disable.  Default: on.
+	
+  --improver_args        --ia
+              Any additional arguments to pass to the improver tool (e.g. --iterations)
+	
+  --raw_config           --rc
+              REQUIRED: The path to the rampart library configuration file for the raw dataset.
+	
+  --qt_config            --qtc
+              REQUIRED: The path to the rampart library configuration file for the quality trimmed dataset.
+	
+  --simulate             --sim
+              If set then the script is run but no mass or improver jobs are submitted to the grid engine. Default: off.
+	
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+
+  --output               --out               -o
+              The output file/dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
 
 
 =head1 AUTHORS
@@ -288,5 +324,6 @@ __END__
   Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
+
 
 
