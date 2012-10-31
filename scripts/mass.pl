@@ -132,7 +132,7 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	my $job_name = $job_prefix . "-k" . $i;
 
 	my $qst_ass = new QsOptions();
-	$qst_ass->setQueueingSystem($qst->getQueueingSystem());
+	$qst_ass->setGridEngine($qst->getGridEngine());
 	$qst_ass->setTool($qst->getTool());
 	$qst_ass->setToolPath($qst->getToolPath());
 	$qst_ass->setProjectName($qst->getProjectName());
@@ -197,7 +197,7 @@ if ($opt{stats}) {
 	my $gp_output_arg = "--output " . $qst->getOutput();
 
 	my $mgp_cmd_line = 	$MASS_GP_PATH . " " .
-						$qst->getQueueingSystemAsParam() . " " .
+						$qst->getGridEngineAsParam() . " " .
 						$gp_tool_arg . " " .
 						$qst->getProjectNameAsParam() . " " .
 						$qst->getQueueAsParam() . " " .
@@ -255,8 +255,8 @@ __END__
 
 =head1 OPTIONS
 
-  --queueing_system      --qs
-              The queueing system to use.  Currently "LSF" and "PBS" are supported.
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.
 
   --tool                 -t
               If this script supports multiple tools to do the same job you can specify that tool using this parameter.
@@ -265,10 +265,10 @@ __END__
               The path to the tool, or name of the tool's binary file if on the path.
 
   --project_name         --project           -p
-              The project name for the job that will be placed on the queueing system.
+              The project name for the job that will be placed on the grid engine.
 
   --job_name             --job               -j
-              The job name for the job that will be placed on the queueing system.
+              The job name for the job that will be placed on the grid engine.
 
   --wait_condition       --wait              -w
               If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
@@ -280,10 +280,10 @@ __END__
               The amount of memory to reserve for this job.
 
   --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the queueing system.
+              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
 
   --extra_args           --ea
-              Any extra arguments that should be sent to the queueing system.
+              Any extra arguments that should be sent to the grid engine.
 
   --input                --in                -i
               The input file(s) for this job.

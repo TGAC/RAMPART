@@ -69,7 +69,7 @@ die "Error: No config file specified\n\n" 	   	unless $opt{config};
 
 # Build up static args which is to be used by all child jobs
 my @static_args = grep {$_} (
-    $qst->getQueueingSystemAsParam(),
+    $qst->getGridEngineAsParam(),
 	$qst->getProjectNameAsParam(),
 	$qst->getExtraArgsAsParam(),
 	$qst->getQueueAsParam(),
@@ -215,21 +215,23 @@ if ( $opt{stats} ) {
 
 	my @mgp_args = grep {$_} (
 		$MASS_GP_PATH,
-		$qst->getQueueingSystemAsParam(),
+		$qst->getGridEngineAsParam(),
 		$qst->getProjectNameAsParam(),
 		$qst->getQueueAsParam(),
 		"--job_name " . $stats_job_name,
 		$mgp_wait_arg,
 		$qst->isVerboseAsParam(),
 		"--output " . $stats_dir,
-		"--input " . $stats_dir	);
+		"--input " . $stats_dir,
+		"--index"	);
 
 	system(join " ", @mgp_args);
 	
-	system("ln -s " . @assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
+	system("ln -s " . $assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
 
 	$last_job = $clip_job_name;
 }
+
 
 __END__
 
@@ -249,19 +251,56 @@ __END__
 
 =head1 DESCRIPTION
 
-  Runs an sequence of programs that attempt to improve the scaffold quality of the input file.  It does this by doing a user defined number of scaffolding and gap fillings steps.  This script uses additional reads specified by the user in the configuration file to do this. After enhancing the user can optionally discard shorter scaffolds from file.  Finally, the user can optionally request assembly statistics to be produced at each step in the process.
+  Runs an sequence of programs that attempt to improve the scaffold quality of the input file.  It does this by doing a 
+  user defined number of scaffolding and gap fillings steps.  This script uses additional reads specified by the user in 
+  the configuration file to do this. After enhancing the user can optionally discard shorter scaffolds from file.  Finally, 
+  the user can optionally request assembly statistics to be produced at each step in the process.
+
 
 
 =head1 OPTIONS
 
-  iterations|i             The number of scaffolding and degapping iterations to run.
-  simulate                 Runs the script without sending any jobs to the queue.
-  stats                    Outputs statistics and plots for all scaffold files produced in the improvement process.
-  output|out|o=s           The output directory.
-  verbose|v                Print extra status information during run.
-  help|usage|h|?           Print usage message and then exit.
-  man                      Display manual.
+  --iterations           -i
+              The number of scaffolding and degapping iterations to run.  Default: 1.
+  
+  --simulate
+              Runs the script without sending any jobs to the queue.  Used for testing purposes only.
+              
+  --stats
+              Outputs statistics and plots for all scaffold files produced in the improvement process.
 
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --threads              -n
+              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+
+  --input                --in                -i
+              The input file(s) for this job.
+
+  --output               --out               -o
+              The output file/dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
 
 
 =head1 AUTHORS

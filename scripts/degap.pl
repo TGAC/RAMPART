@@ -47,7 +47,9 @@ GetOptions( \%opt, 'read_length|readlen|rl|r=i', 'config|c=s', 'help|usage|h|?',
 pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
-die "Error: No config file specified\n\n" unless $opt{config};
+die "Error: No input scaffold file specified\n\n" unless $qst->getInput();
+die "Error: No rampart config file specified\n\n" unless $opt{config};
+die "Error: Read length not specified\n\n" unless $opt{read_length};
 
 my $cmd_line = "";
 
@@ -163,25 +165,64 @@ __END__
 
 =head1 SYNOPSIS
 
-  degap.pl [options] -i <input_file> -c <config_file>
-
-  input|in|i       The path to the input contigs file.
-  config|cfg|c     The degapping library configuration file.
+  degap.pl [options] -r <average_read_length> -c <rampart_config_file>  -i <input_scaffold_file>
 
   For full documentation type: "degap.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs a gap closing program in an attempt to fill in gaps within and around scaffolds.
+  This script is designed to execute degapping jobs on a grid engine.  Degapping the the process of filling gaps in scaffolds, 
+  denoted by the nt (N), with real nucleotides (A,T,G,C), by trying to align assembled reads to the scaffolds.  Currently, one 
+  degapping tool is support: SOAPdenovo GapCloser.
 
 
 =head1 OPTIONS
 
-  output|out|o=s           The output directory.
-  verbose|v                Print extra status information during run.
-  help|usage|h|?           Print usage message and then exit.
-  man                      Display manual.
+  --read_length          --readlen           --rl                 -r
+  			  REQUIRED: The average length of reads to use
+  			  
+  --config               --cfg               -c
+  			  REQUIRED: The rampart config file that describs the reads to be used for this job.
+  
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.
+
+  --tool                 -t
+              Currently supported tools include: (gapcloser).  Default tool: gapcloser.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --threads              -n
+              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+
+  --input                --in                -i
+              REQUIRED: The input scaffold file for this job.
+
+  --output               --out               -o
+              The output dir for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
 
 
 =head1 AUTHORS

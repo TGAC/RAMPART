@@ -102,25 +102,57 @@ __END__
 
 =head1 SYNOPSIS
 
-  clipper.pl [options] --minlen <minimum_length> -i <input_file>
-
-  min_length|minlen    The minimum length for scaffolds to be kept in the output file.
-  input|in|i           The path to the input scaffolds file.
+  clipper.pl [options] --minlen <length_in_nt> -i <input_file> -o <output_file>
 
   For full documentation type: "clipper.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs a clipping program that removes scaffolds less than a user specified length.
+  This script is designed to clip reads from a fastq file that are shorter than a given minimum length, and to run this 
+  process on a grid engine.  Currently there are two alternative methods for clipping: Nizar's own script and Fastx_clipper. 
 
 
 =head1 OPTIONS
 
-  output|out|o             The output directory.
-  verbose|v                Print extra status information during run.
-  help|usage|h|?           Print usage message and then exit.
-  man                      Display manual.
+  --min_length			 --minlen
+              REQUIRED: The minimum length of a read in the output dataset.  All reads shorter than this are removed.
+
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported. Default: LSF.
+
+  --tool                 -t
+              Available clipping tools: (nizar, fastx). Default: nizar.
+
+  --tool_path            --tp
+              The path to the tool, or name of the tool's binary file if on the path.
+
+  --project_name         --project           -p
+              The project name for the job that will be placed on the grid engine.
+
+  --job_name             --job               -j
+              The job name for the job that will be placed on the grid engine.
+
+  --wait_condition       --wait              -w
+              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+  --queue                -q
+              The queue to which this job should automatically be sent.
+
+  --memory               --mem               -m
+              The amount of memory to reserve for this job.
+
+  --extra_args           --ea
+              Any extra arguments that should be sent to the grid engine.
+
+  --input                --in                -i
+              REQUIRED: The input file for this job.
+
+  --output               --out               -o
+              REQUIRED: The output file for this job.
+
+  --verbose              -v
+              Whether detailed debug information should be printed to STDOUT.
 
 
 =head1 AUTHORS
@@ -129,4 +161,5 @@ __END__
   Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
+
 

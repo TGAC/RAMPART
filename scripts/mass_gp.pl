@@ -25,7 +25,11 @@ $qst->parseOptions();
 
 # Assign any command line options to variables
 my %opt;
-GetOptions( \%opt, 'help|usage|h|?', 'man' )
+GetOptions( 
+	\%opt, 
+	'index',
+	'help|usage|h|?', 
+	'man' )
   or pod2usage("Try '$0 --help' for more information.");
 
 # Display usage message or manual information if required
@@ -36,7 +40,8 @@ die "Error: Input file not specified\n\n" unless $qst->getInput();
 
 # Combine gatherer and plotter into a single command and submit
 my $stat_file = $qst->getOutput() . "/stats.txt";
-my $mg_cmd_line = $MASS_GATHERER_PATH . " " . $qst->getInput() . " > " . $stat_file;
+my $index_arg = $opt{index} ? "--index" : "";
+my $mg_cmd_line = $MASS_GATHERER_PATH . " " . $index_arg . " " . $qst->getInput() . " > " . $stat_file;
 my $mp_cmd_line = $MASS_PLOTTER_PATH . " --output " . $qst->getOutput() . " " . $stat_file;
 my $cmd_line = $mg_cmd_line . "; " . $mp_cmd_line;
 
@@ -65,6 +70,7 @@ __END__
 
 =head1 OPTIONS
 
+  index
   verbose|v                Print extra status information during run.
   help|usage|h|?           Print usage message and then exit.
   man                      Display manual.

@@ -15,8 +15,8 @@ my ( $sec, $min, $hr, $mday, $mon, $year, $wday, $yday, $isdst ) =
   localtime(time);
 my $NOW = $year . $mon . $mday . "_" . $hr . $min . $sec;
 
-my $DEFAULT_QUEUEING_SYSTEM = "LSF";
-my $DEFAULT_QUEUE           = "production";
+my $DEFAULT_GRID_ENGINE = "LSF";
+my $DEFAULT_QUEUE       = "production";
 
 my $PWD = getcwd;
 
@@ -25,7 +25,7 @@ sub new {
 	my $self;
 
 	# Extra attributes, which we'll set later
-	$self->{_queueing_system} = $DEFAULT_QUEUEING_SYSTEM;
+	$self->{_grid_engine} = $DEFAULT_GRID_ENGINE;
 	$self->{_tool}            = undef;
 	$self->{_tool_path}       = undef;
 	$self->{_project_name}    = undef;
@@ -47,7 +47,7 @@ sub parseOptions {
 	my ($self) = @_;
 
 	GetOptions(
-		'queueing_system|qs=s'     => \$self->{_queueing_system},
+		'grid_engine|ge=s'     	   => \$self->{_grid_engine},
 		'tool|t=s'                 => \$self->{_tool},
 		'tool_path|tp=s'           => \$self->{_tool_path},
 		'project_name|project|p=s' => \$self->{_project_name},
@@ -75,6 +75,8 @@ sub toString {
 
 	my $string =
 	    "Settings:\n"
+	  . "Grid Engine: "
+	  . $self->{_grid_engine} . "\n"
 	  . "Tool: "
 	  . $self->{_tool} . "\n"
 	  . "Tool path: "
@@ -103,9 +105,9 @@ sub toString {
 
 # **** Setters ****
 
-sub setQueueingSystem {
-	my ( $self, $queueing_system ) = @_;
-	$self->{_queueing_system} = $queueing_system;
+sub setGridEngine {
+	my ( $self, $grid_engine ) = @_;
+	$self->{_grid_engine} = $grid_engine;
 }
 
 sub setTool {
@@ -165,9 +167,9 @@ sub setVerbose {
 
 # **** Getters ****
 
-sub getQueueingSystem {
+sub getGridEngine {
 	my ($self) = @_;
-	return $self->{_queueing_system};
+	return $self->{_grid_engine};
 }
 
 sub getTool {
@@ -242,10 +244,10 @@ sub isVerbose {
 
 # **** Param Getters ****
 
-sub getQueueingSystemAsParam {
+sub getGridEngineAsParam {
 	my ($self) = @_;
-	return $self->{_queueing_system}
-	  ? ( "--queueing_system " . $self->{_queueing_system} )
+	return $self->{_grid_engine}
+	  ? ( "--grid_engine " . $self->{_grid_engine} )
 	  : "";
 }
 
@@ -342,13 +344,13 @@ __END__
 
 =head1 DESCRIPTION
 
-  <Script description>.  This script is designed to execute jobs on a queueing system.
+  <Script description>.  This script is designed to execute jobs on a grid engine.
 
 
 =head1 OPTIONS
 
-  --queueing_system      --qs
-              The queueing system to use.  Currently "LSF" and "PBS" are supported.
+  --grid_engine      	 --ge
+              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
   --tool                 -t
               If this script supports multiple tools to do the same job you can specify that tool using this parameter.
@@ -357,10 +359,10 @@ __END__
               The path to the tool, or name of the tool's binary file if on the path.
 
   --project_name         --project           -p
-              The project name for the job that will be placed on the queueing system.
+              The project name for the job that will be placed on the grid engine.
 
   --job_name             --job               -j
-              The job name for the job that will be placed on the queueing system.
+              The job name for the job that will be placed on the grid engine.
 
   --wait_condition       --wait              -w
               If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
@@ -372,10 +374,10 @@ __END__
               The amount of memory to reserve for this job.
 
   --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the queueing system.
+              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
 
   --extra_args           --ea
-              Any extra arguments that should be sent to the queueing system.
+              Any extra arguments that should be sent to the grid engine.
 
   --input                --in                -i
               The input file(s) for this job.

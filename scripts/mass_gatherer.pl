@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use Getopt::Long;
 use Pod::Usage;
@@ -46,8 +47,14 @@ my (%opt) = ( "assembler", $DEF_ASSEMBLER );
 
 $opt{seq_info} = $SEQ_INFO_PATH if ($SEQ_INFO_PATH);
 
-GetOptions( \%opt, 'assembler|a=s', 'seq_info|si=s', 'verbose|v',
-	'help|usage|h|?', 'man' )
+GetOptions( 
+	\%opt, 
+	'assembler|a=s',
+	'seq_info|si=s',
+	'index',
+	'verbose|v',
+	'help|usage|h|?',
+	'man' )
   or pod2usage("Try '$0 --help' for more information.");
 
 # Display usage message or manual information if required
@@ -119,6 +126,14 @@ my @s_table = sort {
 	my @name_pair = map { /^(\d+)(\|.*)/; $1 } ( $a, $b );
 	$name_pair[0] <=> $name_pair[1];
 } @table;
+
+# Add index to beginning of each table row... note that this assumes that the kmer value isn't present
+# if it is this will make a mess, so use this with care!
+if ($opt{index}) {
+	for(my $i = 0; $i < @s_table; $i++) {
+		$s_table[$i] = ($i + 1) . $s_table[$i];
+	}
+}
 
 print "\nStatistics:\n" if $opt{verbose};
 print

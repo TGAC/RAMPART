@@ -45,7 +45,7 @@ sub submit {
 	if ($self->{_verbose}) {
 		print 	"\nJob Submission:\n" .
 				"Submitting with: " . $self->{_cmd_submit} . "\n" .
-				"Queueing System Args: " . $qs_args . "\n" .
+				"Grid Engine Args: " . $qs_args . "\n" .
 				"Command to execute: " . $cmd_line . "\n\n";
 	}
 
