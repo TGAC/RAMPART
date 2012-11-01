@@ -11,6 +11,7 @@ use Cwd;
 use Cwd 'abs_path';
 use QsOptions;
 use SubmitJob;
+use Configuration;
 
 
 # Tool names
@@ -63,6 +64,7 @@ my (%opt) = (	"kmin", 		$DEF_KMER_MIN,
 
 GetOptions (
 	\%opt,
+	'config|cfg=s',
 	'kmin=i',
 	'kmax=i',
 	'stats',
@@ -79,21 +81,13 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 
-# Get input files
-my @in_files = @ARGV;
-my $input_files = join " ", @in_files;
-
 print "\n";
 print "Command line arguments gathered\n\n" if $qst->isVerbose();
 
 
 # Argument Validation
 
-die "Error: No input files specified\n\n" unless @in_files;
-foreach(@in_files) {
-        die "Error: Input file does not exist: " . $_ . "\n\n" unless (-e $_);
-}
-
+die "Error: No config file specified\n\n" unless $opt{config};
 die "Error: K-mer limits must be >= " . $KMER_MIN . "nt\n\n" unless ($opt{kmin} >= $KMER_MIN && $opt{kmax} >= $KMER_MIN);
 die "Error: K-mer limits must be <= " . $KMER_MAX . "nt\n\n" unless ($opt{kmin} <= $KMER_MAX && $opt{kmax} <= $KMER_MAX);
 die "Error: Min K-mer value must be <= Max K-mer value\n\n" unless ($opt{kmin} <= $opt{kmax});
@@ -103,25 +97,17 @@ die "Error: Invalid number of cores requested.  Must request at least 1 core per
 
 die "Error: Invalid memory setting.  Must request at least " . $MIN_MEM . "GB.\n\n" unless ($qst->getMemoryGB() >= $MIN_MEM);
 
-
 print "Validated arguments\n\n" if $qst->isVerbose();
-print "Input files: " . $input_files . "\n" if $qst->isVerbose();
-if ($opt{verbose}) {
-	print "Options:\n";
-	foreach (keys %opt) {
-		print "\t'$_' => " . $opt{$_} . "\n";
-	}
-	print "\n";
-}
 
 
 # These variables get varied for each run.
 my $job_prefix = $qst->getJobName();
 my $output_dir = $qst->getOutput();
 
+my $cfg = new Configuration( $opt{config} );
+
 
 # Assembly job loop
-
 my $tool = $qst->getTool();
 my $j = 0;
 
@@ -136,6 +122,7 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	$qst_ass->setTool($qst->getTool());
 	$qst_ass->setToolPath($qst->getToolPath());
 	$qst_ass->setProjectName($qst->getProjectName());
+	$qst_ass->setWaitCondition($qst->getWaitCondition());
 	$qst_ass->setQueue($qst->getQueue());
 	$qst_ass->setMemory($qst->getMemoryGB());
 	$qst_ass->setThreads($qst->getThreads());
@@ -148,12 +135,47 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	my $cmd_line;
 	
 	if ($tool eq $T_ABYSS) {
+		
+		# Create argument list
 		my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
 		my $abyss_threads = "np=" . $qst_ass->getThreads();
 		my $abyss_kmer = "k=" . $i;
 		my $abyss_out_prefix = "name=Abyss-mpi-k" . $i;
-		my $abyss_in = "in='" . $input_files . "'";
-		$cmd_line = $ABYSS_SOURCE_CMD . " " . $TP_ABYSS . " " . $abyss_threads . " " . $abyss_core_args . " " . $abyss_kmer . " " . $abyss_out_prefix . " " . $abyss_in;
+		
+		# Process configuration file to build list of libraries to assemble
+		my @libs = ();
+		my @lib_args = ();
+		my @single_ends = ();
+		
+		for(my $j = 0; $j < $cfg->getNbSections(); $j++) {
+			my $sect = $cfg->getSectionAt($j);
+			my $sect_name = $cfg->getSectionNameAt($j);
+			my $se = $sect->{qs};
+			push(@libs, $sect_name);
+			push(@lib_args, ($sect_name . "='" . $sect->{q1} . " " . $sect->{q2} . "'"));
+			push(@single_ends, $se) if $se;
+		}
+		
+		my $abyss_lib = "lib='" . (join " ", @libs) . "'";
+		my $abyss_lib_args = (join " ", @lib_args);
+		my $abyss_ses = @single_ends > 0 ? "se='" . (join " ", @single_ends) . "'" : "";
+		my $abyss_libs = "-j" . $cfg->getNbSections();
+		
+		# Put together all the arguments
+		my @abyss_args = grep {$_} (
+			$ABYSS_SOURCE_CMD,
+			$TP_ABYSS,
+			$abyss_threads,
+			$abyss_core_args,
+			$abyss_kmer,
+			$abyss_out_prefix,
+			$abyss_libs,
+			$abyss_lib,
+			$abyss_lib_args,
+			$abyss_ses
+		);
+		
+		$cmd_line = join " ", @abyss_args;
 	}
 	elsif ($tool eq $T_VELVET) {
 		die "Error: Velvet not implemented yet\n\n";

@@ -39,7 +39,7 @@ $qst->parseOptions();
 # Parse tool specific options
 my (%opt) = ( );
 
-GetOptions( \%opt, 'read_length|readlen|rl|r=i', 'config|c=s', 'help|usage|h|?',
+GetOptions( \%opt, 'config|c=s', 'help|usage|h|?',
 	'man' )
   or pod2usage("Try '$0 --help' for more information.");
 
@@ -49,7 +49,6 @@ pod2usage( -verbose => 2 ) if $opt{man};
 
 die "Error: No input scaffold file specified\n\n" unless $qst->getInput();
 die "Error: No rampart config file specified\n\n" unless $opt{config};
-die "Error: Read length not specified\n\n" unless $opt{read_length};
 
 my $cmd_line = "";
 
@@ -57,8 +56,7 @@ my $cmd_line = "";
 if ($qst->isVerbose()) {
 	print 	"\n\n" .
 			$qst->toString() .
-			"Config: " . $opt{config} . "\n" .
-			"Read Length: " . $opt{read_length} . "\n\n";
+			"Config: " . $opt{config} . "\n\n";
 }
 
 # Select the gap closer and build the command line
@@ -72,18 +70,15 @@ if ( $tool eq $T_GAP_CLOSER ) {
 	
 	my $gc_scaffolds  = $qst->getOutput() . "/gc-scaffolds.fa";
 	my $gc_other_args = "-p 61";
+	my $read_length = $rampart_cfg->getSectionAt(0)->{max_rd_len};
 
 	$cmd_line =
 	    $GC_SOURCE_CMD . " "
 	  . $TP_GAP_CLOSER
-	  . " -a \""
-	  . $qst->getInput()
-	  . "\" -b \""
-	  . $gc_cfg_file
-	  . "\" -o \""
-	  . $gc_scaffolds
-	  . "\" -l "
-	  . $opt{read_length} . " "
+	  . " -a \"" . $qst->getInput() . "\""
+	  . " -b \"" . $gc_cfg_file . "\""
+	  . " -o \"" . $gc_scaffolds . "\"" 
+	  . " -l " . $read_length . " "
 	  . $gc_other_args;
 }
 elsif ( $tool eq $T_IMAGE ) {

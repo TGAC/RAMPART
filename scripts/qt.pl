@@ -56,15 +56,28 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 
+# Validation
+die "Error: input 1 not specified\n\n" unless $opt{in1};
+die "Error: input 2 not specified\n\n" unless $opt{in2};
+die "Error: output 1 not specified\n\n" unless $opt{out1};
+die "Error: output 2 not specified\n\n" unless $opt{out2};
+die "Error: output singles not specified\n\n" unless $opt{sout};
+
+
+
 my $cmd_line = "";
 my $cd = 0;
 
 
 # Display configuration settings if requested.
 if($qst->isVerbose()) {
-	print "\n\n" .
-	$qst->toString() .
-	"Config: " . $opt{config} . "\n\n";
+	print 	"\n\n" .
+			$qst->toString() .
+			"in1: " . $opt{in1} . "\n" .
+			"in2: " . $opt{in2} . "\n" .
+			"out1: " . $opt{out1} . "\n" .
+			"out2: " . $opt{out2} . "\n" .
+			"sout: " . $opt{sout} . "\n\n";
 }
 
 my $tool = $qst->getTool();
@@ -73,6 +86,7 @@ my $tool = $qst->getTool();
 if ($tool eq $T_SICKLE) {
 
 	my @sickle_args = grep {$_} (
+		$SICKLE_SOURCE_CMD,
 		$qst->getToolPath(),
 		"pe",
 		"-q 30 -l 75 -n -t sanger",

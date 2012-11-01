@@ -207,7 +207,7 @@ if ( $opt{stats} ) {
 	# Link to each scaffold file from each stage of this process
 	my $j = 1;
 	foreach ( @assemblies ) {
-		system("ln -s " . $_ . " " . $stats_dir . "/" . $j . "-scaffolds.fa");
+		system("ln -s -f " . $_ . " " . $stats_dir . "/" . $j . "-scaffolds.fa");
 		$j++;
 	}
 
@@ -227,7 +227,7 @@ if ( $opt{stats} ) {
 
 	system(join " ", @mgp_args);
 	
-	system("ln -s " . $assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
+	system("ln -s -f " . $assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
 
 	$last_job = $clip_job_name;
 }

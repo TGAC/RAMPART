@@ -100,7 +100,7 @@ sub toString {
 	  . "Extra Args: "
 	  . ( $self->{_extra_args} ? $self->{_extra_args} : "" ) . "\n"
 	  . "Input: "
-	  . $self->{_input} . "\n"
+	  . ( $self->{_input} ? $self->{_input} : "" ) . "\n"
 	  . "Output: "
 	  . $self->{_output} . "\n";
 

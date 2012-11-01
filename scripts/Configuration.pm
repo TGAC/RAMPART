@@ -49,6 +49,16 @@ sub getSectionAt {
 	return $section;
 }
 
+sub getSectionNameAt {
+	my ($self, $index) = @_;
+
+	my $cfg = $self->{_cfg};
+	my @sects = $cfg->Sections();
+	my $section_name = $sects[$index];
+	
+	return $section_name;
+}
+
 
 sub getAllInputFiles {
 	
@@ -69,6 +79,12 @@ sub getAllInputFiles {
 	}
 
 	return @fq_files;	
+}
+
+sub save {
+	my ($self, $out_path) = @_;
+	
+	$self->{_cfg}->WriteConfig($out_path);
 }
 
 
