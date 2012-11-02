@@ -21,6 +21,7 @@ my $DEF_OUT = $PWD . "/mass_selector.rout";
 
 # R script constants
 my $MASS_SELECTOR_R = $RAMPART_DIR . "mass_selector.R";
+my $FULL_PLOTTER_R = $RAMPART_DIR . "full_plotter.R";
 my $R_SOURCE_CMD = "source R-2.15.0;";
 
 # Parse generic queueing tool options
@@ -55,23 +56,32 @@ die "Error: No qt stats file was specified\n\n" unless $opt{qt_stats_file};
 
 
 
-# Get produce stats and graphs for raw dataset
+# Produce stats and select best assembly from both datasets
 
-my @r_script_args = (
+my $merged_file = $qso->getOutput() . "/merged.tab";	# This file produced by the mass selector R scripts contains the stats for both datasets
+my $plot_file = $qso->getOutput() . "/plots.pdf";
+
+my @r_select_script_args = (
 	$opt{raw_stats_file},
 	$opt{qt_stats_file},
 	$opt{approx_genome_size} ? $opt{approx_genome_size} : "0",
 	$qso->getOutput()
 );
+my $r_select_args = join " ", @r_select_script_args;
+my $r_select_cmd_line = "R CMD BATCH '--args " . $r_select_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/select_log.rout";
 
-my $r_args = join " ", @r_script_args;
+my @r_plot_args = (
+	$merged_file,
+	$plot_file
+);
+my $r_plot_args = join " ", @r_plot_args;
+my $r_plot_cmd_line = "R CMD BATCH '--args " . $r_plot_args  . "' " . $FULL_PLOTTER_R . " " .  $qso->getOutput() . "/plot_log.rout";
 
-my $r_cmd_line = $R_SOURCE_CMD . " R CMD BATCH '--args " . $r_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/log.rout";
+my $r_cmd_line = $R_SOURCE_CMD . " " . $r_select_cmd_line . "; " . $r_plot_cmd_line;
 
 SubmitJob::submit($qso, $r_cmd_line);
 
 print "Selected best assembly from input stats.\n" if $qso->isVerbose();
-
 
 
 __END__

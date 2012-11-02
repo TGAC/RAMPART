@@ -12,6 +12,7 @@ use Cwd 'abs_path';
 use QsOptions;
 use Configuration;
 use SubmitJob;
+use File::Basename;
 
 #### Constants
 
@@ -87,23 +88,32 @@ my $get_best_job_name = $mass_job_prefix . "-getbest";
 my $improver_job_prefix = $qst->getJobName() . "-improver";
 
 
-#Set locations of important assembly directories and files
+# Set locations of read library files and directories
 my $reads_dir = $qst->getOutput() . "/reads";
+my $raw_config_file = $reads_dir . "/raw.cfg";
+my $qt_config_file = $reads_dir . "/qt.cfg";
+
+# Set locations of mass files and directories
 my $mass_dir = $qst->getOutput() . "/mass";
-my $raw_mass_dir = $mass_dir . "/raw";
-my $qt_mass_dir = $mass_dir . "/qt";
-my $raw_stats_file = $raw_mass_dir . "/stats.txt";
-my $qt_stats_file = $qt_mass_dir . "/stats.txt";
-my $best_path_file = $mass_dir . "/best.path.txt";
-my $best_dataset_file = $mass_dir . "/best.dataset.txt";
-my $raw_config_file = $qst->getOutput() . "/raw.cfg";
-my $qt_config_file = $qst->getOutput() . "/qt.cfg";
-my $best_assembly_sl_path = $qst->getOutput() . "/best_assembly.fa";
-my $best_config_sl_path = $qst->getOutput() . "/best.cfg";
+my $mass_raw_dir = $mass_dir . "/raw";
+my $mass_qt_dir = $mass_dir . "/qt";
+my $mass_stats_dir = $mass_dir . "/stats";
+my $mass_best_dir = $mass_dir . "/best";
+my $raw_stats_file = $mass_raw_dir . "/stats.txt";
+my $qt_stats_file = $mass_qt_dir . "/stats.txt";
+my $best_path_file = $mass_stats_dir . "/best.path.txt";
+my $best_dataset_file = $mass_stats_dir . "/best.dataset.txt";
+my $best_assembly_sl_path = $mass_best_dir . "/best_assembly.fa";
+my $best_config_sl_path = $mass_best_dir . "/best.cfg";
 	
 
+# TODO - wrap all stages in subs and avoid global vars where possible.
 
+
+# Optionally do quality trimming on the input data
 if ($opt{qt}) {
+
+	mkdir $reads_dir;
 	
 	system("cp " . $opt{config} . " " . $raw_config_file );
 	system("cp " . $opt{config} . " " . $qt_config_file );
@@ -113,17 +123,28 @@ if ($opt{qt}) {
 	
 	for(my $i = 0; $i < $raw_cfg->getNbSections(); $i++) {
 		
+		# Get info for this section
 		my $cfg_sect = $raw_cfg->getSectionAt($i);
-		my @sects = $raw_cfg->getRawStructure()->Sections();
-		my $sect_name = @sects ? $sects[$i] : "";		
+		my $sect_name = $raw_cfg->getSectionNameAt($i);
 		
-		my $in1_arg = $cfg_sect->{q1};
-		my $in2_arg = $cfg_sect->{q2};
-		my $out1_arg = $in1_arg . ".qt.fastq";
-		my $out2_arg = $in2_arg . ".qt.fastq";
-		my $sout_arg = $qst->getOutput() . "/" . $cfg_sect->{lib} . "_singles.qt.fastq";
+		# Get the file paths pointed to by the original config file.
+		my $file1 = $cfg_sect->{q1};
+		my $file2 = $cfg_sect->{q2};
 		
-		my $qt_job_name = $qt_job_prefix . "-" . $i; 
+		# Configure file paths for reads dir
+		my $read_file_prefix = $reads_dir . "/" . $cfg_sect->{lib};
+		my $in_file1 = $read_file_prefix . "_1.fastq";
+		my $in_file2 = $read_file_prefix . "_2.fastq";
+		my $out_file1 = $read_file_prefix . "_1.qt.fastq";
+		my $out_file2 = $read_file_prefix . "_2.qt.fastq";
+		my $sout_file = $read_file_prefix . "_se.qt.fastq";
+				
+		# Link the original files to the reads dir
+		system("ln -s -f " . $file1 . " " . $in_file1);
+		system("ln -s -f " . $file2 . " " . $in_file2);
+		
+		
+		my $qt_job_name = $qt_job_prefix . "-" . $i;
 		
 		my @qt_args = grep {$_} (
 			$QT_PATH,
@@ -133,24 +154,27 @@ if ($opt{qt}) {
 			$qst->getQueueAsParam(),
 			$qst->getExtraArgs(),
 			$qst->isVerboseAsParam(),
-			"--in1 " . $in1_arg,
-			"--in2 " . $in2_arg,
-			"--out1 " . $out1_arg,
-			"--out2 " . $out2_arg,
-			"--sout " . $sout_arg
+			"--in1 " . $in_file1,
+			"--in2 " . $in_file2,
+			"--out1 " . $out_file1,
+			"--out2 " . $out_file2,
+			"--sout " . $sout_file
 		);
 				
 		my $qt_cmd_line = join " ", @qt_args;
 	
 		system($qt_cmd_line);
 		
-		# Also remember to change the qt configuration
-		$qt_cfg->getSectionAt($i)->{q1} = $out1_arg;
-		$qt_cfg->getSectionAt($i)->{q2} = $out2_arg;
-		$qt_cfg->getRawStructure()->newval($sect_name, "qs", $sout_arg );
+		# Also we must change the new configuration files for consisitency
+		$raw_cfg->getSectionAt($i)->{q1} = $in_file1;
+		$raw_cfg->getSectionAt($i)->{q2} = $in_file2;
+		$qt_cfg->getSectionAt($i)->{q1} = $out_file1;
+		$qt_cfg->getSectionAt($i)->{q2} = $out_file2;
+		$qt_cfg->getRawStructure()->newval($sect_name, "qs", $sout_file );
 	}
 	
-	# Save the QT configuration
+	# Save the new configuration files
+	$raw_cfg->save( $raw_config_file );
 	$qt_cfg->save( $qt_config_file );
 }
 
@@ -160,8 +184,8 @@ if ($opt{mass}) {
 
 	# Create directories to hold the assemblies.
 	mkdir $mass_dir;	
-	mkdir $raw_mass_dir;	
-	mkdir $qt_mass_dir;
+	mkdir $mass_raw_dir;	
+	mkdir $mass_qt_dir;
 
 	# Set job prefixes
 	my $raw_mass_job_prefix = $mass_job_prefix . "-raw";
@@ -171,12 +195,14 @@ if ($opt{mass}) {
 	my $qt_wait_job = $qt_job_prefix . "*" if $opt{qt};
 
 	# Run the assembler script for each dataset
-	run_mass($raw_config_file, $raw_mass_job_prefix, $raw_mass_dir, $qt_wait_job);
-	run_mass($qt_config_file, $qt_mass_job_prefix, $qt_mass_dir, $qt_wait_job);
+	run_mass($raw_config_file, $raw_mass_job_prefix, $mass_raw_dir, $qt_wait_job);
+	run_mass($qt_config_file, $qt_mass_job_prefix, $mass_qt_dir, $qt_wait_job);
 }
 
 ## Run mass selector to find the best assembly
 if ($opt{mass_selector}) {
+	
+	mkdir $mass_stats_dir;
 	
 	# Build the command line args.
 	# If the MASS step was run previously make sure this step doesn't run until after all MASS jobs have finished. 
@@ -188,7 +214,7 @@ if ($opt{mass_selector}) {
 			$opt{mass} ? "--wait_condition 'ended(" . $mass_job_prefix . "*)'" : "",
 			$qst->getQueueAsParam(),
 			$qst->getExtraArgs(),
-			"--output " . $mass_dir,
+			"--output " . $mass_stats_dir,
 			$qst->isVerboseAsParam(),
 			"--raw_stats_file " . $raw_stats_file,
 			"--qt_stats_file " . $qt_stats_file,
@@ -199,6 +225,7 @@ if ($opt{mass_selector}) {
 	system($ms_cmd_line);
 	
 	# Put the best assembly and config in a known location
+	mkdir $mass_best_dir;	
 	
 	my @gb_args = grep {$_} (
 		$GETBEST_PATH,
