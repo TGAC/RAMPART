@@ -17,7 +17,7 @@ my $DEF_OUT = $PWD;
 
 # Assembly stats plotting constants
 my $MASS_PLOTTER_SCRIPT = $RAMPART_DIR . "mass_plotter.R";
-my $R_SOURCE_CMD = "source R-2.15.0;";
+my $R_SOURCE_CMD = "source R-2.12.2;";
 
 
 # Assign any command line options to variables
@@ -54,7 +54,7 @@ die "Error: Was only expecting a single file to process\n\n" unless @in_files ==
 
 my $output_log = $opt{output} . "/plotter.rout";
 my $output_plot = $opt{output} . "/stats.pdf";
-system($R_SOURCE_CMD . " R CMD BATCH '--args " . $input_file . " " . $output_plot . "' " . $MASS_PLOTTER_SCRIPT . " " .  $output_log);
+system($R_SOURCE_CMD . "R CMD BATCH '--args " . $input_file . " " . $output_plot . "' " . $MASS_PLOTTER_SCRIPT . " " .  $output_log);
 
 print "Plotted graphs from raw and qt datasets.\n" if $opt{verbose};
 

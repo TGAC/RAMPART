@@ -81,8 +81,7 @@ pod2usage( -verbose => 1 ) if $opt{help};
 pod2usage( -verbose => 2 ) if $opt{man};
 
 
-print "\n";
-print "Command line arguments gathered\n\n" if $qst->isVerbose();
+print "\nCommand line arguments gathered\n\n" if $qst->isVerbose();
 
 
 # Argument Validation
@@ -98,6 +97,11 @@ die "Error: Invalid number of cores requested.  Must request at least 1 core per
 die "Error: Invalid memory setting.  Must request at least " . $MIN_MEM . "GB.\n\n" unless ($qst->getMemoryGB() >= $MIN_MEM);
 
 print "Validated arguments\n\n" if $qst->isVerbose();
+
+
+
+# We shouldn't have to do this but abyss
+
 
 
 # These variables get varied for each run.

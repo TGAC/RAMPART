@@ -100,6 +100,7 @@ if ( $opt{verbose} ) {
 # Run sequence_info on each and pipe into tabulateor
 #$seq_info_cmd = $opt{seq_info} . "-n -r";
 my @table;
+my $i = 1;
 foreach (@sorted_assemblies) {
 	my ( $name, $dir ) = fileparse( abs_path($0) );
 	my $tabulate_cmd =
@@ -109,11 +110,21 @@ foreach (@sorted_assemblies) {
 	  . $dir
 	  . "/mass_formatter.pl --notitle";
 	my $output   = `$tabulate_cmd`;
-	my $matchstr = $output;
-	$matchstr =~ m/-k(\d+)-scaffolds/;
-	print "k" . $1 . "\n" if $opt{verbose};
-	print $output . "\n"  if $opt{verbose};
-	push @table, $1 . "|" . $output;
+	
+	if ($opt{index}) {
+		print "index-" . $i . "\n" if $opt{verbose};
+		print $output . "\n"  if $opt{verbose};
+		push @table, $i . "|" . $output;
+	}
+	else {
+		my $matchstr = $output;
+		$matchstr =~ m/-k(\d+)-scaffolds/;
+		print "k" . $1 . "\n" if $opt{verbose};
+		print $output . "\n"  if $opt{verbose};
+		push @table, $1 . "|" . $output;
+	}
+	 
+	$i++;
 }
 
 # Need to do some extra sorting here to numberically order by kmer size
@@ -122,17 +133,10 @@ my @s_table = sort {
 	$name_pair[0] <=> $name_pair[1];
 } @table;
 
-# Add index to beginning of each table row... note that this assumes that the kmer value isn't present
-# if it is this will make a mess, so use this with care!
-if ($opt{index}) {
-	for(my $i = 0; $i < @s_table; $i++) {
-		$s_table[$i] = ($i + 1) . $s_table[$i];
-	}
-}
 
 print "\nStatistics:\n" if $opt{verbose};
-print
-"kmer|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n50\n"
+my $col1 = $opt{index} ? "index" : "kmer";
+print $col1 . "|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n50\n"
   . ( join "", @s_table ) . "\n";
 
 sub which {

@@ -22,7 +22,7 @@ my $DEF_OUT = $PWD . "/mass_selector.rout";
 # R script constants
 my $MASS_SELECTOR_R = $RAMPART_DIR . "mass_selector.R";
 my $FULL_PLOTTER_R = $RAMPART_DIR . "full_plotter.R";
-my $R_SOURCE_CMD = "source R-2.15.0;";
+my $R_SOURCE_CMD = "source R-2.12.2;";
 
 # Parse generic queueing tool options
 my $qso = new QsOptions();
@@ -77,7 +77,7 @@ my @r_plot_args = (
 my $r_plot_args = join " ", @r_plot_args;
 my $r_plot_cmd_line = "R CMD BATCH '--args " . $r_plot_args  . "' " . $FULL_PLOTTER_R . " " .  $qso->getOutput() . "/plot_log.rout";
 
-my $r_cmd_line = $R_SOURCE_CMD . " " . $r_select_cmd_line . "; " . $r_plot_cmd_line;
+my $r_cmd_line = $R_SOURCE_CMD . $r_select_cmd_line . ";" . $r_plot_cmd_line;
 
 SubmitJob::submit($qso, $r_cmd_line);
 

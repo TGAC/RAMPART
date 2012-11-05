@@ -44,7 +44,7 @@ GetOptions(
 	\%opt,
 	'scaffolder_args|s_args=s',
 	'degap_args|dg_args=s',
-	'clip|c',
+	'clip',
 	'clip_args=s',
 	'config|cfg=s',
 	'iterations|i=i',
@@ -174,7 +174,7 @@ if ( $opt{clip} ) {
 
 	my $clip_scf_file = $clip_dir . "/clipped-scaffolds.fa";
 	my $clip_out_arg = "--output " . $clip_scf_file;
-	my $clip_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
+	my $clip_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
 
 	my @clip_args = grep {$_} (
 		$CLIPPER_PATH,
@@ -196,9 +196,7 @@ if ( $opt{clip} ) {
 
 ## Remove duplicates???
 
-## Generate final stats (maybe!!)
-
-# Will need to make soft links to all scaffold files in same directory and then use stats_gatherer on this.
+## Generate final stats 
 if ( $opt{stats} ) {
 
 	my $stats_dir = $qst->getOutput() . "/stats";
@@ -211,7 +209,7 @@ if ( $opt{stats} ) {
 		$j++;
 	}
 
-	my $mgp_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
+	my $mgp_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
 
 	my @mgp_args = grep {$_} (
 		$MASS_GP_PATH,

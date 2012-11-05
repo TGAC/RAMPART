@@ -6,19 +6,21 @@ outfile <- args[2]
 
 t1 <- read.table(infile, header = TRUE, sep="|", quote = "");
 
+col1 <- colnames(data)[1]
+
 # Get individual features
 
-nbcontigs <- t1[,c('kmer','nbcontigs')]
-apc <- t1[,c('kmer','a.pc')]
-cpc <- t1[,c('kmer','c.pc')]
-gpc <- t1[,c('kmer','g.pc')]
-tpc <- t1[,c('kmer','t.pc')]
-npc <- t1[,c('kmer','n.pc')]
-total <- t1[,c('kmer','total')]
-minlen <- t1[,c('kmer','minlen')]
-maxlen <- t1[,c('kmer','maxlen')]
-avglen <- t1[,c('kmer','avglen')]
-n50 <- t1[,c('kmer','n50')]
+nbcontigs <- t1[,c(col1,'nbcontigs')]
+apc <- t1[,c(col1,'a.pc')]
+cpc <- t1[,c(col1,'c.pc')]
+gpc <- t1[,c(col1,'g.pc')]
+tpc <- t1[,c(col1,'t.pc')]
+npc <- t1[,c(col1,'n.pc')]
+total <- t1[,c(col1,'total')]
+minlen <- t1[,c(col1,'minlen')]
+maxlen <- t1[,c(col1,'maxlen')]
+avglen <- t1[,c(col1,'avglen')]
+n50 <- t1[,c(col1,'n50')]
 
 pdf(paste(outfile,sep=""))
 plot(nbcontigs, type="o")
