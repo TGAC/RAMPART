@@ -1,0 +1,68 @@
+#!/usr/bin/perl -w
+			########################################################################################
+			############################## abyss_extract_fasta_entries.pl ##########################
+			########################################################################################
+			########################################################################################
+			## This is a simple perl script that given an a file which contains fasta sequences   ##
+			## extracts sequences of certain length. The scripts takes 3 arguments, the length    ##
+			## of the sequences to be extracted, the input file name and the output file name.    ##
+			## This script is modified to work with the output from the abyss algorithm where     ##
+			## the sequence is all in one line following the fasta header. Obviously this script  ##
+			## be modified to work on outputs where the sequence spans many different lines. The  ##
+			## output from this script formats the sequence to be split in a new line every 80 bp.##
+			########################################################################################
+			########################################################################################
+			########################################################################################
+			########################################################################################
+
+# A checking statement that ensures the user has provided all of the 3 arguments needed
+
+unless (@ARGV == 2){
+	print "###############################################################################\n
+Usage: extract_fasta_entries.pl (length_of_sequence) (input_file)\n
+###############################################################################\n";
+exit;
+}
+
+# Get the arguments from the command line and pass them to their relative variables
+
+my $length_limit = $ARGV[0];
+my $input_file = $ARGV[1];
+
+# Intialise some other variables and a counter
+
+my $name;
+my $seq;
+my $seq_length;
+my $count = 0;
+
+# Open the input and output filehandlers
+
+open (FH,"$input_file") || die "Cannot open input file $input_file\n";
+
+# Iterate through the input file, check if the sequences meet length cutoff criteria and print them to the output file if they do
+
+while (<FH>){
+chomp $_;
+	if (/^>.+/){
+	$name = $_;
+	}
+
+	if (/^(\w+)/){
+	$seq = $1;
+	$seq_length = length($seq);
+
+                if ($seq_length < $length_limit){
+                print "$name\n";
+                $seq =~ s/(\w{80})/$1\n/g;
+                print "$seq\n";
+		$count++;
+		}
+
+	}
+
+}
+
+close FH;
+
+

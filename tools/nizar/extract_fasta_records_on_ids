@@ -1,0 +1,103 @@
+#!/usr/bin/perl
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+
+my $id_file;
+my $scaffold_file;
+my $output_file_removed;
+my $output_file_cleaned;
+my $help;
+my @fasta_ids;
+my $id_counter=0;
+my %scaffolds;
+my $scaffold_id;
+my $scaffold_seq;
+my @scaffold_ids;
+my $scaffold_counter=0;
+
+&GetOptions(
+	'i=s'   => \$id_file,
+	's=s'   => \$scaffold_file,
+	'r=s'   => \$output_file_removed,
+	'c=s'   => \$output_file_cleaned,
+	'h'   => \$help,
+	);
+
+if ($help){
+print "\nUSAGE: primary_analysis_qc_pipeline\n
+    -i file containing fasta IDs on on each line, each ID sould start with \">\"
+    -s Scaffold file containing all the sequences, the sequences should NOT be line separated,
+       i.e. all on one line.
+    -r Output fasta file that contains the removed sequences.
+    -c Output fasta file that contains the cleaned scaffolds, i.e. where the fasta IDs provided
+       in the ID file have been removed.
+       removed.
+    -h Print this help message\n\n";
+exit;
+}
+
+unless ($id_file and $scaffold_file and $output_file_removed and $output_file_cleaned){
+print "\nUSAGE: primary_analysis_qc_pipeline\n
+    -i file containing fasta IDs on on each line, each ID sould start with \">\"
+    -s Scaffold file containing all the sequences, the sequences should NOT be line separated,
+       i.e. all on one line.
+    -r Output fasta file that contains the removed sequences.
+    -c Output fasta file that contains the cleaned scaffolds, i.e. where the fasta IDs provided
+       in the ID file have been removed.
+       removed.
+    -h Print this help message\n\n";
+exit;
+}
+
+open (ID_FILE,"$id_file") || die "Cannot open ID file $id_file\n\n";
+
+while (<ID_FILE>){
+chomp;
+	if(/^>(\S+)/){
+	$fasta_ids[$id_counter]=$1;
+	$id_counter++;
+	}
+}
+close ID_FILE;
+
+open (SCAFFOLDS,"$scaffold_file") || die "Cannot open Scaffold file $scaffold_file\n\n";
+
+while (<SCAFFOLDS>){
+chomp;
+	if(/^>(\S+)/){
+	$scaffold_id = $1;
+	my $grep =`grep -c "^>$1\$" $id_file`;
+	chomp $grep;
+		if ($grep == 0){
+		$scaffold_ids[$scaffold_counter]=$1;
+		$scaffold_counter++;
+		}
+	}
+	if(/^(\w+)/){
+	$scaffold_seq = $1;
+	}
+
+$scaffolds{$scaffold_id}=$scaffold_seq;
+
+}
+
+close SCAFFOLDS;
+
+open (REMOVED,">>$output_file_removed")|| die "Cannot open output file $output_file_removed\n\n";
+open (CLEANED,">>$output_file_cleaned")|| die "Cannot open output file $output_file_removed\n\n";
+
+foreach my $fasta_id (@fasta_ids){
+
+print REMOVED ">$fasta_id\n";
+print REMOVED $scaffolds{$fasta_id}."\n";
+}
+
+foreach my $scaffold_id (@scaffold_ids){
+print CLEANED ">$scaffold_id\n$scaffolds{$scaffold_id}\n";
+}
+
+close REMOVED;
+close CLEANED;
+exit;

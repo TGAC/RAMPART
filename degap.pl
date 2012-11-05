@@ -13,6 +13,7 @@ Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use Cwd;
 
+# RAMPART modules
 use QsOptions;
 use Configuration;
 use SubmitJob;

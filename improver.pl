@@ -36,6 +36,7 @@ my $SCAFFOLDER_PATH = $RAMPART_DIR . "scaffolder.pl";
 my $DEGAPPER_PATH   = $RAMPART_DIR . "degap.pl";
 my $CLIPPER_PATH    = $RAMPART_DIR . "clipper.pl";
 my $MASS_GP_PATH    = $RAMPART_DIR . "mass_gp.pl";
+my $DEDUP_PATH    	= $RAMPART_DIR . "dedup.pl";
 
 # Parse generic queueing tool options
 my $qst = new QsOptions();
@@ -51,6 +52,7 @@ GetOptions(
 	'degap_args|dg_args=s',
 	'clip',
 	'clip_args=s',
+	'dedup',
 	'config|cfg=s',
 	'iterations|i=i',
 	'stats',
@@ -86,6 +88,7 @@ my $sg_job_prefix  = $job_prefix . "-stat_gatherer-";
 my $scf_job_prefix = $job_prefix . "-scaffold-";
 my $dg_job_prefix  = $job_prefix . "-degap-";
 my $clip_job_name  = $job_prefix . "-clip";
+my $dedup_job_name = $job_prefix . "-dedup";
 my $stats_job_name = $job_prefix . "-stats";
 
 
@@ -197,9 +200,29 @@ if ( $opt{clip} ) {
 	push @assemblies, $current_scaffold;
 }
 
-## Remove PhiX??? (This step shouldn't be required in a normal run as the data should be screened already)
+## Remove duplicates
+if ( $opt{dedup} ) {
+	my $dedup_dir = $qst->getOutput() . "/dedup";
+	mkdir $dedup_dir;
+	
+	my $dedup_scf_file = $dedup_dir . "cleaned.fasta";
+	my $dedup_out_arg = "--output " . $dedup_dir;
+	my $dedup_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
+	
+	my @dedup_args = grep {$_} (
+		$CLIPPER_PATH,
+		@static_args,
+		"--job_name " . $dedup_job_name,
+		$dedup_wait_arg,
+		"--input " . $current_scaffold,
+		$dedup_out_arg );
 
-## Remove duplicates???
+	system(join " ", @dedup_args) unless $opt{simulate};
+	
+	$current_scaffold = $dedup_scf_file;
+	$last_job         = $clip_job_name;
+	push @assemblies, $current_scaffold;
+}
 
 ## Generate final stats 
 if ( $opt{stats} ) {
