@@ -5,6 +5,10 @@ package Configuration;
 use strict;
 use warnings;
 
+# Add current directory to @INC
+use File::Basename;
+use lib basename ($0);
+
 use IniFiles;
 
 sub new {

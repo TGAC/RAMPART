@@ -3,12 +3,19 @@
 use strict;
 use warnings;
 
+# Add rampart modules directory to @INC
+use FindBin;
+use lib "$FindBin::Bin/modules";
+
+# 3rd Part modules
 use Getopt::Long;
 Getopt::Long::Configure("pass_through");
 use Pod::Usage;
-use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
+use File::Basename;
+
+# RAMPART modules
 use QsOptions;
 use SubmitJob;
 use Configuration;

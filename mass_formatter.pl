@@ -1,5 +1,7 @@
 #!/usr/bin/perl
+
 use strict;
+
 use Pod::Usage;
 use Getopt::Long;
 

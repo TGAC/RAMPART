@@ -1,18 +1,25 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
-#### Packages
+# Add rampart modules directory to @INC
+use FindBin;
+use lib "$FindBin::Bin/modules";
+
+# 3rd Part modules
 use Getopt::Long;
 Getopt::Long::Configure("pass_through");
 use Pod::Usage;
-use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
+use File::Basename;
+
+# RAMPART modules
 use QsOptions;
 use Configuration;
 use SubmitJob;
-use File::Basename;
+
 
 #### Constants
 
@@ -287,7 +294,7 @@ if ($opt{improver}) {
 }
 
 # Notify user of job submission
-if ($qst->isVerbose()) {
+if (1){#$qst->isVerbose()) {
 	print 	"\n" .
 			"RAMPART has successfully submitted all child jobs to the grid engine.  " .
 			"You will be notified by email when the jobs have completed.  " .

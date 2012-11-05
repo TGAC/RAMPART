@@ -1,22 +1,29 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
 
+# Add rampart modules directory to @INC
+use FindBin;
+use lib "$FindBin::Bin/modules";
+
+# 3rd Part modules
 use Getopt::Long;
 use Pod::Usage;
-use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
+use File::Basename;
 
 
 # Other constants
 my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
+my $R_DIR = $RAMPART_DIR . "r_scripts/";
 my $DEF_OUT = $PWD;
 
 
 # Assembly stats plotting constants
-my $MASS_PLOTTER_SCRIPT = $RAMPART_DIR . "mass_plotter.R";
+my $MASS_PLOTTER_SCRIPT = $R_DIR . "mass_plotter.R";
 my $R_SOURCE_CMD = "source R-2.12.2;";
 
 

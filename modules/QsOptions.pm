@@ -5,9 +5,14 @@ package QsOptions;
 use strict;
 use warnings;
 
+# Add current directory to @INC
+use File::Basename;
+use lib basename ($0);
+
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;
+
 use LsfJobSubmitter;
 
 # Now

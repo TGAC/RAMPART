@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+# 3rd Part modules
 use Getopt::Long;
 use Pod::Usage;
 use File::Find;
@@ -10,30 +11,11 @@ use Cwd;
 use Cwd 'abs_path';
 use File::Basename;
 
+my ( $RAMPART, $RAMPART_DIR ) = fileparse( abs_path($0) );
+
 # Sequence info path
-my $SEQ_INFO_ON_PATH = which('sequence_info');
-my $PURNIMA_SEQ_INFO_PATH =
-  '/usr/users/tgac/pachorip/clc/clc-ngs-cell-3.0.0beta2-linux_64/sequence_info';
-my $SEQ_INFO_PATH;
-if ( -e 'sequence_info' ) {
-	$SEQ_INFO_PATH = 'sequence_info';
-
- #	print "Found sequence_info binary in current directory\n\n" if $opt{verbose};
-}
-elsif ( &which('sequence_info') ) {
-	$SEQ_INFO_PATH = 'sequence_info';
-
-	#	print "Found sequence_info binary on path\n\n" if $opt{verbose};
-}
-elsif ( -e $PURNIMA_SEQ_INFO_PATH ) {
-	$SEQ_INFO_PATH = $PURNIMA_SEQ_INFO_PATH;
-
-#	print "Found sequence_info binary in Purnima's directory\n\n" if $opt{verbose};
-}
-else {
-
-#	print "Couldn't find sequence_info binary.  User must specify location via 'seq_info' option.\n\n" if $opt{verbose};
-}
+my $SEQ_INFO_PATH = $RAMPART_DIR  . "tools/sequence_info";
+my $MASS_FORMATTER_PATH = $RAMPART_DIR  . "mass_formatter.pl";
 
 # Other constants
 my $PWD = getcwd;
@@ -41,11 +23,8 @@ my $PWD = getcwd;
 # Assign any command line options to variables
 my (%opt) = ( );
 
-$opt{seq_info} = $SEQ_INFO_PATH if ($SEQ_INFO_PATH);
-
 GetOptions( 
 	\%opt, 
-	'seq_info|si=s',
 	'index',
 	'verbose|v',
 	'help|usage|h|?',
@@ -70,8 +49,6 @@ die "Error: Can only analyse one assembly group at a time\n\n"
   unless ( @in_dir == 1 );
 die "Error: Input directory does not exist: " . $input_dir . "\n\n"
   unless ( -e $input_dir );
-
-die "Error: Could not find sequence_info binary file\n\n" unless $opt{seq_info};
 
 print "Validated arguments\n\n" if $opt{verbose};
 print "Input directory: " . $input_dir . "\n" if $opt{verbose};
@@ -98,17 +75,16 @@ if ( $opt{verbose} ) {
 }
 
 # Run sequence_info on each and pipe into tabulateor
-#$seq_info_cmd = $opt{seq_info} . "-n -r";
 my @table;
 my $i = 1;
 foreach (@sorted_assemblies) {
 	my ( $name, $dir ) = fileparse( abs_path($0) );
 	my $tabulate_cmd =
-	    $opt{seq_info}
+	    $SEQ_INFO_PATH
 	  . " -n -r "
 	  . $_ . " | "
-	  . $dir
-	  . "/mass_formatter.pl --notitle";
+	  . $MASS_FORMATTER_PATH 
+	  . " --notitle";
 	my $output   = `$tabulate_cmd`;
 	
 	if ($opt{index}) {
