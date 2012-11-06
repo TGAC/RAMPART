@@ -12,6 +12,8 @@ use Getopt::Long;
 Getopt::Long::Configure("pass_through");
 use Pod::Usage;
 use Cwd;
+use Cwd 'abs_path';
+use File::Basename;
 
 # RAMPART modules
 use QsOptions;
@@ -28,6 +30,9 @@ my $EXONERATE_PATH  		= $NIZAR_SCRIPT_DIR . "exonerate_cmd";
 my $SEARCH_EXON_RYO_PATH    = $NIZAR_SCRIPT_DIR . "search_exonerate_ryo";
 my $EX_SEQID_PATH    		= $NIZAR_SCRIPT_DIR . "extract_seq_ids_from_exonerate_ryo";
 my $EX_FASTA_ID_PATH    	= $NIZAR_SCRIPT_DIR . "extract_fasta_records_on_ids";
+my $FASTA_FORMATTER			= "fasta_formatter";
+
+my $SOURCE_FASTX			= "source fastx_toolkit-0.0.13;";
 my $SOURCE_EXONERATE		= "source exonerate-2.2.0;";
 
 # Other constants
@@ -62,6 +67,7 @@ if ($qst->isVerbose()) {
 }
 
 
+# First clean output directory and format input file to single line
 #1) perl ~droun/bin/length_extract_fasta 1000 $INPUT_FILE > over_1kb.fasta
 #2) perl ~droun/bin/length_extract_fasta_less_than_limit $INPUT_FILE > less_1kb.fasta
 #3) ~droun/bin/exonerate_cmd less_1kb.fasta over_1kb.fasta sub_1kb_vs_over_1kb.exonerate
@@ -72,21 +78,46 @@ if ($qst->isVerbose()) {
 
 # Setup files
 my $basename_input = basename($qst->getInput());
-my $o1k_file = $qst->getOutput() . "over_1kb.fasta";
-my $l1k_file = $qst->getOutput() . "less_1kb.fasta";
-my $exon_file = $qst->getOutput() . "less_1kb_vs_over_1kb.exonerate";
-my $filtered_file = $qst->getOutput() . "filtered.sub_1kb_vs_over_1kb.exonerate";
-my $ids_file = $qst->getOutput() . "ids.list";
-my $sorted_ids_file = $qst->getOutput() . "ids.list.sorted";
-my $output_cleaned = $qst->getOutput() . "cleaned.fasta";
-my $output_removed = $qst->getOutput() . "removed.fasta";
+my $sl_file = $qst->getOutput() . "/in-sl.fasta";
+my $o1k_file = $qst->getOutput() . "/over_1kb.fasta";
+my $l1k_file = $qst->getOutput() . "/less_1kb.fasta";
+my $exon_file = $qst->getOutput() . "/less_1kb_vs_over_1kb.exonerate";
+my $filtered_file = $qst->getOutput() . "/filtered.sub_1kb_vs_over_1kb.exonerate";
+my $ids_file = $qst->getOutput() . "/ids.list";
+my $sorted_ids_file = $qst->getOutput() . "/ids.list.sorted";
+my $output_cleaned = $qst->getOutput() . "/cleaned.fasta";
+my $output_removed = $qst->getOutput() . "/removed.fasta";
+
+
+# Clean directory (to ensure we overwrite all files)
+my @rm_args = grep{$_} (
+	"rm -f " . $sl_file,
+	"rm -f " . $o1k_file,
+	"rm -f " . $l1k_file,
+	"rm -f " . $exon_file,
+	"rm -f " . $filtered_file,
+	"rm -f " . $ids_file,
+	"rm -f " . $sorted_ids_file,
+	"rm -f " . $output_cleaned,
+	"rm -f " . $output_removed
+);
+my $rm_cmd = join "; ", @rm_args;
+
+# Convert input to single line seq format using FASTX
+my @sl_args = grep{$_} (
+	$SOURCE_FASTX,
+	$FASTA_FORMATTER,
+	"-i " . $qst->getInput(),
+	"-o " . $sl_file
+);
+my $sl_cmd = join " ", @sl_args;
 
 
 # Step 1 - Get large scaffolds ( >= 1kb )
 my @o1k_args = grep{$_} (
 	$LEF_PATH,
 	"1000",
-	$qst->getInput(),
+	$sl_file,
 	">",
 	$o1k_file
 );
@@ -96,7 +127,7 @@ my $o1k_cmd = join " ", @o1k_args;
 my @l1k_args = grep{$_} (
 	$LEFLTL_PATH,
 	"1000",
-	$qst->getInput(),
+	$sl_file,
 	">",
 	$l1k_file
 );
@@ -151,20 +182,18 @@ my $sort_cmd = join " ", @sort_args;
 # Step 7 - Extract FASTA Records based on the sorted IDs
 my @extract_args = grep{$_} (
 	$EX_FASTA_ID_PATH,
-	"-i",
-	$sorted_ids_file,
-	"-s",
-	$qst->getInput(),
-	"-c",
-	$output_cleaned,
-	"-r",
-	$output_removed
+	"-i " . $sorted_ids_file,
+	"-s " . $sl_file,
+	"-c " . $output_cleaned,
+	"-r " . $output_removed
 );
 my $extract_cmd = join " ", @extract_args;
 
 
 # Combine all the commands and submit to the Grid Engine
 my @cmd_args = grep{$_} (
+	$rm_cmd,
+	$sl_cmd,
 	$o1k_cmd,
 	$l1k_cmd,
 	$exon_cmd,
@@ -173,7 +202,7 @@ my @cmd_args = grep{$_} (
 	$sort_cmd,
 	$extract_cmd
 );
-my $full_cmd = join " ", @cmd_args;
+my $full_cmd = join "; ", @cmd_args;
 
 
 # Submit the deduplication job

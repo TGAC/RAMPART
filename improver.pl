@@ -23,9 +23,6 @@ use Configuration;
 # Scaffold Improver constants
 my $DEF_ITERATIONS = 1;
 
-# Clipping constants
-my $DEF_MIN_LEN = 1000;
-
 # Other constants
 my $QUOTE = "\"";
 my $PWD   = getcwd;
@@ -43,8 +40,7 @@ my $qst = new QsOptions();
 $qst->parseOptions();
 
 # Gather Command Line options and set defaults
-my (%opt) = ( 	"clip_args", 	"--min_length " . $DEF_MIN_LEN,
-				"iterations", 	$DEF_ITERATIONS );
+my (%opt) = ( 	"iterations", 	$DEF_ITERATIONS );
 
 GetOptions(
 	\%opt,
@@ -173,32 +169,6 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 	push @assemblies, $current_scaffold;
 }
 
-## Remove contigs under a user specified length
-
-if ( $opt{clip} ) {
-
-	my $clip_dir = $qst->getOutput() . "/clipped";
-	mkdir $clip_dir;
-
-	my $clip_scf_file = $clip_dir . "/clipped-scaffolds.fa";
-	my $clip_out_arg = "--output " . $clip_scf_file;
-	my $clip_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
-
-	my @clip_args = grep {$_} (
-		$CLIPPER_PATH,
-		@static_args,
-		"--job_name " . $clip_job_name,
-		$clip_wait_arg,
-		$opt{clip_args} ? $opt{clip_args} : "",
-		"--input " . $current_scaffold,
-		$clip_out_arg );
-
-	system(join " ", @clip_args) unless $opt{simulate};
-
-	$current_scaffold = $clip_scf_file;
-	$last_job         = $clip_job_name;
-	push @assemblies, $current_scaffold;
-}
 
 ## Remove duplicates
 if ( $opt{dedup} ) {
@@ -223,6 +193,34 @@ if ( $opt{dedup} ) {
 	$last_job         = $clip_job_name;
 	push @assemblies, $current_scaffold;
 }
+
+## Remove contigs under a user specified length
+if ( $opt{clip} ) {
+
+	my $clip_dir = $qst->getOutput() . "/clipped";
+	mkdir $clip_dir;
+
+	my $clip_scf_file = $clip_dir . "/clipped-scaffolds.fa";
+	my $clip_out_arg = "--output " . $clip_dir;
+	my $clip_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
+
+	my @clip_args = grep {$_} (
+		$CLIPPER_PATH,
+		@static_args,
+		"--job_name " . $clip_job_name,
+		$clip_wait_arg,
+		$opt{clip_args} ? $opt{clip_args} : "",
+		"--input " . $current_scaffold,
+		$clip_out_arg );
+
+	system(join " ", @clip_args) unless $opt{simulate};
+
+	$current_scaffold = $clip_scf_file;
+	$last_job         = $clip_job_name;
+	push @assemblies, $current_scaffold;
+}
+
+
 
 ## Generate final stats 
 if ( $opt{stats} ) {
@@ -286,6 +284,24 @@ __END__
 
 =head1 OPTIONS
 
+  --scaffolder_args      --s_args
+              Any additional arguments to send to the scaffolding tool.
+	
+  --degap_args           --dg_args
+              Any additional arguments to send to the degapping tool. 
+	
+  --clip
+              Whether to clip short sequences from the final output. Default: off.
+	
+  --clip_args
+              Any additional arguments to send to the clipping tool (e.g. --min_length 500)
+
+  --dedup
+              Whether to deduplicate redundant scaffolds
+	
+  --config               --cfg
+              REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
+
   --iterations           -i
               The number of scaffolding and degapping iterations to run.  Default: 1.
   
@@ -320,7 +336,7 @@ __END__
               Any extra arguments that should be sent to the grid engine.
 
   --input                --in                -i
-              The input file(s) for this job.
+              REQUIRED: The input scaffold file to improve.
 
   --output               --out               -o
               The output file/dir for this job.

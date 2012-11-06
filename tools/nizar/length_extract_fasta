@@ -54,7 +54,7 @@ chomp $_;
 
                 if ($seq_length >= $length_limit){
                 print "$name\n";
-                $seq =~ s/(\w{80})/$1\n/g;
+                #$seq =~ s/(\w{80})/$1\n/g;
                 print "$seq\n";
 		$count++;
 		}
