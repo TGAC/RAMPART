@@ -102,6 +102,17 @@ system("pdflatex -output-directory=" . $REPORT_DIR . " " . $report_file);
 # Make a symbolic link somewhere?
 #system ("ln -s -f ")
 
+
+
+sub gather_context {
+	my $input_dir = shift;
+	my $images_dir = shift;
+	my $context_out = shift;
+	
+	
+}
+
+
 __END__
 
 =pod
