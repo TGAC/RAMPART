@@ -1,10 +1,16 @@
 package uk.ac.tgac.rampart.util;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import static uk.ac.tgac.rampart.util.RampartLogger.LOGGER;
+
+import org.apache.log4j.Logger;
 
 /**
  * Manages streams to and from an external process
@@ -12,6 +18,9 @@ import static uk.ac.tgac.rampart.util.RampartLogger.LOGGER;
  * @author Dan Mapleson
  */
 public class ProcessStreamManager {
+	
+	private static Logger log = Logger.getLogger(ProcessStreamManager.class.getName());
+	
 	private Process process;
 	private String output_prefix;
 	private int return_code;
@@ -132,21 +141,21 @@ public class ProcessStreamManager {
 					this.dataOut.newLine();
 
 					String message = this.prefix + line;
-					LOGGER.log(Level.FINE, message);
+					log.debug(message);
 				}
 
 				this.dataOut.write(terminator);
 				this.dataOut.newLine();
 
 				String message = this.prefix + "terminator";
-				LOGGER.log(Level.FINE, message);
+				log.debug(message);
 
 				this.dataOut.flush();
 				this.dataOut.close();
 			} catch (IOException e) {
 				String message = "Error in IO with ProcessInputHandler: " + e.getMessage();
-				LOGGER.log(Level.WARNING, message);
-				LOGGER.log(Level.WARNING, Tools.getStackTrace(e));
+				log.warn(message);
+				log.warn(Tools.getStackTrace(e));
 				success = false;
 			}
 		}
@@ -179,9 +188,13 @@ public class ProcessStreamManager {
 			try {
 				while ((line = dataIn.readLine()) != null) {
 					String message = this.prefix + line;
-					Level l = errorStream ? Level.WARNING : Level.FINE;
-					LOGGER.log(l, message);
-
+					if (errorStream) {
+						log.warn(message);
+					}
+					else {
+						log.debug(message);
+					}
+					
 					if (recordOutput) {
 						data.add(line);
 					}
@@ -190,8 +203,8 @@ public class ProcessStreamManager {
 				dataIn.close();
 			} catch (IOException e) {
 				String message = "Error in IO with ProcessOutputHandler: " + e.getMessage();
-				LOGGER.log(Level.WARNING, message);
-				LOGGER.log(Level.WARNING, Tools.getStackTrace(e));
+				log.warn(message);
+				log.warn(Tools.getStackTrace(e));
 				this.success = false;
 			}
 		}

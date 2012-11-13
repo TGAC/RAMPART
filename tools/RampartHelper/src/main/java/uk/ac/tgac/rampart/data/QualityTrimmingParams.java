@@ -6,8 +6,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-@Entity
-@Table(schema="rampart",name="qt_params")
+//@Entity
+//@Table(schema="rampart",name="qt_params")
 public class QualityTrimmingParams {
 	
 	private Long id;

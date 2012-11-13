@@ -6,9 +6,9 @@ import uk.ac.tgac.rampart.data.Job;
 
 public interface JobDao {
 
-	Job getJobDetails(Long id);
+	Job getJob(Long id);
 	
-	List<Job> getAllJobDetails();
+	List<Job> getAllJobs();
 	
 	void save(Job jd);
 }

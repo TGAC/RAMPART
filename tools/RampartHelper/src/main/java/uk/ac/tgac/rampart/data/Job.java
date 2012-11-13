@@ -36,7 +36,7 @@ public class Job implements Serializable {
 	@Column(name="jira_seqinfo_id")
 	private Long jiraSeqinfoId;
 	
-	private List<Library> libraries;	
+	//private List<Library> libraries;	
 	
 	private String author;
 	private String collaborator;
@@ -111,13 +111,13 @@ public class Job implements Serializable {
 		this.startDate = startDate;
 	}*/
 
-	public List<Library> getLibraries() {
+	/*public List<Library> getLibraries() {
 		return libraries;
 	}
 
 	public void setSeqop(List<Library> libraries) {
 		this.libraries = libraries;
-	}
+	}*/
 	
 	
 	@Override
@@ -130,8 +130,8 @@ public class Job implements Serializable {
 		.append(KEY_JD_INSTITUTION + "=" + this.getAuthor() + "\n")
 		.append(KEY_JD_TITLE + "=" + this.getAuthor() + "\n")
 		.append(KEY_JD_JIRA_SEQINFO_ID + "=" + this.getAuthor() + "\n")
-		.append(KEY_JD_MISO_ID + "=" + this.getAuthor() + "\n")
-		.append(this.getLibraries().toString());
+		.append(KEY_JD_MISO_ID + "=" + this.getAuthor() + "\n");
+		//.append(this.getLibraries().toString());
 		
 		return sb.toString();		
 	}

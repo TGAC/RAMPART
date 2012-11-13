@@ -1,5 +1,5 @@
 
-package uk.ac.tgac.rampart.service.seq;
+package uk.ac.tgac.rampart.service.impl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -7,16 +7,15 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import uk.ac.tgac.rampart.data.SequenceFileStats;
+import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 
-public class FastAStatCounter extends SequenceStatCounter {
+public class SequenceStatisticsFastAService implements SequenceStatisticsService {
 
-	public FastAStatCounter(File in) {
-		super(in);
-	}
-	
 	@Override
-	public void count() throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(this.getIn()));
+	public SequenceFileStats analyse(File in) throws IOException {
+
+		BufferedReader reader = new BufferedReader(new FileReader(in));
+		SequenceFileStats seqStats = new SequenceFileStats();
 	    
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
@@ -29,18 +28,14 @@ public class FastAStatCounter extends SequenceStatCounter {
 		        while (firstChar != '>') {
 		            // Get the next line (should be the sequence line)
 		            String seqPart = reader.readLine();
-		            this.getSeqStats().addSequencePart(seqPart);
+		            seqStats.addSequencePart(seqPart);
 		        }
-		        this.getSeqStats().incSeqCount();
+		        seqStats.incSeqCount();
 	    	}
 	    }
 	    
 	    reader.close();
-	}
-
-	public static SequenceFileStats analyse(File in) throws IOException {
-		FastAStatCounter counter = new FastAStatCounter(in);
-		counter.count();
-		return counter.getSeqStats();
+	    
+	    return seqStats;
 	}
 }

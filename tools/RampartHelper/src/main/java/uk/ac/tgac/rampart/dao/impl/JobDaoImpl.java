@@ -16,14 +16,14 @@ import uk.ac.tgac.rampart.data.Job;
 public class JobDaoImpl implements JobDao {
 	
 	@Override
-	public Job getJobDetails(Long id) {
+	public Job getJob(Long id) {
 		Job jd = (Job)HBN_SESSION.getSession().load(Job.class, id);
 		return jd;
 	}
 	
 	@Override
-	public List<Job> getAllJobDetails() {		
-		Query q = HBN_SESSION.getSession().createQuery("from JobDetails");
+	public List<Job> getAllJobs() {		
+		Query q = HBN_SESSION.getSession().createQuery("from Job");
 		List<Job> jobDetails = q.list();
 		return jobDetails;
 	}

@@ -12,12 +12,15 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.log4j.Logger;
 
 import uk.ac.tgac.rampart.service.impl.VelocityMergerServiceImpl;
 
 
 public class ReportGen {
 	
+	private static Logger log = Logger.getLogger(RampartHelper.class.getName());
+		
 	private static final String OPT_TEMPLATE 	= "template";
 	private static final String OPT_CONTEXT 	= "context";
 	private static final String OPT_OUTPUT 		= "output";
@@ -111,7 +114,7 @@ public class ReportGen {
 	    }
 	    catch( ParseException exp ) {
 	        // oops, something went wrong
-	        System.err.println( "Options Parsing failed.  Reason: " + exp.getMessage() );
+	        log.error("Options Parsing failed.  Reason: " + exp.getMessage() );
 	        return;
 	    }
 		
@@ -126,7 +129,7 @@ public class ReportGen {
 			new VelocityMergerServiceImpl().merge(template_path, context_path, output_path);
 	    }
 	    catch(IOException ioe) {
-	    	System.err.println( "Problem merging template and context into latex file: " + ioe.getMessage() );
+	    	log.error( "Problem merging template and context into latex file: " + ioe.getMessage() );
 	    	return;
 	    }
 

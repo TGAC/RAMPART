@@ -139,4 +139,22 @@ public class SequenceFileStats {
 		double avgRdLen = (double)this.getBaseCount() / (double)this.getSeqCount();
 		return avgRdLen;
 	}
+	
+	@Override
+	public String toString() {
+		return 	"Sequence Statistics for file: " + (file == null ? "" : file.getPath()) + "\n" +
+				"Base Count : " + baseCount + "\n" +
+				"Sequence Count: " + seqCount + "\n" +
+				"A Count: " + aCount + "\n" +
+				"C Count: " + cCount + "\n" +
+				"G Count: " + gCount + "\n" +
+				"T Count: " + tCount + "\n" +
+				"N Count: " + nCount + "\n" +
+				"AT Count: " + getATCount() + "\n" +
+				"GC Count: " + getGCCount() + "\n" +
+				"ATGC Count: " + getATGCCount() + "\n" +
+				"GC%: " + getGCContent() + "\n" +
+				"ATGC Ratio: " + getATGCRatio() + "\n" +
+				"N Ratio: " + getNRatio() + "\n";
+	}
 }

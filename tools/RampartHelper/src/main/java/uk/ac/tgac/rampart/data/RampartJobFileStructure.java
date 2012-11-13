@@ -13,11 +13,14 @@ public class RampartJobFileStructure {
 	private File massDir;
 	private File massStatsDir;
 	private File improverDir;
+	private File improverStatsDir;
 	private File reportDir;
 	private File reportImagesDir;
 	
 	// Important Files
 	private File massPlotsFile;
+	private File massStatsFile;
+	private File improverStatsFile;
 	private File reportTemplateFile;
 	private File reportMergedFile;
 	
@@ -36,10 +39,13 @@ public class RampartJobFileStructure {
 		this.massDir = new File(jobDir.getPath() + "/mass");
 		this.massStatsDir = new File(massDir.getPath() + "/stats");
 		this.improverDir = new File(jobDir.getPath() + "/improver");
+		this.improverStatsDir = new File(improverDir.getPath() + "/stats");
 		this.reportDir = new File(jobDir.getPath() + "/report");
 		this.reportImagesDir = new File(reportDir.getPath() + "/images");		
 		
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
+		this.massStatsFile = new File(this.massStatsDir.getPath() + "/merged.tab");
+		this.improverStatsFile = new File(this.improverStatsDir.getPath() + "/stats.txt");
 		this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
 		this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");
 	}
@@ -104,9 +110,12 @@ public class RampartJobFileStructure {
 		return reportImagesDir;
 	}
 
-
 	public File getMassPlotsFile() {
 		return massPlotsFile;
+	}
+
+	public File getMassStatsFile() {
+		return massStatsFile;
 	}
 	
 	public File getReportTemplateFile() {
@@ -116,4 +125,14 @@ public class RampartJobFileStructure {
 	public File getReportMergedFile() {
 		return reportMergedFile;
 	}
+
+	public File getImproverStatsDir() {
+		return improverStatsDir;
+	}
+
+	public File getImproverStatsFile() {
+		return improverStatsFile;
+	}
+	
+	
 }

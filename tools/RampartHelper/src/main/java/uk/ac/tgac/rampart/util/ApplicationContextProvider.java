@@ -1,20 +1,18 @@
 package uk.ac.tgac.rampart.util;
 
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 public class ApplicationContextProvider implements ApplicationContextAware {
 
-	private static ApplicationContext applicationContext = null;
+	private static ApplicationContext applicationContext;
 
-    public static ApplicationContext getApplicationContext() {
-        return applicationContext;
+    public static ApplicationContext getAppContext() {
+    	return applicationContext;
     }
-    
+        
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-          // Assign the ApplicationContext into a static variable
-  	  ApplicationContextProvider.applicationContext = applicationContext;
+    public void setApplicationContext(ApplicationContext applicationContext) {
+    	ApplicationContextProvider.applicationContext = applicationContext;
     }
 }

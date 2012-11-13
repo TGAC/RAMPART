@@ -1,18 +1,8 @@
-package uk.ac.tgac.rampart.service.impl;
+package uk.ac.tgac.rampart.data;
 
 import java.io.File;
-import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.itextpdf.text.DocumentException;
-
-import uk.ac.tgac.rampart.service.MassPlotService;
-import uk.ac.tgac.rampart.service.PdfOperationsService;
-
-@Service
-public class MassPlotServiceImpl implements MassPlotService {
+public class MassPlotFileStructure {
 
 	private static final String FILENAME_NB_CONTIGS = "Mass_NBC.pdf";	
 	private static final String FILENAME_NB_BASES 	= "Mass_TB.pdf";
@@ -31,15 +21,7 @@ public class MassPlotServiceImpl implements MassPlotService {
 	private File massPlotMaxLenFile;
 	private File massPlotN50File;
 	
-	private PdfOperationsService pdfOperationsService;
-	
-	@Autowired
-	public void setPdfOperationsService(PdfOperationsService pdfOperationsService) {
-		this.pdfOperationsService = pdfOperationsService;
-	}
-	
-	
-	public MassPlotServiceImpl(File plots, File outputDir) {
+	public MassPlotFileStructure(File plots, File outputDir) {
 		this.plots = plots;
 		this.outputDir = outputDir;
 		
@@ -86,23 +68,4 @@ public class MassPlotServiceImpl implements MassPlotService {
 	public File getMassPlotN50File() {
 		return massPlotN50File;
 	}
-	
-	public void seperatePlots() throws IOException, DocumentException {
-		
-		this.pdfOperationsService.extractPage(this.plots, this.massPlotNbContigsFile, 1);
-		this.pdfOperationsService.extractPage(this.plots, this.massPlotNPcFile, 6);
-		this.pdfOperationsService.extractPage(this.plots, this.massPlotNbBasesFile, 7);
-		this.pdfOperationsService.extractPage(this.plots, this.massPlotAvgLenFile, 10);
-		this.pdfOperationsService.extractPage(this.plots, this.massPlotMaxLenFile, 9);
-		this.pdfOperationsService.extractPage(this.plots, this.massPlotN50File, 11);
-	}
-	
-	
-	
-	@Override
-	public void seperatePlots(File in, File outDir) throws IOException, DocumentException {		
-		MassPlotServiceImpl mps = new MassPlotServiceImpl(in, outDir);
-		mps.seperatePlots();
-	}
-
 }

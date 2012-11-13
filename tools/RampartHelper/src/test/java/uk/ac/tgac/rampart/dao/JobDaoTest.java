@@ -12,8 +12,8 @@ import uk.ac.tgac.rampart.data.Job;
 public class JobDaoTest {
 
 	@Test
-	public void testGetAllJobDetails() {
-		List<Job> jdl = new JobDaoImpl().getAllJobDetails();
+	public void testGetAllJobs() {
+		List<Job> jdl = new JobDaoImpl().getAllJobs();
 		
 		Job row0 = jdl.get(0);
 		Job row1 = jdl.get(1);
@@ -23,8 +23,8 @@ public class JobDaoTest {
 	}
 
 	@Test
-	public void testGetJobDetails() {
-		Job jd = new JobDaoImpl().getJobDetails(1L);
+	public void testGetJob() {
+		Job jd = new JobDaoImpl().getJob(1L);
 		
 		assertTrue(jd.getAuthor().equals("dan"));
 	}

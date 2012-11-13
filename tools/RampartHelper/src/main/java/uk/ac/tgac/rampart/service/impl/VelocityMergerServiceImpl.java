@@ -19,7 +19,7 @@ public class VelocityMergerServiceImpl implements VelocityMergerService {
 	@Override
 	public void merge(File template, File context, File output) throws IOException {
 		VelocityContext vc = loadContext(context);
-		this.merge(template, context, output);
+		this.merge(template, vc, output);
 	}
 
 	@Override

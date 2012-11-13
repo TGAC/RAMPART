@@ -4,46 +4,44 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.apache.velocity.VelocityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
+import uk.ac.tgac.rampart.data.ImproverStats;
 import uk.ac.tgac.rampart.data.Job;
+import uk.ac.tgac.rampart.data.MassStats;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.data.RampartProjectFileStructure;
 import uk.ac.tgac.rampart.data.SequenceFileStats;
 import uk.ac.tgac.rampart.service.LatexService;
-import uk.ac.tgac.rampart.service.MassPlotService;
+import uk.ac.tgac.rampart.service.RampartJobService;
 import uk.ac.tgac.rampart.service.ReportBuilderService;
+import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 import uk.ac.tgac.rampart.service.VelocityMergerService;
-import uk.ac.tgac.rampart.service.seq.FastQStatCounter;
-import uk.ac.tgac.rampart.util.ProcessStreamManager;
 
 @Service
 public class ReportBuilderServiceImpl implements ReportBuilderService {
 
-	private MassPlotService massPlotService;
+	private static Logger log = Logger.getLogger(ReportBuilderServiceImpl.class.getName());
+	
+	@Autowired
+	private RampartJobService rampartJobService;
+	
+	@Autowired
 	private VelocityMergerService velocityMergerService;
+	
+	@Autowired
 	private LatexService latexService;
 	
 	@Autowired
-	public void setMassPlotService(MassPlotService massPlotService) {
-		this.massPlotService = massPlotService;
-	}
-	
-	@Autowired
-	public void setVelocityMergerService(VelocityMergerService velocityMergerService) {
-		this.velocityMergerService = velocityMergerService;
-	}
-	
-	@Autowired
-	public void setLatexService(LatexService latexService) {
-		this.latexService = latexService;
-	}
-
+	private SequenceStatisticsService sequenceStatisticsService;
 	
 
 	protected Job gatherDetails(RampartJobFileStructure jobDir) throws IOException {
@@ -53,15 +51,22 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		//JobDetails jobDetails = getMISODetails();
 
 		// Get Info from Reads
-		List<SequenceFileStats> seqFileStats = getReadStats(jobDir);
+		//List<SequenceFileStats> seqFileStats = getReadStats(jobDir);
 
 		// Get Info from Assemblies (MASS) ---- is this necessary?
+		List<MassStats> massStats = this.rampartJobService.getMassStats(jobDir.getMassStatsFile());
 
-		// Get Info from Best Assembly
+		// Get Info from Best Assembly statistics
+		MassStats best = Collections.max(massStats);
 
 		// Get Info from Improver
+		List<ImproverStats> improverStats = this.rampartJobService.getImproverStats(jobDir.getImproverStatsFile());
 
+		// Get the final assembly statistics
+		ImproverStats finalAssembly = improverStats.get(improverStats.size() - 1);
+		
 		// Get final scaffold locations
+		String finalAssemblyPath = finalAssembly.getFilePath();
 
 		return null;
 	}
@@ -84,9 +89,18 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 			}
 		});
 
+		log.info("Starting analysis of input library files");
+		
+		StopWatch stopWatch = new StopWatch("Input Library Analysis");
+		
 		for (File f : files) {
-			seqFileStats.add(FastQStatCounter.analyse(f));
+			stopWatch.start(f.getName());
+			seqFileStats.add(this.sequenceStatisticsService.analyse(f));
+			stopWatch.stop();
 		}
+		
+		log.info(stopWatch.prettyPrint());
+		log.debug(seqFileStats.toString());
 
 		return seqFileStats;
 	}
@@ -109,7 +123,7 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		FileUtils.copyDirectory(projectDir.getDataReportImagesDir(), jobDir.getReportImagesDir());
 
 		// Create the plot files which are to be used in the report
-		this.massPlotService.seperatePlots(jobDir.getMassPlotsFile(), jobDir.getReportImagesDir());
+		this.rampartJobService.seperatePlots(jobDir.getMassPlotsFile(), jobDir.getReportImagesDir());
 
 		// Gather statistics and other variables
 		Job projectDetails = gatherDetails(jobDir);
@@ -127,8 +141,8 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		// Merge the template and context
 		this.velocityMergerService.merge(jobDir.getReportTemplateFile(), vc, jobDir.getReportMergedFile());
 
-		// Compile report (If there were any errors carry on anyway, we might still be able to log the details in the
-		// database
+		// Compile report (If there were any errors carry on anyway, we might still be able to log the 
+		// details in the database
 		this.latexService.compileDocument(jobDir.getReportMergedFile(), jobDir.getReportDir());
 		
 		// Log details in database (Is this really part of building the report?)

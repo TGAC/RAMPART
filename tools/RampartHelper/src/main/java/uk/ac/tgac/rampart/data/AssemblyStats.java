@@ -1,15 +1,7 @@
 package uk.ac.tgac.rampart.data;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
-@Entity
-@Table(schema="rampart",name="assembly_stats")
 public class AssemblyStats {
-	
-	@Id
-	private Long id;
 	
 	private Long nbContigs;
 	private Long nbBases;
@@ -20,16 +12,25 @@ public class AssemblyStats {
 	private Double nPerc;
 	private Long n50;
 	private Long minLen;
-	private Long avgLen;
+	private Double avgLen;
 	private Long maxLen;
 	
+	public AssemblyStats() {}
+	public AssemblyStats(String[] stats) {
+		this.nbContigs = Long.parseLong(stats[0]);
+		this.aPerc = Double.parseDouble(stats[1]);
+		this.cPerc = Double.parseDouble(stats[2]);
+		this.gPerc = Double.parseDouble(stats[3]);
+		this.tPerc = Double.parseDouble(stats[4]);
+		this.nPerc = Double.parseDouble(stats[5]);
+		this.nbBases = Long.parseLong(stats[6]);
+		this.minLen = Long.parseLong(stats[7]);
+		this.maxLen = Long.parseLong(stats[8]);
+		this.avgLen = Double.parseDouble(stats[9]);
+		this.n50 = Long.parseLong(stats[10]);
+	}
 	
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
+	
 	public Long getNbContigs() {
 		return nbContigs;
 	}
@@ -84,10 +85,10 @@ public class AssemblyStats {
 	public void setMinLen(Long minLen) {
 		this.minLen = minLen;
 	}
-	public Long getAvgLen() {
+	public Double getAvgLen() {
 		return avgLen;
 	}
-	public void setAvgLen(Long avgLen) {
+	public void setAvgLen(Double avgLen) {
 		this.avgLen = avgLen;
 	}
 	public Long getMaxLen() {
