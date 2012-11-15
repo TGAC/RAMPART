@@ -1,60 +1,35 @@
 package uk.ac.tgac.rampart.data;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
-//@Entity
-//@Table(schema="rampart",name="mass_stats")
-public class ImproverStats extends AssemblyStats {
+@Entity
+@DiscriminatorValue("improver")
+public class ImproverStats extends AssemblyStats implements Comparable<ImproverStats>, Serializable {
 	
-	@Id 
-	private Long id;
+	private static final long serialVersionUID = 3838911367218298049L;
 	
-	private Long job_id;
-	
-	private String stage;
-	private String filePath;
+	private Integer stage;
 	
 	public ImproverStats() {}
 	
 	public ImproverStats(String[] stats) {
-		super(Arrays.copyOfRange(stats, 2, 13));
-		this.stage = stats[0];
-		this.filePath = stats[1];
+		super(Arrays.copyOfRange(stats, 1, 13));
+		this.stage = Integer.parseInt(stats[0]);		
 	}
 	
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public Long getJob_id() {
-		return job_id;
-	}
-
-	public void setJob_id(Long job_id) {
-		this.job_id = job_id;
-	}
-	
-	public String getStage() {
+	public Integer getStage() {
 		return stage;
 	}
-
-	public void setStage(String stage) {
+	public void setStage(Integer stage) {
 		this.stage = stage;
 	}
 
-	public String getFilePath() {
-		return filePath;
+	@Override
+	public int compareTo(ImproverStats o) {
+		return this.stage.compareTo(o.getStage());
 	}
-
-	public void setFilePath(String filePath) {
-		this.filePath = filePath;
-	}
-		
 }

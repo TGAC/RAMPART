@@ -1,6 +1,9 @@
 package uk.ac.tgac.rampart.util;
 
+import java.util.List;
+
 import org.hibernate.FlushMode;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -27,5 +30,11 @@ public enum RampartHibernate {
 	public Session getSession() {
 		
 		return session;
+	}
+	
+	public static <T> List<T> listAndCast(Query q) {
+	    @SuppressWarnings("unchecked")
+	    List<T> list = q.list();
+	    return list;
 	}
 }

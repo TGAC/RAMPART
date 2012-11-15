@@ -5,9 +5,12 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.ini4j.Profile.Section;
@@ -36,12 +39,17 @@ public class Job implements Serializable {
 	@Column(name="jira_seqinfo_id")
 	private Long jiraSeqinfoId;
 	
-	//private List<Library> libraries;	
+	@OneToMany(fetch=FetchType.LAZY)
+	@JoinColumn(name="job_id",referencedColumnName="id")
+	private List<Library> libsRaw;
+	
+	@OneToMany(fetch=FetchType.LAZY, mappedBy="job_id")
+	@JoinColumn(name="job_id",referencedColumnName="id")
+	private List<Library> libsQt;
 	
 	private String author;
 	private String collaborator;
 	private String institution;
-	
 	private String title;
 	
 	//private Date startDate;
@@ -111,14 +119,21 @@ public class Job implements Serializable {
 		this.startDate = startDate;
 	}*/
 
-	/*public List<Library> getLibraries() {
-		return libraries;
+	public List<Library> getLibsRaw() {
+		return libsRaw;
+	}
+	
+	public void setLibsRaw(List<Library> libsRaw) {
+		this.libsRaw = libsRaw;
+	}
+	
+	public List<Library> getLibsQt() {
+		return libsQt;
 	}
 
-	public void setSeqop(List<Library> libraries) {
-		this.libraries = libraries;
-	}*/
-	
+	public void setLibsQt(List<Library> libsQt) {
+		this.libsQt = libsQt;
+	}
 	
 	@Override
 	public String toString() {

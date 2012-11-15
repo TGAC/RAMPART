@@ -7,11 +7,13 @@ import uk.ac.tgac.rampart.data.Library.Dataset;
 
 public interface LibraryDao {
 
-	Library getLibraryDetails(Long id);
+	Library getLibrary(Long id);
 	
-	List<Library> getAllLibraryDetails();
+	List<Library> getAllLibraries();
 	
-	List<Library> getLibraryDetails(String name, Dataset dataset);
+	List<Library> getLibraries(String name, Dataset dataset);
+	
+	List<Library> getLibraries(Long job_id);
 	
 	void save(Library ld);
 }

@@ -10,5 +10,5 @@ public interface JobDao {
 	
 	List<Job> getAllJobs();
 	
-	void save(Job jd);
+	void persist(Job jd);
 }

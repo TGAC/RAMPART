@@ -18,6 +18,9 @@ public class RampartJobFileStructure {
 	private File reportImagesDir;
 	
 	// Important Files
+	private File configFile;
+	private File configRawFile;
+	private File configQtFile;
 	private File massPlotsFile;
 	private File massStatsFile;
 	private File improverStatsFile;
@@ -43,6 +46,9 @@ public class RampartJobFileStructure {
 		this.reportDir = new File(jobDir.getPath() + "/report");
 		this.reportImagesDir = new File(reportDir.getPath() + "/images");		
 		
+		this.configFile = new File(jobDir.getPath() + "/rampart.cfg");
+		this.configRawFile = new File(this.readsDir.getPath() + "/raw.cfg");
+		this.configQtFile = new File(this.readsDir.getPath() + "/qt.cfg");
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
 		this.massStatsFile = new File(this.massStatsDir.getPath() + "/merged.tab");
 		this.improverStatsFile = new File(this.improverStatsDir.getPath() + "/stats.txt");
@@ -76,6 +82,8 @@ public class RampartJobFileStructure {
 	}
 
 
+	// ****** Dirs ******
+	
 	public File getJobDir() {
 		return jobDir;
 	}
@@ -109,7 +117,22 @@ public class RampartJobFileStructure {
 	public File getReportImagesDir() {
 		return reportImagesDir;
 	}
+	
+	
+	// ****** Files ******
 
+	public File getConfigFile() {
+		return configFile;
+	}
+	
+	public File getConfigRawFile() {
+		return configRawFile;
+	}
+	
+	public File getConfigQtFile() {
+		return configQtFile;
+	}
+	
 	public File getMassPlotsFile() {
 		return massPlotsFile;
 	}

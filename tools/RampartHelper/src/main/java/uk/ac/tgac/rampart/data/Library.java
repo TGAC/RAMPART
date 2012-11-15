@@ -6,9 +6,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.ini4j.Profile.Section;
@@ -24,11 +28,6 @@ public class Library implements Serializable {
 		ASSEMBLY_ONLY,
 		SCAFFOLDING_ONLY,
 		ASSEMBLY_AND_SCAFFOLDING		
-	}
-	
-	public enum FileType {
-		FASTA,
-		FASTQ
 	}
 	
 	public enum Dataset {
@@ -56,8 +55,12 @@ public class Library implements Serializable {
 	
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
-	
+		
 	private String name;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="job_id", referencedColumnName="id")
+	private Job job;
 	
 	@Enumerated(EnumType.STRING)
 	private Dataset dataset;
@@ -76,18 +79,17 @@ public class Library implements Serializable {
 	
 	private Integer order;
 	
-	@Enumerated(EnumType.STRING)
-	@Column(name=KEY_FILE_TYPE)
-	private FileType fileType;
+	@OneToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name=KEY_FILE_1,referencedColumnName="id")
+	private SeqFile filePaired1;
 	
-	@Column(name=KEY_FILE_1)
-	private String filePaired1;
+	@OneToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name=KEY_FILE_2,referencedColumnName="id")
+	private SeqFile filePaired2;
 	
-	@Column(name=KEY_FILE_2)
-	private String filePaired2;
-	
-	@Column(name=KEY_FILE_SE)
-	private String seFile;
+	@OneToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name=KEY_FILE_SE,referencedColumnName="id")
+	private SeqFile seFile;
 	
 	
 	
@@ -106,7 +108,15 @@ public class Library implements Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+		
+	public Job getJob() {
+		return job;
+	}
+
+	public void setJob(Job job) {
+		this.job = job;
+	}
+
 	public Dataset getDataset() {
 		return dataset;
 	}
@@ -155,35 +165,27 @@ public class Library implements Serializable {
 		this.order = order;
 	}
 
-	public FileType getFiletype() {
-		return fileType;
-	}
-
-	public void setFiletype(FileType filetype) {
-		this.fileType = filetype;
-	}
-
-	public String getFilePaired1() {
+	public SeqFile getFilePaired1() {
 		return filePaired1;
 	}
 
-	public void setFilePaired1(String filePaired1) {
+	public void setFilePaired1(SeqFile filePaired1) {
 		this.filePaired1 = filePaired1;
 	}
 
-	public String getFilePaired2() {
+	public SeqFile getFilePaired2() {
 		return filePaired2;
 	}
 
-	public void setFilePaired2(String filePaired2) {
+	public void setFilePaired2(SeqFile filePaired2) {
 		this.filePaired2 = filePaired2;
 	}
 
-	public String getSeFile() {
+	public SeqFile getSeFile() {
 		return seFile;
 	}
 
-	public void setSeFile(String seFile) {
+	public void setSeFile(SeqFile seFile) {
 		this.seFile = seFile;
 	}
 
@@ -198,10 +200,9 @@ public class Library implements Serializable {
 		.append(KEY_INSERT_ERROR_TOLERANCE + "=" + this.getInsertErrorTolerance().toString() + "\n")
 		.append(KEY_READ_LENGTH + "=" + this.getReadLength() + "\n")
 		.append(KEY_USAGE + "=" + this.getUsage().toString() + "\n")
-		.append(KEY_FILE_TYPE + "=" + this.getFiletype().toString() + "\n")
-		.append(KEY_FILE_1 + "=" + this.getFilePaired1() + "\n")
-		.append(KEY_FILE_2 + "=" + this.getFilePaired2() + "\n")
-		.append(KEY_FILE_SE + "=" + this.getSeFile() + "\n");
+		.append(KEY_FILE_1 + "=" + this.getFilePaired1().getFilePath() + "\n")
+		.append(KEY_FILE_2 + "=" + this.getFilePaired2().getFilePath() + "\n")
+		.append(KEY_FILE_SE + "=" + this.getSeFile().getFilePath() + "\n");
 		
 		return sb.toString();
 	}
@@ -217,10 +218,9 @@ public class Library implements Serializable {
 		ld.setReadLength(Integer.parseInt(iniSection.get(KEY_READ_LENGTH)));
 		ld.setUsage(Usage.valueOf(iniSection.get(KEY_USAGE)));
 		ld.setOrder(index);
-		ld.setFiletype(FileType.valueOf(iniSection.get(KEY_FILE_TYPE)));
-		ld.setFilePaired1(iniSection.get(KEY_FILE_1));	
-		ld.setFilePaired2(iniSection.get(KEY_FILE_2));
-		ld.setSeFile(iniSection.get(KEY_FILE_SE));
+		ld.setFilePaired1(new SeqFile(iniSection.get(KEY_FILE_1)));	
+		ld.setFilePaired2(new SeqFile(iniSection.get(KEY_FILE_2)));
+		ld.setSeFile(new SeqFile(iniSection.get(KEY_FILE_SE)));
 		return ld;
 	}
 }

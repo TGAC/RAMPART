@@ -17,8 +17,8 @@ public class RampartConfiguration {
 	public static final String SECTION_LIB_PREFIX = "LIB";
 	
 	
-	private Job jobDetails;
-	private List<Library> libDetails;
+	private Job job;
+	private List<Library> libs;
 	
 	public RampartConfiguration(File config) throws InvalidFileFormatException, IOException {
 		loadFile(config);
@@ -27,14 +27,14 @@ public class RampartConfiguration {
 	public void loadFile(File config) throws InvalidFileFormatException, IOException {
 		Ini ini = new Ini(config);
 		
-		this.jobDetails = Job.parseIniSection(ini.get(SECTION_JOB_DETAILS));
+		this.job = Job.parseIniSection(ini.get(SECTION_JOB_DETAILS));
 		
-		this.libDetails = new ArrayList<Library>();
+		this.libs = new ArrayList<Library>();
 		for(Map.Entry<String,Section> e : ini.entrySet()) {
 			if (e.getKey().startsWith(SECTION_LIB_PREFIX)) {
 				int index = Integer.parseInt(e.getKey().substring(SECTION_LIB_PREFIX.length()));
 				Library ld = Library.parseIniSection(e.getValue(), index);
-				this.libDetails.add(ld);
+				this.libs.add(ld);
 			}
 		}
 		
@@ -42,13 +42,21 @@ public class RampartConfiguration {
 	
 	public void saveFile(File outFile) throws IOException {
 		StringBuilder sb = new StringBuilder();
-		sb.append(this.jobDetails.toString());
-		for(Library ld : this.libDetails) {
+		sb.append(this.job.toString());
+		for(Library ld : this.libs) {
 			sb.append(ld.toString());
 		}
 		
 		
 		FileUtils.writeStringToFile(outFile, sb.toString());
+	}
+
+	public Job getJobs() {
+		return job;
+	}
+
+	public List<Library> getLibs() {
+		return libs;
 	}
 	
 }

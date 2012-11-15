@@ -6,16 +6,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import uk.ac.tgac.rampart.data.SequenceFileStats;
+import uk.ac.tgac.rampart.data.SeqFileStats;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 
 public class SequenceStatisticsFastAService implements SequenceStatisticsService {
 
 	@Override
-	public SequenceFileStats analyse(File in) throws IOException {
+	public SeqFileStats analyse(File in) throws IOException {
 
 		BufferedReader reader = new BufferedReader(new FileReader(in));
-		SequenceFileStats seqStats = new SequenceFileStats();
+		SeqFileStats seqStats = new SeqFileStats();
 	    
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {

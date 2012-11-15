@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SequenceFileStatsTest {
+public class SeqFileStatsTest {
 
 	final long BASE_COUNT = 1000000;
 	final long SEQ_COUNT = 10000;
@@ -23,11 +23,11 @@ public class SequenceFileStatsTest {
 	
 	final String SEQ1 = "ATGCATGCATGCN";
 	
-	private SequenceFileStats sfs;
+	private SeqFileStats sfs;
 	
 	@Before
 	public void setUp() {
-		this.sfs = new SequenceFileStats(null, BASE_COUNT, SEQ_COUNT, A_COUNT, C_COUNT, G_COUNT, T_COUNT, N_COUNT);
+		this.sfs = new SeqFileStats(BASE_COUNT, SEQ_COUNT, A_COUNT, C_COUNT, G_COUNT, T_COUNT, N_COUNT);
 	}
 	
 	

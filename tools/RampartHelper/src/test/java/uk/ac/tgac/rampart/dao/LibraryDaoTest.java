@@ -15,7 +15,7 @@ public class LibraryDaoTest {
 
 	@Test
 	public void testGetLibraryDetailsLong() {
-		Library ld = new LibraryDaoImpl().getLibraryDetails(1L);
+		Library ld = new LibraryDaoImpl().getLibrary(1L);
 		
 		assertTrue(ld.getName().equals("LIB1782"));
 		assertTrue(ld.getDataset() == Dataset.RAW);
@@ -23,7 +23,7 @@ public class LibraryDaoTest {
 
 	@Test
 	public void testGetAllLibraryDetails() {
-		List<Library> jdl = new LibraryDaoImpl().getAllLibraryDetails();
+		List<Library> jdl = new LibraryDaoImpl().getAllLibraries();
 		
 		Library row0 = jdl.get(0);
 		Library row1 = jdl.get(1);
@@ -37,7 +37,7 @@ public class LibraryDaoTest {
 
 	@Test
 	public void testGetLibraryDetailsStringDataset() {
-		List<Library> ld = new LibraryDaoImpl().getLibraryDetails("LIB1782", Dataset.RAW);
+		List<Library> ld = new LibraryDaoImpl().getLibraries("LIB1782", Dataset.RAW);
 		
 		assertTrue(ld.size() == 1);		
 		assertTrue(ld.get(0).getName().equals("LIB1782"));

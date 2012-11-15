@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Service;
 
-import uk.ac.tgac.rampart.data.SequenceFileStats;
+import uk.ac.tgac.rampart.data.SeqFileStats;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 
 @Service
@@ -24,12 +24,12 @@ public class SequenceStatisticsFastFastQService implements SequenceStatisticsSer
 	 * {@code SequenceStatisticsFastQService}.
 	 */
 	@Override
-	public SequenceFileStats analyse(File in) throws IOException {
+	public SeqFileStats analyse(File in) throws IOException {
 
-		SequenceFileStats seqStats = new SequenceFileStats(in);
+		SeqFileStats seqStats = new SeqFileStats();
 		
 		FileReader fr = new FileReader(in);
-		int nlines = 0;
+		//int nlines = 0;
 
 		char buffer[] = new char[BUFFER_SIZE + 1];
 		char lineBuf[] = new char[MAX_LINE_LENGTH];
@@ -82,7 +82,7 @@ public class SequenceStatisticsFastFastQService implements SequenceStatisticsSer
 									
 				seqLineNext = lineBuf[0] == '@' ? true : false;
 				
-				nlines++;
+				//nlines++;
 
 				if (c == '\r') {
 					if (nextChar >= nChars) {
