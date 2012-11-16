@@ -12,5 +12,7 @@ public interface SeqFileDao {
 	
 	List<SeqFile> getSeqFileStatsByType(SeqFile.FileType type);
 	
-	void save(SeqFile sf);
+	long count();
+	
+	void persist(SeqFile sf);
 }

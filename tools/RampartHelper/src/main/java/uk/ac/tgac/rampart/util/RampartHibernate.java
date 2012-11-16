@@ -19,10 +19,12 @@ public enum RampartHibernate {
 	private Session session;
 	
 	private RampartHibernate() {
-		Configuration configuration = new Configuration();
-		configuration.configure();
-		serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry(); 
-		sessionFactory = configuration.buildSessionFactory(serviceRegistry);		
+		//Configuration configuration = new Configuration();
+		//configuration.configure();
+		ApplicationContextProvider.getAppContext().getBean("transactionManager");
+		//serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry(); 
+		//sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+		
 		session = sessionFactory.openSession();
 		session.setFlushMode(FlushMode.AUTO);
 	}

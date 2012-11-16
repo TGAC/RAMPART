@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Service;
 
-import uk.ac.tgac.rampart.data.SeqFileStats;
+import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 
 @Service
@@ -24,9 +24,9 @@ public class SequenceStatisticsFastFastQService implements SequenceStatisticsSer
 	 * {@code SequenceStatisticsFastQService}.
 	 */
 	@Override
-	public SeqFileStats analyse(File in) throws IOException {
+	public SeqFile analyse(File in) throws IOException {
 
-		SeqFileStats seqStats = new SeqFileStats();
+		SeqFile seqStats = new SeqFile();
 		
 		FileReader fr = new FileReader(in);
 		//int nlines = 0;

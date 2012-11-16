@@ -3,9 +3,9 @@ package uk.ac.tgac.rampart.service;
 import java.io.File;
 import java.io.IOException;
 
-import uk.ac.tgac.rampart.data.SeqFileStats;
+import uk.ac.tgac.rampart.data.SeqFile;
 
 public interface SequenceStatisticsService {
 	
-	SeqFileStats analyse(File in) throws IOException;
+	SeqFile analyse(File in) throws IOException;
 }

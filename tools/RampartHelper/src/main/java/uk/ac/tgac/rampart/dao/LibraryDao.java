@@ -15,5 +15,7 @@ public interface LibraryDao {
 	
 	List<Library> getLibraries(Long job_id);
 	
-	void save(Library ld);
+	long count();
+	
+	void persist(Library ld);
 }

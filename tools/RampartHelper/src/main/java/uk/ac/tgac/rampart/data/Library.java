@@ -2,6 +2,7 @@ package uk.ac.tgac.rampart.data;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -12,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -53,16 +55,19 @@ public class Library implements Serializable {
 	public static final String KEY_FILE_SE = "file_single_end";
 	
 	
-	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Id 
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 		
+	@Column(name="name")
 	private String name;
 	
 	@ManyToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="job_id", referencedColumnName="id")
+	@JoinColumn(name="job_id")
 	private Job job;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(name="dataset")
 	private Dataset dataset;
 	
 	@Column(name=KEY_AVG_INSERT_SIZE)
@@ -75,20 +80,22 @@ public class Library implements Serializable {
 	private Integer readLength;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(name="usage")
 	private Usage usage;
 	
+	@Column(name="order")
 	private Integer order;
 	
 	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name=KEY_FILE_1,referencedColumnName="id")
+	@JoinColumn(name="id")
 	private SeqFile filePaired1;
 	
 	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name=KEY_FILE_2,referencedColumnName="id")
+	@JoinColumn(name="id")
 	private SeqFile filePaired2;
 	
 	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name=KEY_FILE_SE,referencedColumnName="id")
+	@JoinColumn(name="id")
 	private SeqFile seFile;
 	
 	

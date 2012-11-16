@@ -30,7 +30,8 @@ public class Job implements Serializable {
 	
 	private static final long serialVersionUID = -8280863990140875866L;
 
-	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Id 
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	
 	@Column(name="miso_id")
@@ -40,11 +41,11 @@ public class Job implements Serializable {
 	private Long jiraSeqinfoId;
 	
 	@OneToMany(fetch=FetchType.LAZY)
-	@JoinColumn(name="job_id",referencedColumnName="id")
+	@JoinColumn(name="id")
 	private List<Library> libsRaw;
 	
-	@OneToMany(fetch=FetchType.LAZY, mappedBy="job_id")
-	@JoinColumn(name="job_id",referencedColumnName="id")
+	@OneToMany(fetch=FetchType.LAZY)
+	@JoinColumn(name="id")
 	private List<Library> libsQt;
 	
 	private String author;

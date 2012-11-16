@@ -1,40 +1,60 @@
 package uk.ac.tgac.rampart.dao.impl;
 
-import static uk.ac.tgac.rampart.util.RampartHibernate.HBN_SESSION;
-
 import java.util.List;
 
 import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Projections;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import uk.ac.tgac.rampart.dao.SeqFileDao;
 import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.util.RampartHibernate;
 
+@Repository("seqFileDaoImpl")
 public class SeqFileDaoImpl implements SeqFileDao {
+	
+	@Autowired
+    private SessionFactory sessionFactory;
 	
 	@Override
 	public SeqFile getSeqFile(Long id) {
-		SeqFile sf = (SeqFile)HBN_SESSION.getSession().load(SeqFile.class, id);
+		Session session = this.sessionFactory.getCurrentSession();
+		SeqFile sf = (SeqFile)session.load(SeqFile.class, id);
 		return sf;
 	}
 	
 	@Override
 	public List<SeqFile> getAllSeqFiles() {
-		Query q = HBN_SESSION.getSession().createQuery("from SeqFile");
+		Session session = this.sessionFactory.getCurrentSession();
+		Query q = session.createQuery("from SeqFile");
 		List<SeqFile> sfl = RampartHibernate.listAndCast(q);
 		return sfl;
 	}
 	
 	@Override
 	public List<SeqFile> getSeqFileStatsByType(SeqFile.FileType type) {
-		Query q = HBN_SESSION.getSession().createQuery("from SeqFileStats where file_type = :file_type" );
+		Session session = this.sessionFactory.getCurrentSession();
+		Query q = session.createQuery("from SeqFile where file_type = :file_type" );
 		q.setParameter("file_type", type);
 		List<SeqFile> sfl = RampartHibernate.listAndCast(q);		
 		return sfl;
 	}
 	
 	@Override
-	public void save(SeqFile sf) {
-		HBN_SESSION.getSession().saveOrUpdate(sf);
+	public long count() {
+		Session session = this.sessionFactory.getCurrentSession();
+		Number c = (Number) session.createCriteria(SeqFile.class).setProjection(Projections.rowCount()).uniqueResult();
+		return c.longValue();
+	}
+	
+	@Override
+	public void persist(SeqFile sf) {
+		Session session = this.sessionFactory.getCurrentSession();
+		//HBN_SESSION.getSession().beginTransaction();
+		session.saveOrUpdate(sf);
+		//HBN_SESSION.getSession().getTransaction().commit();
 	}
 }

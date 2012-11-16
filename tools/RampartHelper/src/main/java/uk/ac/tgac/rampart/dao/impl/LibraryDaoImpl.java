@@ -5,11 +5,13 @@ import static uk.ac.tgac.rampart.util.RampartHibernate.HBN_SESSION;
 import java.util.List;
 
 import org.hibernate.Query;
+import org.hibernate.criterion.Projections;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import uk.ac.tgac.rampart.dao.LibraryDao;
 import uk.ac.tgac.rampart.data.Library;
+import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.data.Library.Dataset;
 import uk.ac.tgac.rampart.util.RampartHibernate;
 
@@ -25,14 +27,14 @@ public class LibraryDaoImpl implements LibraryDao {
 	
 	@Override
 	public List<Library> getAllLibraries() {		
-		Query q = HBN_SESSION.getSession().createQuery("from LibraryDetails");
+		Query q = HBN_SESSION.getSession().createQuery("from Library");
 		List<Library> libDetails = RampartHibernate.listAndCast(q);
 		return libDetails;
 	}
 	
 	@Override
 	public List<Library> getLibraries(String name, Dataset dataset) {		
-		Query q = HBN_SESSION.getSession().createQuery("from LibraryDetails where name = :name and dataset = :dataset" );
+		Query q = HBN_SESSION.getSession().createQuery("from Library where name = :name and dataset = :dataset" );
 		q.setParameter("name", name);
 		q.setParameter("dataset", dataset);
 		List<Library> libDetails = RampartHibernate.listAndCast(q);		
@@ -41,14 +43,20 @@ public class LibraryDaoImpl implements LibraryDao {
 	
 	@Override
 	public List<Library> getLibraries(Long job_id) {		
-		Query q = HBN_SESSION.getSession().createQuery("from LibraryDetails where job_id = :job_id" );
+		Query q = HBN_SESSION.getSession().createQuery("from Library where job_id = :job_id" );
 		q.setParameter("job_id", job_id);
 		List<Library> libDetails = RampartHibernate.listAndCast(q);		
 		return libDetails;
 	}
 	
 	@Override
-	public void save(Library ld) {
+	public long count() {
+		Number c = (Number) HBN_SESSION.getSession().createCriteria(Library.class).setProjection(Projections.rowCount()).uniqueResult();
+		return c.longValue();
+	}
+	
+	@Override
+	public void persist(Library ld) {
 		HBN_SESSION.getSession().saveOrUpdate(ld);
 	}
 }

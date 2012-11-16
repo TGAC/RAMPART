@@ -10,5 +10,7 @@ public interface JobDao {
 	
 	List<Job> getAllJobs();
 	
+	long count();
+	
 	void persist(Job jd);
 }

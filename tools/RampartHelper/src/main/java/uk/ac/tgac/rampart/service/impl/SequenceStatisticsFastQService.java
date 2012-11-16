@@ -9,7 +9,7 @@ import java.io.IOException;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import uk.ac.tgac.rampart.data.SeqFileStats;
+import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 
 @Primary
@@ -17,10 +17,10 @@ import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 public class SequenceStatisticsFastQService implements SequenceStatisticsService {
 	
 	@Override
-	public SeqFileStats analyse(File in) throws IOException {
+	public SeqFile analyse(File in) throws IOException {
 				
 		BufferedReader reader = new BufferedReader(new FileReader(in), 1024*1000);
-		SeqFileStats seqStats = new SeqFileStats();
+		SeqFile seqStats = new SeqFile();
 	    
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {

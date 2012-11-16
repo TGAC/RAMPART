@@ -22,7 +22,6 @@ import uk.ac.tgac.rampart.data.MassStats;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.data.SeqFile;
-import uk.ac.tgac.rampart.data.SeqFileStats;
 import uk.ac.tgac.rampart.service.PdfOperationsService;
 import uk.ac.tgac.rampart.service.RampartJobService;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
@@ -109,8 +108,8 @@ public class RampartJobServiceImpl implements RampartJobService {
 						
 		// Analyse Read files and generate statistics for them.  Stats objects are already linked
 		// to the seq files in the libs.
-		List<SeqFileStats> statsSeqFilesRaw = calcReadStats(libsRaw);
-		List<SeqFileStats> statsSeqFilesQt = calcReadStats(libsQt);
+		List<SeqFile> statsSeqFilesRaw = calcReadStats(libsRaw);
+		List<SeqFile> statsSeqFilesQt = calcReadStats(libsQt);
 		
 		// Get Info from Assemblies (MASS) ---- is this necessary?
 		List<MassStats> massStats = this.getMassStats(jobFS.getMassStatsFile());
@@ -152,16 +151,17 @@ public class RampartJobServiceImpl implements RampartJobService {
 	 * persistence
 	 * @throws IOException
 	 */
-	protected SeqFileStats calcSeqFileStats(SeqFile sf) throws IOException {
-		SeqFileStats sfs = this.sequenceStatisticsService.analyse(sf.getFile());
-		sfs.setSeqFile(sf);
-		return sfs;
+	protected SeqFile calcSeqFileStats(SeqFile sf) throws IOException {
+		SeqFile new_sf = this.sequenceStatisticsService.analyse(sf.getFile());
+		new_sf.setFilePath(sf.getFilePath());
+		new_sf.setFileType(sf.getFileType());
+		return new_sf;
 	}
 	
 	@Override
-	public List<SeqFileStats> calcReadStats(List<Library> libs) throws IOException {
+	public List<SeqFile> calcReadStats(List<Library> libs) throws IOException {
 		
-		List<SeqFileStats> seqFileStats = new ArrayList<SeqFileStats>();
+		List<SeqFile> seqFileStats = new ArrayList<SeqFile>();
 
 		// This can be long process so log it
 		log.info("Starting analysis of input library files");

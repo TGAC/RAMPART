@@ -5,11 +5,13 @@ import static uk.ac.tgac.rampart.util.RampartHibernate.HBN_SESSION;
 import java.util.List;
 
 import org.hibernate.Query;
+import org.hibernate.criterion.Projections;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import uk.ac.tgac.rampart.dao.JobDao;
 import uk.ac.tgac.rampart.data.Job;
+import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.util.RampartHibernate;
 
 @Repository
@@ -27,6 +29,12 @@ public class JobDaoImpl implements JobDao {
 		Query q = HBN_SESSION.getSession().createQuery("from Job");
 		List<Job> jobDetails = RampartHibernate.listAndCast(q);
 		return jobDetails;
+	}
+	
+	@Override
+	public long count() {
+		Number c = (Number) HBN_SESSION.getSession().createCriteria(Job.class).setProjection(Projections.rowCount()).uniqueResult();
+		return c.longValue();
 	}
 	
 	@Override
