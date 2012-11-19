@@ -1,44 +1,49 @@
 package uk.ac.tgac.rampart.dao.impl;
 
-import static uk.ac.tgac.rampart.util.RampartHibernate.HBN_SESSION;
-
 import java.util.List;
 
 import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import uk.ac.tgac.rampart.dao.JobDao;
 import uk.ac.tgac.rampart.data.Job;
-import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.util.RampartHibernate;
 
-@Repository
-@Transactional
+@Repository("jobDaoImpl")
 public class JobDaoImpl implements JobDao {
+	
+	@Autowired
+    private SessionFactory sessionFactory;
 	
 	@Override
 	public Job getJob(Long id) {
-		Job jd = (Job)HBN_SESSION.getSession().load(Job.class, id);
+		Session session = this.sessionFactory.getCurrentSession();
+		Job jd = (Job)session.load(Job.class, id);
 		return jd;
 	}
 	
 	@Override
-	public List<Job> getAllJobs() {		
-		Query q = HBN_SESSION.getSession().createQuery("from Job");
+	public List<Job> getAllJobs() {	
+		Session session = this.sessionFactory.getCurrentSession();
+		Query q = session.createQuery("from Job");
 		List<Job> jobDetails = RampartHibernate.listAndCast(q);
 		return jobDetails;
 	}
 	
 	@Override
 	public long count() {
-		Number c = (Number) HBN_SESSION.getSession().createCriteria(Job.class).setProjection(Projections.rowCount()).uniqueResult();
+		Session session = this.sessionFactory.getCurrentSession();
+		Number c = (Number) session.createCriteria(Job.class).setProjection(Projections.rowCount()).uniqueResult();
 		return c.longValue();
 	}
 	
 	@Override
 	public void persist(Job jd) {
-		HBN_SESSION.getSession().saveOrUpdate(jd);
+		Session session = this.sessionFactory.getCurrentSession();
+		session.saveOrUpdate(jd);
 	}
 }

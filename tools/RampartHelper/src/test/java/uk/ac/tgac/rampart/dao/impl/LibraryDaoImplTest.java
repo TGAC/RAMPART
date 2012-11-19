@@ -1,29 +1,40 @@
 package uk.ac.tgac.rampart.dao.impl;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import uk.ac.tgac.rampart.dao.LibraryDao;
-import uk.ac.tgac.rampart.data.Job;
 import uk.ac.tgac.rampart.data.Library;
 import uk.ac.tgac.rampart.data.Library.Dataset;
-import uk.ac.tgac.rampart.data.Library.Usage;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={"/applicationContext.xml"})
 public class LibraryDaoImplTest {
 
+	@Autowired 
+	ApplicationContext ctx;
+	
 	private LibraryDao ld;
 	
 	@Before
 	public void before() {
-		this.ld = new LibraryDaoImpl();
+		this.ld = (LibraryDao)ctx.getAutowireCapableBeanFactory().createBean(LibraryDaoImpl.class);
 	}
 	
 	@Test
+	@Transactional
 	public void testGetLibraryLong() {
 		Library l = ld.getLibrary(1L);
 		
@@ -32,6 +43,7 @@ public class LibraryDaoImplTest {
 	}
 
 	@Test
+	@Transactional
 	public void testGetAllLibraries() {
 		List<Library> ll = ld.getAllLibraries();
 		
@@ -46,6 +58,7 @@ public class LibraryDaoImplTest {
 	}
 
 	@Test
+	@Transactional
 	public void testGetLibraryStringDataset() {
 		List<Library> ll = ld.getLibraries("LIB1782", Dataset.RAW);
 		
@@ -59,6 +72,8 @@ public class LibraryDaoImplTest {
 	}
 
 	@Test
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+	@Rollback(true)
 	public void testSave() {
 		Library l = new Library();
 		l.setName("test_lib");

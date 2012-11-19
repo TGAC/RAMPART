@@ -6,21 +6,35 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import uk.ac.tgac.rampart.dao.JobDao;
 import uk.ac.tgac.rampart.dao.impl.JobDaoImpl;
 import uk.ac.tgac.rampart.data.Job;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={"/applicationContext.xml"})
 public class JobDaoImplTest {
 
+	@Autowired 
+	ApplicationContext ctx;
+	
 	private JobDao jd;
 	
 	@Before
 	public void before() {
-		this.jd = new JobDaoImpl();
+		this.jd = (JobDao)ctx.getAutowireCapableBeanFactory().createBean(JobDaoImpl.class);
 	}
 	
 	@Test
+	@Transactional
 	public void testGetAllJobs() {
 		List<Job> jdl = jd.getAllJobs();
 		
@@ -32,6 +46,7 @@ public class JobDaoImplTest {
 	}
 
 	@Test
+	@Transactional
 	public void testGetJob() {
 		Job j = jd.getJob(1L);
 		
@@ -39,6 +54,8 @@ public class JobDaoImplTest {
 	}
 	
 	@Test
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+	@Rollback(false)
 	public void testSave() {
 		
 		Job j = new Job();

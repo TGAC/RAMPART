@@ -53,8 +53,6 @@ public class SeqFileDaoImpl implements SeqFileDao {
 	@Override
 	public void persist(SeqFile sf) {
 		Session session = this.sessionFactory.getCurrentSession();
-		//HBN_SESSION.getSession().beginTransaction();
 		session.saveOrUpdate(sf);
-		//HBN_SESSION.getSession().getTransaction().commit();
 	}
 }
