@@ -36,10 +36,10 @@ public class JobDaoImplTest {
 	@Test
 	@Transactional
 	public void testGetAllJobs() {
-		List<Job> jdl = jd.getAllJobs();
+		List<Job> jl = jd.getAllJobs();
 		
-		Job row0 = jdl.get(0);
-		Job row1 = jdl.get(1);
+		Job row0 = jl.get(0);
+		Job row1 = jl.get(1);
 		
 		assertTrue(row0.getAuthor().equals("dan"));
 		assertTrue(row1.getAuthor().equals("nizar"));
@@ -55,7 +55,7 @@ public class JobDaoImplTest {
 	
 	@Test
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-	@Rollback(false)
+	@Rollback(true)
 	public void testSave() {
 		
 		Job j = new Job();
@@ -67,7 +67,7 @@ public class JobDaoImplTest {
 		j.setMisoId(500L);
 				
 		long count = jd.count(); 
-		jd.persist(j);
+		jd.persist(j, false);
 		long newCount = jd.count();
 		
 		assertTrue(newCount == count+1);

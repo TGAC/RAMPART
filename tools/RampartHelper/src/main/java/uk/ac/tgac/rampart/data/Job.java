@@ -54,7 +54,15 @@ public class Job implements Serializable {
 	private String title;
 	
 	//private Date startDate;
-
+	
+	@OneToMany(fetch=FetchType.LAZY)
+	@JoinColumn(name="id")
+	private List<MassStats> massStats;
+	
+	@OneToMany(fetch=FetchType.LAZY)
+	@JoinColumn(name="id")
+	private List<ImproverStats> improverStats;
+	
 	
 	public Long getId() {
 		return id;
@@ -136,6 +144,24 @@ public class Job implements Serializable {
 		this.libsQt = libsQt;
 	}
 	
+	
+	
+	public List<MassStats> getMassStats() {
+		return massStats;
+	}
+
+	public void setMassStats(List<MassStats> massStats) {
+		this.massStats = massStats;
+	}
+
+	public List<ImproverStats> getImproverStats() {
+		return improverStats;
+	}
+
+	public void setImproverStats(List<ImproverStats> improverStats) {
+		this.improverStats = improverStats;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

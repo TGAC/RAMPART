@@ -35,6 +35,7 @@ public class ReportGen {
 	
 	
 
+	@SuppressWarnings("static-access")
 	private static Options createOptions() {
 		
 		// Boolean options
@@ -131,6 +132,10 @@ public class ReportGen {
 	    catch(IOException ioe) {
 	    	log.error( "Problem merging template and context into latex file: " + ioe.getMessage() );
 	    	return;
+	    }
+	    
+	    if (verbose) {
+	    	System.out.println("Finished");
 	    }
 
 	    return;

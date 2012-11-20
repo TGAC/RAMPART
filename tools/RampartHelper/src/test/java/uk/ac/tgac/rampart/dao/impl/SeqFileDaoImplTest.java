@@ -57,7 +57,7 @@ public class SeqFileDaoImplTest {
 	
 	@Test
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-	@Rollback(false)
+	@Rollback(true)
 	public void testSave() {
 		
 		long count = sfd.count();

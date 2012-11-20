@@ -6,11 +6,11 @@ import uk.ac.tgac.rampart.data.Job;
 
 public interface JobDao {
 
-	Job getJob(Long id);
+	Job getJob(final Long id);
 	
 	List<Job> getAllJobs();
 	
 	long count();
 	
-	void persist(Job jd);
+	void persist(final Job job, final boolean cascade);
 }

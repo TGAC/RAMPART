@@ -1,10 +1,8 @@
 package uk.ac.tgac.rampart.data;
 
-import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.Table;
 
 //@Entity
 //@Table(schema="rampart",name="qt_params")

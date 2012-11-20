@@ -11,8 +11,10 @@ import org.apache.log4j.Logger;
 import org.apache.velocity.VelocityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
+import uk.ac.tgac.rampart.dao.AssemblyStatsDao;
 import uk.ac.tgac.rampart.dao.JobDao;
 import uk.ac.tgac.rampart.data.ImproverStats;
 import uk.ac.tgac.rampart.data.Job;
@@ -21,7 +23,6 @@ import uk.ac.tgac.rampart.data.MassPlotFileStructure;
 import uk.ac.tgac.rampart.data.MassStats;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
-import uk.ac.tgac.rampart.data.SeqFile;
 import uk.ac.tgac.rampart.service.PdfOperationsService;
 import uk.ac.tgac.rampart.service.RampartJobService;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
@@ -34,14 +35,13 @@ public class RampartJobServiceImpl implements RampartJobService {
 	
 	private static Logger log = Logger.getLogger(RampartJobServiceImpl.class.getName());
 	
-	@Autowired
-	private PdfOperationsService pdfOperationsService;
+	// Services
+	@Autowired private PdfOperationsService pdfOperationsService;
+	@Autowired private SequenceStatisticsService sequenceStatisticsService;
 	
-	@Autowired
-	private SequenceStatisticsService sequenceStatisticsService;
-	
-	@Autowired
-	private JobDao jobDao;
+	// DAOs
+	@Autowired private JobDao jobDao;
+	@Autowired private AssemblyStatsDao assemblyStatsDao;
 	
 	
 	
@@ -102,67 +102,49 @@ public class RampartJobServiceImpl implements RampartJobService {
 		List<Library> libsRaw = this.getRampartConfiguration(jobFS.getConfigRawFile()).getLibs();
 		List<Library> libsQt = this.getRampartConfiguration(jobFS.getConfigQtFile()).getLibs();
 		
+		// Analyse Read files and generate statistics for them.  Stats objects are already linked
+		// to the seq files in the libs.
+		calcReadStats(libsRaw);
+		calcReadStats(libsQt);
+		
 		// Add libs to job object
 		job.setLibsRaw(libsRaw);
 		job.setLibsQt(libsQt);
-						
-		// Analyse Read files and generate statistics for them.  Stats objects are already linked
-		// to the seq files in the libs.
-		List<SeqFile> statsSeqFilesRaw = calcReadStats(libsRaw);
-		List<SeqFile> statsSeqFilesQt = calcReadStats(libsQt);
 		
-		// Get Info from Assemblies (MASS) ---- is this necessary?
+		// Get Info from Assemblies (MASS)
 		List<MassStats> massStats = this.getMassStats(jobFS.getMassStatsFile());
-
+		List<ImproverStats> improverStats = this.getImproverStats(jobFS.getImproverStatsFile());
+		
 		// Get Info from Best Assembly statistics
 		MassStats best = Collections.max(massStats);
 		best.setBest(true);
-
-		// Get Info from Improver
-		List<ImproverStats> improverStats = this.getImproverStats(jobFS.getImproverStatsFile());
+		
+		job.setMassStats(massStats);
+		job.setImproverStats(improverStats);
+		
 
 		// Get the final assembly statistics
 		ImproverStats finalAssembly = improverStats.get(improverStats.size() - 1);
+		finalAssembly.setFinalAssembly(Boolean.TRUE);
 		
 		// Get final scaffold locations
 		String finalAssemblyPath = finalAssembly.getFilePath();
-
+		
 		// Getting the structure of this is important for both report building and data persistence
 		// Build context
 		VelocityContext vc = new VelocityContext();
 		vc.put("job", job);
-		vc.put("read_stats_raw", statsSeqFilesRaw);
-		vc.put("read_stats_qt", statsSeqFilesQt);
-		vc.put("assembly_params", null);
-		vc.put("assembly_stats", null);
-		vc.put("best_assembly", null);
-		vc.put("file_locations", null);
+		vc.put("fpa_path", finalAssemblyPath);
 		
 		return vc;
 	}
 	
 
-	/**
-	 * Calculates and sequence file statistics for the provided sequence file.  Also links the
-	 * created sequence file statistics object to the provided sequence file for persistence
-	 * purposes
-	 * @param sf The sequence file to analyse
-	 * @return The statistics related to the sequence file, linked to the sequence file for 
-	 * persistence
-	 * @throws IOException
-	 */
-	protected SeqFile calcSeqFileStats(SeqFile sf) throws IOException {
-		SeqFile new_sf = this.sequenceStatisticsService.analyse(sf.getFile());
-		new_sf.setFilePath(sf.getFilePath());
-		new_sf.setFileType(sf.getFileType());
-		return new_sf;
-	}
+
 	
 	@Override
-	public List<SeqFile> calcReadStats(List<Library> libs) throws IOException {
+	public void calcReadStats(List<Library> libs) throws IOException {
 		
-		List<SeqFile> seqFileStats = new ArrayList<SeqFile>();
-
 		// This can be long process so log it
 		log.info("Starting analysis of input library files");
 		
@@ -171,32 +153,30 @@ public class RampartJobServiceImpl implements RampartJobService {
 		for (Library l : libs) {
 			
 			stopWatch.start(l.getName() + " : " + l.getFilePaired1());
-			seqFileStats.add(calcSeqFileStats(l.getFilePaired1()));
+			this.sequenceStatisticsService.analyse(l.getFilePaired1());
 			stopWatch.stop();
 			
 			stopWatch.start(l.getName() + " : " + l.getFilePaired2());
-			seqFileStats.add(calcSeqFileStats(l.getFilePaired2()));
+			this.sequenceStatisticsService.analyse(l.getFilePaired2());
 			stopWatch.stop();
 			
 			if (l.getSeFile() != null && !l.getSeFile().getFilePath().isEmpty()) {
 				stopWatch.start(l.getName() + " : " + l.getSeFile());
-				seqFileStats.add(calcSeqFileStats(l.getSeFile()));
+				this.sequenceStatisticsService.analyse(l.getSeFile());
 				stopWatch.stop();
 			}
 		}
 		
 		log.info(stopWatch.prettyPrint());
-		log.debug(seqFileStats.toString());
-		
-		return seqFileStats;
 	}
 	
 	
 	@Override
-	public void persistContext(VelocityContext vc) {
+	@Transactional
+	public void persistContext(final VelocityContext vc, final boolean cascade) {
 		
 		Job j = (Job) vc.get("job");		
-		jobDao.persist(j);		
+		jobDao.persist(j, cascade);
 	}
 
 

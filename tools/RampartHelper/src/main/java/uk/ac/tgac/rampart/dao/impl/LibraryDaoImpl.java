@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import uk.ac.tgac.rampart.dao.LibraryDao;
+import uk.ac.tgac.rampart.dao.SeqFileDao;
 import uk.ac.tgac.rampart.data.Library;
 import uk.ac.tgac.rampart.data.Library.Dataset;
 import uk.ac.tgac.rampart.util.RampartHibernate;
@@ -20,8 +21,11 @@ public class LibraryDaoImpl implements LibraryDao {
 	@Autowired
     private SessionFactory sessionFactory;
 	
+	@Autowired
+	private SeqFileDao seqFileDao;
+	
 	@Override
-	public Library getLibrary(Long id) {
+	public Library getLibrary(final Long id) {
 		Session session = this.sessionFactory.getCurrentSession();
 		Library ld = (Library)session.load(Library.class, id);
 		return ld;
@@ -36,7 +40,7 @@ public class LibraryDaoImpl implements LibraryDao {
 	}
 	
 	@Override
-	public List<Library> getLibraries(String name, Dataset dataset) {	
+	public List<Library> getLibraries(final String name, final Dataset dataset) {	
 		Session session = this.sessionFactory.getCurrentSession();
 		Query q = session.createQuery("from Library where name = :name and dataset = :dataset" );
 		q.setParameter("name", name);
@@ -46,10 +50,10 @@ public class LibraryDaoImpl implements LibraryDao {
 	}
 	
 	@Override
-	public List<Library> getLibraries(Long job_id) {	
+	public List<Library> getLibraries(final Long jobId) {	
 		Session session = this.sessionFactory.getCurrentSession();
 		Query q = session.createQuery("from Library where job_id = :job_id" );
-		q.setParameter("job_id", job_id);
+		q.setParameter("job_id", jobId);
 		List<Library> libDetails = RampartHibernate.listAndCast(q);		
 		return libDetails;
 	}
@@ -62,8 +66,27 @@ public class LibraryDaoImpl implements LibraryDao {
 	}
 	
 	@Override
-	public void persist(Library ld) {
+	public void persist(final Library library, final boolean cascade) {
 		Session session = this.sessionFactory.getCurrentSession();
-		session.saveOrUpdate(ld);
+		session.saveOrUpdate(library);
+		
+		if (cascade) {
+			
+			if (library.getFilePaired1() != null)
+				seqFileDao.persist(library.getFilePaired1());
+			
+			if (library.getFilePaired2() != null)
+				seqFileDao.persist(library.getFilePaired2());
+			
+			if (library.getSeFile() != null)
+				seqFileDao.persist(library.getSeFile());
+		}
+	}
+	
+	@Override
+	public void persistList(final List<Library> libraryList, final boolean cascade) {
+		for(Library l : libraryList) {
+			persist(l, cascade);
+		}
 	}
 }

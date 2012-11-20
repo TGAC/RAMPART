@@ -3,6 +3,7 @@ package uk.ac.tgac.rampart.data;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -14,6 +15,9 @@ public class ImproverStats extends AssemblyStats implements Comparable<ImproverS
 	
 	private Integer stage;
 	
+	@Column(name="final")
+	private Boolean finalAssembly;
+	
 	public ImproverStats() {}
 	
 	public ImproverStats(String[] stats) {
@@ -24,8 +28,17 @@ public class ImproverStats extends AssemblyStats implements Comparable<ImproverS
 	public Integer getStage() {
 		return stage;
 	}
+	
 	public void setStage(Integer stage) {
 		this.stage = stage;
+	}
+	
+	public Boolean isFinalAssembly() {
+		return finalAssembly;
+	}
+
+	public void setFinalAssembly(Boolean finalAssembly) {
+		this.finalAssembly = finalAssembly;
 	}
 
 	@Override

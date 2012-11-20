@@ -15,10 +15,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import uk.ac.tgac.rampart.service.SequenceStatisticsService;
+
 @Entity
 @Table(schema="rampart",name="seq_file")
 public class SeqFile implements Serializable {
 
+	@Autowired
+	private SequenceStatisticsService sequenceStatisticsService;
+	
 	private static final long serialVersionUID = -3958558031764287299L;
 
 	public enum FileType {
@@ -298,6 +305,8 @@ public class SeqFile implements Serializable {
 		double avgRdLen = (double) this.getBaseCount() / (double) this.getSeqCount();
 		return avgRdLen;
 	}
+	
+	
 
 	@Override
 	public String toString() {

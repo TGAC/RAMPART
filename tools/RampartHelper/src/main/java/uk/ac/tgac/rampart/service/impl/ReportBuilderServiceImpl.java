@@ -33,6 +33,17 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 	@Override
 	public void buildReport(File jobDir, File projectDir) throws Exception {
 		
+		// Gather statistics and other variables
+		log.info("Gathering job context for report");
+		VelocityContext vc = this.rampartJobService.buildContext(jobDir);
+		log.info("Gathered job context for report");
+		
+		buildReport(jobDir, projectDir, vc);
+	}
+	
+	@Override
+	public void buildReport(File jobDir, File projectDir, VelocityContext context) throws Exception {
+		
 		log.info("Starting report generation");
 		
 		RampartJobFileStructure jobFS = new RampartJobFileStructure(jobDir);
@@ -55,13 +66,8 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		this.rampartJobService.seperatePlots(jobFS.getMassPlotsFile(), jobFS.getReportImagesDir());
 		log.debug("Seperated plots into seperate files for report");
 
-		// Gather statistics and other variables
-		log.info("Gathering job context for report");
-		VelocityContext vc = this.rampartJobService.buildContext(jobDir);
-		log.info("Gathered job context for report");
-
 		// Merge the template and context
-		this.velocityMergerService.merge(jobFS.getReportTemplateFile(), vc, jobFS.getReportMergedFile());
+		this.velocityMergerService.merge(jobFS.getReportTemplateFile(), context, jobFS.getReportMergedFile());
 		log.debug("Merged report template and context");
 		
 		// Compile report (If there were any errors carry on anyway, we might still be able to log the 

@@ -2,7 +2,6 @@ package uk.ac.tgac.rampart.data;
 
 import java.io.Serializable;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,7 +12,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -80,11 +78,11 @@ public class Library implements Serializable {
 	private Integer readLength;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(name="usage")
+	@Column(name="lib_usage")
 	private Usage usage;
 	
-	@Column(name="order")
-	private Integer order;
+	@Column(name="process_order")
+	private Integer index;
 	
 	@OneToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="id")
@@ -164,12 +162,12 @@ public class Library implements Serializable {
 		this.usage = usage;
 	}
 
-	public Integer getOrder() {
-		return order;
+	public Integer getIndex() {
+		return index;
 	}
 
-	public void setOrder(Integer order) {
-		this.order = order;
+	public void setIndex(Integer index) {
+		this.index = index;
 	}
 
 	public SeqFile getFilePaired1() {
@@ -200,7 +198,7 @@ public class Library implements Serializable {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("[SECTION_LIB_PREFIX" + this.getOrder().toString() + "]\n")
+		sb.append("[SECTION_LIB_PREFIX" + this.getIndex().toString() + "]\n")
 		.append(KEY_NAME + "=" + this.getName() + "\n")
 		.append(KEY_DATASET + "=" + this.getDataset().toString() + "\n")
 		.append(KEY_AVG_INSERT_SIZE + "=" + this.getAverageInsertSize().toString() + "\n")
@@ -224,7 +222,7 @@ public class Library implements Serializable {
 		ld.setInsertErrorTolerance(Double.parseDouble(iniSection.get(KEY_INSERT_ERROR_TOLERANCE)));
 		ld.setReadLength(Integer.parseInt(iniSection.get(KEY_READ_LENGTH)));
 		ld.setUsage(Usage.valueOf(iniSection.get(KEY_USAGE)));
-		ld.setOrder(index);
+		ld.setIndex(index);
 		ld.setFilePaired1(new SeqFile(iniSection.get(KEY_FILE_1)));	
 		ld.setFilePaired2(new SeqFile(iniSection.get(KEY_FILE_2)));
 		ld.setSeFile(new SeqFile(iniSection.get(KEY_FILE_SE)));

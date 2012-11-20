@@ -123,14 +123,14 @@ public class ProcessStreamManager {
 		private List<String> data;
 		private String prefix;
 		private String terminator;
-		private boolean success;
+		//private boolean success;
 
 		public ProcessInputHandler(OutputStream dataOut, List<String> data, String terminator, String prefix) {
 			this.dataOut = new BufferedWriter(new OutputStreamWriter(dataOut));
 			this.data = data;
 			this.prefix = prefix + ": ";
 			this.terminator = terminator;
-			this.success = true;
+			//this.success = true;
 		}
 
 		@Override
@@ -156,13 +156,13 @@ public class ProcessStreamManager {
 				String message = "Error in IO with ProcessInputHandler: " + e.getMessage();
 				log.warn(message);
 				log.warn(Tools.getStackTrace(e));
-				success = false;
+				//success = false;
 			}
 		}
 
-		public boolean success() {
+		/*public boolean success() {
 			return this.success;
-		}
+		}*/
 	}
 
 	private class ProcessOutputHandler extends Thread {
@@ -171,7 +171,7 @@ public class ProcessStreamManager {
 		private List<String> data;
 		private boolean errorStream;
 		private boolean recordOutput;
-		private boolean success;
+		//private boolean success;
 
 		public ProcessOutputHandler(InputStream dataIn, String outputPrefix, boolean isErrStream, boolean recordOutput) {
 			this.dataIn = new BufferedReader(new InputStreamReader(dataIn));
@@ -179,7 +179,7 @@ public class ProcessStreamManager {
 			this.data = new ArrayList<String>();
 			this.errorStream = isErrStream;
 			this.recordOutput = recordOutput;
-			this.success = true;
+			//this.success = true;
 		}
 
 		@Override
@@ -205,7 +205,7 @@ public class ProcessStreamManager {
 				String message = "Error in IO with ProcessOutputHandler: " + e.getMessage();
 				log.warn(message);
 				log.warn(Tools.getStackTrace(e));
-				this.success = false;
+				//this.success = false;
 			}
 		}
 
@@ -213,8 +213,8 @@ public class ProcessStreamManager {
 			return recordOutput ? data : null;
 		}
 
-		public boolean success() {
+		/*public boolean success() {
 			return success;
-		}
+		}*/
 	}
 }

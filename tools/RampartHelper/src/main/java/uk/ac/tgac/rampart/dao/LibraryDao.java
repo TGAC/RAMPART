@@ -7,15 +7,17 @@ import uk.ac.tgac.rampart.data.Library.Dataset;
 
 public interface LibraryDao {
 
-	Library getLibrary(Long id);
+	Library getLibrary(final Long id);
 	
 	List<Library> getAllLibraries();
 	
-	List<Library> getLibraries(String name, Dataset dataset);
+	List<Library> getLibraries(final String name, final Dataset dataset);
 	
-	List<Library> getLibraries(Long job_id);
+	List<Library> getLibraries(final Long jobId);
 	
 	long count();
 	
-	void persist(Library ld);
+	void persist(final Library library, final boolean cascade);
+	
+	void persistList(final List<Library> libraryList, final boolean cascade);
 }

@@ -10,7 +10,6 @@ import uk.ac.tgac.rampart.data.ImproverStats;
 import uk.ac.tgac.rampart.data.Library;
 import uk.ac.tgac.rampart.data.MassStats;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
-import uk.ac.tgac.rampart.data.SeqFile;
 
 import com.itextpdf.text.DocumentException;
 
@@ -24,9 +23,9 @@ public interface RampartJobService {
 	
 	List<ImproverStats> getImproverStats(File in) throws IOException;
 	
-	List<SeqFile> calcReadStats(List<Library> libs) throws IOException;
+	void calcReadStats(List<Library> libs) throws IOException;
 	
 	VelocityContext buildContext(File jobDir) throws IOException;
 	
-	void persistContext(VelocityContext context);
+	void persistContext(final VelocityContext context, final boolean cascade);
 }
