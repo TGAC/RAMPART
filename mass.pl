@@ -47,7 +47,7 @@ my $DEF_MEM=60;
 my $MIN_MEM=5;
 
 # Source command constants
-my $ABYSS_SOURCE_CMD = "source abyss_upTo127-1.3.4;";
+my $ABYSS_SOURCE_CMD = "source abyss_cb-1.3.4;";
 
 # Other constants
 my $QUOTE = "\"";
