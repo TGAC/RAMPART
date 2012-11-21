@@ -21,7 +21,7 @@
 	
 	<tx:annotation-driven transaction-manager="transactionManager"/>
 		
-	<bean id="applicationContextProvider" class="uk.ac.tgac.rampart.util.ApplicationContextProvider" />
+	<!-- <bean id="applicationContextLoader" class="uk.ac.tgac.rampart.util.ApplicationContextLoader" />-->
 	
 	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="location" value="classpath:jdbc.properties"/>

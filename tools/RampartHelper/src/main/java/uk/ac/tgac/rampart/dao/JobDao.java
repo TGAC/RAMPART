@@ -12,5 +12,5 @@ public interface JobDao {
 	
 	long count();
 	
-	void persist(final Job job, final boolean cascade);
+	void persist(Job job);
 }

@@ -17,7 +17,7 @@ public interface LibraryDao {
 	
 	long count();
 	
-	void persist(final Library library, final boolean cascade);
+	void persist(Library library);
 	
-	void persistList(final List<Library> libraryList, final boolean cascade);
+	void persistList(List<Library> libraryList);
 }

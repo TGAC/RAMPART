@@ -2,6 +2,7 @@ package uk.ac.tgac.rampart.data;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -29,8 +30,8 @@ public class AssemblyStats implements Serializable {
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	
-	@ManyToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="job_id", referencedColumnName="id")
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@JoinColumn(name="job_id")
 	private Job job;
 	
 	@Column(name="file_path")
@@ -71,17 +72,18 @@ public class AssemblyStats implements Serializable {
 	
 	public AssemblyStats() {}
 	public AssemblyStats(String[] stats) {
-		this.nbContigs = Long.parseLong(stats[0]);
-		this.aPerc = Double.parseDouble(stats[1]);
-		this.cPerc = Double.parseDouble(stats[2]);
-		this.gPerc = Double.parseDouble(stats[3]);
-		this.tPerc = Double.parseDouble(stats[4]);
-		this.nPerc = Double.parseDouble(stats[5]);
-		this.nbBases = Long.parseLong(stats[6]);
-		this.minLen = Long.parseLong(stats[7]);
-		this.maxLen = Long.parseLong(stats[8]);
-		this.avgLen = Double.parseDouble(stats[9]);
-		this.n50 = Long.parseLong(stats[10]);
+		this.filePath = stats[0];
+		this.nbContigs = Long.parseLong(stats[1]);
+		this.aPerc = Double.parseDouble(stats[2]);
+		this.cPerc = Double.parseDouble(stats[3]);
+		this.gPerc = Double.parseDouble(stats[4]);
+		this.tPerc = Double.parseDouble(stats[5]);
+		this.nPerc = Double.parseDouble(stats[6]);
+		this.nbBases = Long.parseLong(stats[7]);
+		this.minLen = Long.parseLong(stats[8]);
+		this.maxLen = Long.parseLong(stats[9]);
+		this.avgLen = Double.parseDouble(stats[10]);
+		this.n50 = Long.parseLong(stats[11]);
 	}
 	
 	public Long getId() {

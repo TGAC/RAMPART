@@ -27,5 +27,5 @@ public interface RampartJobService {
 	
 	VelocityContext buildContext(File jobDir) throws IOException;
 	
-	void persistContext(final VelocityContext context, final boolean cascade);
+	void persistContext(final VelocityContext context);
 }

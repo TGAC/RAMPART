@@ -72,7 +72,7 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		
 		// Compile report (If there were any errors carry on anyway, we might still be able to log the 
 		// details in the database
-		this.latexService.compileDocument(jobFS.getReportMergedFile(), jobFS.getReportDir());
+		this.latexService.compileDocument(jobFS.getReportMergedFile());
 		log.info("Report built");
 	}
 

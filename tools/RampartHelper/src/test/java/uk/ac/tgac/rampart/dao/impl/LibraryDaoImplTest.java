@@ -77,7 +77,7 @@ public class LibraryDaoImplTest {
 	@Test
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	@Rollback(true)
-	public void testSave() {
+	public void testPersist() {
 		
 		JobDao jd = (JobDao)ctx.getAutowireCapableBeanFactory().createBean(JobDaoImpl.class);
 		
@@ -101,8 +101,8 @@ public class LibraryDaoImplTest {
 		l.setJob(j);
 		
 		long count = ld.count(); 
-		jd.persist(j, false);
-		ld.persist(l, false);
+		jd.persist(j);
+		ld.persist(l);
 		long newCount = ld.count();
 		
 		assertTrue(newCount == count+1);

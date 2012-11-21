@@ -2,6 +2,7 @@ package uk.ac.tgac.rampart.data;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -12,7 +13,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.ini4j.Profile.Section;
@@ -60,7 +60,7 @@ public class Library implements Serializable {
 	@Column(name="name")
 	private String name;
 	
-	@ManyToOne(fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
 	@JoinColumn(name="job_id")
 	private Job job;
 	
@@ -84,16 +84,16 @@ public class Library implements Serializable {
 	@Column(name="process_order")
 	private Integer index;
 	
-	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
+	@JoinColumn(name="file_paired_1")
 	private SeqFile filePaired1;
 	
-	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
+	@JoinColumn(name="file_paired_2")
 	private SeqFile filePaired2;
 	
-	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
+	@JoinColumn(name="file_se")
 	private SeqFile seFile;
 	
 	
@@ -175,6 +175,9 @@ public class Library implements Serializable {
 	}
 
 	public void setFilePaired1(SeqFile filePaired1) {
+		if (filePaired1 != null) {
+			filePaired1.setLibrary(this);
+		}
 		this.filePaired1 = filePaired1;
 	}
 
@@ -183,6 +186,9 @@ public class Library implements Serializable {
 	}
 
 	public void setFilePaired2(SeqFile filePaired2) {
+		if (filePaired2 != null) {
+			filePaired2.setLibrary(this);
+		}
 		this.filePaired2 = filePaired2;
 	}
 
@@ -191,6 +197,9 @@ public class Library implements Serializable {
 	}
 
 	public void setSeFile(SeqFile seFile) {
+		if (seFile != null) {
+			seFile.setLibrary(this);
+		}
 		this.seFile = seFile;
 	}
 
@@ -198,7 +207,7 @@ public class Library implements Serializable {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("[SECTION_LIB_PREFIX" + this.getIndex().toString() + "]\n")
+		sb.append("[" + SECTION_PREFIX + this.getIndex().toString() + "]\n")
 		.append(KEY_NAME + "=" + this.getName() + "\n")
 		.append(KEY_DATASET + "=" + this.getDataset().toString() + "\n")
 		.append(KEY_AVG_INSERT_SIZE + "=" + this.getAverageInsertSize().toString() + "\n")
@@ -215,17 +224,25 @@ public class Library implements Serializable {
 	public static Library parseIniSection(Section iniSection, int index) {
 		
 		Library ld = new Library();
-		ld.setId(-1L);
+		
+		// Required properties
 		ld.setName(iniSection.get(KEY_NAME));
-		ld.setDataset(Dataset.valueOf(iniSection.get(KEY_DATASET)));
 		ld.setAverageInsertSize(Integer.parseInt(iniSection.get(KEY_AVG_INSERT_SIZE)));
 		ld.setInsertErrorTolerance(Double.parseDouble(iniSection.get(KEY_INSERT_ERROR_TOLERANCE)));
 		ld.setReadLength(Integer.parseInt(iniSection.get(KEY_READ_LENGTH)));
 		ld.setUsage(Usage.valueOf(iniSection.get(KEY_USAGE)));
-		ld.setIndex(index);
 		ld.setFilePaired1(new SeqFile(iniSection.get(KEY_FILE_1)));	
 		ld.setFilePaired2(new SeqFile(iniSection.get(KEY_FILE_2)));
-		ld.setSeFile(new SeqFile(iniSection.get(KEY_FILE_SE)));
+		
+		// Optional properties		
+		if (iniSection.get(KEY_DATASET) != null) {
+			ld.setDataset(Dataset.valueOf(iniSection.get(KEY_DATASET)));
+		}
+		
+		if (iniSection.get(KEY_FILE_SE) != null) {
+			ld.setSeFile(new SeqFile(iniSection.get(KEY_FILE_SE)));
+		}
+		
 		return ld;
 	}
 }

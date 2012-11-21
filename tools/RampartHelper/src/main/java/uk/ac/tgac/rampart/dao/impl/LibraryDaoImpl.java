@@ -66,27 +66,15 @@ public class LibraryDaoImpl implements LibraryDao {
 	}
 	
 	@Override
-	public void persist(final Library library, final boolean cascade) {
+	public void persist(Library library) {
 		Session session = this.sessionFactory.getCurrentSession();
 		session.saveOrUpdate(library);
-		
-		if (cascade) {
-			
-			if (library.getFilePaired1() != null)
-				seqFileDao.persist(library.getFilePaired1());
-			
-			if (library.getFilePaired2() != null)
-				seqFileDao.persist(library.getFilePaired2());
-			
-			if (library.getSeFile() != null)
-				seqFileDao.persist(library.getSeFile());
-		}
 	}
 	
 	@Override
-	public void persistList(final List<Library> libraryList, final boolean cascade) {
+	public void persistList(List<Library> libraryList) {
 		for(Library l : libraryList) {
-			persist(l, cascade);
+			persist(l);
 		}
 	}
 }

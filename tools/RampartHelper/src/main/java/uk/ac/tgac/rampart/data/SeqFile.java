@@ -3,6 +3,7 @@ package uk.ac.tgac.rampart.data;
 import java.io.File;
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -12,20 +13,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import uk.ac.tgac.rampart.service.SequenceStatisticsService;
 
 @Entity
 @Table(schema="rampart",name="seq_file")
 public class SeqFile implements Serializable {
 
-	@Autowired
-	private SequenceStatisticsService sequenceStatisticsService;
-	
 	private static final long serialVersionUID = -3958558031764287299L;
 
 	public enum FileType {
@@ -59,7 +53,7 @@ public class SeqFile implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
 	
-	@OneToOne(fetch=FetchType.LAZY, optional=true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
 	@JoinColumn(name="library_id")
 	private Library library;
 	

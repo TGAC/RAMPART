@@ -50,7 +50,7 @@ public class RampartJobFileStructure {
 		this.configRawFile = new File(this.readsDir.getPath() + "/raw.cfg");
 		this.configQtFile = new File(this.readsDir.getPath() + "/qt.cfg");
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
-		this.massStatsFile = new File(this.massStatsDir.getPath() + "/merged.tab");
+		this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
 		this.improverStatsFile = new File(this.improverStatsDir.getPath() + "/stats.txt");
 		this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
 		this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");

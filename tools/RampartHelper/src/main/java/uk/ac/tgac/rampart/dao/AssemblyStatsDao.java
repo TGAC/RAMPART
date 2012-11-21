@@ -26,11 +26,11 @@ public interface AssemblyStatsDao {
 	
 	long count();
 	
-	void persist(final MassStats massStats);
+	void persist(MassStats massStats);
 	
-	void persist(final ImproverStats improverStats);
+	void persist(ImproverStats improverStats);
 	
-	void persistMassStatsList(final List<MassStats> massStatsList);
+	void persistMassStatsList(List<MassStats> massStatsList);
 	
-	void persistImproverStatsList(final List<ImproverStats> improverStatsList);
+	void persistImproverStatsList(List<ImproverStats> improverStatsList);
 }

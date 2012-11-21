@@ -107,7 +107,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		calcReadStats(libsRaw);
 		calcReadStats(libsQt);
 		
-		// Add libs to job object
+		// Link libs to job object and vice versa
 		job.setLibsRaw(libsRaw);
 		job.setLibsQt(libsQt);
 		
@@ -119,6 +119,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		MassStats best = Collections.max(massStats);
 		best.setBest(true);
 		
+		// Link stats to job object and vice versa
 		job.setMassStats(massStats);
 		job.setImproverStats(improverStats);
 		
@@ -127,19 +128,24 @@ public class RampartJobServiceImpl implements RampartJobService {
 		ImproverStats finalAssembly = improverStats.get(improverStats.size() - 1);
 		finalAssembly.setFinalAssembly(Boolean.TRUE);
 		
-		// Get final scaffold locations
-		String finalAssemblyPath = finalAssembly.getFilePath();
-		
 		// Getting the structure of this is important for both report building and data persistence
 		// Build context
 		VelocityContext vc = new VelocityContext();
 		vc.put("job", job);
-		vc.put("fpa_path", finalAssemblyPath);
+		vc.put("mass_dir", jobFS.getMassDir().getPath());
+		vc.put("improver_dir", jobFS.getImproverDir().getPath());
+		vc.put("best_mass_asm", best);
+		vc.put("final_asm", finalAssembly);
 		
 		return vc;
 	}
 	
 
+	protected void setJobInLibs(List<Library> libs, Job job) {
+		for(Library l : libs) {
+			l.setJob(job);
+		}
+	}
 
 	
 	@Override
@@ -152,16 +158,16 @@ public class RampartJobServiceImpl implements RampartJobService {
 		
 		for (Library l : libs) {
 			
-			stopWatch.start(l.getName() + " : " + l.getFilePaired1());
+			stopWatch.start(l.getName() + " : " + l.getFilePaired1().getFile().getName());
 			this.sequenceStatisticsService.analyse(l.getFilePaired1());
 			stopWatch.stop();
 			
-			stopWatch.start(l.getName() + " : " + l.getFilePaired2());
+			stopWatch.start(l.getName() + " : " + l.getFilePaired2().getFile().getName());
 			this.sequenceStatisticsService.analyse(l.getFilePaired2());
 			stopWatch.stop();
 			
 			if (l.getSeFile() != null && !l.getSeFile().getFilePath().isEmpty()) {
-				stopWatch.start(l.getName() + " : " + l.getSeFile());
+				stopWatch.start(l.getName() + " : " + l.getSeFile().getFile().getName());
 				this.sequenceStatisticsService.analyse(l.getSeFile());
 				stopWatch.stop();
 			}
@@ -173,10 +179,10 @@ public class RampartJobServiceImpl implements RampartJobService {
 	
 	@Override
 	@Transactional
-	public void persistContext(final VelocityContext vc, final boolean cascade) {
+	public void persistContext(final VelocityContext vc) {
 		
 		Job j = (Job) vc.get("job");		
-		jobDao.persist(j, cascade);
+		jobDao.persist(j);
 	}
 
 

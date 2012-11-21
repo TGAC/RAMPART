@@ -4,5 +4,5 @@ import java.io.File;
 
 public interface LatexService {
 
-	void compileDocument(File texFile, File outputDir) throws Exception;
+	void compileDocument(File texFile) throws Exception;
 }

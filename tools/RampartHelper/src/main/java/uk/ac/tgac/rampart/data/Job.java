@@ -3,6 +3,7 @@ package uk.ac.tgac.rampart.data;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -13,6 +14,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Cascade;
 import org.ini4j.Profile.Section;
 
 @Entity
@@ -40,12 +42,14 @@ public class Job implements Serializable {
 	@Column(name="jira_seqinfo_id")
 	private Long jiraSeqinfoId;
 	
-	@OneToMany(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@JoinColumn(name="job_id")
 	private List<Library> libsRaw;
 	
-	@OneToMany(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@JoinColumn(name="job_id")
 	private List<Library> libsQt;
 	
 	private String author;
@@ -55,12 +59,14 @@ public class Job implements Serializable {
 	
 	//private Date startDate;
 	
-	@OneToMany(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@JoinColumn(name="job_id")
 	private List<MassStats> massStats;
 	
-	@OneToMany(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@JoinColumn(name="job_id")
 	private List<ImproverStats> improverStats;
 	
 	
@@ -133,6 +139,12 @@ public class Job implements Serializable {
 	}
 	
 	public void setLibsRaw(List<Library> libsRaw) {
+		if (libsRaw != null) {
+			for(Library lib : libsRaw) {
+				lib.setJob(this);
+			}
+		}
+		
 		this.libsRaw = libsRaw;
 	}
 	
@@ -141,6 +153,13 @@ public class Job implements Serializable {
 	}
 
 	public void setLibsQt(List<Library> libsQt) {
+		
+		if (libsQt != null) {
+			for(Library lib : libsQt) {
+				lib.setJob(this);
+			}
+		}
+		
 		this.libsQt = libsQt;
 	}
 	
@@ -151,6 +170,11 @@ public class Job implements Serializable {
 	}
 
 	public void setMassStats(List<MassStats> massStats) {
+		if (massStats != null) {
+			for(MassStats stats : massStats) {
+				stats.setJob(this);
+			}
+		}
 		this.massStats = massStats;
 	}
 
@@ -159,6 +183,11 @@ public class Job implements Serializable {
 	}
 
 	public void setImproverStats(List<ImproverStats> improverStats) {
+		if (improverStats != null) {
+			for(ImproverStats stats : improverStats) {
+				stats.setJob(this);
+			}
+		}
 		this.improverStats = improverStats;
 	}
 
@@ -180,7 +209,6 @@ public class Job implements Serializable {
 	
 	public static Job parseIniSection(Section iniSection) {
 		Job jd = new Job();
-		jd.setId(-1L);
 		jd.setAuthor(iniSection.get(KEY_JD_AUTHOR));
 		jd.setCollaborator(iniSection.get(KEY_JD_COLLABORATOR));
 		jd.setInstitution(iniSection.get(KEY_JD_INSTITUTION));

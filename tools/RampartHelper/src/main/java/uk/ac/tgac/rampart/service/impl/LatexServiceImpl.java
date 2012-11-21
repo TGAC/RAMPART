@@ -12,12 +12,13 @@ import uk.ac.tgac.rampart.util.ProcessStreamManager;
 public class LatexServiceImpl implements LatexService {
 	
 	@Override
-	public void compileDocument(File texFile, File outputDir) throws Exception {
+	public void compileDocument(File texFile) throws Exception {
 		
 		// Assumes latex is installed and pdflatex is on the path
-		String command = "pdflatex -interaction=nonstopmode -output-directory=" + outputDir + " " + texFile;
+		File workingDir = new File(texFile.getParent());
+		String command = "pdflatex -interaction=nonstopmode " + texFile;
 
-		Process process = Runtime.getRuntime().exec(command);
+		Process process = Runtime.getRuntime().exec(command, new String[]{}, workingDir);
 		ProcessStreamManager psm = new ProcessStreamManager(process, "PDFLATEX");
 
 		int code = psm.runInForeground(false);
