@@ -32,7 +32,22 @@ public class Library implements Serializable {
 	
 	public enum Dataset {
 		RAW,
-		QT
+		QT;
+		
+		public static final Dataset QUALITY_TRIMMED = QT;
+	}
+	
+	public enum SeqOrientation {
+		FR,
+		RF,
+		FF,
+		RR;
+		
+		public static final SeqOrientation FORWARD_REVERSE = FR;
+		public static final SeqOrientation REVERSE_FORWARD = RF;
+		public static final SeqOrientation FORWARD_FORWARD = FF;
+		public static final SeqOrientation REVERSE_REVERSE = RR;
+		
 	}
 	
 	
@@ -44,6 +59,7 @@ public class Library implements Serializable {
 	public static final String KEY_AVG_INSERT_SIZE = "avg_insert_size";
 	public static final String KEY_INSERT_ERROR_TOLERANCE = "insert_err_tolerance";
 	public static final String KEY_READ_LENGTH = "read_length";
+	public static final String KEY_SEQ_ORIENTATION = "seq_orientation";
 	public static final String KEY_USAGE = "usage";
 	public static final String KEY_ORDER = "order";
 	
@@ -76,6 +92,10 @@ public class Library implements Serializable {
 	
 	@Column(name=KEY_READ_LENGTH)
 	private Integer readLength;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name="seq_orientation")
+	private SeqOrientation seqOrientation;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name="lib_usage")
@@ -153,6 +173,14 @@ public class Library implements Serializable {
 	public void setReadLength(Integer readLength) {
 		this.readLength = readLength;
 	}
+	
+	public SeqOrientation getSeqOrientation() {
+		return seqOrientation;
+	}
+
+	public void setSeqOrientation(SeqOrientation seqOrientation) {
+		this.seqOrientation = seqOrientation;
+	}
 
 	public Usage getUsage() {
 		return usage;
@@ -213,6 +241,7 @@ public class Library implements Serializable {
 		.append(KEY_AVG_INSERT_SIZE + "=" + this.getAverageInsertSize().toString() + "\n")
 		.append(KEY_INSERT_ERROR_TOLERANCE + "=" + this.getInsertErrorTolerance().toString() + "\n")
 		.append(KEY_READ_LENGTH + "=" + this.getReadLength() + "\n")
+		.append(KEY_SEQ_ORIENTATION + "=" + this.getSeqOrientation().toString() + "\n")
 		.append(KEY_USAGE + "=" + this.getUsage().toString() + "\n")
 		.append(KEY_FILE_1 + "=" + this.getFilePaired1().getFilePath() + "\n")
 		.append(KEY_FILE_2 + "=" + this.getFilePaired2().getFilePath() + "\n")
@@ -230,6 +259,7 @@ public class Library implements Serializable {
 		ld.setAverageInsertSize(Integer.parseInt(iniSection.get(KEY_AVG_INSERT_SIZE)));
 		ld.setInsertErrorTolerance(Double.parseDouble(iniSection.get(KEY_INSERT_ERROR_TOLERANCE)));
 		ld.setReadLength(Integer.parseInt(iniSection.get(KEY_READ_LENGTH)));
+		ld.setSeqOrientation(SeqOrientation.valueOf(iniSection.get(KEY_SEQ_ORIENTATION)));
 		ld.setUsage(Usage.valueOf(iniSection.get(KEY_USAGE)));
 		ld.setFilePaired1(new SeqFile(iniSection.get(KEY_FILE_1)));	
 		ld.setFilePaired2(new SeqFile(iniSection.get(KEY_FILE_2)));

@@ -158,19 +158,19 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		my @lib_args = ();
 		my @single_ends = ();
 		
-		for(my $j = 0; $j < $cfg->getNbSections(); $j++) {
+		for(my $j = 1; $j < $cfg->getNbSections(); $j++) {
 			my $sect = $cfg->getSectionAt($j);
 			my $sect_name = $cfg->getSectionNameAt($j);
-			my $se = $sect->{qs};
+			my $se = $sect->{file_se};
 			push(@libs, $sect_name);
-			push(@lib_args, ($sect_name . "='" . $sect->{q1} . " " . $sect->{q2} . "'"));
+			push(@lib_args, ($sect_name . "='" . $sect->{file_paired_1} . " " . $sect->{file_paired_2} . "'"));
 			push(@single_ends, $se) if $se;
 		}
 		
 		my $abyss_lib = "lib='" . (join " ", @libs) . "'";
 		my $abyss_lib_args = (join " ", @lib_args);
 		my $abyss_ses = @single_ends > 0 ? "se='" . (join " ", @single_ends) . "'" : "";
-		my $abyss_libs = "-j" . $cfg->getNbSections();
+		my $abyss_libs = "-j" . ($cfg->getNbSections() - 1);
 		
 		# Put together all the arguments
 		my @abyss_args = grep {$_} (

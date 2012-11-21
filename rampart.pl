@@ -38,6 +38,7 @@ my $MASS_PATH = $RAMPART_DIR . "mass.pl";
 my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
 my $GETBEST_PATH = $RAMPART_DIR . "get_best.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
+my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1-jar-with-dependencies.jar";
 
 
 # Parse generic queueing tool options
@@ -48,7 +49,9 @@ $qst->parseOptions();
 my (%opt) = (	"qt",				1,
 				"mass", 			1,
 				"improver",			1,
-				"mass_selector", 	1 );
+				"mass_selector", 	1,
+				"persist",			1,
+				"report",			1 );
 	
 
 GetOptions (
@@ -59,6 +62,8 @@ GetOptions (
 	'mass_selector!',
 	'improver!',
 	'improver_args|ia=s',
+	'persist!',
+	'report!',
 	'config|cfg=s',
 	'simulate|sim',
 	'help|usage|h|?',
@@ -93,6 +98,7 @@ my $mass_job_prefix = $qst->getJobName() . "-mass";
 my $ms_job_name = $qst->getJobName() . "-ms";
 my $get_best_job_name = $mass_job_prefix . "-getbest";
 my $improver_job_prefix = $qst->getJobName() . "-improver";
+my $helper_job_name = $qst->getJobName() . "-helper";
 
 
 # Set locations of read library files and directories
@@ -128,18 +134,18 @@ if ($opt{qt}) {
 	$raw_cfg = new Configuration( $raw_config_file );
 	$qt_cfg = new Configuration( $qt_config_file );
 	
-	for(my $i = 0; $i < $raw_cfg->getNbSections(); $i++) {
+	for(my $i = 1; $i < $raw_cfg->getNbSections(); $i++) {
 		
 		# Get info for this section
 		my $cfg_sect = $raw_cfg->getSectionAt($i);
 		my $sect_name = $raw_cfg->getSectionNameAt($i);
 		
 		# Get the file paths pointed to by the original config file.
-		my $file1 = $cfg_sect->{q1};
-		my $file2 = $cfg_sect->{q2};
+		my $file1 = $cfg_sect->{file_paired_1};
+		my $file2 = $cfg_sect->{file_paired_2};
 		
 		# Configure file paths for reads dir
-		my $read_file_prefix = $reads_dir . "/" . $cfg_sect->{lib};
+		my $read_file_prefix = $reads_dir . "/" . $cfg_sect->{name};
 		my $in_file1 = $read_file_prefix . "_1.fastq";
 		my $in_file2 = $read_file_prefix . "_2.fastq";
 		my $out_file1 = $read_file_prefix . "_1.qt.fastq";
@@ -173,11 +179,11 @@ if ($opt{qt}) {
 		system($qt_cmd_line);
 		
 		# Also we must change the new configuration files for consisitency
-		$raw_cfg->getSectionAt($i)->{q1} = $in_file1;
-		$raw_cfg->getSectionAt($i)->{q2} = $in_file2;
-		$qt_cfg->getSectionAt($i)->{q1} = $out_file1;
-		$qt_cfg->getSectionAt($i)->{q2} = $out_file2;
-		$qt_cfg->getRawStructure()->newval($sect_name, "qs", $sout_file );
+		$raw_cfg->getSectionAt($i)->{file_paired_1} = $in_file1;
+		$raw_cfg->getSectionAt($i)->{file_paired_2} = $in_file2;
+		$qt_cfg->getSectionAt($i)->{file_paired_1} = $out_file1;
+		$qt_cfg->getSectionAt($i)->{file_paired_2} = $out_file2;
+		$qt_cfg->getRawStructure()->newval($sect_name, "file_se", $sout_file );
 	}
 	
 	# Save the new configuration files
@@ -291,6 +297,32 @@ if ($opt{improver}) {
 	SubmitJob::submit($imp_job, join " ", @imp_args);
 
 	chdir $PWD;
+}
+
+if ($opt{report} || $opt{persist}) {
+	
+	my @helper_args = grep {$_} (
+		"java -jar " . $HELPER_PATH,
+		"--job_dir " . $qst->getOutput(),
+		"--project_dir " . $RAMPART_DIR,
+		$opt{report} ? "--report" : undef,
+		$opt{persist} ? "--persist" : undef,
+		$qst->isVerboseAsParam()
+	);
+	
+	my $helper_job = new QsOptions();
+	$helper_job->setGridEngine($qst->getGridEngine());
+	$helper_job->setProjectName($qst->getProjectName());
+	$helper_job->setJobName($helper_job_name);
+	
+	if ($opt{improver}) {
+		$helper_job->setWaitCondition("ended(" . $improver_job_prefix . "*)");
+	}
+	elsif ($opt{mass_selector}) {
+		$helper_job->setWaitCondition("ended(" . $get_best_job_name . ")");
+	}
+	
+	SubmitJob::submit($helper_job, join " ", @helper_args);
 }
 
 # Notify user of job submission

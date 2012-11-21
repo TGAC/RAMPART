@@ -38,7 +38,7 @@ public class RampartHelper {
 	
 	public void process(Options options) {
 		
-		if (this.rhOptions.isHelp()) {
+		if (this.rhOptions.doHelp()) {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("RampartHelper", options);
 			return;
@@ -49,10 +49,14 @@ public class RampartHelper {
 			VelocityContext context = this.rampartJobService.buildContext(this.rhOptions.getJobDir());
 			
 			// Build the report
-			this.reportBuilderService.buildReport(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir(), context);
+			if (this.rhOptions.doReport()) {
+				this.reportBuilderService.buildReport(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir(), context);
+			}
 			
 			// Persist the context to the database
-			this.rampartJobService.persistContext(context);
+			if (this.rhOptions.doPersist()) {
+				this.rampartJobService.persistContext(context);
+			}
 			
 		} catch (Exception ioe) {
 			log.error(ioe.getMessage());

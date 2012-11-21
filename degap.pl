@@ -127,20 +127,45 @@ sub write_soap_cfg {
 		
 		my $lib = $config->getSectionAt($i-1);
 		
-		my $ft = $lib->{q1};
-		my $file1 = $lib->{q1} ? $lib->{q1} : $lib->{f1} ? $lib->{f1} : undef;
-		my $file2 = $lib->{q2} ? $lib->{q2} : $lib->{f2} ? $lib->{f2} : undef;
+		my $ft = $lib->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
+		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
+		my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
 		
 		# We expect to have a valid configuration file here so don't bother throwing
 		# any errors from this point... sspace will error anyway if there is a problem.
 				
+		my $rs = "";
+		
+		if ($lib->{seq_orientation} eq "FR") {
+			$rs = 0;
+		}
+		elsif($lib->{seq_orientation} eq "RF") {
+			$rs = 1;
+		}
+		
+		my $asm = "";
+		
+		if ($lib->{usage} eq "ASSEMBLY_ONLY") {
+			$asm = "1";
+		}
+		elsif($lib->{usage} eq "SCAFFOLDING_ONLY") {
+			$asm = "2";
+		}
+		elsif($lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {
+			$asm = "3";
+		}
+		else {
+			$asm = "0";
+		}
+				
+				
 		my @soap_args = (
 			"[LIB]",
-			"max_rd_len=" . $lib->{max_rd_len},
-			"avg_ins=" . $lib->{avg_ins},
-			"reverse_seq=" . $lib->{reverse_seq},
-			"asm_flags=3",
-			"rank=1",
+			"max_rd_len=" . $lib->{read_length},
+			"avg_ins=" . $lib->{avg_insert_size},
+			"reverse_seq=" . $rs,
+			"asm_flags=" . $asm,
+			"rank=" . $i,
 			($ft ? "q1=" : "f1=") . $file1,
 			($ft ? "q2=" : "f2=") . $file2
 		);

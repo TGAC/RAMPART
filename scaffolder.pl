@@ -132,8 +132,8 @@ sub write_sspace_cfg {
 		
 		my $lib = $config->getSectionAt($i-1);
 		
-		my $file1 = $lib->{q1} ? $lib->{q1} : $lib->{f1} ? $lib->{f1} : undef;
-		my $file2 = $lib->{q2} ? $lib->{q2} : $lib->{f2} ? $lib->{f2} : undef;
+		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
+		my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
 		
 		# We expect to have a valid configuration file here so don't bother throwing
 		# any errors from this point... sspace will error anyway if there is a problem.
@@ -142,9 +142,9 @@ sub write_sspace_cfg {
 			"LIB" . $i,
 			$file1,
 			$file2,
-			$lib->{avg_ins},
-			$lib->{ins_err},
-			$lib->{reverse_seq} ? "FR" : "RF" 
+			$lib->{avg_insert_size},
+			$lib->{insert_err_tolerance},
+			$lib->{seq_orientation} 
 		);
 		
 		my $line = join " ", @sspace_args;
