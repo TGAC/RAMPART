@@ -288,6 +288,9 @@ __END__
 
 =head1 OPTIONS
 
+  --config               --cfg
+              REQUIRED: The rampart library configuration file to use, which describes the paired end / mate pair reads which are to be used to improve the assembly.
+
   --grid_engine      	 --ge
               The grid engine to use.  Currently "LSF" and "PBS" are supported. Default: LSF.
 
@@ -318,11 +321,8 @@ __END__
   --extra_args           --ea
               Any extra arguments that should be sent to the grid engine.
 
-  --input                --in                -i
-              The input file(s) for this job.
-
   --output               --out               -o
-              The output file/dir for this job.
+              The output dir for this job.
 
   --verbose              -v
               Whether detailed debug information should be printed to STDOUT.
