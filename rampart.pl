@@ -41,6 +41,7 @@ my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
 my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1-jar-with-dependencies.jar";
 
 my $SOURCE_JAVA = "source jre-6.0.25;";
+my $SOURCE_LATEX = "source texlive-2012";
 
 
 # Parse generic queueing tool options
@@ -305,6 +306,7 @@ if ($opt{report} || $opt{persist}) {
 	
 	my @helper_args = grep {$_} (
 		$SOURCE_JAVA,
+		$SOURCE_LATEX,
 		"java -jar " . $HELPER_PATH,
 		"--job_dir " . $qst->getOutput(),
 		"--project_dir " . $RAMPART_DIR,
