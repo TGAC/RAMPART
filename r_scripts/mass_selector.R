@@ -37,19 +37,19 @@ print(paste("Written merged table to: ", merged_file))
 
 norm_tab <- merged
 
-norm_tab$nbcontigs <- score_tab$nbcontigs - min(score_tab$nbcontigs)
-#norm_tab$total <- score_tab$total - approx_genome_size
-norm_tab$minlen <- score_tab$minlen - min(score_tab$minlen)
-norm_tab$avglen <- score_tab$avglen - min(score_tab$avglen)
-norm_tab$maxlen <- score_tab$maxlen - min(score_tab$maxlen)
-norm_tab$n50 <- score_tab$n50 - min(score_tab$n50)
+norm_tab$nbcontigs <- norm_tab$nbcontigs - min(norm_tab$nbcontigs)
+#norm_tab$total <- norm_tab$total - approx_genome_size
+norm_tab$minlen <- norm_tab$minlen - min(norm_tab$minlen)
+norm_tab$avglen <- norm_tab$avglen - min(norm_tab$avglen)
+norm_tab$maxlen <- norm_tab$maxlen - min(norm_tab$maxlen)
+norm_tab$n50 <- norm_tab$n50 - min(norm_tab$n50)
 
-norm_tab$nbcontigs <- 1.0 - (score_tab$nbcontigs / max(score_tab$nbcontigs))
-#norm_tab$total <- ( abs(score_tab$total) / approx_genome_size )
-norm_tab$minlen <- score_tab$minlen / max(score_tab$minlen)
-norm_tab$avglen <- score_tab$avglen / max(score_tab$avglen)
-norm_tab$maxlen <- score_tab$maxlen / max(score_tab$maxlen)
-norm_tab$n50 <- score_tab$n50 / max(score_tab$n50)
+norm_tab$nbcontigs <- 1.0 - (norm_tab$nbcontigs / max(norm_tab$nbcontigs))
+#norm_tab$total <- ( abs(norm_tab$total) / approx_genome_size )
+norm_tab$minlen <- norm_tab$minlen / max(norm_tab$minlen)
+norm_tab$avglen <- norm_tab$avglen / max(norm_tab$avglen)
+norm_tab$maxlen <- norm_tab$maxlen / max(norm_tab$maxlen)
+norm_tab$n50 <- norm_tab$n50 / max(norm_tab$n50)
 
 norm_tab_file <- paste(output_dir, "norm.tab", sep="/")
 write.table(norm_tab, norm_tab_file, sep="|", quote=FALSE, row.names=FALSE)
@@ -93,7 +93,7 @@ print(paste("Written score_tab table to: ", score_tab_file))
 
 # Get best results
 
-best <- weighting_tab[score_tab$score == max(weighting_tab$score),]
+best <- weighting_tab[score_tab$score == max(score_tab$score),]
 best_file <- paste(output_dir, "best.tab", sep="/")
 write.table(best, best_file, sep="|", quote=FALSE, row.names=FALSE)
 print(paste("Written best table to: ", best_file, "\n"))

@@ -40,6 +40,8 @@ my $GETBEST_PATH = $RAMPART_DIR . "get_best.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
 my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1-jar-with-dependencies.jar";
 
+my $SOURCE_JAVA = "source jre-6.0.25;";
+
 
 # Parse generic queueing tool options
 my $qst = new QsOptions();
@@ -160,7 +162,7 @@ if ($opt{qt}) {
 		my $qt_job_name = $qt_job_prefix . "-" . $i;
 		
 		my @qt_args = grep {$_} (
-			$QT_PATH,
+			$QT_PATH,score_tab
 			$qst->getGridEngineAsParam(),
 			$qst->getProjectNameAsParam(),
 			"--job_name " . $qt_job_name,
@@ -302,6 +304,7 @@ if ($opt{improver}) {
 if ($opt{report} || $opt{persist}) {
 	
 	my @helper_args = grep {$_} (
+		$SOURCE_JAVA,
 		"java -jar " . $HELPER_PATH,
 		"--job_dir " . $qst->getOutput(),
 		"--project_dir " . $RAMPART_DIR,

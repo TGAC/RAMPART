@@ -123,9 +123,9 @@ sub write_soap_cfg {
 	
 	open OUT, ">", $out_file;
 	
-	for( my $i = 1; $i <= $config->getNbSections(); $i++ ) {
+	for( my $i = 1; $i < $config->getNbSections(); $i++ ) {
 		
-		my $lib = $config->getSectionAt($i-1);
+		my $lib = $config->getSectionAt($i);
 		
 		my $ft = $lib->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
 		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
