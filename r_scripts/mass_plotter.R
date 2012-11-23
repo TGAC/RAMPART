@@ -6,7 +6,7 @@ outfile <- args[2]
 
 t1 <- read.table(infile, header = TRUE, sep="|", quote = "");
 
-col1 <- colnames(data)[1]
+col1 <- colnames(t1)[1]
 
 # Get individual features
 
