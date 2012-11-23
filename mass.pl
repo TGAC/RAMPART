@@ -147,6 +147,9 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	
 	if ($tool eq $T_ABYSS) {
 		
+		# TGAC Cluster specific command (Abyss doesn't like Intel nodes, so avoid those)
+		$qst_ass->setExtraArgs("-Rselect[hname!='n57142.tgaccluster']");
+		
 		# Create argument list
 		my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
 		my $abyss_threads = "np=" . $qst_ass->getThreads();
@@ -198,7 +201,8 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		die "Error: Invalid assembler requested.  Also, the script should not have got this far!!!.\n\n";
 	}
 
-	# Make the output directory for this child job and go into it
+	# Make the output directory for this child job and go into it (make sure we're in the workdir before doing anything tho!!)
+	chdir $PWD;
 	system("mkdir", $i_dir) unless (-e $i_dir);
   	chdir $i_dir;
 
