@@ -100,7 +100,7 @@ my $qt_job_prefix = $qst->getJobName() . "-qt";
 my $mass_job_prefix = $qst->getJobName() . "-mass";
 my $ms_job_name = $qst->getJobName() . "-ms";
 my $get_best_job_name = $mass_job_prefix . "-getbest";
-my $improver_job_prefix = $qst->getJobName() . "-improver";
+my $improver_job_name = $qst->getJobName() . "-improver";
 my $helper_job_name = $qst->getJobName() . "-helper";
 
 
@@ -163,7 +163,7 @@ if ($opt{qt}) {
 		my $qt_job_name = $qt_job_prefix . "-" . $i;
 		
 		my @qt_args = grep {$_} (
-			$QT_PATH,score_tab
+			$QT_PATH,
 			$qst->getGridEngineAsParam(),
 			$qst->getProjectNameAsParam(),
 			"--job_name " . $qt_job_name,
@@ -280,7 +280,7 @@ if ($opt{improver}) {
 			$IMPROVER_PATH,
 			$qst->getGridEngineAsParam(),
 			$qst->getProjectNameAsParam(),
-			"--job_name " . $improver_job_prefix,
+			"--job_name " . $improver_job_name,
 			$opt{mass_selector} ? "--wait_condition 'done(" . $get_best_job_name . ")'" : "",
 			$qst->getQueueAsParam(),
 			$qst->getExtraArgs(),
@@ -292,13 +292,8 @@ if ($opt{improver}) {
 			$opt{improver_args},
 			$qst->isVerboseAsParam());
 	
-	my $imp_job = new QsOptions();
-	$imp_job->setGridEngine($qst->getGridEngine());
-	$imp_job->setProjectName($qst->getProjectName());
-	$imp_job->setJobName($improver_job_prefix);
-	$imp_job->setWaitCondition("ended(" . $get_best_job_name . ")") if $opt{mass_selector};
-	SubmitJob::submit($imp_job, join " ", @imp_args);
-
+	system(join " ", @imp_args);
+	
 	chdir $PWD;
 }
 
@@ -321,7 +316,7 @@ if ($opt{report} || $opt{persist}) {
 	$helper_job->setJobName($helper_job_name);
 	
 	if ($opt{improver}) {
-		$helper_job->setWaitCondition("ended(" . $improver_job_prefix . "*)");
+		$helper_job->setWaitCondition("ended(" . $improver_job_name . ")");
 	}
 	elsif ($opt{mass_selector}) {
 		$helper_job->setWaitCondition("ended(" . $get_best_job_name . ")");

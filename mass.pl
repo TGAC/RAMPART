@@ -163,11 +163,13 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		
 		for(my $j = 1; $j < $cfg->getNbSections(); $j++) {
 			my $sect = $cfg->getSectionAt($j);
-			my $sect_name = $cfg->getSectionNameAt($j);
-			my $se = $sect->{file_se};
-			push(@libs, $sect_name);
-			push(@lib_args, ($sect_name . "='" . $sect->{file_paired_1} . " " . $sect->{file_paired_2} . "'"));
-			push(@single_ends, $se) if $se;
+			if ($sect->{usage} eq "ASSEMBLY" || $sect->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {			
+				my $sect_name = $cfg->getSectionNameAt($j);
+				my $se = $sect->{file_se};
+				push(@libs, $sect_name);
+				push(@lib_args, ($sect_name . "='" . $sect->{file_paired_1} . " " . $sect->{file_paired_2} . "'"));
+				push(@single_ends, $se) if $se;
+			}
 		}
 		
 		my $abyss_lib = "lib='" . (join " ", @libs) . "'";

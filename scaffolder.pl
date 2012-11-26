@@ -85,15 +85,29 @@ if ($tool eq $T_SSPACE) {
 	my $rampart_cfg = new Configuration( $opt{config} );
 	$rampart_cfg->validate();
 	my $sspace_cfg_file = $qst->getOutput() . "/sspace.cfg";
-	write_sspace_cfg( $rampart_cfg, $sspace_cfg_file);	
+	write_sspace_cfg( $rampart_cfg, $sspace_cfg_file);
+	
+	my $in_file = convert_to_absolute($qst->getInput());
+	my $out_file = convert_to_absolute($qst->getOutput());	
+	system("ln -s " . $in_file . " " . $out_file . "/input_scaffolds.fa;");
 	
 	my $sspace_output_prefix = "scaffolder";
 	my $other_args = "-x 1 -T 2";
 
 	$cd = 1;
 
-	$cmd_line = $PERL_SOURCE_CMD . " " . $SSPACE_SOURCE_CMD . " " . $TP_SSPACE . " -l " . $sspace_cfg_file . " -s " . $qst->getInput() . " " . $other_args . " -b " . $sspace_output_prefix;
-
+	my @sspace_args = (
+		$PERL_SOURCE_CMD,
+		$SSPACE_SOURCE_CMD,
+		$TP_SSPACE,
+		#"-l " . $sspace_cfg_file,
+		"-l " . "sspace.cfg",
+		"-s " . "input_scaffolds.fa",
+		$other_args,
+		"-b " . $sspace_output_prefix
+	);
+	
+	$cmd_line = join " ", @sspace_args;
 }
 elsif ($tool eq $T_GRASS) {
 
@@ -120,6 +134,24 @@ if ($qst->isVerbose()) {
 }
 
 
+sub convert_to_absolute {
+	my ( $file ) = shift;
+	
+	system("case " . $file. " in
+     /*) absolute=1 ;;
+     *) absolute=0 ;;
+	esac");
+	
+	my $abs_file;
+	if ($? == 1) {
+		$abs_file = $file;
+	}
+	else {
+		$abs_file = $PWD . "/" . $file;
+	}
+		
+	return $abs_file;
+}
 
 sub write_sspace_cfg {
 	
@@ -132,24 +164,27 @@ sub write_sspace_cfg {
 		
 		my $lib = $config->getSectionAt($i);
 		
-		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
-		my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
+		if ($lib->{usage} eq "SCAFFOLDING" || $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {
 		
-		# We expect to have a valid configuration file here so don't bother throwing
-		# any errors from this point... sspace will error anyway if there is a problem.
-				
-		my @sspace_args = (
-			"LIB" . $i,
-			$file1,
-			$file2,
-			$lib->{avg_insert_size},
-			$lib->{insert_err_tolerance},
-			$lib->{seq_orientation} 
-		);
-		
-		my $line = join " ", @sspace_args;
-		
-		print OUT $line . "\n";
+			my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
+			my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
+			
+			# We expect to have a valid configuration file here so don't bother throwing
+			# any errors from this point... sspace will error anyway if there is a problem.
+					
+			my @sspace_args = (
+				"LIB" . $i,
+				$file1,
+				$file2,
+				$lib->{avg_insert_size},
+				$lib->{insert_err_tolerance},
+				$lib->{seq_orientation} 
+			);
+			
+			my $line = join " ", @sspace_args;
+			
+			print OUT $line . "\n";
+		}
 	}
 	
 	close OUT;

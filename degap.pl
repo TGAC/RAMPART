@@ -43,10 +43,9 @@ $qst->setToolPath($DEF_TOOL_PATH);
 $qst->parseOptions();
 
 # Parse tool specific options
-my (%opt) = ( );
+my (%opt) = ();
 
-GetOptions( \%opt, 'config|c=s', 'help|usage|h|?',
-	'man' )
+GetOptions( \%opt, 'config|c=s', 'help|usage|h|?', 'man' )
   or pod2usage("Try '$0 --help' for more information.");
 
 # Display usage message or manual information if required
@@ -59,10 +58,8 @@ die "Error: No rampart config file specified\n\n" unless $opt{config};
 my $cmd_line = "";
 
 # Display configuration settings if requested.
-if ($qst->isVerbose()) {
-	print 	"\n\n" .
-			$qst->toString() .
-			"Config: " . $opt{config} . "\n\n";
+if ( $qst->isVerbose() ) {
+	print "\n\n" . $qst->toString() . "Config: " . $opt{config} . "\n\n";
 }
 
 # Select the gap closer and build the command line
@@ -72,27 +69,31 @@ if ( $tool eq $T_GAP_CLOSER ) {
 	my $rampart_cfg = new Configuration( $opt{config} );
 	$rampart_cfg->validate();
 	my $gc_cfg_file = $qst->getOutput() . "/gc.cfg";
-	write_soap_cfg($rampart_cfg, $gc_cfg_file);	
-	
+	write_soap_cfg( $rampart_cfg, $gc_cfg_file );
+
 	my $gc_scaffolds  = $qst->getOutput() . "/gc-scaffolds.fa";
 	my $gc_other_args = "-p 61";
-	my $read_length = $rampart_cfg->getSectionAt(0)->{max_rd_len};
+	my $read_length   = $rampart_cfg->getSectionAt(0)->{max_rd_len};
 
-	$cmd_line =
-	    $GC_SOURCE_CMD . " "
-	  . $TP_GAP_CLOSER
-	  . " -a \"" . $qst->getInput() . "\""
-	  . " -b \"" . $gc_cfg_file . "\""
-	  . " -o \"" . $gc_scaffolds . "\"" 
-	  . " -l " . $read_length . " "
-	  . $gc_other_args;
+	my @gc_args = (
+		$GC_SOURCE_CMD,
+		$TP_GAP_CLOSER,
+		"-a \"" . $qst->getInput() . "\"",
+		"-b \"" . $gc_cfg_file . "\"",
+		"-o \"" . $gc_scaffolds . "\"",
+		"-l " . $read_length . " ",
+		$gc_other_args
+	);
+
+	$cmd_line = join " ", @gc_args;
 }
 elsif ( $tool eq $T_IMAGE ) {
 
 	my $image_scaffolds = $qst->getOutput() . "/image-scaffolds.fa";
 	$cmd_line = "";
 
-	die "Error: IMAGE (Iterative Mapping and Assembly for Gap Elimination) tool not implemented in this script yet.\n\n";
+	die
+"Error: IMAGE (Iterative Mapping and Assembly for Gap Elimination) tool not implemented in this script yet.\n\n";
 }
 elsif ( $tool eq $T_GAP_FILLER ) {
 
@@ -102,63 +103,61 @@ elsif ( $tool eq $T_GAP_FILLER ) {
 	die "Error: Gap filler tool not implemented in this script yet.\n\n";
 }
 else {
-	die "Error: Invalid gap closing tool requested.  Also, the script should not have got this far!!!.\n\n";
+	die
+"Error: Invalid gap closing tool requested.  Also, the script should not have got this far!!!.\n\n";
 }
 
 # Submit the scaffolding job
-SubmitJob::submit($qst, $cmd_line);
+SubmitJob::submit( $qst, $cmd_line );
 
 # Notify user of job submission
-if ($qst->isVerbose()) {
-	print 	"\n" .
-			"Degap has successfully submitted the degapping job to the grid engine.  You will be notified by email when the job has completed.\n";
+if ( $qst->isVerbose() ) {
+	print "\n"
+	  . "Degap has successfully submitted the degapping job to the grid engine.  You will be notified by email when the job has completed.\n";
 }
 
-
-
 sub write_soap_cfg {
-	
+
 	my ( $config, $out_file ) = @_;
-	
-	
+
 	open OUT, ">", $out_file;
-	
-	for( my $i = 1; $i < $config->getNbSections(); $i++ ) {
-		
+
+	for ( my $i = 1 ; $i < $config->getNbSections() ; $i++ ) {
+
 		my $lib = $config->getSectionAt($i);
-		
-		my $ft = $lib->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
+
+		my $ft = $lib
+		  ->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
 		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
 		my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
-		
-		# We expect to have a valid configuration file here so don't bother throwing
-		# any errors from this point... sspace will error anyway if there is a problem.
-				
+
+ # We expect to have a valid configuration file here so don't bother throwing
+ # any errors from this point... sspace will error anyway if there is a problem.
+
 		my $rs = "";
-		
-		if ($lib->{seq_orientation} eq "FR") {
+
+		if ( $lib->{seq_orientation} eq "FR" ) {
 			$rs = 0;
 		}
-		elsif($lib->{seq_orientation} eq "RF") {
+		elsif ( $lib->{seq_orientation} eq "RF" ) {
 			$rs = 1;
 		}
-		
+
 		my $asm = "";
-		
-		if ($lib->{usage} eq "ASSEMBLY_ONLY") {
+
+		if ( $lib->{usage} eq "ASSEMBLY_ONLY" ) {
 			$asm = "1";
 		}
-		elsif($lib->{usage} eq "SCAFFOLDING_ONLY") {
+		elsif ( $lib->{usage} eq "SCAFFOLDING_ONLY" ) {
 			$asm = "2";
 		}
-		elsif($lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {
+		elsif ( $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING" ) {
 			$asm = "3";
 		}
 		else {
 			$asm = "0";
 		}
-				
-				
+
 		my @soap_args = (
 			"[LIB]",
 			"max_rd_len=" . $lib->{read_length},
@@ -166,19 +165,17 @@ sub write_soap_cfg {
 			"reverse_seq=" . $rs,
 			"asm_flags=" . $asm,
 			"rank=" . $i,
-			($ft ? "q1=" : "f1=") . $file1,
-			($ft ? "q2=" : "f2=") . $file2
+			( $ft ? "q1=" : "f1=" ) . $file1,
+			( $ft ? "q2=" : "f2=" ) . $file2
 		);
-		
+
 		my $line = join "\n", @soap_args;
-		
+
 		print OUT $line . "\n";
 	}
-	
+
 	close OUT;
 }
-
-
 
 __END__
 

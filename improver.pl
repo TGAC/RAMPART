@@ -17,6 +17,7 @@ use File::Basename;
 
 use QsOptions;
 use Configuration;
+use SubmitJob;
 
 #### Constants
 
@@ -72,7 +73,7 @@ die "Error: No config file specified\n\n" 	   	unless $opt{config};
 
 # Build up static args which is to be used by all child jobs
 my @static_args = grep {$_} (
-    $qst->getGridEngineAsParam(),
+    "--grid_engine NONE",
 	$qst->getProjectNameAsParam(),
 	$qst->getExtraArgsAsParam(),
 	$qst->getQueueAsParam(),
@@ -106,6 +107,10 @@ my $dg_dir     = $output_dir . "/degap";
 mkdir $scf_dir;
 mkdir $dg_dir;
 
+# Commands
+my @commands;
+
+
 for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 
 	my $scf_job_name = $scf_job_prefix . $i;
@@ -116,30 +121,16 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 	my $scf_dir_i = $scf_dir . "/" . $i;
 	mkdir $scf_dir_i;
 
-	my $scf_wait_arg;
-	
-	if ($first_wait) {
-		$scf_wait_arg = "--wait_condition '" . $qst->getWaitCondition() . "'";
-	}
-	elsif ($last_job) {
-		$scf_wait_arg = "--wait_condition 'ended(" . $last_job . ")'";
-	}
-	else {
-		$scf_wait_arg = "";
-	}
-	
-
 	my @scf_args = grep {$_} (
 		$SCAFFOLDER_PATH,
 		@static_args,
-		$scf_wait_arg,
 		"--job_name " . $scf_job_name,
 		"--config " . $opt{config},
 		$opt{scaffolder_args} ? $opt{scaffolder_args} : "",
 		"--output " . $scf_dir_i,
 		"--input " . $current_scaffold );
 
-	system(join " ", @scf_args) unless $opt{simulate};
+	push @commands, (join " ", @scf_args) unless $opt{simulate};
 
 	$current_scaffold = $scf_dir_i . "/scaffolder.final.scaffolds.fasta";
 	$last_job         = $scf_job_name;
@@ -150,19 +141,16 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 	my $dg_dir_i = $dg_dir . "/" . $i;
 	mkdir $dg_dir_i;
 
-	my $dg_wait_arg = $last_job ? "--wait_condition 'done(" . $last_job . ")'" : "";
-
 	my @dg_args = grep {$_} (
 		$DEGAPPER_PATH,
 		@static_args,
-		$dg_wait_arg,
 		"--job_name " . $dg_job_name,
 		"--config " . $opt{config},
 		"--output " . $dg_dir_i,
 		"--input " . $current_scaffold,
 		$opt{degap_args} ? $opt{degap_args} : "" );
 
-	system(join " ", @dg_args ) unless $opt{simulate};
+	push @commands, (join " ", @dg_args ) unless $opt{simulate};
 
 	$current_scaffold = $dg_dir_i . "/gc-scaffolds.fa";
 	$last_job         = $dg_job_name;
@@ -177,17 +165,15 @@ if ( $opt{dedup} ) {
 	
 	my $dedup_scf_file = $dedup_dir . "cleaned.fasta";
 	my $dedup_out_arg = "--output " . $dedup_dir;
-	my $dedup_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
 	
 	my @dedup_args = grep {$_} (
 		$CLIPPER_PATH,
 		@static_args,
 		"--job_name " . $dedup_job_name,
-		$dedup_wait_arg,
 		"--input " . $current_scaffold,
 		$dedup_out_arg );
 
-	system(join " ", @dedup_args) unless $opt{simulate};
+	push @commands, (join " ", @dedup_args) unless $opt{simulate};
 	
 	$current_scaffold = $dedup_scf_file;
 	$last_job         = $clip_job_name;
@@ -202,23 +188,28 @@ if ( $opt{clip} ) {
 
 	my $clip_scf_file = $clip_dir . "/clipped-scaffolds.fa";
 	my $clip_out_arg = "--output " . $clip_dir;
-	my $clip_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
-
+	
 	my @clip_args = grep {$_} (
 		$CLIPPER_PATH,
 		@static_args,
 		"--job_name " . $clip_job_name,
-		$clip_wait_arg,
 		$opt{clip_args} ? $opt{clip_args} : "",
 		"--input " . $current_scaffold,
 		$clip_out_arg );
 
-	system(join " ", @clip_args) unless $opt{simulate};
+	push @commands, (join " ", @clip_args) unless $opt{simulate};
 
 	$current_scaffold = $clip_scf_file;
 	$last_job         = $clip_job_name;
 	push @assemblies, $current_scaffold;
 }
+
+## Run AMOS validate here
+if ($opt{validate}) {
+	
+		
+}
+
 
 
 
@@ -231,30 +222,28 @@ if ( $opt{stats} ) {
 	# Link to each scaffold file from each stage of this process
 	my $j = 1;
 	foreach ( @assemblies ) {
-		system("ln -s -f " . $_ . " " . $stats_dir . "/" . $j . "-scaffolds.fa");
+		push @commands, ("ln -s -f " . $_ . " " . $stats_dir . "/" . $j . "-scaffolds.fa");
 		$j++;
 	}
 
-	my $mgp_wait_arg = $last_job ? "--wait_condition 'ended(" . $last_job . ")'" : "";
-
-	my @mgp_args = grep {$_} (
+		my @mgp_args = grep {$_} (
 		$MASS_GP_PATH,
-		$qst->getGridEngineAsParam(),
-		$qst->getProjectNameAsParam(),
-		$qst->getQueueAsParam(),
+		@static_args,
 		"--job_name " . $stats_job_name,
-		$mgp_wait_arg,
 		$qst->isVerboseAsParam(),
 		"--output " . $stats_dir,
 		"--input " . $stats_dir,
 		"--index"	);
 
-	system(join " ", @mgp_args);
+	push @commands, (join " ", @mgp_args);
 	
-	system("ln -s -f " . $assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
+	push @commands, ("ln -s -f " . $assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
 
 	$last_job = $clip_job_name;
 }
+
+# Everything gets submitted as one big job.
+SubmitJob::submit($qst, join("; ", @commands))
 
 
 __END__
@@ -298,6 +287,9 @@ __END__
 
   --dedup
               Whether to deduplicate redundant scaffolds
+              
+  --validate
+              Whether to assess the validity of the assembly.
 	
   --config               --cfg
               REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
