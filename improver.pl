@@ -204,13 +204,6 @@ if ( $opt{clip} ) {
 	push @assemblies, $current_scaffold;
 }
 
-## Run AMOS validate here
-if ($opt{validate}) {
-	
-		
-}
-
-
 
 
 ## Generate final stats 
@@ -226,14 +219,14 @@ if ( $opt{stats} ) {
 		$j++;
 	}
 
-		my @mgp_args = grep {$_} (
-		$MASS_GP_PATH,
-		@static_args,
-		"--job_name " . $stats_job_name,
-		$qst->isVerboseAsParam(),
-		"--output " . $stats_dir,
-		"--input " . $stats_dir,
-		"--index"	);
+	my @mgp_args = grep {$_} (
+	$MASS_GP_PATH,
+	@static_args,
+	"--job_name " . $stats_job_name,
+	$qst->isVerboseAsParam(),
+	"--output " . $stats_dir,
+	"--input " . $stats_dir,
+	"--index"	);
 
 	push @commands, (join " ", @mgp_args);
 	
@@ -288,9 +281,6 @@ __END__
   --dedup
               Whether to deduplicate redundant scaffolds
               
-  --validate
-              Whether to assess the validity of the assembly.
-	
   --config               --cfg
               REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
 
