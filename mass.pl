@@ -277,86 +277,108 @@ __END__
 
 =head1 NAME
 
-  mass.pl
+B<mass.pl>
 
 
 =head1 SYNOPSIS
 
-  mass.pl [options] <input_files>
+B<mass.pl> [options] B<--config> F<config.cfg> 
 
-  For full documentation type: "mass.pl --man"
+For full documentation type: "mass.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.
+Runs an assembly program with multiple k-mer settings with alternate 4 and 6 step increments.
 
 
 =head1 OPTIONS
 
-  --config               --cfg
-              REQUIRED: The rampart library configuration file to use, which describes the paired end / mate pair reads which are to be used to improve the assembly.
+=over
 
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported. Default: LSF.
+=item B<--config>,B<--cfg>
 
-  --tool                 -t
-              Currently these assemblers are supported (abyss).  Default: abyss.
+REQUIRED: The rampart library configuration file to use, which describes the paired end / mate pair reads which are to be used to improve the assembly.
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+=item B<--grid_engine>,B<--ge>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+The grid engine to use.  Currently "LSF" and "PBS" are supported. Default: LSF.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--tool>,B<-t>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+Currently these assemblers are supported (abyss).  Default: abyss.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--tool_path>,B<--tp>
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+The path to the tool, or name of the tool's binary file if on the path.
 
-  --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+The project name for the job that will be placed on the grid engine.
 
-  --output               --out               -o
-              The output dir for this job.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+The job name for the job that will be placed on the grid engine.
 
-  --kmin
-              The minimum k-mer value to run. DEfault: 41.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
-  --kmax
-              The maximum k-mer value in run. Default: 125.
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
 
-  --stats
-              Produces output statistics and graphs comparing each assembly job produced.
+=item B<--queue>,B<-q>
 
-  --simulate             --sim              -s
-              Runs the script as normal except that the assembly jobs are not submitted.
+The queue to which this job should automatically be sent.
 
-  --help                 --usage            -h             -?
-              Print usage message and then exit.
+=item B<--memory>,B<--mem>,B<-m>
 
-  --man
-              Display manual.
+The amount of memory to reserve for this job.
 
+=item B<--threads>,B<-n>
 
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output dir for this job. Default: Current working directory (".")
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=item B<--kmin>
+
+The minimum k-mer value to run. Default: 41.
+
+=item B<--kmax>
+
+The maximum k-mer value in run. Default: 125.
+
+=item B<--stats>
+
+Produces output statistics and graphs comparing each assembly job produced.
+
+=item B<--simulate>,B<--sim>,B<-s>
+
+Runs the script as normal except that the assembly jobs are not submitted.
+
+=item B<--help>,B<--usage>,B<-h>,B<-?>
+
+Print usage message and then exit.
+
+=item B<--man>
+
+Display manual.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

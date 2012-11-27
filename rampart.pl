@@ -368,77 +368,96 @@ __END__
 
 =head1 NAME
 
-  rampart.pl
+B<rampart.pl>
 
 
 =head1 SYNOPSIS
 
-  rampart.pl [options] --raw_config <raw_config_file> --qt_config <qt_config_file>
+B<rampart.pl> [options] B<--raw_config> F<raw_config.cfg> B<--qt_config> F<qt_config.cfg>
 
-  For full documentation type: "rampart.pl --man"
+For full documentation type: "rampart.pl --man"
 
 
 =head1 DESCRIPTION
 
-  This script is designed to run mass on raw and quality trimmed datasets and gather the resulting statistics.  
-  It then selects the best assembly and then attempts to improve that assembly by doing additional scaffolding, gap closing and cleaning.
+This script is designed to run mass on raw and quality trimmed datasets and gather the resulting statistics.  It then selects the best assembly and then attempts to improve that assembly by doing additional scaffolding, gap closing and cleaning.
 
 
 =head1 OPTIONS
 
-  --qt
-              Whether or not to run the quality trimming step.  Use --noqt to disable.  Default: on.
+=over
+
+=item B<--qt>
+
+Whether or not to run the quality trimming step.  Use --noqt to disable.  Default: on.
   
-  --mass
-	          Whether or not to do the MASS step.  Use --nomass to disable.  Default: on.
+=item B<--mass>
+
+Whether or not to do the MASS step.  Use --nomass to disable.  Default: on.
 	          
-  --mass_args            --ma
-              Any additional arguments to pass to the MASS tool (e.g. --kmin and --kmax).
+=item B<--mass_args>,B<--ma>
+
+Any additional arguments to pass to the MASS tool (e.g. --kmin and --kmax).
 	
-  --mass_selector
-              Whether to attempt to select the best assembly from a set of assemblies already created by rampart.  Use --nomass_selector to disable.  Default: on.
+=item B<--mass_selector>
+
+Whether to attempt to select the best assembly from a set of assemblies already created by rampart.  Use B<--nomass_selector> to disable.  Default: on.
 	
-  --improver
-              Whether or not to run the assembly improver step.  Use --noimprover to disable.  Default: on.
+=item B<--improver>
+
+Whether or not to run the assembly improver step.  Use --noimprover to disable.  Default: on.
 	
-  --improver_args        --ia
-              Any additional arguments to pass to the improver tool (e.g. --iterations)
+=item B<--improver_args>,B<--ia>
+
+Any additional arguments to pass to the improver tool (e.g. --iterations)
 	
-  --config               --cfg
-              REQUIRED: The path to the rampart library configuration file.
+=item B<--config>,B<--cfg>
+
+REQUIRED: The path to the rampart library configuration file.
 	
-  --simulate             --sim
-              If set then the script is run but no mass or improver jobs are submitted to the grid engine. Default: off.
+=item B<--simulate>,B<--sim>
+
+If set then the script is run but no mass or improver jobs are submitted to the grid engine. Default: off.
 	
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+=item B<--grid_engine>,B<--ge>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+The project name for the job that will be placed on the grid engine.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+The job name for the job that will be placed on the grid engine.
 
-  --output               --out               -o
-              The output file/dir for this job.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
 
+=item B<--queue>,B<-q>
+
+The queue to which this job should automatically be sent.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output dir for this job. Default: Current working directory (".")
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

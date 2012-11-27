@@ -245,92 +245,112 @@ __END__
 
 =head1 NAME
 
-  improver.pl
+B<improver.pl>
 
 
 =head1 SYNOPSIS
 
-  improver.pl [options] -i <input_file>
+B<improver.pl> [options] B<--input> F<assembly.fa> B<--config> F<config.cfg>
 
-  For full documentation type: "improver.pl --man"
+For full documentation type: "improver.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs an sequence of programs that attempt to improve the scaffold quality of the input file.  It does this by doing a 
-  user defined number of scaffolding and gap fillings steps.  This script uses additional reads specified by the user in 
-  the configuration file to do this. After enhancing the user can optionally discard shorter scaffolds from file.  Finally, 
-  the user can optionally request assembly statistics to be produced at each step in the process.
-
+Runs an sequence of programs that attempt to improve the scaffold quality of the input file.  It does this by doing a user defined number of scaffolding and gap fillings steps.  This script uses additional reads specified by the user in the configuration file to do this. After enhancing the user can optionally discard shorter scaffolds from file.  Finally, the user can optionally request assembly statistics to be produced at each step in the process.
 
 
 =head1 OPTIONS
 
-  --scaffolder_args      --s_args
-              Any additional arguments to send to the scaffolding tool.
-	
-  --degap_args           --dg_args
-              Any additional arguments to send to the degapping tool. 
-	
-  --clip
-              Whether to clip short sequences from the final output. Default: off.
-	
-  --clip_args
-              Any additional arguments to send to the clipping tool (e.g. --min_length 500)
+=over
 
-  --dedup
-              Whether to deduplicate redundant scaffolds
+=item B<--scaffolder_args>,B<--s_args>
+
+Any additional arguments to send to the scaffolding tool.
+	
+=item B<--degap_args>,B<--dg_args>
+
+Any additional arguments to send to the degapping tool. 
+	
+=item B<--clip>
+
+Whether to clip short sequences from the final output. Default: off.
+	
+=item B<--clip_args>
+
+Any additional arguments to send to the clipping tool (e.g. --min_length 500)
+
+=item B<--dedup>
+
+Whether to deduplicate redundant scaffolds
               
-  --config               --cfg
-              REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
+=item B<--config>,B<--cfg>
 
-  --iterations           -i
-              The number of scaffolding and degapping iterations to run.  Default: 1.
+REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
+
+=item B<--iterations>,B<-i>
+
+The number of scaffolding and degapping iterations to run.  Default: 1.
   
-  --simulate
-              Runs the script without sending any jobs to the queue.  Used for testing purposes only.
+=item B<--simulate>
+
+Runs the script without sending any jobs to the queue.  Used for testing purposes only.
               
-  --stats
-              Outputs statistics and plots for all scaffold files produced in the improvement process.
+=item B<--stats>
 
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+Outputs statistics and plots for all scaffold files produced in the improvement process.
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+=item B<--grid_engine>,B<--ge>
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+The project name for the job that will be placed on the grid engine.
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+The job name for the job that will be placed on the grid engine.
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
-  --input                --in                -i
-              REQUIRED: The input scaffold file to improve.
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
 
-  --output               --out               -o
-              The output file/dir for this job.
+=item B<--queue>,B<-q>
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+The queue to which this job should automatically be sent.
 
+=item B<--memory>,B<--mem>,B<-m>
+
+The amount of memory to reserve for this job.
+
+=item B<--threads>,B<-n>
+
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--input>,B<--in>,B<-i>
+
+REQUIRED: The input scaffold file to improve.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output dir for this job. Default: Current working directory (".")
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 
