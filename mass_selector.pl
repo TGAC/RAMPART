@@ -98,36 +98,59 @@ __END__
 
 =head1 NAME
 
-  mass_selector.pl
+B<mass_selector.pl>
 
 
 =head1 SYNOPSIS
 
-  mass_selector.pl [options] <input_file>
+B<mass_selector.pl> [options] B<--raw_stats_file> F<raw_stats.txt> B<--qt_stats_file> F<qt_stats_file.txt>
 
-  For full documentation type: "mass_selector.pl --man"
+For full documentation type: "mass_selector.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Simplifies the calling of an R script that selects the best assembly from pre-computed raw and quality trimmed assembly statistics.
+Simplifies the calling of an R script that selects the best assembly from pre-computed raw and quality trimmed assembly statistics.
 
 =head1 OPTIONS
 
-  raw_stats_file|raw          The file containing the statistics for multiple raw assemblies.
-  qt_stats_file|qt            The file containing the statistics for multiple quality trimmed assemblies.
-  approx_genome_size|ags|s    The approximate genome size (used to determine how close each assembly is to the expected genome size.
-  output|o                    The output directory.
-  verbose|v                   Print extra status information during run.
-  help|usage|h|?              Print usage message and then exit.
-  man                         Display manual.
+=over
 
+=item B<--raw_stats_file>,B<--raw>
 
+REQUIRED: The file containing the statistics for multiple raw assemblies.
+
+=item B<--qt_stats_file>,B<--qt>
+
+REQUIRED: The file containing the statistics for multiple quality trimmed assemblies.
+  
+=item B<--approx_genome_size>,B<--ags>,B<-s>
+
+The approximate genome size (used to determine how close each assembly is to the expected genome size. Default: 0
+  
+=item B<--output>,B<-o>
+
+The output directory. Default: Current working directory (".")
+  
+=item B<--verbose>,B<-v>
+
+Print extra status information during run.
+
+=item B<--help>,B<--usage>,B<-h>,B<-?>
+
+Print usage message and then exit.
+
+=item B<--man>
+
+Display manual.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

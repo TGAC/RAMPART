@@ -142,69 +142,89 @@ __END__
 
 =head1 NAME
 
-  clipper.pl
+B<clipper.pl>
 
 
 =head1 SYNOPSIS
 
-  clipper.pl [options] --minlen <length_in_nt> -i <input_file> -o <output_file>
+B<clipper.pl> [options] B<--minlen> <length_in_nt> B<--input> F<input_file.fa> -B<--output> F<output_file.fa>
 
-  For full documentation type: "clipper.pl --man"
+For full documentation type: "clipper.pl --man"
 
 
 =head1 DESCRIPTION
 
-  This script is designed to clip reads from a fastq file that are shorter than a given minimum length, and to run this 
-  process on a grid engine.  Currently there are two alternative methods for clipping: Nizar's own script and Fastx_clipper. 
+This script is designed to clip reads from a fastq file that are shorter than a given minimum length, and to run this process on a grid engine.  Currently there are two alternative methods for clipping: Nizar's own script and Fastx_clipper. 
 
 
 =head1 OPTIONS
 
-  --min_length			 --minlen
-              The minimum length of a read in the output dataset.  All reads shorter than this are removed.  Default: 1000.
+=over
 
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported. Default: LSF.
+=item B<--min_length>,B<--minlen>
 
-  --tool                 -t
-              Available clipping tools: (nizar, fastx). Default: nizar.
+The minimum length of a read in the output dataset.  All reads shorter than this are removed.  Default: 1000.
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+=item B<--grid_engine>,B<--ge>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--tool>,B<-t>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+If this script supports multiple tools to do the same job you can specify that tool using this parameter.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--tool_path>,B<--tp>
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+The path to the tool, or name of the tool's binary file if on the path.
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --input                --in                -i
-              REQUIRED: The input file for this job.
+The project name for the job that will be placed on the grid engine.
 
-  --output               --out               -o
-              REQUIRED: The output file for this job.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+The job name for the job that will be placed on the grid engine.
+
+=item B<--wait_condition>,B<--wait>,B<-w>
+
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+=item B<--queue>,B<-q>
+
+The queue to which this job should automatically be sent.
+
+=item B<--memory>,B<--mem>,B<-m>
+
+The amount of memory to reserve for this job.
+
+=item B<--threads>,B<-n>
+
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--input>,B<--in>,B<-i>
+
+REQUIRED: The input scaffold file for this job.
+
+=item B<--output>,B<--out>,B<-o>
+
+REQUIRED: The output scaffold file for this job.
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
-
 

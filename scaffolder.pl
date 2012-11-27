@@ -196,70 +196,88 @@ __END__
 
 =head1 NAME
 
-  scaffolder.pl
+B<scaffolder.pl>
 
 
 =head1 SYNOPSIS
 
-  scaffolder.pl [options] --config <config_file> -i <input_assembly>
+B<scaffolder.pl> [options] B<--config> F<config.cfg> B<--input> F<assembly.fa>
 
-  For full documentation type: "scaffolder.pl --man"
+For full documentation type: "scaffolder.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Runs a scaffolding tool to in an attempt to improve a given assembly.  This script is designed to execute jobs on a grid engine.
+Runs a scaffolding tool to in an attempt to improve a given assembly.  This script is designed to execute jobs on a grid engine.
 
 
 =head1 OPTIONS
 
-  --config
-              REQUIRED: The rampart library configuration file to use, which describes the paired end / mate pair reads which are to be used to improve the assembly.
+=over
 
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+=item B<--config>
 
-  --tool                 -t
-              Currently supported scaffolding tools: (sspace).  Default: sspace.
+REQUIRED: The rampart library configuration file to use, which describes the paired end / mate pair reads which are to be used to improve the assembly.
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+=item B<--grid_engine>,B<--ge>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--tool>,B<-t>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+Currently supported scaffolding tools: (sspace).  Default: sspace.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--tool_path>,B<--tp>
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+The path to the tool, or name of the tool's binary file if on the path.
 
-  --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+The project name for the job that will be placed on the grid engine.
 
-  --input                --in                -i
-              REQUIRED: The assembly to improve.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --output               --out               -o
-              The output dir for this job.
+The job name for the job that will be placed on the grid engine.
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+=item B<--queue>,B<-q>
+
+The queue to which this job should automatically be sent.
+
+=item B<--memory>,B<--mem>,B<-m>
+
+The amount of memory to reserve for this job.
+
+=item B<--threads>,B<-n>
+
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--input>,B<--in>,B<-i>
+
+REQUIRED: The assembly to improve.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output dir for this job. Default: Current working directory (".");
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

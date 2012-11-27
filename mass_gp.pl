@@ -59,65 +59,72 @@ __END__
 
 =head1 NAME
 
-  mass_gp.pl
+B<mass_gp.pl>
 
 
 =head1 SYNOPSIS
 
-  mass_gp.pl [options] -i <input_dir>
+B<mass_gp.pl> [options] B<--input> F<input_dir>
 
-  For full documentation type: "mass_gp.pl --man"
+For full documentation type: "mass_gp.pl --man"
 
 
 =head1 DESCRIPTION
 
-  This script is designed to execute mass_gatherer and mass_plotter together as a job on a grid engine.
+This script is designed to execute mass_gatherer and mass_plotter together as a job on a grid engine.
 
 
 =head1 OPTIONS
 
-  --index
-              Whether to prefix each row in the statistics table with the index of the scaffold file being analysed.
+=over
+
+=item B<--index>
+
+Whether to prefix each row in the statistics table with the index of the scaffold file being analysed.
   
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+=item B<--grid_engine>,B<--ge>
 
-  --tool                 -t
-              If this script supports multiple tools to do the same job you can specify that tool using this parameter.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+The project name for the job that will be placed on the grid engine.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+The job name for the job that will be placed on the grid engine.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
 
-  --input                --in                -i
-              REQUIRED: The input directory containing scaffold files for this job.
+=item B<--queue>,B<-q>
 
-  --output               --out               -o
-              The output file/dir for this job.
+The queue to which this job should automatically be sent.
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+=item B<--extra_args>,B<--ea>
 
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--input>,B<--in>,B<-i>
+
+REQUIRED: The input file for this job.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output directory for this job.  Default: Current working directory (".")
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
-
 

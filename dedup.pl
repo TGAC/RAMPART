@@ -216,70 +216,85 @@ __END__
 
 =head1 NAME
 
-  dedup.pl
+B<dedup.pl>
 
 
 =head1 SYNOPSIS
 
-  dedup.pl [options] -i <input_scaffold_file>
+B<dedup.pl> [options] B<--input> F<input_scaffold_file.fa>
 
-  For full documentation type: "dedup.pl --man"
+For full documentation type: "dedup.pl --man"
 
 
 =head1 DESCRIPTION
 
-  This script is designed to execute a fasta deduplication jobs on a grid engine.  The deduplication process involves separating the input scaffold file
-  into 2 groups, those scaffolds that are under 1k and those that are over 1k in length.  The smaller scaffolds are exonerated against the larger scaffolds and
-  the output is filtered and sorted to indentify those smaller scaffolds for which there is strong evidence of redundancy.  Two files are produced, one which
-  has the redundant scaffolds removed, and another that contains the redundant scaffolds.
+This script is designed to execute a fasta deduplication jobs on a grid engine.  The deduplication process involves separating the input scaffold file into 2 groups, those scaffolds that are under 1k and those that are over 1k in length.  The smaller scaffolds are exonerated against the larger scaffolds and the output is filtered and sorted to indentify those smaller scaffolds for which there is strong evidence of redundancy.  Two files are produced, one which has the redundant scaffolds removed, and another that contains the redundant scaffolds.
 
 
 =head1 OPTIONS
 
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.
+=over
 
-  --tool                 -t
-              Currently supported tools include: (gapcloser).  Default tool: gapcloser.
+=item B<--grid_engine>,B<--ge>
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+=item B<--tool>,B<-t>
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+If this script supports multiple tools to do the same job you can specify that tool using this parameter.
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+=item B<--tool_path>,B<--tp>
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+The path to the tool, or name of the tool's binary file if on the path.
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+The project name for the job that will be placed on the grid engine.
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --input                --in                -i
-              REQUIRED: The input scaffold file for this job.
+The job name for the job that will be placed on the grid engine.
 
-  --output               --out               -o
-              The output dir for this job.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+=item B<--queue>,B<-q>
+
+The queue to which this job should automatically be sent.
+
+=item B<--memory>,B<--mem>,B<-m>
+
+The amount of memory to reserve for this job.
+
+=item B<--threads>,B<-n>
+
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--input>,B<--in>,B<-i>
+
+REQUIRED: The input scaffold file for this job.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output directory for this job.  Recommended that you select a clean directory for this.  Default: Current working directory (".")
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

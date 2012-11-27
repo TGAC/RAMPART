@@ -73,33 +73,47 @@ __END__
 
 =head1 NAME
 
-  mass_plotter.pl
+B<mass_plotter.pl>
 
 
 =head1 SYNOPSIS
 
-  mass_plotter.pl [options] <input_file>
+B<mass_plotter.pl> [options] F<assembly_statistics_file>
 
-  For full documentation type: "mass_plotter.pl --man"
+For full documentation type: "mass_plotter.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Multiple Assembly Statistics Plotter.  Simplifies the calling of an R script that plots assembly changes in assembly statistics across multiple assemblies.
+Multiple Assembly Statistics Plotter.  Simplifies the calling of an R script that plots assembly changes in assembly statistics across multiple assemblies.
 
 =head1 OPTIONS
 
-  output|o         The directory to which output should be written
-  verbose|v        Print extra status information during run.
-  help|usage|h|?   Print usage message and then exit.
-  man              Display manual.
+=over
 
+=item B<--output>,B<-o>
 
+The directory to which output should be written
+
+=item B<--verbose>,B<-v>
+
+Print extra status information during run.
+
+=item B<--help>,B<--usage>,B<-h>,B<-?>
+
+Print usage message and then exit.
+
+=item B<--man>
+
+Display manual.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

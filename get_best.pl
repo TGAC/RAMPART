@@ -49,3 +49,73 @@ if ($opt{verbose}) {
 	print "Best Config:" . $best_config . "\n";
 }
 
+__END__
+
+=pod
+
+=head1 NAME
+
+B<get_best.pl>
+
+
+=head1 SYNOPSIS
+
+B<get_best.pl> [options] F<input_directory>
+
+For full documentation type: "get_best.pl --man"
+
+
+=head1 DESCRIPTION
+
+Creates symbolic links to the best mass assembly and the best dataset configuration at a specified location.
+
+
+=head1 OPTIONS
+
+=over
+
+=item B<--best_assembly_in>,B<--in_ba>
+
+REQUIRED: The location of the file containing information about the best assembly
+
+=item B<--best_dataset_in>,B<--in_bd>
+
+REQUIRED: The location of the file containing information about the best dataset
+
+=item B<--raw_config>,B<--raw>
+
+REQUIRED: The location of the raw config file
+
+=item B<--qt_config>,B<--qt>
+
+REQUIRED: The location of the qt config file
+
+=item B<--best_assembly_out>,B<--out_ba>
+
+REQUIRED: The location to create the symbolic link to the best assembly
+
+=item B<--best_config_out>,B<--out_cfg>
+
+REQUIRED: The location to create the symbolic link the the best dataset configuration file.
+	
+=item B<--verbose>,B<-v>
+
+Print extra debug information
+
+=item B<--help>,B<--usage>,B<-h>,B<-?>
+
+Print usage message and then exit.
+
+=item B<--man>
+
+Display manual.
+
+=back
+
+=head1 AUTHORS
+
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
+
+=cut

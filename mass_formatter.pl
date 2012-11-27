@@ -97,33 +97,44 @@ __END__
 
 =head1 NAME
 
-  mass_formatter.pl
+B<mass_formatter.pl>
 
 
 =head1 SYNOPSIS
 
-  mass_formatter.pl [options] <input_directory>
+B<mass_formatter.pl> [options] F<input_directory>
 
-  For full documentation type: "mass_formatter.pl --man"
+For full documentation type: "mass_formatter.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Consumes assembly statistics produced from a fasta file and presents it as a pipe delimited string.
+Consumes assembly statistics produced from a fasta file and presents it as a pipe delimited string.
 
 
 =head1 OPTIONS
 
-  header|head!     Whether to output a header row above the data.
-  help|usage|h|?   Print usage message and then exit.
-  man              Display manual.
+=over
 
+=item B<--title>,B<-t>
 
+Whether to output a header row above the data.  Use --notitle to disable.  Default: on
+
+=item B<--help>,B<--usage>,B<-h>,B<-?>
+
+Print usage message and then exit.
+
+=item B<--man>
+
+Display manual.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

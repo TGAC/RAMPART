@@ -183,75 +183,88 @@ __END__
 
 =head1 NAME
 
-  degap.pl
+B<degap.pl>
 
 
 =head1 SYNOPSIS
 
-  degap.pl [options] -r <average_read_length> -c <rampart_config_file>  -i <input_scaffold_file>
+B<degap.pl> [options] B<--config> F<config.cfg> B<-i> F<input_scaffold_file.fa>
 
-  For full documentation type: "degap.pl --man"
+For full documentation type: "degap.pl --man"
 
 
 =head1 DESCRIPTION
 
-  This script is designed to execute degapping jobs on a grid engine.  Degapping the the process of filling gaps in scaffolds, 
-  denoted by the nt (N), with real nucleotides (A,T,G,C), by trying to align assembled reads to the scaffolds.  Currently, one 
-  degapping tool is support: SOAPdenovo GapCloser.
+This script is designed to execute degapping jobs on a grid engine.  Degapping the the process of filling gaps in scaffolds, denoted by the nt (N), with real nucleotides (A,T,G,C), by trying to align assembled reads to the scaffolds.  Currently, one degapping tool is support: SOAPdenovo GapCloser.
 
 
 =head1 OPTIONS
 
-  --read_length          --readlen           --rl                 -r
-  			  REQUIRED: The average length of reads to use
-  			  
-  --config               --cfg               -c
-  			  REQUIRED: The rampart config file that describs the reads to be used for this job.
+=over
+
+=item B<--config>,B<--cfg>,B<-c>
+
+REQUIRED: The rampart config file that describs the reads to be used for this job.
   
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.
+=item B<--grid_engine>,B<--ge>
 
-  --tool                 -t
-              Currently supported tools include: (gapcloser).  Default tool: gapcloser.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+=item B<--tool>,B<-t>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+Currently supported tools include: (gapcloser).  Default tool: gapcloser.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--tool_path>,B<--tp>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+The path to the tool, or name of the tool's binary file if on the path.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+The project name for the job that will be placed on the grid engine.
 
-  --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
+The job name for the job that will be placed on the grid engine.
 
-  --input                --in                -i
-              REQUIRED: The input scaffold file for this job.
+=item B<--wait_condition>,B<--wait>,B<-w>
 
-  --output               --out               -o
-              The output dir for this job.
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
 
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+=item B<--queue>,B<-q>
 
+The queue to which this job should automatically be sent.
+
+=item B<--memory>,B<--mem>,B<-m>
+
+The amount of memory to reserve for this job.
+
+=item B<--threads>,B<-n>
+
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--input>,B<--in>,B<-i>
+
+REQUIRED: The input scaffold file for this job.
+
+=item B<--output>,B<--out>,B<-o>
+
+The output dir for this job. Default: Current working directory ("."); 
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 

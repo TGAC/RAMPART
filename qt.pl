@@ -128,76 +128,96 @@ __END__
 
 =head1 NAME
 
-  qt.pl
+B<qt.pl>
 
 
 =head1 SYNOPSIS
 
-  qt.pl [options] --in1 <input_file1> --in2 <input_file2> --out1 <output_file1> --out2 <output_file2> --sout <singles_output_file>
+B<qt.pl> [options] B<--in1> F<input_file_1.fq> B<--in2> F<input_file_2.fq> B<--out1> F<output_file_1.fq> B<--out2> F<output_file_2.fq> B<--sout> F<singles_output_file.fq>
 
-  For full documentation type: "qt.pl --man"
+For full documentation type: "qt.pl --man"
 
 
 =head1 DESCRIPTION
 
-  Quality trimming tool that allows the user to execute a quality trimmer on a grid engine.  Assumes the user wants to quality trim paired end or mate pair data.
+Quality trimming tool that allows the user to execute a quality trimmer on a grid engine.  Assumes the user wants to quality trim paired end or mate pair data.
 
 
 =head1 OPTIONS
 
-  --in1
-              REQUIRED: First input file.
+=over
+
+=item B<--in1>
+
+REQUIRED: First input file.
               
-  --in2
-              REQUIRED: Second input file.
+=item B<--in2>
+
+REQUIRED: Second input file.
   
-  --out1
-              REQUIRED: First output file.
+=item B<--out1>
+
+REQUIRED: First output file.
   
-  --out2
-              REQUIRED: Second input file.
+=item B<--out2>
+
+REQUIRED: Second input file.
   
-  --sout
-              REQUIRED: Singles output file.
+=item B<--sout>
+
+REQUIRED: Singles output file.
   
-  --grid_engine      	 --ge
-              The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
+=item B<--grid_engine>,B<--ge>
 
-  --tool                 -t
-              Currently these quality trimming tools are supported: (sickle).  Default: sickle.
+The grid engine to use.  Currently "LSF" and "PBS" are supported.  Default: LSF.
 
-  --tool_path            --tp
-              The path to the tool, or name of the tool's binary file if on the path.
+=item B<--tool>,B<-t>
 
-  --project_name         --project           -p
-              The project name for the job that will be placed on the grid engine.
+Currently these quality trimming tools are supported: (sickle).  Default: sickle.
 
-  --job_name             --job               -j
-              The job name for the job that will be placed on the grid engine.
+=item B<--tool_path>,B<--tp>
 
-  --wait_condition       --wait              -w
-              If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+The path to the tool, or name of the tool's binary file if on the path.
 
-  --queue                -q
-              The queue to which this job should automatically be sent.
+=item B<--project_name>,B<--project>,B<-p>
 
-  --memory               --mem               -m
-              The amount of memory to reserve for this job.
+The project name for the job that will be placed on the grid engine.
 
-  --threads              -n
-              The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+=item B<--job_name>,B<--job>,B<-j>
 
-  --extra_args           --ea
-              Any extra arguments that should be sent to the grid engine.
-  
-  --verbose              -v
-              Whether detailed debug information should be printed to STDOUT.
+The job name for the job that will be placed on the grid engine.
 
+=item B<--wait_condition>,B<--wait>,B<-w>
+
+If this job shouldn't run until after some condition has been met (normally the condition being the successful completion of another job), then that wait condition is specified here.
+
+=item B<--queue>,B<-q>
+
+The queue to which this job should automatically be sent.
+
+=item B<--memory>,B<--mem>,B<-m>
+
+The amount of memory to reserve for this job.
+
+=item B<--threads>,B<-n>
+
+The number of threads that this job is likely to use.  This is used to reserve cores from the grid engine.
+
+=item B<--extra_args>,B<--ea>
+
+Any extra arguments that should be sent to the grid engine.
+
+=item B<--verbose>,B<-v>
+
+Whether detailed debug information should be printed to STDOUT.
+
+=back
 
 =head1 AUTHORS
 
-  Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
-  Nizar Drou <nizar.drou@tgac.ac.uk>
+Daniel Mapleson <daniel.mapleson@tgac.ac.uk>
+
+Nizar Drou <nizar.drou@tgac.ac.uk>
 
 =cut
 
