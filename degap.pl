@@ -73,7 +73,7 @@ if ( $tool eq $T_GAP_CLOSER ) {
 
 	my $gc_scaffolds  = $qst->getOutput() . "/gc-scaffolds.fa";
 	my $gc_other_args = "-p 61";
-	my $read_length   = $rampart_cfg->getSectionAt(0)->{max_rd_len};
+	my $read_length   = $rampart_cfg->getSectionAt(0)->{read_length};
 
 	my @gc_args = (
 		$GC_SOURCE_CMD,

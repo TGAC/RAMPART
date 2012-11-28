@@ -87,8 +87,8 @@ if ($tool eq $T_SSPACE) {
 	my $sspace_cfg_file = $qst->getOutput() . "/sspace.cfg";
 	write_sspace_cfg( $rampart_cfg, $sspace_cfg_file);
 	
-	my $in_file = convert_to_absolute($qst->getInput());
-	my $out_file = convert_to_absolute($qst->getOutput());	
+	my $in_file = $qst->getInput(); #convert_to_absolute($qst->getInput());
+	my $out_file = $qst->getOutput(); #convert_to_absolute($qst->getOutput());	
 	system("ln -s " . $in_file . " " . $out_file . "/input_scaffolds.fa;");
 	
 	my $sspace_output_prefix = "scaffolder";
