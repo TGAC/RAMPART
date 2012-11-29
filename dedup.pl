@@ -19,7 +19,7 @@ use File::Basename;
 use QsOptions;
 use Configuration;
 use SubmitJob;
-
+use AppStarter;
 
 # Script locations
 my ( $RAMPART, $RAMPART_DIR ) = fileparse( abs_path($0) );
@@ -32,8 +32,8 @@ my $EX_SEQID_PATH    		= $NIZAR_SCRIPT_DIR . "extract_seq_ids_from_exonerate_ryo
 my $EX_FASTA_ID_PATH    	= $NIZAR_SCRIPT_DIR . "extract_fasta_records_on_ids";
 my $FASTA_FORMATTER			= "fasta_formatter";
 
-my $SOURCE_FASTX			= "source fastx_toolkit-0.0.13;";
-my $SOURCE_EXONERATE		= "source exonerate-2.2.0;";
+my $SOURCE_FASTX			= AppStarter::getAppInitialiser("FASTX");
+my $SOURCE_EXONERATE		= AppStarter::getAppInitialiser("EXONERATE");
 
 # Other constants
 my $QUOTE = "\"";

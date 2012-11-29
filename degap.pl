@@ -17,6 +17,7 @@ use Cwd;
 use QsOptions;
 use Configuration;
 use SubmitJob;
+use AppStarter;
 
 # Gap closing constants
 my $T_GAP_CLOSER = "gapcloser";
@@ -30,7 +31,7 @@ my $TP_GAP_FILLER = "gapfiller";
 my $DEF_TOOL_PATH = $TP_GAP_CLOSER;
 
 # Command constants
-my $GC_SOURCE_CMD = "source GapCloser-1.12;";
+my $GC_SOURCE_CMD = AppStarter::getAppInitialiser("GAP_CLOSER");
 
 # Other constants
 my $QUOTE = "\"";

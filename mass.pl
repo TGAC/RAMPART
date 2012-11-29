@@ -19,7 +19,7 @@ use File::Basename;
 use QsOptions;
 use SubmitJob;
 use Configuration;
-
+use AppStarter;
 
 # Tool names
 my $T_ABYSS = "abyss";
@@ -32,6 +32,9 @@ my $TP_ABYSS = "abyss-pe";
 my $TP_VELVET = "velvet";
 my $TP_SOAP = "soapdenovo";
 my $DEF_TOOL_PATH = $TP_ABYSS;
+
+# Names
+my $ABYSS_NAME_PREFIX = "Abyss-mpi-k";
 
 # Kmer constants
 my $KMER_MIN = 11;
@@ -47,7 +50,7 @@ my $DEF_MEM=60;
 my $MIN_MEM=5;
 
 # Source command constants
-my $ABYSS_SOURCE_CMD = "source abyss_cb-1.3.4;";
+my $ABYSS_SOURCE_CMD = AppStarter::getAppInitialiser("ABYSS");
 
 # Other constants
 my $QUOTE = "\"";
@@ -122,6 +125,10 @@ my $cfg = new Configuration( $opt{config} );
 my $tool = $qst->getTool();
 my $j = 0;
 
+# Create directory for links to assembled contigs
+my $contigs_dir = $output_dir . "/" . "contigs";
+system("mkdir", $contigs_dir) unless (-e $contigs_dir);
+
 
 for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 
@@ -150,48 +157,13 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		# TGAC Cluster specific command (Abyss doesn't like Intel nodes, so avoid those)
 		$qst_ass->setExtraArgs("-Rselect[hname!='n57142.tgaccluster']");
 		
-		# Create argument list
-		my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
-		my $abyss_threads = "np=" . $qst_ass->getThreads();
-		my $abyss_kmer = "k=" . $i;
-		my $abyss_out_prefix = "name=Abyss-mpi-k" . $i;
+		# Build up the command line for abyss
+		$cmd_line = buildAbyssCmdLine($i);
 		
-		# Process configuration file to build list of libraries to assemble
-		my @libs = ();
-		my @lib_args = ();
-		my @single_ends = ();
-		
-		for(my $j = 1; $j < $cfg->getNbSections(); $j++) {
-			my $sect = $cfg->getSectionAt($j);
-			if ($sect->{usage} eq "ASSEMBLY" || $sect->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {			
-				my $sect_name = $cfg->getSectionNameAt($j);
-				my $se = $sect->{file_se};
-				push(@libs, $sect_name);
-				push(@lib_args, ($sect_name . "='" . $sect->{file_paired_1} . " " . $sect->{file_paired_2} . "'"));
-				push(@single_ends, $se) if $se;
-			}
-		}
-		
-		my $abyss_lib = "lib='" . (join " ", @libs) . "'";
-		my $abyss_lib_args = (join " ", @lib_args);
-		my $abyss_ses = @single_ends > 0 ? "se='" . (join " ", @single_ends) . "'" : "";
-		my $abyss_libs = "-j" . ($cfg->getNbSections() - 1);
-		
-		# Put together all the arguments
-		my @abyss_args = grep {$_} (
-			$ABYSS_SOURCE_CMD,
-			$TP_ABYSS,
-			$abyss_threads,
-			$abyss_core_args,
-			$abyss_kmer,
-			$abyss_out_prefix,
-			$abyss_libs,
-			$abyss_lib,
-			$abyss_lib_args,
-			$abyss_ses
-		);
-		
-		$cmd_line = join " ", @abyss_args;
+		# Make links to assembled contigs at a predicatable location
+		my $abyss_config_file = "../" . $i . "/" . $ABYSS_NAME_PREFIX . $i . "-contigs.fa"; #Expected abyss contig file
+		my $sl_file = $contigs_dir . "/k" . $i . "-contigs.fa";	#Output file				
+		system("ln -s -f " . $abyss_config_file . " " . $sl_file);
 	}
 	elsif ($tool eq $T_VELVET) {
 		die "Error: Velvet not implemented yet\n\n";
@@ -204,12 +176,15 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	}
 
 	# Make the output directory for this child job and go into it (make sure we're in the workdir before doing anything tho!!)
-	chdir $PWD;
 	system("mkdir", $i_dir) unless (-e $i_dir);
   	chdir $i_dir;
 
 	# Submit the job
 	SubmitJob::submit($qst_ass, $cmd_line) unless $opt{simulate};
+
+	# Go back to the working directory
+	chdir $PWD;
+	
 
 	if ($j % 2) {
 		$i += 6;
@@ -232,8 +207,8 @@ if ($opt{stats}) {
 	my $gp_tool_arg = "--tool mass_gp";
 	my $gp_wc_arg = "--wait_condition " . "'ended(" . $job_prefix . "-k*)'"; # This presumes an LSF wait condition, modify to handle this better in the future.
 	my $gp_job_arg = "--job_name " . $job_prefix . "-stats";
-	my $gp_input_arg = "--input " .  $qst->getOutput();
-	my $gp_output_arg = "--output " . $qst->getOutput();
+	my $gp_input_arg = "--input " .  $contigs_dir;
+	my $gp_output_arg = "--output " . $output_dir;
 
 	my $mgp_cmd_line = 	$MASS_GP_PATH . " " .
 						$qst->getGridEngineAsParam() . " " .
@@ -255,6 +230,56 @@ if ($opt{stats}) {
 
 exit 0;
 
+
+sub buildAbyssCmdLine {
+	
+	my ($kmer) = @_;
+	
+	# Create argument list
+	my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
+	my $abyss_threads = "np=" . $qst->getThreads();
+	my $abyss_kmer = "k=" . $kmer;
+	my $abyss_out_prefix = "name=" . $ABYSS_NAME_PREFIX . $kmer;
+	
+	# Process configuration file to build list of libraries to assemble
+	my @libs = ();
+	my @lib_args = ();
+	my @single_ends = ();
+	
+	for(my $j = 1; $j < $cfg->getNbSections(); $j++) {
+		my $sect = $cfg->getSectionAt($j);
+		if ($sect->{usage} eq "ASSEMBLY" || $sect->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {			
+			my $sect_name = $cfg->getSectionNameAt($j);
+			my $se = $sect->{file_se};
+			push(@libs, $sect_name);
+			push(@lib_args, ($sect_name . "='" . $sect->{file_paired_1} . " " . $sect->{file_paired_2} . "'"));
+			push(@single_ends, $se) if $se;
+		}
+	}
+	
+	my $abyss_lib = "lib='" . (join " ", @libs) . "'";
+	my $abyss_lib_args = (join " ", @lib_args);
+	my $abyss_ses = @single_ends > 0 ? "se='" . (join " ", @single_ends) . "'" : "";
+	my $abyss_libs = "-j" . ($cfg->getNbSections() - 1);
+	
+	# Put together all the arguments
+	my @abyss_args = grep {$_} (
+		$ABYSS_SOURCE_CMD,
+		$TP_ABYSS,
+		$abyss_threads,
+		$abyss_core_args,
+		$abyss_kmer,
+		$abyss_out_prefix,
+		$abyss_libs,
+		$abyss_lib,
+		$abyss_lib_args,
+		$abyss_ses
+	);
+	
+	my $cmd_line = join " ", @abyss_args;
+	
+	return $cmd_line;
+}
 
 
 sub validKmer {

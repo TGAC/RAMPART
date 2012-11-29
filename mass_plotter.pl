@@ -14,6 +14,8 @@ use Cwd;
 use Cwd 'abs_path';
 use File::Basename;
 
+# Rampart modules
+use AppStarter;
 
 # Other constants
 my $PWD = getcwd;
@@ -24,7 +26,7 @@ my $DEF_OUT = $PWD;
 
 # Assembly stats plotting constants
 my $MASS_PLOTTER_SCRIPT = $R_DIR . "mass_plotter.R";
-my $R_SOURCE_CMD = "source R-2.12.2;";
+my $R_SOURCE_CMD = AppStarter::getAppInitialiser("R");
 
 
 # Assign any command line options to variables

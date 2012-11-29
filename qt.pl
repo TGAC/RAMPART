@@ -17,6 +17,7 @@ use Cwd;
 use QsOptions;
 use SubmitJob;
 use Configuration;
+use AppStarter;
 
 # Tool constants
 my $T_SICKLE = "sickle";
@@ -27,7 +28,7 @@ my $TP_SICKLE = "sickle";
 my $DEF_TOOL_PATH = $TP_SICKLE;
 
 # Command constants
-my $SICKLE_SOURCE_CMD = "source sickle-1.1;";
+my $SICKLE_SOURCE_CMD = AppStarter::getAppInitialiser("SICKLE");
 
 # Other constants
 my $QUOTE = "\"";

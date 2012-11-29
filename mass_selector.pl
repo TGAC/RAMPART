@@ -18,7 +18,7 @@ use File::Basename;
 # RAMPART modules
 use QsOptions;
 use SubmitJob;
-
+use AppStarter;
 
 # Other constants
 my $PWD = getcwd;
@@ -30,7 +30,7 @@ my $DEF_OUT = $PWD . "/mass_selector.rout";
 # R script constants
 my $MASS_SELECTOR_R = $R_DIR . "mass_selector.R";
 my $FULL_PLOTTER_R = $R_DIR . "full_plotter.R";
-my $R_SOURCE_CMD = "source R-2.12.2;";
+my $R_SOURCE_CMD = AppStarter::getAppInitialiser("R");
 
 # Parse generic queueing tool options
 my $qso = new QsOptions();

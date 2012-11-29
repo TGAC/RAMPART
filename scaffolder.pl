@@ -18,6 +18,7 @@ use Cwd;
 use QsOptions;
 use SubmitJob;
 use Configuration;
+use AppStarter;
 
 # Tool constants
 my $T_SSPACE = "sspace";
@@ -30,8 +31,8 @@ my $TP_GRASS = "grass";
 my $DEF_TOOL_PATH = $TP_SSPACE;
 
 # Command constants
-my $SSPACE_SOURCE_CMD = "source SSPACE-BASIC-2.0;";
-my $PERL_SOURCE_CMD = "source perl-5.16.1;";
+my $SSPACE_SOURCE_CMD = AppStarter::getAppInitialiser("SSPACE");
+my $PERL_SOURCE_CMD = AppStarter::getAppInitialiser("PERL");
 
 # Other constants
 my $QUOTE = "\"";

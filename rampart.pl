@@ -19,7 +19,7 @@ use File::Basename;
 use QsOptions;
 use Configuration;
 use SubmitJob;
-
+use AppStarter;
 
 #### Constants
 
@@ -40,8 +40,8 @@ my $GETBEST_PATH = $RAMPART_DIR . "get_best.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
 my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1.one-jar.jar";
 
-my $SOURCE_JAVA = "source jre-6.0.25;";
-my $SOURCE_LATEX = "source texlive-2012;";
+my $SOURCE_JAVA = AppStarter::getAppInitialiser("JRE");
+my $SOURCE_LATEX = AppStarter::getAppInitialiser("LATEX");
 
 
 # Parse generic queueing tool options
@@ -188,7 +188,7 @@ if ($opt{qt}) {
 		$qt_cfg->getSectionAt($i)->{file_paired_1} = $out_file1;
 		$qt_cfg->getSectionAt($i)->{file_paired_2} = $out_file2;
 		$qt_cfg->getRawStructure()->newval($sect_name, "file_se", $sout_file );
-		$raw_cfg->getRawStructure()->newval($sect_name, "dataset", "QT" );
+		$qt_cfg->getRawStructure()->newval($sect_name, "dataset", "QT" );
 	}
 	
 	# Save the new configuration files

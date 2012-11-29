@@ -17,6 +17,7 @@ use Cwd;
 # Rampart modules
 use QsOptions;
 use SubmitJob;
+use AppStarter;
 
 # Setup directories
 my ( $RAMPART, $RAMPART_DIR ) = fileparse( abs_path($0) );
@@ -33,7 +34,7 @@ my $TP_NIZAR = $NIZAR_SCRIPT_DIR . "length_extract_fasta";
 my $DEF_TOOL_PATH = $TP_NIZAR;
 
 # Sourceing constants
-my $SOURCE_FASTX 	= "source fastx_toolkit-0.0.13;";
+my $SOURCE_FASTX 	= AppStarter::getAppInitialiser("FASTX");
 my $FASTA_FORMATTER	= "fasta_formatter";
 
 # Other constants

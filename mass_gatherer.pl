@@ -66,7 +66,10 @@ my @assemblies;
 
 sub wanted { push @assemblies, $File::Find::name }
 find( \&wanted, $input_dir );
-my @filtered_assemblies = grep( /-scaffolds.fa$/, @assemblies );
+my @scaffolded_assemblies = grep( /-scaffolds.fa$/, @assemblies );
+my @contiged_assemblies = grep( /-contigs.fa$/, @assemblies );
+
+my @filtered_assemblies = (@contiged_assemblies, @scaffolded_assemblies);
 my @sorted_assemblies = sort(@filtered_assemblies);
 
 if ( $opt{verbose} ) {
@@ -87,17 +90,22 @@ foreach (@sorted_assemblies) {
 	  . " --notitle";
 	my $output   = `$tabulate_cmd`;
 	
-	if ($opt{index}) {
-		print "index-" . $i . "\n" if $opt{verbose};
-		print $output . "\n"  if $opt{verbose};
-		push @table, $i . "|" . $output;
+	if($output =~ m/^\|\|\|/i) {
+		#print "Warning: " . $name . " does not contain any assembly information.";
 	}
 	else {
-		my $matchstr = $output;
-		$matchstr =~ m/-k(\d+)-scaffolds/;
-		print "k" . $1 . "\n" if $opt{verbose};
-		print $output . "\n"  if $opt{verbose};
-		push @table, $1 . "|" . $output;
+		if ($opt{index}) {
+			print "index-" . $i . "\n" if $opt{verbose};
+			print $output . "\n"  if $opt{verbose};
+			push @table, $i . "|" . $output;
+		}
+		else {
+			my $matchstr = $output;
+			$matchstr =~ m/k(\d+)-/;
+			print "k" . $1 . "\n" if $opt{verbose};
+			print $output . "\n"  if $opt{verbose};
+			push @table, $1 . "|" . $output;
+		}
 	}
 	 
 	$i++;
