@@ -38,7 +38,7 @@ my $MASS_PATH = $RAMPART_DIR . "mass.pl";
 my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
 my $GETBEST_PATH = $RAMPART_DIR . "get_best.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
-my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1-jar-with-dependencies.jar";
+my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1.one-jar.jar";
 
 my $SOURCE_JAVA = "source jre-6.0.25;";
 my $SOURCE_LATEX = "source texlive-2012;";
@@ -184,9 +184,11 @@ if ($opt{qt}) {
 		# Also we must change the new configuration files for consisitency
 		$raw_cfg->getSectionAt($i)->{file_paired_1} = $in_file1;
 		$raw_cfg->getSectionAt($i)->{file_paired_2} = $in_file2;
+		$raw_cfg->getRawStructure()->newval($sect_name, "dataset", "RAW" );
 		$qt_cfg->getSectionAt($i)->{file_paired_1} = $out_file1;
 		$qt_cfg->getSectionAt($i)->{file_paired_2} = $out_file2;
 		$qt_cfg->getRawStructure()->newval($sect_name, "file_se", $sout_file );
+		$raw_cfg->getRawStructure()->newval($sect_name, "dataset", "QT" );
 	}
 	
 	# Save the new configuration files
@@ -299,6 +301,13 @@ if ($opt{improver}) {
 
 if ($opt{report} || $opt{persist}) {
 	
+	# Make a directory for all improver results
+	my $rep_dir = $qst->getOutput() . "/report";
+	mkdir $rep_dir;
+	
+	# Change into that dir
+	chdir $rep_dir;
+	
 	my @helper_args = grep {$_} (
 		$SOURCE_JAVA,
 		$SOURCE_LATEX,
@@ -323,6 +332,8 @@ if ($opt{report} || $opt{persist}) {
 	}
 	
 	SubmitJob::submit($helper_job, join " ", @helper_args);
+	
+	chdir $PWD;
 }
 
 # Notify user of job submission
