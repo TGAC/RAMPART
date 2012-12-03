@@ -19,10 +19,11 @@ import uk.ac.tgac.rampart.dao.JobDao;
 import uk.ac.tgac.rampart.data.ImproverStats;
 import uk.ac.tgac.rampart.data.Job;
 import uk.ac.tgac.rampart.data.Library;
-import uk.ac.tgac.rampart.data.MassPlotFileStructure;
 import uk.ac.tgac.rampart.data.MassStats;
+import uk.ac.tgac.rampart.data.PlotFileStructure;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
+import uk.ac.tgac.rampart.data.RampartSettings;
 import uk.ac.tgac.rampart.service.PdfOperationsService;
 import uk.ac.tgac.rampart.service.RampartJobService;
 import uk.ac.tgac.rampart.service.SequenceStatisticsService;
@@ -46,17 +47,17 @@ public class RampartJobServiceImpl implements RampartJobService {
 	
 	
 	@Override
-	public void seperatePlots(File in, File outDir) throws IOException, DocumentException {		
-		MassPlotFileStructure mpfs = new MassPlotFileStructure(in, outDir);
+	public void seperatePlots(File in, File outDir, String filenamePrefix) throws IOException, DocumentException {		
+		PlotFileStructure pfs = new PlotFileStructure(in, outDir, filenamePrefix);
 		
-		File plots = mpfs.getPlots();
+		File plots = pfs.getPlots();
 		
-		this.pdfOperationsService.extractPage(plots, mpfs.getMassPlotNbContigsFile(), 1);
-		this.pdfOperationsService.extractPage(plots, mpfs.getMassPlotNPcFile(), 6);
-		this.pdfOperationsService.extractPage(plots, mpfs.getMassPlotNbBasesFile(), 7);
-		this.pdfOperationsService.extractPage(plots, mpfs.getMassPlotAvgLenFile(), 10);
-		this.pdfOperationsService.extractPage(plots, mpfs.getMassPlotMaxLenFile(), 9);
-		this.pdfOperationsService.extractPage(plots, mpfs.getMassPlotN50File(), 11);
+		this.pdfOperationsService.extractPage(plots, pfs.getNbContigsFile(), 1);
+		this.pdfOperationsService.extractPage(plots, pfs.getNPcFile(), 6);
+		this.pdfOperationsService.extractPage(plots, pfs.getNbBasesFile(), 7);
+		this.pdfOperationsService.extractPage(plots, pfs.getAvgLenFile(), 10);
+		this.pdfOperationsService.extractPage(plots, pfs.getMaxLenFile(), 9);
+		this.pdfOperationsService.extractPage(plots, pfs.getN50File(), 11);
 	}
 
 	
@@ -98,9 +99,12 @@ public class RampartJobServiceImpl implements RampartJobService {
 		RampartJobFileStructure jobFS = new RampartJobFileStructure(jobDir);
 		
 		// Get Configuration info from config files
-		Job job = this.getRampartConfiguration(jobFS.getConfigFile()).getJobs();
-		List<Library> libsRaw = this.getRampartConfiguration(jobFS.getConfigRawFile()).getLibs();
-		List<Library> libsQt = this.getRampartConfiguration(jobFS.getConfigQtFile()).getLibs();
+		Job job = this.loadConfiguration(jobFS.getConfigFile()).getJob();
+		List<Library> libsRaw = this.loadConfiguration(jobFS.getConfigRawFile()).getLibs();
+		List<Library> libsQt = this.loadConfiguration(jobFS.getConfigQtFile()).getLibs();
+		
+		// Tool Settings from settings file
+		RampartSettings rampartSettings = this.determineSettings(jobFS);
 		
 		// Analyse Read files and generate statistics for them.  Stats objects are already linked
 		// to the seq files in the libs.
@@ -121,8 +125,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		
 		// Link stats to job object and vice versa
 		job.setMassStats(massStats);
-		job.setImproverStats(improverStats);
-		
+		job.setImproverStats(improverStats);		
 
 		// Get the final assembly statistics
 		ImproverStats finalAssembly = improverStats.get(improverStats.size() - 1);
@@ -132,8 +135,8 @@ public class RampartJobServiceImpl implements RampartJobService {
 		// Build context
 		VelocityContext vc = new VelocityContext();
 		vc.put("job", job);
-		vc.put("mass_dir", jobFS.getMassDir().getPath());
-		vc.put("improver_dir", jobFS.getImproverDir().getPath());
+		vc.put("tool", rampartSettings);
+		vc.put("locations", jobFS);
 		vc.put("best_mass_asm", best);
 		vc.put("final_asm", finalAssembly);
 		
@@ -187,10 +190,21 @@ public class RampartJobServiceImpl implements RampartJobService {
 
 
 	@Override
-	public RampartConfiguration getRampartConfiguration(File in) throws IOException {
+	public RampartConfiguration loadConfiguration(File in) throws IOException {
 		
 		RampartConfiguration rc = new RampartConfiguration(in);
 		return rc;
+	}
+
+
+	@Override
+	public RampartSettings determineSettings(RampartJobFileStructure job) throws IOException {
+		
+		RampartSettings rampartSettings = new RampartSettings(job);
+		
+		rampartSettings.setRampartVersion(getClass().getPackage().getImplementationVersion());
+		
+		return rampartSettings;
 	}
 
 }

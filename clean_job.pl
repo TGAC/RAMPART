@@ -38,11 +38,11 @@ my $report_dir = $job_dir . "/report";
 my $log_dir = $job_dir . "/log";
 
 
-system("rm -R " . $reads_dir);
-system("rm -R " . $mass_dir);
-system("rm -R " . $improver_dir);
-system("rm -R " . $report_dir);
-system("rm -R " . $log_dir);
+system("rm -R -f " . $reads_dir);
+system("rm -R -f " . $mass_dir);
+system("rm -R -f " . $improver_dir);
+system("rm -R -f " . $report_dir);
+system("rm -R -f " . $log_dir);
 
 
 __END__

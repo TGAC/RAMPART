@@ -1,5 +1,7 @@
 package uk.ac.tgac.rampart.frontend.cli;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -14,7 +16,6 @@ import org.springframework.context.ApplicationContext;
 import uk.ac.tgac.rampart.service.RampartJobService;
 import uk.ac.tgac.rampart.service.ReportBuilderService;
 import uk.ac.tgac.rampart.util.ApplicationContextLoader;
-import uk.ac.tgac.rampart.util.Tools;
 
 public class RampartHelper {
 	
@@ -36,7 +37,7 @@ public class RampartHelper {
 		this.rhOptions = options;
 	}
 	
-	public void process(Options options) {
+	public void process(Options options) throws Exception {
 		
 		if (this.rhOptions.doHelp()) {
 			HelpFormatter formatter = new HelpFormatter();
@@ -44,24 +45,18 @@ public class RampartHelper {
 			return;
 		}
 
-		try {
-			// Analyse the rampart job directory and build the job context object 
-			VelocityContext context = this.rampartJobService.buildContext(this.rhOptions.getJobDir());
-			
-			// Build the report
-			if (this.rhOptions.doReport()) {
-				this.reportBuilderService.buildReport(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir(), context);
-			}
-			
-			// Persist the context to the database
-			if (this.rhOptions.doPersist()) {
-				this.rampartJobService.persistContext(context);
-			}
-			
-		} catch (Exception ioe) {
-			log.error(ioe.getMessage());
-			log.error(Tools.getStackTrace(ioe));
-			return;
+		
+		// Analyse the rampart job directory and build the job context object 
+		VelocityContext context = this.rampartJobService.buildContext(this.rhOptions.getJobDir());
+		
+		// Build the report
+		if (this.rhOptions.doReport()) {
+			this.reportBuilderService.buildReport(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir(), context);
+		}
+		
+		// Persist the context to the database
+		if (this.rhOptions.doPersist()) {
+			this.rampartJobService.persistContext(context);
 		}
 	}
 
@@ -92,12 +87,22 @@ public class RampartHelper {
 			log.debug("Spring configured -- dependencies injected");
 			
 		} catch (ParseException exp) {
-			log.fatal("Options Parsing failed.  Reason: " + exp.getMessage());
-			return;
+			log.fatal(exp.getMessage(), exp);
+			System.exit(1);
 		}
 		
 		// Process report builder
-		rampartHelper.process(options);		
+		try {
+			rampartHelper.process(options);
+		}
+		catch (IOException ioe) {
+			log.fatal(ioe.getMessage(), ioe);
+			System.exit(2);
+		}
+		catch (Exception e) {
+			log.fatal(e.getMessage(), e);
+			System.exit(3);
+		}
 
 		log.info("Finished RAMPART Helper");
 		

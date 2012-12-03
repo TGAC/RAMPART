@@ -54,6 +54,7 @@ GetOptions(
 	'config|cfg=s',
 	'iterations|i=i',
 	'stats',
+	'log',
 	'simulate|sim',
 	'help|usage|h|?',
 	'man' )
@@ -236,8 +237,22 @@ if ( $opt{stats} ) {
 	$last_job = $clip_job_name;
 }
 
+if ($opt{log}) {
+	open (LOGFILE, ">", $output_dir . "/improver.log");
+	print LOGFILE "[IMPROVER]\n";
+	print LOGFILE "iterations=" . $opt{iterations} . "\n";
+	print LOGFILE "scaffolding.tool=" . "scfx" . "\n";
+	print LOGFILE "scaffolding.version=" . "x.x" . "\n";
+	print LOGFILE "degap.tool=" . "degapx" . "\n";
+	print LOGFILE "degap.version=" . "x.x" . "\n";
+	print LOGFILE "dedup=" . ($opt{dedup} ? "true" : "false") . "\n";
+	print LOGFILE "clip=" . ($opt{clip} ? "true" : "false") . "\n";
+	print LOGFILE "clip.minlen=" . "1" . "\n";
+	close(LOGFILE);
+}
+
 # Everything gets submitted as one big job.
-SubmitJob::submit($qst, join("; ", @commands))
+SubmitJob::submit($qst, join("; ", @commands));
 
 
 __END__
@@ -344,6 +359,18 @@ The output dir for this job. Default: Current working directory (".")
 =item B<--verbose>,B<-v>
 
 Whether detailed debug information should be printed to STDOUT.
+
+=item B<--log>
+
+Whether to log the mass scripts settings in a file called F<mass.log> in the directory specified with the B<--output> argument. 
+
+=item B<--help>,B<--usage>,B<-h>,B<-?>
+
+Print usage message and then exit.
+
+=item B<--man>
+
+Display manual.
 
 =back
 

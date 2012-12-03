@@ -27,13 +27,20 @@ my $DEF_TOOL = $T_SICKLE;
 my $TP_SICKLE = "sickle";
 my $DEF_TOOL_PATH = $TP_SICKLE;
 
+# Tool version constants
+my $T_SICKLE_VERSION = "1.1";
+
 # Command constants
 my $SICKLE_SOURCE_CMD = AppStarter::getAppInitialiser("SICKLE");
 
-# Other constants
+# Tool settings constants
+my $THRESHOLD = 30;
+my $MINLEN = 75;
+
+
+# Generic constants
 my $QUOTE = "\"";
 my $PWD = getcwd;
-
 
 # Parse generic queueing tool options
 my $qst = new QsOptions();
@@ -51,6 +58,7 @@ GetOptions (
 	'out1=s',
 	'out2=s',
 	'sout=s',
+	'log',
 	'help|usage|h|?',
 	'man'
 )
@@ -88,15 +96,20 @@ if($qst->isVerbose()) {
 }
 
 my $tool = $qst->getTool();
+my $tool_version = "x.x";
 
 # Select the scaffolder and build the command line
 if ($tool eq $T_SICKLE) {
+
+	$tool_version = $T_SICKLE_VERSION;
 
 	my @sickle_args = grep {$_} (
 		$SICKLE_SOURCE_CMD,
 		$qst->getToolPath(),
 		"pe",
-		"-q 30 -l 75 -n -t sanger",
+		"-q " . $THRESHOLD,
+		"-l " . $MINLEN,
+		"-n -t sanger",
 		"-f " . $opt{in1},
 		"-r " . $opt{in2},
 		"-o " . $opt{out1},
@@ -111,6 +124,15 @@ else {
 	die "Error: Invalid scaffolder requested.  Also, the script should not have got this far!!!.\n\n";
 }
 
+if ($opt{log}) {
+	open (LOGFILE, ">", $qst->getOutput() . "/qt.log");
+	print LOGFILE "[QT]\n";
+	print LOGFILE "tool=" . $tool . "\n";
+	print LOGFILE "version=" . $tool_version . "\n";
+	print LOGFILE "threshold=" . $THRESHOLD . "\n";
+	print LOGFILE "minlen=" . $MINLEN . "\n";
+	close(LOGFILE);
+}
 
 # Submit the scaffolding job
 SubmitJob::submit($qst, $cmd_line);
@@ -167,6 +189,10 @@ REQUIRED: Second input file.
 =item B<--sout>
 
 REQUIRED: Singles output file.
+
+=item B<--log>
+
+Whether to log the qt scripts settings in a file called F<qt.log> in the directory specified with the B<--output> argument. 
   
 =item B<--grid_engine>,B<--ge>
 

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>RampartHelper</groupId>
 	<artifactId>RampartHelper</artifactId>
-	<version>0.1</version>
+	<version>0.2</version>
 	<name>RampartHelper</name>
 	<packaging>jar</packaging>
 	<description>Provides a number of helpful services for RAMPART such as:

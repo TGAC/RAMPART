@@ -20,6 +20,7 @@ use QsOptions;
 use Configuration;
 use SubmitJob;
 use AppStarter;
+use RampartJobFileStructure;
 
 #### Constants
 
@@ -38,7 +39,7 @@ my $MASS_PATH = $RAMPART_DIR . "mass.pl";
 my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
 my $GETBEST_PATH = $RAMPART_DIR . "get_best.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
-my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.1.one-jar.jar";
+my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.2.one-jar.jar";
 
 my $SOURCE_JAVA = AppStarter::getAppInitialiser("JRE");
 my $SOURCE_LATEX = AppStarter::getAppInitialiser("LATEX");
@@ -104,38 +105,20 @@ my $improver_job_name = $qst->getJobName() . "-improver";
 my $helper_job_name = $qst->getJobName() . "-helper";
 
 
-# Set locations of read library files and directories
-my $reads_dir = $qst->getOutput() . "/reads";
-my $raw_config_file = $reads_dir . "/raw.cfg";
-my $qt_config_file = $reads_dir . "/qt.cfg";
-
-# Set locations of mass files and directories
-my $mass_dir = $qst->getOutput() . "/mass";
-my $mass_raw_dir = $mass_dir . "/raw";
-my $mass_qt_dir = $mass_dir . "/qt";
-my $mass_stats_dir = $mass_dir . "/stats";
-my $mass_best_dir = $mass_dir . "/best";
-my $raw_stats_file = $mass_raw_dir . "/stats.txt";
-my $qt_stats_file = $mass_qt_dir . "/stats.txt";
-my $best_path_file = $mass_stats_dir . "/best.path.txt";
-my $best_dataset_file = $mass_stats_dir . "/best.dataset.txt";
-my $best_assembly_sl_path = $mass_best_dir . "/best_assembly.fa";
-my $best_config_sl_path = $mass_best_dir . "/best.cfg";
-	
-
-# TODO - wrap all stages in subs and avoid global vars where possible.
+# Contains locations of all files in a RAMPART job
+my $job_fs = new RampartJobFileStructure($qst->getOutput(), $opt{config});
 
 
 # Optionally do quality trimming on the input data
 if ($opt{qt}) {
 
-	mkdir $reads_dir;
+	mkdir $job_fs->getReadsDir();
 	
-	system("cp " . $opt{config} . " " . $raw_config_file );
-	system("cp " . $opt{config} . " " . $qt_config_file );
+	system("cp " . $job_fs->getConfigFile() . " " . $job_fs->getRawConfigFile() );
+	system("cp " . $job_fs->getConfigFile() . " " . $job_fs->getQtConfigFile() );
 	
-	$raw_cfg = new Configuration( $raw_config_file );
-	$qt_cfg = new Configuration( $qt_config_file );
+	$raw_cfg = new Configuration( $job_fs->getRawConfigFile() );
+	$qt_cfg = new Configuration( $job_fs->getQtConfigFile() );
 	
 	for(my $i = 1; $i < $raw_cfg->getNbSections(); $i++) {
 		
@@ -148,7 +131,7 @@ if ($opt{qt}) {
 		my $file2 = $cfg_sect->{file_paired_2};
 		
 		# Configure file paths for reads dir
-		my $read_file_prefix = $reads_dir . "/" . $cfg_sect->{name};
+		my $read_file_prefix = $job_fs->getReadsDir() . "/" . $cfg_sect->{name};
 		my $in_file1 = $read_file_prefix . "_1.fastq";
 		my $in_file2 = $read_file_prefix . "_2.fastq";
 		my $out_file1 = $read_file_prefix . "_1.qt.fastq";
@@ -170,6 +153,8 @@ if ($opt{qt}) {
 			$qst->getQueueAsParam(),
 			$qst->getExtraArgs(),
 			$qst->isVerboseAsParam(),
+			"--output " . $job_fs->getReadsDir(),
+			"--log",
 			"--in1 " . $in_file1,
 			"--in2 " . $in_file2,
 			"--out1 " . $out_file1,
@@ -192,8 +177,8 @@ if ($opt{qt}) {
 	}
 	
 	# Save the new configuration files
-	$raw_cfg->save( $raw_config_file );
-	$qt_cfg->save( $qt_config_file );
+	$raw_cfg->save( $job_fs->getRawConfigFile() );
+	$qt_cfg->save( $job_fs->getQtConfigFile() );
 }
 
 
@@ -201,9 +186,9 @@ if ($opt{qt}) {
 if ($opt{mass}) {
 
 	# Create directories to hold the assemblies.
-	mkdir $mass_dir;	
-	mkdir $mass_raw_dir;	
-	mkdir $mass_qt_dir;
+	mkdir $job_fs->getMassDir();	
+	mkdir $job_fs->getMassRawDir();	
+	mkdir $job_fs->getMassQtDir();
 
 	# Set job prefixes
 	my $raw_mass_job_prefix = $mass_job_prefix . "-raw";
@@ -213,14 +198,17 @@ if ($opt{mass}) {
 	my $qt_wait_job = $qt_job_prefix . "*" if $opt{qt};
 
 	# Run the assembler script for each dataset
-	run_mass($raw_config_file, $raw_mass_job_prefix, $mass_raw_dir, $qt_wait_job);
-	run_mass($qt_config_file, $qt_mass_job_prefix, $mass_qt_dir, $qt_wait_job);
+	run_mass($job_fs->getRawConfigFile(), $raw_mass_job_prefix, $job_fs->getMassRawDir(), $qt_wait_job);
+	run_mass($job_fs->getQtConfigFile(), $qt_mass_job_prefix, $job_fs->getMassQtDir(), $qt_wait_job);
+	
+	# Just link to one of the mass.log files produced in one of the sub directories... they both should be the same.
+	system("cp -f " . $job_fs->getMassRawDir() . "/mass.log " . $job_fs->getMassDir() . "/mass.log");
 }
 
 ## Run mass selector to find the best assembly
 if ($opt{mass_selector}) {
 	
-	mkdir $mass_stats_dir;
+	mkdir $job_fs->getMassStatsDir();
 	
 	# Build the command line args.
 	# If the MASS step was run previously make sure this step doesn't run until after all MASS jobs have finished. 
@@ -232,10 +220,10 @@ if ($opt{mass_selector}) {
 			$opt{mass} ? "--wait_condition 'ended(" . $mass_job_prefix . "*)'" : "",
 			$qst->getQueueAsParam(),
 			$qst->getExtraArgs(),
-			"--output " . $mass_stats_dir,
+			"--output " . $job_fs->getMassStatsDir(),
 			$qst->isVerboseAsParam(),
-			"--raw_stats_file " . $raw_stats_file,
-			"--qt_stats_file " . $qt_stats_file,
+			"--raw_stats_file " . $job_fs->getMassRawStatsFile(),
+			"--qt_stats_file " . $job_fs->getMassQtStatsFile(),
 			$opt{approx_genome_size} ? "--approx_genome_size " . $opt{approx_genome_size} : "" );
 			
 	my $ms_cmd_line = join " ", @ms_args;
@@ -243,16 +231,16 @@ if ($opt{mass_selector}) {
 	system($ms_cmd_line);
 	
 	# Put the best assembly and config in a known location
-	mkdir $mass_best_dir;	
+	mkdir $job_fs->getMassBestDir();	
 	
 	my @gb_args = grep {$_} (
 		$GETBEST_PATH,
-		"--best_assembly_in " . $best_path_file,
-		"--best_dataset_in " . $best_dataset_file,
-		"--raw_config " . $raw_config_file,
-		"--qt_config " . $qt_config_file,
-		"--best_assembly_out " . $best_assembly_sl_path,
-		"--best_config_out " . $best_config_sl_path,
+		"--best_assembly_in " . $job_fs->getBestPathFile(),
+		"--best_dataset_in " . $job_fs->getBestDatasetFile(),
+		"--raw_config " . $job_fs->getRawConfigFile(),
+		"--qt_config " . $job_fs->getQtConfigFile(),
+		"--best_assembly_out " . $job_fs->getBestAssemblyFile(),
+		"--best_config_out " . $job_fs->getBestConfigFile(),
 		$qst->isVerboseAsParam()
 	);
 	
@@ -287,9 +275,10 @@ if ($opt{improver}) {
 			$qst->getQueueAsParam(),
 			$qst->getExtraArgs(),
 			"--output " . $imp_dir,
-			"--input " . $best_assembly_sl_path,
-			"--config " . $best_config_sl_path,
+			"--input " . $job_fs->getBestAssemblyFile(),
+			"--config " . $job_fs->getBestConfigFile(),
 			"--stats",
+			"--log",
 			$opt{simulate} ? "--simulate" : "",
 			$opt{improver_args},
 			$qst->isVerboseAsParam());
@@ -366,6 +355,7 @@ sub run_mass {
 		$opt{mass_args},
 		"--stats",
 		$opt{simulate} ? "--simulate" : "",
+		"--log",
 		"--config " . $mass_config
 	);
 

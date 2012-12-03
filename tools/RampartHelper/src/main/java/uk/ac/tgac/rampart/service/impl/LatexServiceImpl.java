@@ -21,20 +21,21 @@ public class LatexServiceImpl implements LatexService {
 		log.debug("Starting LaTeX document compilation procedure.");
 		
 		// Assumes latex is installed and pdflatex is on the path
-		File workingDir = new File(texFile.getParent());
 		String command = "pdflatex -interaction=nonstopmode " + texFile.getName();
 		
-		//log.debug("Executing " + command + " in " + workingDir.getPath());
 		log.debug("Executing \"" + command + "\"");
 
-		//Process process = Runtime.getRuntime().exec(command, new String[]{}, workingDir);
-		Process process = Runtime.getRuntime().exec(command);
-		ProcessStreamManager psm = new ProcessStreamManager(process, "PDFLATEX");
-
-		int code = psm.runInForeground(false);
-
-		if (code != 0) {
-			throw new IOException("PDFLATEX returned code " + code);
+		// We have to run Latex 3 times to ensure the document is fully compiled.
+		for(int i = 1; i <= 3; i++) {
+			// Assumes we are in the correct directory and output should go here too.
+			Process process = Runtime.getRuntime().exec(command);
+			ProcessStreamManager psm = new ProcessStreamManager(process, "PDFLATEX");
+	
+			int code = psm.runInForeground(false);
+	
+			if (code != 0) {
+				throw new IOException("PDFLATEX returned code " + code);
+			}
 		}
 		
 		log.debug("LaTeX document compiled successfully");

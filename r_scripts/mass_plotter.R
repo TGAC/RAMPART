@@ -23,16 +23,17 @@ avglen <- t1[,c(col1,'avglen')]
 n50 <- t1[,c(col1,'n50')]
 
 pdf(paste(outfile,sep=""))
-plot(nbcontigs, type="o")
-plot(apc, type="o")
-plot(cpc, type="o")
-plot(gpc, type="o")
-plot(npc, type="o")
-plot(total, type="o")
-plot(minlen, type="o")
-plot(maxlen, type="o")
-plot(avglen, type="o")
-plot(n50, type="o")
+plot(nbcontigs, type="o", ylab = "Number of Contigs")
+plot(apc, type="o", ylab = "A%")
+plot(cpc, type="o", ylab = "C%")
+plot(gpc, type="o", ylab = "G%")
+plot(tpc, type="o", ylab = "T%")
+plot(npc, type="o", ylab = "N%")
+plot(total, type="o", ylab = "Total Bases")
+plot(minlen, type="o", ylab = "Minimum Length")
+plot(maxlen, type="o", ylab = "Maximum Length")
+plot(avglen, type="o", ylab = "Average Length")
+plot(n50, type="o", ylab = "N50")
 dev.off()
 
 

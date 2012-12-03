@@ -51,7 +51,7 @@ public class RampartConfiguration {
 		FileUtils.writeStringToFile(outFile, sb.toString());
 	}
 
-	public Job getJobs() {
+	public Job getJob() {
 		return job;
 	}
 

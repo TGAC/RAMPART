@@ -25,9 +25,26 @@ public class Library implements Serializable {
 
 	public enum Usage {
 		
-		ASSEMBLY_ONLY,
-		SCAFFOLDING_ONLY,
-		ASSEMBLY_AND_SCAFFOLDING		
+		ASSEMBLY_ONLY {
+			@Override
+			public String toString() {
+				return "Assembly Only";
+			}
+		},
+		SCAFFOLDING_ONLY {
+			@Override
+			public String toString() {
+				return "Scaffolding Only";
+			}
+		},
+		ASSEMBLY_AND_SCAFFOLDING {
+			@Override
+			public String toString() {
+				return "Assembly and Scaffolding";
+			}
+		};
+		
+		public abstract String toString();
 	}
 	
 	public enum Dataset {

@@ -33,8 +33,13 @@ my $TP_VELVET = "velvet";
 my $TP_SOAP = "soapdenovo";
 my $DEF_TOOL_PATH = $TP_ABYSS;
 
+# Tool versions
+my $T_ABYSS_VERSION = "1.3.4";
+my $T_VELVET_VERSION = "x.x";
+my $T_SOAP_VERSION = "x.x";
+
 # Names
-my $ABYSS_NAME_PREFIX = "Abyss-mpi-k";
+my $ASM_NAME_PREFIX = "MASS-k";
 
 # Kmer constants
 my $KMER_MIN = 11;
@@ -79,6 +84,7 @@ GetOptions (
 	'kmax=i',
 	'stats',
 	'simulate|sim|s',
+	'log',
 	'help|usage|h|?',
 	'man'
 )
@@ -123,33 +129,28 @@ my $cfg = new Configuration( $opt{config} );
 
 # Assembly job loop
 my $tool = $qst->getTool();
+my $tool_version = "x.x";
 my $j = 0;
 
 # Create directory for links to assembled contigs
-my $contigs_dir = $output_dir . "/" . "contigs";
+my $contigs_dir = $output_dir . "/contigs";
 system("mkdir", $contigs_dir) unless (-e $contigs_dir);
+
+# Abyss automatically creates scaffolds so create a directory for links to assembled scaffolds
+my $scaffolds_dir = $output_dir . "/scaffolds";
+my $stat_scaffolds = 0;
+if ($tool eq $T_ABYSS) {
+	$stat_scaffolds = 1;
+	$tool_version = $T_ABYSS_VERSION;
+	system("mkdir", $scaffolds_dir) unless (-e $scaffolds_dir);	
+}
 
 
 for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 
 	my $i_dir = $output_dir . "/" . $i;
 	my $job_name = $job_prefix . "-k" . $i;
-
-	my $qst_ass = new QsOptions();
-	$qst_ass->setGridEngine($qst->getGridEngine());
-	$qst_ass->setTool($qst->getTool());
-	$qst_ass->setToolPath($qst->getToolPath());
-	$qst_ass->setProjectName($qst->getProjectName());
-	$qst_ass->setWaitCondition($qst->getWaitCondition());
-	$qst_ass->setQueue($qst->getQueue());
-	$qst_ass->setMemory($qst->getMemoryGB());
-	$qst_ass->setThreads($qst->getThreads());
-	$qst_ass->setVerbose($qst->isVerbose());
-
-	$qst_ass->setOutput($i_dir);
-	$qst_ass->setJobName($job_name);
-
-
+	my $qst_ass = createAssemblyJobOptions($i_dir, $job_name);
 	my $cmd_line;
 	
 	if ($tool eq $T_ABYSS) {
@@ -161,9 +162,14 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		$cmd_line = buildAbyssCmdLine($i);
 		
 		# Make links to assembled contigs at a predicatable location
-		my $abyss_config_file = "../" . $i . "/" . $ABYSS_NAME_PREFIX . $i . "-contigs.fa"; #Expected abyss contig file
-		my $sl_file = $contigs_dir . "/k" . $i . "-contigs.fa";	#Output file				
-		system("ln -s -f " . $abyss_config_file . " " . $sl_file);
+		my $abyss_config_file = "../" . $i . "/" . $ASM_NAME_PREFIX . $i . "-contigs.fa"; #Expected abyss contig file
+		my $contig_sl_file = $contigs_dir . "/k" . $i . "-contigs.fa";	#Output file				
+		system("ln -s -f " . $abyss_config_file . " " . $contig_sl_file);
+		
+		# Make links to assembled scaffolds at a predicatable location
+		my $abyss_scaffold_file = "../" . $i . "/" . $ASM_NAME_PREFIX . $i . "-scaffolds.fa"; #Expected abyss scaffold file
+		my $scaffold_sl_file = $scaffolds_dir . "/k" . $i . "-scaffolds.fa";	#Output file				
+		system("ln -s -f " . $abyss_scaffold_file . " " . $scaffold_sl_file);
 	}
 	elsif ($tool eq $T_VELVET) {
 		die "Error: Velvet not implemented yet\n\n";
@@ -175,8 +181,15 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		die "Error: Invalid assembler requested.  Also, the script should not have got this far!!!.\n\n";
 	}
 
-	# Make the output directory for this child job and go into it (make sure we're in the workdir before doing anything tho!!)
-	system("mkdir", $i_dir) unless (-e $i_dir);
+	# Make the output directory for this child job (clean the directory if it exists)
+	if (-e $i_dir) {
+		system("rm -R -f " . $i_dir . "/*");	
+	}
+	else {
+		system("mkdir", $i_dir) unless ();
+	}
+	
+	# Go into the output dir for this job
   	chdir $i_dir;
 
 	# Submit the job
@@ -185,7 +198,7 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	# Go back to the working directory
 	chdir $PWD;
 	
-
+	# Increment the kmer
 	if ($j % 2) {
 		$i += 6;
 	}
@@ -203,32 +216,53 @@ chdir $PWD;
 
 # If requested, produce statistics and graphs for this run
 if ($opt{stats}) {
-
-	my $gp_tool_arg = "--tool mass_gp";
-	my $gp_wc_arg = "--wait_condition " . "'ended(" . $job_prefix . "-k*)'"; # This presumes an LSF wait condition, modify to handle this better in the future.
-	my $gp_job_arg = "--job_name " . $job_prefix . "-stats";
-	my $gp_input_arg = "--input " .  $contigs_dir;
-	my $gp_output_arg = "--output " . $output_dir;
-
-	my $mgp_cmd_line = 	$MASS_GP_PATH . " " .
-						$qst->getGridEngineAsParam() . " " .
-						$gp_tool_arg . " " .
-						$qst->getProjectNameAsParam() . " " .
-						$qst->getQueueAsParam() . " " .
-						$gp_wc_arg . " " .
-						$gp_job_arg . " " .
-						$qst->isVerboseAsParam() . " " .
-						$gp_input_arg . " " .
-						$gp_output_arg;
-
-	system($mgp_cmd_line);
+	
+	# Create the job options	
+	my $qst_stats = createStatJobOptions();
+	
+	# Create the command line
+	my @stat_args;
+	push @stat_args, buildStatCmdLine($contigs_dir);
+	push @stat_args, buildStatCmdLine($scaffolds_dir) if $stat_scaffolds;
+	
+	my $stat_cmd_line = join "; ", @stat_args;
+	
+	# Submit the stat job
+	SubmitJob::submit($qst_stats, $stat_cmd_line);
 }
 
 
+if ($opt{log}) {
+	open (LOGFILE, ">", $output_dir . "/mass.log");
+	print LOGFILE "[MASS]\n";
+	print LOGFILE "tool=" . $tool . "\n";
+	print LOGFILE "version=" . $tool_version . "\n";
+	print LOGFILE "kmin=" . $opt{kmin} . "\n";
+	print LOGFILE "kmax=" . $opt{kmax} . "\n";
+	close(LOGFILE);
+}
 
-# Script finished successfully... but the jobs will still be running
+
+# Script finished successfully... but the jobs will still be running...
 
 exit 0;
+
+
+sub buildStatCmdLine {
+	my ($stat_dir) = @_;
+	
+	my @mgp_args = grep {$_} (
+		$MASS_GP_PATH,
+		"--grid_engine NONE",
+		$qst->isVerboseAsParam(),
+		"--input " .  $stat_dir,
+		"--output " . $stat_dir
+	);
+	
+	my $mgp_cmd_line = join " ", @mgp_args;
+	
+	return $mgp_cmd_line;
+}
 
 
 sub buildAbyssCmdLine {
@@ -239,7 +273,7 @@ sub buildAbyssCmdLine {
 	my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
 	my $abyss_threads = "np=" . $qst->getThreads();
 	my $abyss_kmer = "k=" . $kmer;
-	my $abyss_out_prefix = "name=" . $ABYSS_NAME_PREFIX . $kmer;
+	my $abyss_out_prefix = "name=" . $ASM_NAME_PREFIX . $kmer;
 	
 	# Process configuration file to build list of libraries to assemble
 	my @libs = ();
@@ -281,6 +315,43 @@ sub buildAbyssCmdLine {
 	return $cmd_line;
 }
 
+
+sub createAssemblyJobOptions {
+	
+	my ($i_dir, $job_name) = @_;
+	
+	my $qst_ass = new QsOptions();
+	$qst_ass->setGridEngine($qst->getGridEngine());
+	$qst_ass->setTool($qst->getTool());
+	$qst_ass->setToolPath($qst->getToolPath());
+	$qst_ass->setProjectName($qst->getProjectName());
+	$qst_ass->setWaitCondition($qst->getWaitCondition());
+	$qst_ass->setQueue($qst->getQueue());
+	$qst_ass->setMemory($qst->getMemoryGB());
+	$qst_ass->setThreads($qst->getThreads());
+	$qst_ass->setVerbose($qst->isVerbose());
+
+	$qst_ass->setOutput($i_dir);
+	$qst_ass->setJobName($job_name);
+	
+	return $qst_ass;
+}
+
+sub createStatJobOptions {
+	
+	my $gp_wc_arg = "ended(" . $job_prefix . "-k*)"; # This presumes an LSF wait condition, modify to handle this better in the future.
+	my $gp_job_arg = $job_prefix . "-stats";
+	
+	my $qst_stats = new QsOptions();
+	$qst_stats->setGridEngine($qst->getGridEngine());
+	$qst_stats->setProjectName($qst->getProjectName());
+	$qst_stats->setWaitCondition($gp_wc_arg);
+	$qst_stats->setQueue($qst->getQueue());
+	$qst_stats->setVerbose($qst->isVerbose());
+	$qst_stats->setJobName($gp_job_arg);
+	
+	return $qst_stats;
+}
 
 sub validKmer {
 	my $val_in = $_[0];
@@ -388,6 +459,10 @@ Produces output statistics and graphs comparing each assembly job produced.
 =item B<--simulate>,B<--sim>,B<-s>
 
 Runs the script as normal except that the assembly jobs are not submitted.
+
+=item B<--log>
+
+Whether to log the mass scripts settings in a file called F<mass.log> in the directory specified with the B<--output> argument. 
 
 =item B<--help>,B<--usage>,B<-h>,B<-?>
 

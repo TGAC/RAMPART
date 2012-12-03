@@ -63,8 +63,13 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		log.debug("Copied common resources to report directories");
 		
 		// Create the plot files which are to be used in the report
-		this.rampartJobService.seperatePlots(jobFS.getMassPlotsFile(), jobFS.getReportImagesDir());
-		log.debug("Seperated plots into seperate files for report");
+		this.rampartJobService.seperatePlots(jobFS.getMassPlotsFile(), jobFS.getReportImagesDir(), "Mass");
+		log.debug("Seperated Mass plots into seperate files for report");
+		
+		// Create the plot files which are to be used in the report
+		this.rampartJobService.seperatePlots(jobFS.getImproverPlotsFile(), jobFS.getReportImagesDir(), "Improver");
+		log.debug("Seperated Improver plots into seperate files for report");
+
 
 		// Merge the template and context
 		this.velocityMergerService.merge(jobFS.getReportTemplateFile(), context, jobFS.getReportMergedFile());
