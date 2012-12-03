@@ -11,6 +11,7 @@
 \usepackage{listings}
 \usepackage{numprint}
 \npthousandsep{,}
+\npdecimalsign{.}
 
 \usepackage{caption}
 \DeclareCaptionFont{white}{\color{white}}
@@ -108,7 +109,7 @@ The job requested the raw sequenced libraries specified in Table \ref{tab:librar
 \begin{table}[h]
 \begin{tabular}{lrrll}
 \toprule
-Library Name & Maximum Read Length & Average Read Length & Usage & Orientation \\ \midrule
+Library Name & Max Read Length & Avg Read Length & Usage & Orientation \\ \midrule
 #foreach($lib in $job.libsRaw)
 $lib.name & $lib.readLength & $lib.averageInsertSize & $lib.usage.toString() & $lib.seqOrientation \\
 #end
@@ -121,19 +122,19 @@ $lib.name & $lib.readLength & $lib.averageInsertSize & $lib.usage.toString() & $
 \begin{table}[h]
 \begin{tabular}{lllrrrr}
 \toprule
-Library & Dataset & File & Total Unpaired Reads & \%GC & Total Bases & Estimated Coverage  \\ \midrule
+Library & Dataset & File & \# Reads & \%GC & Total Bases & Est. Coverage  \\ \midrule
 #foreach($lib in $job.libsRaw)
-$lib.name & $lib.dataset & PE1 & \numprint{$lib.filePaired1.seqCount} & $lib.filePaired1.gCContent & \numprint{$lib.filePaired1.baseCount} & $0 \times$ \\ 
-$lib.name & $lib.dataset & PE2 & \numprint{$lib.filePaired2.seqCount} & $lib.filePaired2.gCContent & \numprint{$lib.filePaired2.baseCount} & $0 \times$ \\
+$lib.name & $lib.dataset & PE1 & \numprint{$lib.filePaired1.seqCount} & \nprounddigits{2} $\numprint{$lib.filePaired1.gCContent}$ \npnoround & \numprint{$lib.filePaired1.baseCount} & $0 \times$ \\ 
+$lib.name & $lib.dataset & PE2 & \numprint{$lib.filePaired2.seqCount} & \nprounddigits{2} $\numprint{$lib.filePaired2.gCContent}$ \npnoround & \numprint{$lib.filePaired2.baseCount} & $0 \times$ \\
 #if( $lib.seFile )
-$lib.name & $lib.dataset & SE & \numprint{$lib.seFile.seqCount} & $lib.seFile.gCContent & \numprint{$lib.seFile.baseCount} & $ xxx \times$ \\
+$lib.name & $lib.dataset & SE & \numprint{$lib.seFile.seqCount} & \nprounddigits{2} $\numprint{$lib.seFile.gCContent}$ \npnoround & \numprint{$lib.seFile.baseCount} & $ xxx \times$ \\
 #end
 #end
 #foreach($lib in $job.libsQt)
-$lib.name & $lib.dataset & PE1 & \numprint{$lib.filePaired1.seqCount} & $lib.filePaired1.gCContent & \numprint{$lib.filePaired1.baseCount} & $0 \times$ \\ 
-$lib.name & $lib.dataset & PE2 & \numprint{$lib.filePaired2.seqCount} & $lib.filePaired2.gCContent & \numprint{$lib.filePaired2.baseCount} & $0 \times$ \\
+$lib.name & $lib.dataset & PE1 & \numprint{$lib.filePaired1.seqCount} & \nprounddigits{2} $\numprint{$lib.filePaired1.gCContent}$ \npnoround & \numprint{$lib.filePaired1.baseCount} & $0 \times$ \\ 
+$lib.name & $lib.dataset & PE2 & \numprint{$lib.filePaired2.seqCount} & \nprounddigits{2} $\numprint{$lib.filePaired2.gCContent}$ \npnoround & \numprint{$lib.filePaired2.baseCount} & $0 \times$ \\
 #if( $lib.seFile )
-$lib.name & $lib.dataset & SE & \numprint{$lib.seFile.seqCount} & $lib.seFile.gCContent & \numprint{$lib.seFile.baseCount} & $ xxx \times$ \\
+$lib.name & $lib.dataset & SE & \numprint{$lib.seFile.seqCount} & \nprounddigits{2} $\numprint{$lib.seFile.gCContent}$ \npnoround & \numprint{$lib.seFile.baseCount} & $ xxx \times$ \\
 #end
 #end
 \bottomrule
@@ -156,7 +157,7 @@ The datasets we assembled the reads by $tool.massName $tool.massVersion using a 
 \includegraphics[height=5cm]{Mass_AL.pdf} & \includegraphics[height=5cm]{Mass_ML.pdf} & \includegraphics[height=5cm]{Mass_N50.pdf} 
 \end{tabular}
 \end{center}
-\caption{Plots showing various assembly size metrics against kmer value. Black lines represent the Raw Dataset.  Red lines the quality trimmed dataset. }
+\caption{Plots showing various assembly size metrics against kmer value. Black lines represent the Raw Dataset.  Red lines the quality trimmed dataset.}
 \label{fig:contig_assembly_graphs}
 \end{table}
 
