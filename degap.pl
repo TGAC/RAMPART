@@ -25,10 +25,16 @@ my $T_IMAGE      = "image";
 my $T_GAP_FILLER = "gapfiller";
 my $DEF_TOOL     = $T_GAP_CLOSER;
 
+# Tool path constants
 my $TP_GAP_CLOSER = "GapCloser";
 my $TP_IMAGE      = "image";
 my $TP_GAP_FILLER = "gapfiller";
 my $DEF_TOOL_PATH = $TP_GAP_CLOSER;
+
+# Tool versions
+my $T_GAP_CLOSER_VERSION = "1.12";
+my $T_IMAGE_VERSION = "x.x";
+my $T_GAP_FILLER_VERSION = "x.x";
 
 # Command constants
 my $GC_SOURCE_CMD = AppStarter::getAppInitialiser("GAP_CLOSER");

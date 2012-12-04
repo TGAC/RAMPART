@@ -30,6 +30,10 @@ my $TP_SSPACE = "/common/software/SSPACE-BASIC-2.0/x86_64/bin/SSPACE_Basic_v2.0.
 my $TP_GRASS = "grass";
 my $DEF_TOOL_PATH = $TP_SSPACE;
 
+# Tool versions
+my $T_SSPACE_VERSION = "2.0-Basic";
+my $T_GRASS_VERSION = "x.x";
+
 # Command constants
 my $SSPACE_SOURCE_CMD = AppStarter::getAppInitialiser("SSPACE");
 my $PERL_SOURCE_CMD = AppStarter::getAppInitialiser("PERL");
