@@ -97,7 +97,7 @@ The job requested the raw sequenced libraries specified in Table \ref{tab:librar
 \begin{table}[h]
 \begin{tabular}{lrrll}
 \toprule
-Library Name & Max Read Length & Avg Read Length & Usage & Orientation \\ \midrule
+Library Name & Max Read Length & Avg Insert Size & Usage & Orientation \\ \midrule
 #foreach($lib in $job.libsRaw)
 $lib.name & $lib.readLength & $lib.averageInsertSize & $lib.usage.toString() & $lib.seqOrientation \\
 #end
