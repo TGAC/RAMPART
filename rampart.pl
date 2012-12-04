@@ -39,7 +39,7 @@ my $MASS_PATH = $RAMPART_DIR . "mass.pl";
 my $MASS_SELECTOR_PATH = $RAMPART_DIR . "mass_selector.pl";
 my $GETBEST_PATH = $RAMPART_DIR . "get_best.pl";
 my $IMPROVER_PATH = $RAMPART_DIR . "improver.pl";
-my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.2.one-jar.jar";
+my $HELPER_PATH = $RAMPART_DIR . "tools/RampartHelper/target/RampartHelper-0.3.one-jar.jar";
 
 my $SOURCE_JAVA = AppStarter::getAppInitialiser("JRE");
 my $SOURCE_LATEX = AppStarter::getAppInitialiser("LATEX");

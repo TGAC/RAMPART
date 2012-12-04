@@ -1,0 +1,111 @@
+RAMPART README
+
+Version: 0.3
+Date: 3rd December 2012
+
+
+What does RAMPART do?:
+
+RAMPART automates an first pass assembly pipeline.  The pipeline can be divided into a number of steps:
+
+1 - Create a quality trimmed version of the raw input libraries.
+2 - Perform a kmer optimisation procedure where multiple contig assemblies are execute with a range of kmer values.  
+The best assembly is selected for the next stage.
+3 - Enhance the best contig assembly using scaffolding, gap closing and other post-processing features.
+4 - Reporting and persisting job information.  
+
+
+
+Installation:
+
+Copy and extract the RAMPART deliverable to a directory of your choice.  Add this directory to your PATH environment variable.
+
+
+
+Quick start:
+
+1. Ensure the RAMPART root directory is on the path.  
+2. Create a job configuration file (details below) in a clean directory.  
+3. Then make this directory the working directory and type: "rampart.pl --config <name of config file>"
+
+This will run RAMPART with its default settings on the data you've provided in the config file.
+
+More information on RAMPART usage can be obtained by typing "rampart.pl --man".
+
+
+
+Config file:
+
+An example configuration file can be found in "<rampart dir>/example.cfg".  The configuration file takes a standard "ini" format and
+is divided into the following sections: 
+
+- [JOB] - which contains all general information regarding the job to be run.  Information in
+this section is used for building an automatic report at the end of the assembly process.  
+
+- [LIB<x>] - which represents a library that should be processed by RAMPART.  The <x> represents the order in which this library should
+be processed.  Generally, we start with [LIB1] and increment this value as necessary.
+
+Each section can contain properties, which take the following format: "<key>=<value>".  Each property should be separated by a new line.  
+
+The job section can contain the following properties:
+
+- "author"        - The author of the job / report
+- "collaborator"  - Any partner who is involved with this job.
+- "institution"   - The institution for whom the collaborator works.
+- "title"         - The title of this job
+- "jira_seqinfo"  - For linking to TGAC ticketing service
+- "miso_id"       - For linking to TGAC MISO LIMS. 
+
+Each lib section can contain the following properties:
+
+- "name"                 - The library name, for use in the report.
+- "read_length"          - The maximum read length for reads in this library
+- "avg_insert_size"      - The average insert size for paired end or mate pair reads
+- "insert_err_tolerance" - Used in the scaffolding step to determine how tolerant the scaffolder should be when mapping reads that deviate 
+from the expected insert_size
+- "usage"                - One of the following values: "ASSEMBLY_ONLY", "SCAFFOLDING_ONLY", "ASSEMBLY_AND_SCAFFOLDING".
+- "seq_orientation"      - One of the following values: "FR", "RF", "FF", "RR". 
+- "file_paired_1"        - If this is a paired end or mate pair library, this represents the first file of the pair.
+- "file_paired_2"        - If this is a paired end of mate pair library, this represents the second file of the pair.
+- "se_file"              - For use if this is a single end read library.
+
+
+
+Output:
+
+A typical RAMPART run will produce the following directory structure:
+
+- /reads    - A directory containing quality trimmed versions of the input libraries and custom configuration files representing both the raw and 
+quality trimmed datasets.
+- /mass     - A directory containing the results of assembling the raw and qt trimmed input libraries.  
+- /improver - A directory containing the results of the assembly enhancement process applied to the best contig assembly from MASS.
+- /report   - A directory containing an automatically generated report detailing the results of this RAMPART job.  
+
+
+
+
+Managing dependencies:
+
+RAMPART uses a number of 3rd party tools during processing.  The current list is described below.  For full functionality, all these
+tools should be available in your environment:
+
+Quality Trimming: sickle 1.1, ...
+Assembly: abyss 1.3.4, ...
+Scaffolding: SSPACE basic v2.0, ...
+Degapping: SOAP Gap Closer 1.12, ...
+Java: JRE 1.6
+LaTeX: texlive 2012, ...
+
+Often it's not possible to keep all these tools with the specified versions on the PATH.  There is a file in the rampart root directory called: 
+"grid_engine_app_startup.cfg", which enables the user to execute any commands that would bring the specified tools onto the PATH.  The current
+version of the file is intended for use on the TGAC cluster.
+
+
+Additional Tools:
+
+
+
+Contact:
+Daniel Mapleson (TGAC)
+http://tgac.ac.uk/
+daniel.mapleson@tgac.ac.uk
