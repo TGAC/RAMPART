@@ -5,6 +5,7 @@
 # 2 - quality trimmed statistics file
 # 3 - approximate genome size
 # 4 - output directory
+# 5 - weighting file
 
 args <- commandArgs(trailingOnly = TRUE)
 print(paste("Argument:", args, sep=" "))
@@ -13,13 +14,15 @@ raw_stats <- args[1]
 qt_stats <- args[2]
 approx_genome_size <- as.numeric(args[3])
 output_dir <- args[4]
+weightings_file <- args[5]
 
 
 # Load statistics into data frames
-
 raw <- read.table(raw_stats, header = TRUE, sep="|", quote = "")
 qt <- read.table(qt_stats, header = TRUE, sep="|", quote = "")
 
+# Load weightings into data frame
+weightings <- read.table(weightings_file, header = TRUE, sep="|", quote = "")
 
 # Merge the tables into 1
 raw$dataset <- "raw"
@@ -59,14 +62,6 @@ print(paste("Written norm_tab table to: ", norm_tab_file))
 
 
 # Apply weightings.  Weightings should add up to 100
-
-weightings <- data.frame(
-	nbcontigs = c(20),
-	#total = c(30),
-	minlen = c(0),
-	avglen = c(5),
-	maxlen = c(20),
-	n50 = c(25))
 
 weighting_tab <- norm_tab
 

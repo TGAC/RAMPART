@@ -10,6 +10,7 @@ public class PlotFileStructure {
 	private static final String FILENAME_SUFFIX_AVG_LEN 	= "_AL.pdf";
 	private static final String FILENAME_SUFFIX_MAX_LEN 	= "_ML.pdf";
 	private static final String FILENAME_SUFFIX_N50 		= "_N50.pdf";
+	private static final String FILENAME_SUFFIX_SCORES		= "_Scores.pdf";
 	
 	private File plots;
 	private File outputDir;
@@ -21,6 +22,7 @@ public class PlotFileStructure {
 	private File avgLenFile;
 	private File maxLenFile;
 	private File n50File;
+	private File scoreFile;
 	
 	public PlotFileStructure(File plots, File outputDir, String filenamePrefix) {
 		this.plots = plots;
@@ -39,6 +41,7 @@ public class PlotFileStructure {
 		this.avgLenFile = new File(outDir + FILENAME_SUFFIX_AVG_LEN);
 		this.maxLenFile = new File(outDir + FILENAME_SUFFIX_MAX_LEN);
 		this.n50File = new File(outDir + FILENAME_SUFFIX_N50);
+		this.scoreFile = new File(outDir + FILENAME_SUFFIX_SCORES);
 	}
 
 	public File getPlots() {
@@ -71,5 +74,9 @@ public class PlotFileStructure {
 
 	public File getN50File() {
 		return n50File;
+	}
+	
+	public File getScoreFile() {
+		return scoreFile;
 	}
 }

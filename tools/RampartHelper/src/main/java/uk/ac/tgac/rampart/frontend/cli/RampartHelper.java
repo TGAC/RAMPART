@@ -47,7 +47,7 @@ public class RampartHelper {
 
 		
 		// Analyse the rampart job directory and build the job context object 
-		VelocityContext context = this.rampartJobService.buildContext(this.rhOptions.getJobDir());
+		VelocityContext context = this.rampartJobService.buildContext(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir());
 		
 		// Build the report
 		if (this.rhOptions.doReport()) {

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.velocity.VelocityContext;
 
+import uk.ac.tgac.rampart.data.AssemblyStats;
 import uk.ac.tgac.rampart.data.ImproverStats;
 import uk.ac.tgac.rampart.data.Library;
 import uk.ac.tgac.rampart.data.MassStats;
@@ -25,9 +26,11 @@ public interface RampartJobService {
 	
 	List<ImproverStats> getImproverStats(File in) throws IOException;
 	
+	AssemblyStats getWeightings(File in) throws IOException;
+	
 	void calcReadStats(List<Library> libs) throws IOException;
 	
-	VelocityContext buildContext(File jobDir) throws IOException;
+	VelocityContext buildContext(File jobDir, File rampartDir) throws IOException;
 	
 	RampartSettings determineSettings(RampartJobFileStructure job) throws IOException;
 	

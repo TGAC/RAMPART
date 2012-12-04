@@ -35,7 +35,7 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		
 		// Gather statistics and other variables
 		log.info("Gathering job context for report");
-		VelocityContext vc = this.rampartJobService.buildContext(jobDir);
+		VelocityContext vc = this.rampartJobService.buildContext(jobDir, projectDir);
 		log.info("Gathered job context for report");
 		
 		buildReport(jobDir, projectDir, vc);

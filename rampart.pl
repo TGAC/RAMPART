@@ -54,7 +54,7 @@ my (%opt) = (	"qt",				1,
 				"mass", 			1,
 				"improver",			1,
 				"mass_selector", 	1,
-				"persist",			1,
+				"persist",			0,
 				"report",			1 );
 	
 

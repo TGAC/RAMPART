@@ -16,6 +16,7 @@ public class RampartProjectFileStructure {
 	
 	// Important Files
 	private File reportTemplateFile;
+	private File weightingsFile;
 	
 	
 	public RampartProjectFileStructure(File rampartDir) {
@@ -34,6 +35,7 @@ public class RampartProjectFileStructure {
 		this.dataReportImagesDir = new File(dataReportDir.getPath() + "/images");
 		
 		this.reportTemplateFile = new File(this.dataReportDir.getPath() + "/template.tex");
+		this.weightingsFile = new File(rampartDir.getPath() + "/weightings.tab");
 	}
 	
 	
@@ -78,6 +80,9 @@ public class RampartProjectFileStructure {
 		return reportTemplateFile;
 	}
 
+	public File getWeightingsFile() {
+		return weightingsFile;
+	}
 
 	
 }

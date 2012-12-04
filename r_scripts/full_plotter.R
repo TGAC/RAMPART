@@ -57,4 +57,8 @@ n50_range <- range(raw$n50, qt$n50)
 plot(n50 ~ kmer, data = raw, type = "l", ylab = "N50", ylim=n50_range)
 lines(qt$kmer, qt$n50, col = "red")
 
+score_range <- range(raw$score, qt$score)
+plot(score~ kmer, data = raw, type = "l", ylab = "Score", ylim=score_range)
+lines(qt$kmer, qt$score, col = "red")
+
 dev.off()

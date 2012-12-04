@@ -24,6 +24,7 @@ use AppStarter;
 my $PWD = getcwd;
 my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 my $R_DIR = $RAMPART_DIR . "r_scripts/";
+my $WEIGHTINGS_FILE = $RAMPART_DIR . "weightings.tab";
 my $DEF_OUT = $PWD . "/mass_selector.rout";
 
 
@@ -66,20 +67,21 @@ die "Error: No qt stats file was specified\n\n" unless $opt{qt_stats_file};
 
 # Produce stats and select best assembly from both datasets
 
-my $merged_file = $qso->getOutput() . "/merged.tab";	# This file produced by the mass selector R scripts contains the stats for both datasets
+my $score_file = $qso->getOutput() . "/score.tab";	# This file produced by the mass selector R scripts contains the stats for both datasets
 my $plot_file = $qso->getOutput() . "/plots.pdf";
 
 my @r_select_script_args = (
 	$opt{raw_stats_file},
 	$opt{qt_stats_file},
 	$opt{approx_genome_size} ? $opt{approx_genome_size} : "0",
-	$qso->getOutput()
+	$qso->getOutput(),
+	$WEIGHTINGS_FILE
 );
 my $r_select_args = join " ", @r_select_script_args;
 my $r_select_cmd_line = "R CMD BATCH '--args " . $r_select_args  . "' " . $MASS_SELECTOR_R . " " .  $qso->getOutput() . "/select_log.rout";
 
 my @r_plot_args = (
-	$merged_file,
+	$score_file,
 	$plot_file
 );
 my $r_plot_args = join " ", @r_plot_args;
