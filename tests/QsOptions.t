@@ -3,6 +3,10 @@
 use strict;
 use warnings;
 
+# Add rampart modules directory to @INC
+use FindBin;
+use lib "$FindBin::Bin/../modules";
+
 use Test::More tests => 14;
 
 use lib '../scripts';
