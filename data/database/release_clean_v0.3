@@ -1,0 +1,169 @@
+-- MySQL dump 10.13  Distrib 5.5.28, for debian-linux-gnu (x86_64)
+--
+-- Host: localhost    Database: rampart
+-- ------------------------------------------------------
+-- Server version	5.5.28-0ubuntu0.12.04.2
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `assembly_stats`
+--
+
+DROP TABLE IF EXISTS `assembly_stats`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `assembly_stats` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `job_id` bigint(20) DEFAULT NULL,
+  `file_path` varchar(256) DEFAULT NULL,
+  `nb_contigs` bigint(20) DEFAULT NULL,
+  `nb_bases` bigint(20) DEFAULT NULL,
+  `a_perc` double DEFAULT NULL,
+  `c_perc` double DEFAULT NULL,
+  `g_perc` double DEFAULT NULL,
+  `t_perc` double DEFAULT NULL,
+  `n_perc` double DEFAULT NULL,
+  `n50` bigint(20) DEFAULT NULL,
+  `min_len` bigint(20) DEFAULT NULL,
+  `avg_len` double DEFAULT NULL,
+  `max_len` bigint(20) DEFAULT NULL,
+  `assembly_type` varchar(45) DEFAULT NULL,
+  `kmer` int(11) DEFAULT NULL,
+  `dataset` varchar(45) DEFAULT NULL,
+  `score` double DEFAULT NULL,
+  `best` bit(1) DEFAULT NULL,
+  `stage` int(11) DEFAULT NULL,
+  `final` bit(1) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=278 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `job`
+--
+
+DROP TABLE IF EXISTS `job`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `job` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `author` varchar(45) DEFAULT NULL,
+  `collaborator` varchar(45) DEFAULT NULL,
+  `institution` varchar(45) DEFAULT NULL,
+  `title` varchar(45) DEFAULT NULL,
+  `jira_seqinfo_id` bigint(20) DEFAULT NULL,
+  `miso_id` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `library`
+--
+
+DROP TABLE IF EXISTS `library`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `library` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) DEFAULT NULL,
+  `dataset` varchar(45) DEFAULT NULL,
+  `avg_insert_size` int(11) DEFAULT NULL,
+  `insert_err_tolerance` varchar(45) DEFAULT NULL,
+  `read_length` int(11) DEFAULT NULL,
+  `lib_usage` varchar(45) DEFAULT NULL,
+  `seq_orientation` varchar(45) DEFAULT NULL,
+  `process_order` int(11) DEFAULT NULL,
+  `job_id` bigint(20) DEFAULT NULL,
+  `file_paired_1` bigint(20) DEFAULT NULL,
+  `file_paired_2` bigint(20) DEFAULT NULL,
+  `file_se` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `job_id` (`job_id`),
+  KEY `file_paired_1` (`file_paired_1`),
+  KEY `file_paired_2` (`file_paired_2`),
+  KEY `file_se` (`file_se`),
+  CONSTRAINT `file_paired_1` FOREIGN KEY (`file_paired_1`) REFERENCES `seq_file` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `file_paired_2` FOREIGN KEY (`file_paired_2`) REFERENCES `seq_file` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `file_se` FOREIGN KEY (`file_se`) REFERENCES `seq_file` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `job_id` FOREIGN KEY (`job_id`) REFERENCES `job` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `seq_file`
+--
+
+DROP TABLE IF EXISTS `seq_file`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `seq_file` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `file_path` varchar(256) DEFAULT NULL,
+  `file_type` varchar(45) DEFAULT NULL,
+  `library_id` bigint(20) DEFAULT NULL,
+  `base_count` bigint(20) DEFAULT NULL,
+  `seq_count` bigint(20) DEFAULT NULL,
+  `a_count` bigint(20) DEFAULT NULL,
+  `c_count` bigint(20) DEFAULT NULL,
+  `g_count` bigint(20) DEFAULT NULL,
+  `t_count` bigint(20) DEFAULT NULL,
+  `n_count` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `library_id` (`library_id`),
+  CONSTRAINT `library_id` FOREIGN KEY (`library_id`) REFERENCES `library` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `settings` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `job_id` bigint(20) DEFAULT NULL,
+  `rampart_version` varchar(45) DEFAULT NULL,
+  `qt_tool` varchar(45) DEFAULT NULL,
+  `qt_tool_version` varchar(45) DEFAULT NULL,
+  `qt_threshold` double DEFAULT NULL,
+  `qt_minlen` int(11) DEFAULT NULL,
+  `mass_tool` varchar(45) DEFAULT NULL,
+  `mass_tool_version` varchar(45) DEFAULT NULL,
+  `mass_kmin` int(11) DEFAULT NULL,
+  `mass_kmax` int(11) DEFAULT NULL,
+  `imp_iterations` int(11) DEFAULT NULL,
+  `imp_scf_tool` varchar(45) DEFAULT NULL,
+  `imp_scf_tool_version` varchar(45) DEFAULT NULL,
+  `imp_degap_tool` varchar(45) DEFAULT NULL,
+  `imp_degap_tool_version` varchar(45) DEFAULT NULL,
+  `imp_dedup` bit(1) DEFAULT NULL,
+  `imp_clip` bit(1) DEFAULT NULL,
+  `imp_clip_minlen` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2012-12-05 13:50:50

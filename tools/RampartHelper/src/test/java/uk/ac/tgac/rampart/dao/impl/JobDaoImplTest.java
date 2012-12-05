@@ -21,6 +21,7 @@ import uk.ac.tgac.rampart.dao.impl.JobDaoImpl;
 import uk.ac.tgac.rampart.data.ImproverStats;
 import uk.ac.tgac.rampart.data.Job;
 import uk.ac.tgac.rampart.data.Library;
+import uk.ac.tgac.rampart.data.RampartSettings;
 import uk.ac.tgac.rampart.data.Library.Dataset;
 import uk.ac.tgac.rampart.data.Library.Usage;
 import uk.ac.tgac.rampart.data.MassStats;
@@ -122,6 +123,25 @@ public class JobDaoImplTest {
 		List<ImproverStats> isList = new ArrayList<ImproverStats>();
 		isList.add(i1);
 		
+		RampartSettings rs = new RampartSettings();
+		rs.setRampartVersion("0.2");
+		rs.setQtTool("sickle");
+		rs.setQtToolVersion("1.1");
+		rs.setQtThreshold(0.3);
+		rs.setQtMinLen(75);
+		rs.setMassTool("abyss");
+		rs.setMassToolVersion("1.3.4");
+		rs.setMassKmin(41);
+		rs.setMassKmax(95);
+		rs.setImpIterations(2);
+		rs.setImpScfTool("sspace");
+		rs.setImpScfToolVersion("2.0-Basic");
+		rs.setImpDegapTool("gapcloser");
+		rs.setImpDegapToolVersion("1.12");
+		rs.setImpDedup(Boolean.FALSE);
+		rs.setImpClip(Boolean.TRUE);
+		rs.setImpClipMinLen(1000);
+				
 		
 		Job j = new Job();
 		j.setAuthor("test_author");
@@ -134,6 +154,7 @@ public class JobDaoImplTest {
 		j.setLibsQt(qtList);
 		j.setMassStats(msList);
 		j.setImproverStats(isList);
+		j.setRampartSettings(rs);
 		
 				
 		long count = jd.count(); 
@@ -144,8 +165,4 @@ public class JobDaoImplTest {
 		assertNotNull(j.getId());
 	}
 	
-	
-	
-	
-
 }

@@ -3,9 +3,22 @@ package uk.ac.tgac.rampart.data;
 import java.io.File;
 import java.io.IOException;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
 
+@Entity
+@Table(schema="rampart",name="settings")
 public class RampartSettings {
 
 	public static final String SECT_RAMPART	 					= "rampart";
@@ -22,31 +35,71 @@ public class RampartSettings {
 	public static final String KEY_MASS_KMAX 					= "kmax";
 	public static final String SECT_IMPROVER					= "IMPROVER";
 	public static final String KEY_IMPROVER_ITERATIONS 			= "iterations";
-	public static final String KEY_IMPROVER_SCAFFOLDING_NAME	= "scaffolding.tool";
+	public static final String KEY_IMPROVER_SCAFFOLDING_TOOL	= "scaffolding.tool";
 	public static final String KEY_IMPROVER_SCAFFOLDING_VERSION	= "scaffolding.version";
-	public static final String KEY_IMPROVER_DEGAP_NAME			= "degap.tool";
+	public static final String KEY_IMPROVER_DEGAP_TOOL			= "degap.tool";
 	public static final String KEY_IMPROVER_DEGAP_VERSION		= "degap.version";
 	public static final String KEY_IMPROVER_DEDUP				= "dedup";
 	public static final String KEY_IMPROVER_CLIP				= "clip";
 	public static final String KEY_IMPROVER_CLIP_MINLEN			= "clip.minlen";
 	
-
+	@Id 
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Long 	id;
+	
+	@OneToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@JoinColumn(name="job_id", referencedColumnName="id")
+	private Job job;
+	
+	@Column(name="rampart_version")
 	private String 	rampartVersion;
-	private String 	qtName;
-	private String 	qtVersion;
+	
+	@Column(name="qt_tool")
+	private String 	qtTool;
+	
+	@Column(name="qt_tool_version")
+	private String 	qtToolVersion;
+	
+	@Column(name="qt_threshold")
 	private Double 	qtThreshold;
+	
+	@Column(name="qt_minlen")
 	private Integer qtMinLen;
-	private String 	massName;
-	private String 	massVersion;
+	
+	@Column(name="mass_tool")
+	private String 	massTool;
+	
+	@Column(name="mass_tool_version")
+	private String 	massToolVersion;
+	
+	@Column(name="mass_kmin")
 	private Integer massKmin;
+	
+	@Column(name="mass_kmax")
 	private Integer massKmax;
+	
+	@Column(name="imp_iterations")
 	private Integer impIterations;
-	private String 	impScfName;
-	private String 	impScfVersion;
-	private String  impDegapName;
-	private String  impDegapVersion;
+	
+	@Column(name="imp_scf_tool")
+	private String 	impScfTool;
+	
+	@Column(name="imp_scf_tool_version")
+	private String 	impScfToolVersion;
+	
+	@Column(name="imp_degap_tool")
+	private String  impDegapTool;
+	
+	@Column(name="imp_degap_tool_version")
+	private String  impDegapToolVersion;
+	
+	@Column(name="imp_dedup")
 	private Boolean impDedup;
+	
+	@Column(name="imp_clip")
 	private Boolean impClip;
+	
+	@Column(name="imp_clip_minlen")
 	private Integer impClipMinLen;
 
 	public RampartSettings() {
@@ -90,21 +143,21 @@ public class RampartSettings {
 		
 		ini.put(SECT_RAMPART, KEY_RAMPART_VERSION, this.getRampartVersion());
 		
-		ini.put(SECT_QT, KEY_QT_TOOL, this.getQtName());
-		ini.put(SECT_QT, KEY_QT_VERSION, this.getQtVersion());
+		ini.put(SECT_QT, KEY_QT_TOOL, this.getQtTool());
+		ini.put(SECT_QT, KEY_QT_VERSION, this.getQtToolVersion());
 		ini.put(SECT_QT, KEY_QT_THRESHOLD, this.getQtThreshold());
 		ini.put(SECT_QT, KEY_QT_MINLEN, this.getQtMinLen());
 		
-		ini.put(SECT_MASS, KEY_MASS_TOOL, this.getMassName());
-		ini.put(SECT_MASS, KEY_MASS_VERSION, this.getMassVersion());
+		ini.put(SECT_MASS, KEY_MASS_TOOL, this.getMassTool());
+		ini.put(SECT_MASS, KEY_MASS_VERSION, this.getMassToolVersion());
 		ini.put(SECT_MASS, KEY_MASS_KMIN, this.getMassKmin());
 		ini.put(SECT_MASS, KEY_MASS_KMAX, this.getMassKmax());
 		
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_ITERATIONS, this.getImpIterations());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_NAME, this.getImpScfName());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_VERSION, this.getImpScfVersion());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_NAME, this.getImpDegapName());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_VERSION, this.getImpDegapVersion());
+		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_TOOL, this.getImpScfTool());
+		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_VERSION, this.getImpScfToolVersion());
+		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_TOOL, this.getImpDegapTool());
+		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_VERSION, this.getImpDegapToolVersion());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEDUP, this.getImpDedup());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_CLIP, this.getImpClip());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_CLIP_MINLEN, this.getImpClipMinLen());
@@ -113,30 +166,48 @@ public class RampartSettings {
 	}
 	
 	protected void setQtFromIniSect(Section iniSection) {
-		this.setQtName(iniSection.get(KEY_QT_TOOL));
-		this.setQtVersion(iniSection.get(KEY_QT_VERSION));
+		this.setQtTool(iniSection.get(KEY_QT_TOOL));
+		this.setQtToolVersion(iniSection.get(KEY_QT_VERSION));
 		this.setQtThreshold(Double.parseDouble(iniSection.get(KEY_QT_THRESHOLD)));
 		this.setQtMinLen(Integer.parseInt(iniSection.get(KEY_QT_MINLEN)));
 	}
 	
 	protected void setMassFromIniSect(Section iniSection) {
-		this.setMassName(iniSection.get(KEY_MASS_TOOL));
-		this.setMassVersion(iniSection.get(KEY_MASS_VERSION));
+		this.setMassTool(iniSection.get(KEY_MASS_TOOL));
+		this.setMassToolVersion(iniSection.get(KEY_MASS_VERSION));
 		this.setMassKmin(Integer.parseInt(iniSection.get(KEY_MASS_KMIN)));
 		this.setMassKmax(Integer.parseInt(iniSection.get(KEY_MASS_KMAX)));
 	}
 	
 	protected void setImpFromIniSect(Section iniSection) {
 		this.setImpIterations(Integer.parseInt(iniSection.get(KEY_IMPROVER_ITERATIONS)));
-		this.setImpScfName(iniSection.get(KEY_IMPROVER_SCAFFOLDING_NAME));
-		this.setImpScfVersion(iniSection.get(KEY_IMPROVER_SCAFFOLDING_VERSION));
-		this.setImpDegapName(iniSection.get(KEY_IMPROVER_DEGAP_NAME));
-		this.setImpDegapVersion(iniSection.get(KEY_IMPROVER_DEGAP_VERSION));
+		this.setImpScfTool(iniSection.get(KEY_IMPROVER_SCAFFOLDING_TOOL));
+		this.setImpScfToolVersion(iniSection.get(KEY_IMPROVER_SCAFFOLDING_VERSION));
+		this.setImpDegapTool(iniSection.get(KEY_IMPROVER_DEGAP_TOOL));
+		this.setImpDegapToolVersion(iniSection.get(KEY_IMPROVER_DEGAP_VERSION));
 		this.setImpDedup(Boolean.parseBoolean(iniSection.get(KEY_IMPROVER_DEDUP)));
 		this.setImpClip(Boolean.parseBoolean(iniSection.get(KEY_IMPROVER_CLIP)));
 		this.setImpClipMinLen(Integer.parseInt(iniSection.get(KEY_IMPROVER_CLIP_MINLEN)));
 	}
 
+	
+	
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Job getJob() {
+		return job;
+	}
+
+	public void setJob(Job job) {
+		this.job = job;
+	}
 
 	public String getRampartVersion() {
 		return rampartVersion;
@@ -146,20 +217,20 @@ public class RampartSettings {
 		this.rampartVersion = rampartVersion;
 	}
 
-	public String getQtName() {
-		return qtName;
+	public String getQtTool() {
+		return qtTool;
 	}
 
-	public void setQtName(String qtName) {
-		this.qtName = qtName;
+	public void setQtTool(String qtTool) {
+		this.qtTool = qtTool;
 	}
 
-	public String getQtVersion() {
-		return qtVersion;
+	public String getQtToolVersion() {
+		return qtToolVersion;
 	}
 
-	public void setQtVersion(String qtVersion) {
-		this.qtVersion = qtVersion;
+	public void setQtToolVersion(String qtToolVersion) {
+		this.qtToolVersion = qtToolVersion;
 	}
 
 	public Double getQtThreshold() {
@@ -178,20 +249,20 @@ public class RampartSettings {
 		this.qtMinLen = qtMinLen;
 	}
 
-	public String getMassName() {
-		return massName;
+	public String getMassTool() {
+		return massTool;
 	}
 
-	public void setMassName(String massName) {
-		this.massName = massName;
+	public void setMassTool(String massTool) {
+		this.massTool = massTool;
 	}
 
-	public String getMassVersion() {
-		return massVersion;
+	public String getMassToolVersion() {
+		return massToolVersion;
 	}
 
-	public void setMassVersion(String massVersion) {
-		this.massVersion = massVersion;
+	public void setMassToolVersion(String massToolVersion) {
+		this.massToolVersion = massToolVersion;
 	}
 
 	public Integer getMassKmin() {
@@ -218,36 +289,36 @@ public class RampartSettings {
 		this.impIterations = impIterations;
 	}
 
-	public String getImpScfName() {
-		return impScfName;
+	public String getImpScfTool() {
+		return impScfTool;
 	}
 
-	public void setImpScfName(String impScfName) {
-		this.impScfName = impScfName;
+	public void setImpScfTool(String impScfTool) {
+		this.impScfTool = impScfTool;
 	}
 
-	public String getImpScfVersion() {
-		return impScfVersion;
+	public String getImpScfToolVersion() {
+		return impScfToolVersion;
 	}
 
-	public void setImpScfVersion(String impScfVersion) {
-		this.impScfVersion = impScfVersion;
+	public void setImpScfToolVersion(String impScfToolVersion) {
+		this.impScfToolVersion = impScfToolVersion;
 	}
 
-	public String getImpDegapName() {
-		return impDegapName;
+	public String getImpDegapTool() {
+		return impDegapTool;
 	}
 
-	public void setImpDegapName(String impDegapName) {
-		this.impDegapName = impDegapName;
+	public void setImpDegapTool(String impDegapTool) {
+		this.impDegapTool = impDegapTool;
 	}
 
-	public String getImpDegapVersion() {
-		return impDegapVersion;
+	public String getImpDegapToolVersion() {
+		return impDegapToolVersion;
 	}
 
-	public void setImpDegapVersion(String impDegapVersion) {
-		this.impDegapVersion = impDegapVersion;
+	public void setImpDegapToolVersion(String impDegapToolVersion) {
+		this.impDegapToolVersion = impDegapToolVersion;
 	}
 
 	public Boolean getImpDedup() {

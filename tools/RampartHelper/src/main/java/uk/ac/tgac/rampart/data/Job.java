@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Cascade;
@@ -68,6 +69,11 @@ public class Job implements Serializable {
 	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
 	@JoinColumn(name="job_id")
 	private List<ImproverStats> improverStats;
+	
+	@OneToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="job", targetEntity=RampartSettings.class)
+	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@JoinColumn(referencedColumnName = "job_id")
+	private RampartSettings rampartSettings;
 	
 	
 	public Long getId() {
@@ -190,6 +196,17 @@ public class Job implements Serializable {
 		}
 		this.improverStats = improverStats;
 	}
+	
+	public RampartSettings getRampartSettings() {
+		return this.rampartSettings;
+	}
+	
+	public void setRampartSettings(RampartSettings rampartSettings) {		
+		if (rampartSettings != null) {
+			rampartSettings.setJob(this);
+		}
+		this.rampartSettings = rampartSettings;
+	}
 
 	@Override
 	public String toString() {
@@ -204,7 +221,7 @@ public class Job implements Serializable {
 		.append(KEY_JD_MISO_ID + "=" + this.getAuthor() + "\n");
 		//.append(this.getLibraries().toString());
 		
-		return sb.toString();		
+		return sb.toString();
 	}
 	
 	public static Job parseIniSection(Section iniSection) {
