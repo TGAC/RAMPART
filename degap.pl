@@ -47,6 +47,8 @@ my $PWD   = getcwd;
 my $qst = new QsOptions();
 $qst->setTool($DEF_TOOL);
 $qst->setToolPath($DEF_TOOL_PATH);
+$qst->setMemory(30);
+$qst->setThreads(8);
 $qst->parseOptions();
 
 # Parse tool specific options
@@ -88,7 +90,8 @@ if ( $tool eq $T_GAP_CLOSER ) {
 		"-a \"" . $qst->getInput() . "\"",
 		"-b \"" . $gc_cfg_file . "\"",
 		"-o \"" . $gc_scaffolds . "\"",
-		"-l " . $read_length . " ",
+		"-l " . $read_length,
+		"-t " . $qst->getThreads(),
 		$gc_other_args
 	);
 
@@ -133,8 +136,7 @@ sub write_soap_cfg {
 
 		my $lib = $config->getSectionAt($i);
 
-		my $ft = $lib
-		  ->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
+		my $ft = $lib->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
 		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
 		my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
 

@@ -26,7 +26,7 @@ my $T_GRASS = "grass";
 my $DEF_TOOL = $T_SSPACE;
 
 # Tool path constants
-my $TP_SSPACE = "/common/software/SSPACE-BASIC-2.0/x86_64/bin/SSPACE_Basic_v2.0.pl";
+my $TP_SSPACE = "SSPACE_Basic_v2.0.pl";
 my $TP_GRASS = "grass";
 my $DEF_TOOL_PATH = $TP_SSPACE;
 
@@ -47,6 +47,8 @@ my $PWD = getcwd;
 my $qst = new QsOptions();
 $qst->setTool($DEF_TOOL);
 $qst->setToolPath($DEF_TOOL_PATH);
+$qst->setMemory(30);
+$qst->setThreads(8);
 $qst->parseOptions();
 
 
@@ -94,10 +96,11 @@ if ($tool eq $T_SSPACE) {
 	
 	my $in_file = $qst->getInput(); #convert_to_absolute($qst->getInput());
 	my $out_file = $qst->getOutput(); #convert_to_absolute($qst->getOutput());	
-	system("ln -s " . $in_file . " " . $out_file . "/input_scaffolds.fa;");
+	my $input_scaffolds = $out_file . "/input_scaffolds.fa";
+	system("ln -s -f " . $in_file . " " . $input_scaffolds);
 	
 	my $sspace_output_prefix = "scaffolder";
-	my $other_args = "-x 1 -T 2";
+	my $other_args = "-x 1";
 
 	$cd = 1;
 
@@ -107,8 +110,9 @@ if ($tool eq $T_SSPACE) {
 		$TP_SSPACE,
 		#"-l " . $sspace_cfg_file,
 		"-l " . "sspace.cfg",
-		"-s " . "input_scaffolds.fa",
+		"-s " . $input_scaffolds,
 		$other_args,
+		"-T " . $qst->getThreads(),
 		"-b " . $sspace_output_prefix
 	);
 	

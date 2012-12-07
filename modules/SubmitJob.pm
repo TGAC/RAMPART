@@ -9,7 +9,7 @@ use warnings;
 sub submit {
 
 	my ( $qso, $cmd_line ) = @_;
-
+	
 	if ( $qso->{_grid_engine} eq "LSF" ) {
 		my $lqs = new LsfJobSubmitter($qso);
 		$lqs->submit($cmd_line);
@@ -20,6 +20,8 @@ sub submit {
 	elsif ( $qso->{_grid_engine} eq "NONE" ) {
 
 		# No grid engine requested.  Running job directly
+		print("Executing command line: " . $cmd_line . "\n") if $qso->isVerbose();
+		
 		system($cmd_line);
 	}
 	else {

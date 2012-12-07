@@ -39,6 +39,8 @@ my $DEDUP_PATH    	= $RAMPART_DIR . "dedup.pl";
 
 # Parse generic queueing tool options
 my $qst = new QsOptions();
+$qst->setMemory(30);
+$qst->setThreads(8);
 $qst->parseOptions();
 
 # Gather Command Line options and set defaults
@@ -129,6 +131,8 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 		"--job_name " . $scf_job_name,
 		"--config " . $opt{config},
 		$opt{scaffolder_args} ? $opt{scaffolder_args} : "",
+		$qst->getMemoryAsParam(),
+		$qst->getThreadsAsParam(),
 		"--output " . $scf_dir_i,
 		"--input " . $current_scaffold );
 
@@ -150,6 +154,8 @@ for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
 		"--config " . $opt{config},
 		"--output " . $dg_dir_i,
 		"--input " . $current_scaffold,
+		$qst->getMemoryAsParam(),
+		$qst->getThreadsAsParam(),
 		$opt{degap_args} ? $opt{degap_args} : "" );
 
 	push @commands, (join " ", @dg_args ) unless $opt{simulate};
@@ -243,8 +249,10 @@ if ($opt{log}) {
 	print LOGFILE "iterations=" . $opt{iterations} . "\n";
 	print LOGFILE "scaffolding.tool=" . "scfx" . "\n";
 	print LOGFILE "scaffolding.version=" . "x.x" . "\n";
+	print LOGFILE "scaffolding.memory=" . "xx" . "\n";
 	print LOGFILE "degap.tool=" . "degapx" . "\n";
 	print LOGFILE "degap.version=" . "x.x" . "\n";
+	print LOGFILE "degap.memory=" . "xx" . "\n";
 	print LOGFILE "dedup=" . ($opt{dedup} ? "true" : "false") . "\n";
 	print LOGFILE "clip=" . ($opt{clip} ? "true" : "false") . "\n";
 	print LOGFILE "clip.minlen=" . "1" . "\n";

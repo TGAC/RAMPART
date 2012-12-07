@@ -237,6 +237,7 @@ if ($opt{log}) {
 	print LOGFILE "[MASS]\n";
 	print LOGFILE "tool=" . $tool . "\n";
 	print LOGFILE "version=" . $tool_version . "\n";
+	print LOGFILE "memory=" . $qst->getMemoryGB() . "\n";
 	print LOGFILE "kmin=" . $opt{kmin} . "\n";
 	print LOGFILE "kmax=" . $opt{kmax} . "\n";
 	close(LOGFILE);

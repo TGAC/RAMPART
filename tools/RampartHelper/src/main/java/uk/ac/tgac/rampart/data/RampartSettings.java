@@ -31,10 +31,12 @@ public class RampartSettings {
 	public static final String SECT_MASS 						= "MASS";
 	public static final String KEY_MASS_TOOL 					= "tool";
 	public static final String KEY_MASS_VERSION 				= "version";
+	public static final String KEY_MASS_MEMORY	 				= "memory";
 	public static final String KEY_MASS_KMIN 					= "kmin";
 	public static final String KEY_MASS_KMAX 					= "kmax";
 	public static final String SECT_IMPROVER					= "IMPROVER";
 	public static final String KEY_IMPROVER_ITERATIONS 			= "iterations";
+	public static final String KEY_IMPROVER_MEMORY	 			= "memory";
 	public static final String KEY_IMPROVER_SCAFFOLDING_TOOL	= "scaffolding.tool";
 	public static final String KEY_IMPROVER_SCAFFOLDING_VERSION	= "scaffolding.version";
 	public static final String KEY_IMPROVER_DEGAP_TOOL			= "degap.tool";
@@ -72,6 +74,9 @@ public class RampartSettings {
 	@Column(name="mass_tool_version")
 	private String 	massToolVersion;
 	
+	@Column(name="mass_memory")
+	private Integer massMemory;
+	
 	@Column(name="mass_kmin")
 	private Integer massKmin;
 	
@@ -80,6 +85,9 @@ public class RampartSettings {
 	
 	@Column(name="imp_iterations")
 	private Integer impIterations;
+	
+	@Column(name="imp_memory")
+	private Integer impMemory;
 	
 	@Column(name="imp_scf_tool")
 	private String 	impScfTool;
@@ -150,6 +158,7 @@ public class RampartSettings {
 		
 		ini.put(SECT_MASS, KEY_MASS_TOOL, this.getMassTool());
 		ini.put(SECT_MASS, KEY_MASS_VERSION, this.getMassToolVersion());
+		ini.put(SECT_MASS, KEY_MASS_MEMORY, this.getMassMemory());
 		ini.put(SECT_MASS, KEY_MASS_KMIN, this.getMassKmin());
 		ini.put(SECT_MASS, KEY_MASS_KMAX, this.getMassKmax());
 		
@@ -175,12 +184,14 @@ public class RampartSettings {
 	protected void setMassFromIniSect(Section iniSection) {
 		this.setMassTool(iniSection.get(KEY_MASS_TOOL));
 		this.setMassToolVersion(iniSection.get(KEY_MASS_VERSION));
+		this.setMassMemory(Integer.parseInt(iniSection.get(KEY_MASS_MEMORY)));
 		this.setMassKmin(Integer.parseInt(iniSection.get(KEY_MASS_KMIN)));
 		this.setMassKmax(Integer.parseInt(iniSection.get(KEY_MASS_KMAX)));
 	}
 	
 	protected void setImpFromIniSect(Section iniSection) {
 		this.setImpIterations(Integer.parseInt(iniSection.get(KEY_IMPROVER_ITERATIONS)));
+		this.setImpMemory(Integer.parseInt(iniSection.get(KEY_IMPROVER_MEMORY)));
 		this.setImpScfTool(iniSection.get(KEY_IMPROVER_SCAFFOLDING_TOOL));
 		this.setImpScfToolVersion(iniSection.get(KEY_IMPROVER_SCAFFOLDING_VERSION));
 		this.setImpDegapTool(iniSection.get(KEY_IMPROVER_DEGAP_TOOL));
@@ -264,6 +275,14 @@ public class RampartSettings {
 	public void setMassToolVersion(String massToolVersion) {
 		this.massToolVersion = massToolVersion;
 	}
+	
+	public Integer getMassMemory() {
+		return massMemory;
+	}
+
+	public void setMassMemory(Integer massMemory) {
+		this.massMemory = massMemory;
+	}
 
 	public Integer getMassKmin() {
 		return massKmin;
@@ -287,6 +306,14 @@ public class RampartSettings {
 
 	public void setImpIterations(Integer impIterations) {
 		this.impIterations = impIterations;
+	}
+	
+	public Integer getImpMemory() {
+		return impMemory;
+	}
+
+	public void setImpMemory(Integer impMemory) {
+		this.impMemory = impMemory;
 	}
 
 	public String getImpScfTool() {
