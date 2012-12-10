@@ -348,7 +348,7 @@ sub run_mass {
 		$qst->getProjectNameAsParam(),
 		"--job_name " . $mass_job_name,
 		$qst->getQueueAsParam(),
-		$qt_job_name ? "--wait_condition 'done(" . $qt_job_name . ")'" : "",
+		$qt_job_name ? "--wait_condition 'ended(" . $qt_job_name . ")'" : "",
 		$qst->getExtraArgs(),
 		"--output " . $mass_output_dir,
 		$qst->isVerboseAsParam(),
