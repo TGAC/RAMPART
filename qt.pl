@@ -35,7 +35,7 @@ my $SICKLE_SOURCE_CMD = AppStarter::getAppInitialiser("SICKLE");
 
 # Tool settings constants
 my $THRESHOLD = 30;
-my $MINLEN = 75;
+my $MINLEN = 21;
 
 
 # Generic constants
