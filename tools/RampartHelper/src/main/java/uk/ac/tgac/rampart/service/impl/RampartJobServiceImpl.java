@@ -154,7 +154,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		// Build context
 		VelocityContext vc = new VelocityContext();
 		vc.put("job", job);
-		vc.put("tool", rampartSettings);
+		vc.put("settings", rampartSettings);
 		vc.put("contigScores", massStats);
 		vc.put("weightings", weights);
 		vc.put("locations", jobFS);

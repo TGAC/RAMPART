@@ -22,15 +22,9 @@ use SubmitJob;
 
 #### Constants
 
-# Scaffold Improver constants
-my $DEF_ITERATIONS = 1;
-
-# Other constants
-my $QUOTE = "\"";
-my $PWD   = getcwd;
-
 # Script locations
-my ( $RAMPART, $RAMPART_DIR ) = fileparse( abs_path($0) );
+my $PWD = getcwd;
+my ($RAMPART, $RAMPART_DIR) = fileparse(abs_path($0));
 my $SCAFFOLDER_PATH = $RAMPART_DIR . "scaffolder.pl";
 my $DEGAPPER_PATH   = $RAMPART_DIR . "degap.pl";
 my $CLIPPER_PATH    = $RAMPART_DIR . "clipper.pl";
@@ -44,17 +38,14 @@ $qst->setThreads(8);
 $qst->parseOptions();
 
 # Gather Command Line options and set defaults
-my (%opt) = ( 	"iterations", 	$DEF_ITERATIONS );
+my (%opt) = ();
 
 GetOptions(
 	\%opt,
 	'scaffolder_args|s_args=s',
 	'degap_args|dg_args=s',
-	'clip',
 	'clip_args=s',
-	'dedup',
 	'config|cfg=s',
-	'iterations|i=i',
 	'stats',
 	'log',
 	'simulate|sim',
@@ -85,182 +76,244 @@ my @static_args = grep {$_} (
 
 # Make all job name/prefix strings
 my $job_prefix     = $qst->getJobName();
-my $sg_job_prefix  = $job_prefix . "-stat_gatherer-";
-my $scf_job_prefix = $job_prefix . "-scaffold-";
-my $dg_job_prefix  = $job_prefix . "-degap-";
-my $clip_job_name  = $job_prefix . "-clip";
-my $dedup_job_name = $job_prefix . "-dedup";
-my $stats_job_name = $job_prefix . "-stats";
-
 
 ## Improve best assembly
-my $current_scaffold = $qst->getInput();
 my $first_wait = $qst->getWaitCondition() ? 1 : 0;
-my $last_job;
-
-
-# Create an array which will store a record of all the assemblies created by this script.
-# Initialise it with the input file. 
-my @assemblies;
-push @assemblies, $current_scaffold;
 
 # Make output directories
-my $output_dir = $qst->getOutput();
-my $scf_dir    = $output_dir . "/scaffolds";
-my $dg_dir     = $output_dir . "/degap";
-mkdir $scf_dir;
-mkdir $dg_dir;
+my $assembly_dir = $qst->getOutput() . "/assemblies";
+my $stages_dir = $qst->getOutput() . "/stages";
+my $logs_dir = $qst->getOutput() . "/logs";
+mkdir $assembly_dir;
+mkdir $stages_dir;
+mkdir $logs_dir;
 
-# Commands
-my @commands;
+# Want some code here to interpret improver pipeline from configuration file
+my @enhancer_stages = load_stages($opt{config});
+
+# Generate the execution command list
+my $input_file = abs_path($qst->getInput());
+my @commands = process_stages(\@enhancer_stages, $input_file);
+
+# Generate final stats if requests 
+stats($assembly_dir) if $opt{stats};
+
+# Log if requested
+log_settings() if $opt{log};
+
+# Everything gets submitted as one big job.
+my $job_command = join("; ", @commands);
+SubmitJob::submit($qst, $job_command);
 
 
-for ( my $i = 1 ; $i <= $opt{iterations} ; $i++ ) {
+# Loads improver stage configuration from file and returns an array of stages to execute
+sub load_stages {	
+	my $cfg_file = shift;
+	
+	my $cfg = new Configuration($cfg_file);
+	my $cfg_mass_sect = $cfg->getSectionByName("IMPROVER");
+	
+	my @enhancer_stages;
+	my $i = 1;
+	while($cfg_mass_sect->{$i}) {
+		push @enhancer_stages, $cfg_mass_sect->{$i};
+		$i++;
+	}
+	
+	# Checks the requestes enhancement stages are valid
+	validateStages(\@enhancer_stages);
+	
+	return @enhancer_stages;
+}
 
-	my $scf_job_name = $scf_job_prefix . $i;
-	my $dg_job_name  = $dg_job_prefix . $i;
+# Builds up a command line containing all programs to execute
+sub process_stages {
+	my $ref_stages = shift;
+	my $input_assembly = shift;
+	
+	my @stages = @{$ref_stages};
+	
+	my $current_assembly = $assembly_dir . "/0.fa";
+	
+	my @commands;
+	
+	# Create link from input file to assemblies dir
+	push @commands, ("ln -s -f " . $input_assembly . " " . $current_assembly );
+	
+	
+	my $i = 1;
+	my $last_job;
+	foreach(@stages) {
+		my $stage = $_;
+		my $assembly;
+		
+		my $stage_dir = $stages_dir . "/" . $i;
+		mkdir $stage_dir;
+		
+		if ($stage eq "SCAFFOLD") {
+			$assembly = scaffold(\@commands, $current_assembly, $stage_dir, $logs_dir, $i);
+		}
+		elsif ($stage eq "DEGAP") {
+			$assembly = degap(\@commands, $current_assembly, $stage_dir, $logs_dir, $i);
+		}
+		elsif ($stage eq "DEDUP") {
+			$assembly =	dedup(\@commands, $current_assembly, $stage_dir, $logs_dir, $i);
+		}
+		elsif ($stage eq "CLIP") {
+			$assembly = clip(\@commands, $current_assembly, $stage_dir, $logs_dir, $i);
+		}
+		
+		# Make link for output of this stage to the assemblies directory
+		$current_assembly = $assembly_dir . "/" . $i . "-scaffolds.fa";
+		push @commands, ("ln -s -f " . $assembly . " " . $current_assembly);
+		$i++;			
+	}
+	
+	push @commands, ("ln -s -f " . $current_assembly . " " . $qst->getOutput() . "/final.fa");
+	
+	return @commands;
+}
 
-	# Run scaffolding step
 
-	my $scf_dir_i = $scf_dir . "/" . $i;
-	mkdir $scf_dir_i;
-
+sub scaffold {
+	my ($ref_commands, $input_assembly, $stage_dir, $logs_dir, $i) = @_;
+	
 	my @scf_args = grep {$_} (
 		$SCAFFOLDER_PATH,
 		@static_args,
-		"--job_name " . $scf_job_name,
 		"--config " . $opt{config},
 		$opt{scaffolder_args} ? $opt{scaffolder_args} : "",
 		$qst->getMemoryAsParam(),
 		$qst->getThreadsAsParam(),
-		"--output " . $scf_dir_i,
-		"--input " . $current_scaffold );
+		"--output " . $stage_dir,
+		"--input " . $input_assembly,
+		">",
+		$logs_dir . "/" . $i . ".log");
 
-	push @commands, (join " ", @scf_args) unless $opt{simulate};
+	push @$ref_commands, (join " ", @scf_args) unless $opt{simulate};
+	
+	my $current_scaffold = $stage_dir . "/scaffolder.final.scaffolds.fasta";
+	
+	return $current_scaffold;
+}
 
-	$current_scaffold = $scf_dir_i . "/scaffolder.final.scaffolds.fasta";
-	$last_job         = $scf_job_name;
-	push @assemblies, $current_scaffold;
-
-	# Run gap closing step
-
-	my $dg_dir_i = $dg_dir . "/" . $i;
-	mkdir $dg_dir_i;
-
+sub degap {	
+	my ($ref_commands, $input_assembly, $stage_dir, $logs_dir, $i) = @_;
+	
 	my @dg_args = grep {$_} (
 		$DEGAPPER_PATH,
 		@static_args,
-		"--job_name " . $dg_job_name,
 		"--config " . $opt{config},
-		"--output " . $dg_dir_i,
-		"--input " . $current_scaffold,
+		"--output " . $stage_dir,
+		"--input " . $input_assembly,
 		$qst->getMemoryAsParam(),
 		$qst->getThreadsAsParam(),
-		$opt{degap_args} ? $opt{degap_args} : "" );
+		$opt{degap_args} ? $opt{degap_args} : "",
+		">",
+		$logs_dir . "/" . $i . ".log" );
 
-	push @commands, (join " ", @dg_args ) unless $opt{simulate};
+	push @$ref_commands, (join " ", @dg_args ) unless $opt{simulate};
 
-	$current_scaffold = $dg_dir_i . "/gc-scaffolds.fa";
-	$last_job         = $dg_job_name;
-	push @assemblies, $current_scaffold;
+	my $current_scaffold = $stage_dir . "/gc-scaffolds.fa";
+	
+	return $current_scaffold;
 }
 
-
-## Remove duplicates
-if ( $opt{dedup} ) {
-	my $dedup_dir = $qst->getOutput() . "/dedup";
-	mkdir $dedup_dir;
-	
-	my $dedup_scf_file = $dedup_dir . "cleaned.fasta";
-	my $dedup_out_arg = "--output " . $dedup_dir;
+sub dedup {
+	my ($ref_commands, $input_assembly, $stage_dir, $logs_dir, $i) = @_;
 	
 	my @dedup_args = grep {$_} (
-		$CLIPPER_PATH,
+		$DEDUP_PATH,
 		@static_args,
-		"--job_name " . $dedup_job_name,
-		"--input " . $current_scaffold,
-		$dedup_out_arg );
+		"--input " . $input_assembly,
+		"--output " . $stage_dir,
+		">",
+		$logs_dir . "/" . $i . ".log" 
+	);
 
-	push @commands, (join " ", @dedup_args) unless $opt{simulate};
+	push @$ref_commands, (join " ", @dedup_args) unless $opt{simulate};
 	
-	$current_scaffold = $dedup_scf_file;
-	$last_job         = $clip_job_name;
-	push @assemblies, $current_scaffold;
+	my $current_scaffold = $stage_dir . "/cleaned.fasta";
+	
+	return $current_scaffold;
 }
 
-## Remove contigs under a user specified length
-if ( $opt{clip} ) {
-
-	my $clip_dir = $qst->getOutput() . "/clipped";
-	mkdir $clip_dir;
-
-	my $clip_scf_file = $clip_dir . "/clipped-scaffolds.fa";
-	my $clip_out_arg = "--output " . $clip_dir;
+sub clip {
+	my ($ref_commands, $input_assembly, $stage_dir, $logs_dir, $i) = @_;
 	
 	my @clip_args = grep {$_} (
 		$CLIPPER_PATH,
 		@static_args,
-		"--job_name " . $clip_job_name,
 		$opt{clip_args} ? $opt{clip_args} : "",
-		"--input " . $current_scaffold,
-		$clip_out_arg );
+		"--input " . $input_assembly,
+		"--output " . $stage_dir,
+		">",
+		$logs_dir . "/" . $i . ".log" 
+	);
 
-	push @commands, (join " ", @clip_args) unless $opt{simulate};
-
-	$current_scaffold = $clip_scf_file;
-	$last_job         = $clip_job_name;
-	push @assemblies, $current_scaffold;
+	push @$ref_commands, (join " ", @clip_args) unless $opt{simulate};
+	
+	my $current_scaffold = $stage_dir . "/clipped-scaffolds.fa";
+	
+	return $current_scaffold;
 }
 
-
-
-## Generate final stats 
-if ( $opt{stats} ) {
-
-	my $stats_dir = $qst->getOutput() . "/stats";
-	mkdir $stats_dir;
-
-	# Link to each scaffold file from each stage of this process
-	my $j = 1;
-	foreach ( @assemblies ) {
-		push @commands, ("ln -s -f " . $_ . " " . $stats_dir . "/" . $j . "-scaffolds.fa");
-		$j++;
-	}
+sub stats {
+	my $stats_dir = shift;
 
 	my @mgp_args = grep {$_} (
-	$MASS_GP_PATH,
-	@static_args,
-	"--job_name " . $stats_job_name,
-	$qst->isVerboseAsParam(),
-	"--output " . $stats_dir,
-	"--input " . $stats_dir,
-	"--index"	);
+		$MASS_GP_PATH,
+		@static_args,
+		$qst->isVerboseAsParam(),
+		"--output " . $stats_dir,
+		"--input " . $stats_dir,
+		"--index"
+	);
 
 	push @commands, (join " ", @mgp_args);
-	
-	push @commands, ("ln -s -f " . $assemblies[-1] . " " . $qst->getOutput() . "/final-scaffolds.fa" );
-
-	$last_job = $clip_job_name;
 }
 
-if ($opt{log}) {
-	open (LOGFILE, ">", $output_dir . "/improver.log");
+
+sub log_settings {
+	open (LOGFILE, ">", $qst->getOutput() . "/improver.log");
 	print LOGFILE "[IMPROVER]\n";
-	print LOGFILE "iterations=" . $opt{iterations} . "\n";
 	print LOGFILE "scaffolding.tool=" . "scfx" . "\n";
 	print LOGFILE "scaffolding.version=" . "x.x" . "\n";
-	print LOGFILE "scaffolding.memory=" . "xx" . "\n";
+	print LOGFILE "scaffolding.memory=" . "0" . "\n";
 	print LOGFILE "degap.tool=" . "degapx" . "\n";
 	print LOGFILE "degap.version=" . "x.x" . "\n";
-	print LOGFILE "degap.memory=" . "xx" . "\n";
-	print LOGFILE "dedup=" . ($opt{dedup} ? "true" : "false") . "\n";
-	print LOGFILE "clip=" . ($opt{clip} ? "true" : "false") . "\n";
+	print LOGFILE "degap.memory=" . "0" . "\n";
 	print LOGFILE "clip.minlen=" . "1" . "\n";
 	close(LOGFILE);
 }
 
-# Everything gets submitted as one big job.
-SubmitJob::submit($qst, join("; ", @commands));
+
+sub validateStages {
+	my $ref_stages = shift;
+	my @stages = @{$ref_stages};
+	
+	my $i = 1;
+	foreach(@stages) {
+		my $stage = $_;
+		die "Stage " . $i . " is not valid: " . $stage . "; Valid stage names are: SCAFFOLD, DEGAP, DEDUP, CLIP" unless validStage($stage);
+		$i++;
+	}
+	
+	return 1;
+}
+
+sub validStage {
+	my $stage = shift;
+	
+	print "Validating stage: " . $stage . "\n" if $qst->isVerbose();
+	
+	if ($stage eq "SCAFFOLD" || $stage eq "DEGAP" || $stage eq "DEDUP" || $stage eq "CLIP") {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
 
 
 __END__
@@ -296,25 +349,13 @@ Any additional arguments to send to the scaffolding tool.
 
 Any additional arguments to send to the degapping tool. 
 	
-=item B<--clip>
-
-Whether to clip short sequences from the final output. Default: off.
-	
 =item B<--clip_args>
 
 Any additional arguments to send to the clipping tool (e.g. --min_length 500)
 
-=item B<--dedup>
-
-Whether to deduplicate redundant scaffolds
-              
 =item B<--config>,B<--cfg>
 
 REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
-
-=item B<--iterations>,B<-i>
-
-The number of scaffolding and degapping iterations to run.  Default: 1.
   
 =item B<--simulate>
 

@@ -41,7 +41,6 @@ public class RampartSettingsDaoImplTest {
 		RampartSettings row1 = rsl.get(1);
 		
 		assertTrue(row0.getRampartVersion().equals("0.2"));
-		assertTrue(row1.getImpClip().equals(Boolean.TRUE));
 	}
 
 	@Test
@@ -67,13 +66,10 @@ public class RampartSettingsDaoImplTest {
 		rs.setMassToolVersion("1.3.4");
 		rs.setMassKmin(41);
 		rs.setMassKmax(95);
-		rs.setImpIterations(2);
 		rs.setImpScfTool("sspace");
 		rs.setImpScfToolVersion("2.0-Basic");
 		rs.setImpDegapTool("gapcloser");
 		rs.setImpDegapToolVersion("1.12");
-		rs.setImpDedup(Boolean.FALSE);
-		rs.setImpClip(Boolean.TRUE);
 		rs.setImpClipMinLen(1000);
 				
 		long count = rsd.count(); 

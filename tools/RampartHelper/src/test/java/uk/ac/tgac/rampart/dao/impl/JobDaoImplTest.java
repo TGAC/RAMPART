@@ -133,13 +133,10 @@ public class JobDaoImplTest {
 		rs.setMassToolVersion("1.3.4");
 		rs.setMassKmin(41);
 		rs.setMassKmax(95);
-		rs.setImpIterations(2);
 		rs.setImpScfTool("sspace");
 		rs.setImpScfToolVersion("2.0-Basic");
 		rs.setImpDegapTool("gapcloser");
 		rs.setImpDegapToolVersion("1.12");
-		rs.setImpDedup(Boolean.FALSE);
-		rs.setImpClip(Boolean.TRUE);
 		rs.setImpClipMinLen(1000);
 				
 		

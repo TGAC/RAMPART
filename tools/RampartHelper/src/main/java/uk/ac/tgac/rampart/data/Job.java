@@ -230,8 +230,8 @@ public class Job implements Serializable {
 		jd.setCollaborator(iniSection.get(KEY_JD_COLLABORATOR));
 		jd.setInstitution(iniSection.get(KEY_JD_INSTITUTION));
 		jd.setTitle(iniSection.get(KEY_JD_TITLE));
-		jd.setJiraSeqinfoId(Long.parseLong(iniSection.get(KEY_JD_JIRA_SEQINFO_ID)));
-		jd.setMisoId(Long.parseLong(iniSection.get(KEY_JD_MISO_ID)));	
+		jd.setJiraSeqinfoId(Long.parseLong(iniSection.get(KEY_JD_JIRA_SEQINFO_ID).replaceAll("SEQINFO-", "")));
+		jd.setMisoId(Long.parseLong(iniSection.get(KEY_JD_MISO_ID).replaceAll("PRO", "")));	
 		return jd;
 	}
 }

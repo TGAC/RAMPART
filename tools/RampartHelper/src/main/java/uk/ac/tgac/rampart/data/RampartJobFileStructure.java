@@ -13,7 +13,7 @@ public class RampartJobFileStructure {
 	private File massDir;
 	private File massStatsDir;
 	private File improverDir;
-	private File improverStatsDir;
+	private File improverAssembliesDir;
 	private File reportDir;
 	private File reportImagesDir;
 	private File logDir;
@@ -48,7 +48,7 @@ public class RampartJobFileStructure {
 		this.massDir = new File(jobDir.getPath() + "/mass");
 		this.massStatsDir = new File(massDir.getPath() + "/stats");
 		this.improverDir = new File(jobDir.getPath() + "/improver");
-		this.improverStatsDir = new File(improverDir.getPath() + "/stats");
+		this.improverAssembliesDir = new File(improverDir.getPath() + "/assemblies");
 		this.reportDir = new File(jobDir.getPath() + "/report");
 		this.reportImagesDir = new File(reportDir.getPath() + "/images");
 		this.logDir = new File(jobDir.getPath() + "/log");
@@ -59,9 +59,9 @@ public class RampartJobFileStructure {
 		this.qtLogFile = new File(this.readsDir.getPath() + "/qt.log");
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
 		this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
-		this.massLogFile = new File(this.massDir.getPath() + "/mass.log");
-		this.improverPlotsFile = new File(this.improverStatsDir.getPath() + "/stats.pdf");
-		this.improverStatsFile = new File(this.improverStatsDir.getPath() + "/stats.txt");
+		this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
+		this.improverPlotsFile = new File(this.improverAssembliesDir.getPath() + "/stats.pdf");
+		this.improverStatsFile = new File(this.improverAssembliesDir.getPath() + "/stats.txt");
 		this.improverLogFile = new File(this.improverDir.getPath() + "/improver.log");
 		this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
 		this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");
@@ -85,6 +85,11 @@ public class RampartJobFileStructure {
 	}
 	
 	public void makeReportDirs() throws IOException {
+		
+		// Clean the report dir first...
+		this.reportDir.delete();		
+		
+		// ... then rebuild
 		this.reportDir.mkdir();
 		this.reportImagesDir.mkdir();
 		
@@ -181,8 +186,8 @@ public class RampartJobFileStructure {
 		return improverPlotsFile;
 	}
 
-	public File getImproverStatsDir() {
-		return improverStatsDir;
+	public File getImproverAssembliesDir() {
+		return improverAssembliesDir;
 	}
 
 	public File getImproverStatsFile() {

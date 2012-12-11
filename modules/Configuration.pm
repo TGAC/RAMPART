@@ -63,6 +63,24 @@ sub getSectionNameAt {
 	return $section_name;
 }
 
+sub getSectionByName {
+	my ($self, $section_name) = @_;
+
+	my $cfg = $self->{_cfg};
+	my @section_names = $cfg->Sections();
+	
+	my $found_section = undef;
+	my $i = 0;
+	foreach(@section_names) {
+		if (lc($_) eq lc($section_name)) {
+			$found_section = $self->getSectionAt($i);
+		} 
+		$i++;
+	}
+	
+	return $found_section;
+}
+
 
 sub getAllInputFiles {
 	

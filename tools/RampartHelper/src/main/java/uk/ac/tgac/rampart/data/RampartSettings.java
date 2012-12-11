@@ -35,14 +35,12 @@ public class RampartSettings {
 	public static final String KEY_MASS_KMIN 					= "kmin";
 	public static final String KEY_MASS_KMAX 					= "kmax";
 	public static final String SECT_IMPROVER					= "IMPROVER";
-	public static final String KEY_IMPROVER_ITERATIONS 			= "iterations";
-	public static final String KEY_IMPROVER_MEMORY	 			= "memory";
 	public static final String KEY_IMPROVER_SCAFFOLDING_TOOL	= "scaffolding.tool";
 	public static final String KEY_IMPROVER_SCAFFOLDING_VERSION	= "scaffolding.version";
+	public static final String KEY_IMPROVER_SCAFFOLDING_MEMORY  = "scaffolding.memory";
 	public static final String KEY_IMPROVER_DEGAP_TOOL			= "degap.tool";
 	public static final String KEY_IMPROVER_DEGAP_VERSION		= "degap.version";
-	public static final String KEY_IMPROVER_DEDUP				= "dedup";
-	public static final String KEY_IMPROVER_CLIP				= "clip";
+	public static final String KEY_IMPROVER_DEGAP_MEMORY		= "degap.memory";
 	public static final String KEY_IMPROVER_CLIP_MINLEN			= "clip.minlen";
 	
 	@Id 
@@ -83,17 +81,14 @@ public class RampartSettings {
 	@Column(name="mass_kmax")
 	private Integer massKmax;
 	
-	@Column(name="imp_iterations")
-	private Integer impIterations;
-	
-	@Column(name="imp_memory")
-	private Integer impMemory;
-	
 	@Column(name="imp_scf_tool")
 	private String 	impScfTool;
 	
 	@Column(name="imp_scf_tool_version")
 	private String 	impScfToolVersion;
+	
+	@Column(name="imp_scf_memory")
+	private Integer	impScfMemory;
 	
 	@Column(name="imp_degap_tool")
 	private String  impDegapTool;
@@ -101,11 +96,8 @@ public class RampartSettings {
 	@Column(name="imp_degap_tool_version")
 	private String  impDegapToolVersion;
 	
-	@Column(name="imp_dedup")
-	private Boolean impDedup;
-	
-	@Column(name="imp_clip")
-	private Boolean impClip;
+	@Column(name="imp_degap_memory")
+	private Integer	impDegapMemory;
 	
 	@Column(name="imp_clip_minlen")
 	private Integer impClipMinLen;
@@ -162,13 +154,12 @@ public class RampartSettings {
 		ini.put(SECT_MASS, KEY_MASS_KMIN, this.getMassKmin());
 		ini.put(SECT_MASS, KEY_MASS_KMAX, this.getMassKmax());
 		
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_ITERATIONS, this.getImpIterations());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_TOOL, this.getImpScfTool());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_VERSION, this.getImpScfToolVersion());
+		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_MEMORY, this.getImpScfMemory());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_TOOL, this.getImpDegapTool());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_VERSION, this.getImpDegapToolVersion());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEDUP, this.getImpDedup());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_CLIP, this.getImpClip());
+		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_MEMORY, this.getImpDegapMemory());
 		ini.put(SECT_IMPROVER, KEY_IMPROVER_CLIP_MINLEN, this.getImpClipMinLen());
 		
 		ini.store();
@@ -190,14 +181,12 @@ public class RampartSettings {
 	}
 	
 	protected void setImpFromIniSect(Section iniSection) {
-		this.setImpIterations(Integer.parseInt(iniSection.get(KEY_IMPROVER_ITERATIONS)));
-		this.setImpMemory(Integer.parseInt(iniSection.get(KEY_IMPROVER_MEMORY)));
 		this.setImpScfTool(iniSection.get(KEY_IMPROVER_SCAFFOLDING_TOOL));
 		this.setImpScfToolVersion(iniSection.get(KEY_IMPROVER_SCAFFOLDING_VERSION));
+		this.setImpScfMemory(Integer.parseInt(iniSection.get(KEY_IMPROVER_SCAFFOLDING_MEMORY)));
 		this.setImpDegapTool(iniSection.get(KEY_IMPROVER_DEGAP_TOOL));
 		this.setImpDegapToolVersion(iniSection.get(KEY_IMPROVER_DEGAP_VERSION));
-		this.setImpDedup(Boolean.parseBoolean(iniSection.get(KEY_IMPROVER_DEDUP)));
-		this.setImpClip(Boolean.parseBoolean(iniSection.get(KEY_IMPROVER_CLIP)));
+		this.setImpDegapMemory(Integer.parseInt(iniSection.get(KEY_IMPROVER_SCAFFOLDING_MEMORY)));
 		this.setImpClipMinLen(Integer.parseInt(iniSection.get(KEY_IMPROVER_CLIP_MINLEN)));
 	}
 
@@ -300,22 +289,6 @@ public class RampartSettings {
 		this.massKmax = massKmax;
 	}
 
-	public Integer getImpIterations() {
-		return impIterations;
-	}
-
-	public void setImpIterations(Integer impIterations) {
-		this.impIterations = impIterations;
-	}
-	
-	public Integer getImpMemory() {
-		return impMemory;
-	}
-
-	public void setImpMemory(Integer impMemory) {
-		this.impMemory = impMemory;
-	}
-
 	public String getImpScfTool() {
 		return impScfTool;
 	}
@@ -330,6 +303,14 @@ public class RampartSettings {
 
 	public void setImpScfToolVersion(String impScfToolVersion) {
 		this.impScfToolVersion = impScfToolVersion;
+	}
+	
+	public Integer getImpScfMemory() {
+		return impScfMemory;
+	}
+
+	public void setImpScfMemory(Integer impScfMemory) {
+		this.impScfMemory = impScfMemory;
 	}
 
 	public String getImpDegapTool() {
@@ -347,21 +328,13 @@ public class RampartSettings {
 	public void setImpDegapToolVersion(String impDegapToolVersion) {
 		this.impDegapToolVersion = impDegapToolVersion;
 	}
-
-	public Boolean getImpDedup() {
-		return impDedup;
+	
+	public Integer getImpDegapMemory() {
+		return impDegapMemory;
 	}
 
-	public void setImpDedup(Boolean impDedup) {
-		this.impDedup = impDedup;
-	}
-
-	public Boolean getImpClip() {
-		return impClip;
-	}
-
-	public void setImpClip(Boolean impClip) {
-		this.impClip = impClip;
+	public void setImpDegapMemory(Integer impDegapMemory) {
+		this.impDegapMemory = impDegapMemory;
 	}
 
 	public Integer getImpClipMinLen() {

@@ -76,21 +76,18 @@ my $tool = $qst->getTool();
 if ( $tool eq $T_GAP_CLOSER ) {
 
 	my $rampart_cfg = new Configuration( $opt{config} );
-	$rampart_cfg->validate();
 	my $gc_cfg_file = $qst->getOutput() . "/gc.cfg";
 	write_soap_cfg( $rampart_cfg, $gc_cfg_file );
 
 	my $gc_scaffolds  = $qst->getOutput() . "/gc-scaffolds.fa";
 	my $gc_other_args = "-p 61";
-	my $read_length   = $rampart_cfg->getSectionAt(0)->{read_length};
-
-	my @gc_args = (
+	
+	my @gc_args = grep{$_} (
 		$GC_SOURCE_CMD,
 		$TP_GAP_CLOSER,
 		"-a \"" . $qst->getInput() . "\"",
 		"-b \"" . $gc_cfg_file . "\"",
 		"-o \"" . $gc_scaffolds . "\"",
-		"-l " . $read_length,
 		"-t " . $qst->getThreads(),
 		$gc_other_args
 	);
@@ -134,53 +131,59 @@ sub write_soap_cfg {
 
 	for ( my $i = 1 ; $i < $config->getNbSections() ; $i++ ) {
 
+		# Get info for this section
 		my $lib = $config->getSectionAt($i);
+		my $sect_name = $config->getSectionNameAt($i);
+		
+		# Only interested if this config section starts with "LIB"
+		if ($sect_name =~ m/^LIB/) {
 
-		my $ft = $lib->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
-		my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
-		my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
-
- # We expect to have a valid configuration file here so don't bother throwing
- # any errors from this point... sspace will error anyway if there is a problem.
-
-		my $rs = "";
-
-		if ( $lib->{seq_orientation} eq "FR" ) {
-			$rs = 0;
+			my $ft = $lib->{file_paired_1}; # TODO: Need to fix this, doesn't distinguish between FASTQ and FASTA yet (assumes FASTQ)
+			my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
+			my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
+	
+			# We expect to have a valid configuration file here so don't bother throwing
+			# any errors from this point... sspace will error anyway if there is a problem.
+		
+			my $rs = "";
+	
+			if ( $lib->{seq_orientation} eq "FR" ) {
+				$rs = 0;
+			}
+			elsif ( $lib->{seq_orientation} eq "RF" ) {
+				$rs = 1;
+			}
+	
+			my $asm = "";
+	
+			if ( $lib->{usage} eq "ASSEMBLY_ONLY" ) {
+				$asm = "1";
+			}
+			elsif ( $lib->{usage} eq "SCAFFOLDING_ONLY" ) {
+				$asm = "2";
+			}
+			elsif ( $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING" ) {
+				$asm = "3";
+			}
+			else {
+				$asm = "0";
+			}
+	
+			my @soap_args = (
+				"[LIB]",
+				"max_rd_len=" . $lib->{read_length},
+				"avg_ins=" . $lib->{avg_insert_size},
+				"reverse_seq=" . $rs,
+				"asm_flags=" . $asm,
+				"rank=" . $i,
+				( $ft ? "q1=" : "f1=" ) . $file1,
+				( $ft ? "q2=" : "f2=" ) . $file2
+			);
+	
+			my $line = join "\n", @soap_args;
+	
+			print OUT $line . "\n";
 		}
-		elsif ( $lib->{seq_orientation} eq "RF" ) {
-			$rs = 1;
-		}
-
-		my $asm = "";
-
-		if ( $lib->{usage} eq "ASSEMBLY_ONLY" ) {
-			$asm = "1";
-		}
-		elsif ( $lib->{usage} eq "SCAFFOLDING_ONLY" ) {
-			$asm = "2";
-		}
-		elsif ( $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING" ) {
-			$asm = "3";
-		}
-		else {
-			$asm = "0";
-		}
-
-		my @soap_args = (
-			"[LIB]",
-			"max_rd_len=" . $lib->{read_length},
-			"avg_ins=" . $lib->{avg_insert_size},
-			"reverse_seq=" . $rs,
-			"asm_flags=" . $asm,
-			"rank=" . $i,
-			( $ft ? "q1=" : "f1=" ) . $file1,
-			( $ft ? "q2=" : "f2=" ) . $file2
-		);
-
-		my $line = join "\n", @soap_args;
-
-		print OUT $line . "\n";
 	}
 
 	close OUT;

@@ -42,10 +42,10 @@ my $T_SOAP_VERSION = "x.x";
 my $ASM_NAME_PREFIX = "MASS-k";
 
 # Kmer constants
+my $DEF_KMER_MIN = 41;
+my $DEF_KMER_MAX = 101;
 my $KMER_MIN = 11;
 my $KMER_MAX = 125;
-my $DEF_KMER_MIN = 41;
-my $DEF_KMER_MAX = 125;
 
 # Threads constants
 my $DEF_THREADS=8;
@@ -74,8 +74,7 @@ $qst->parseOptions();
 
 
 # Assign any command line options to variables
-my (%opt) = (	"kmin", 		$DEF_KMER_MIN,
-				"kmax", 		$DEF_KMER_MAX);
+my (%opt) = ();
 
 GetOptions (
 	\%opt,
@@ -100,23 +99,33 @@ pod2usage( -verbose => 2 ) if $opt{man};
 print "\nCommand line arguments gathered\n\n" if $qst->isVerbose();
 
 
-# Argument Validation
-
+# Check for and load relevant info from config file (will die if config file not present)
 die "Error: No config file specified\n\n" unless $opt{config};
-die "Error: K-mer limits must be >= " . $KMER_MIN . "nt\n\n" unless ($opt{kmin} >= $KMER_MIN && $opt{kmax} >= $KMER_MIN);
-die "Error: K-mer limits must be <= " . $KMER_MAX . "nt\n\n" unless ($opt{kmin} <= $KMER_MAX && $opt{kmax} <= $KMER_MAX);
-die "Error: Min K-mer value must be <= Max K-mer value\n\n" unless ($opt{kmin} <= $opt{kmax});
-die "Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.\n\n" unless (validKmer($opt{kmin}) && validKmer($opt{kmax}));
 
+# Set default kmer values
+my $kmin = $DEF_KMER_MIN;
+my $kmax = $DEF_KMER_MAX;
+
+# Override with kmer settings in config
+my $cfg = new Configuration( $opt{config} );
+my $cfg_mass_sect = $cfg->getSectionByName("MASS");
+$kmin = $cfg_mass_sect->{"kmin"} ? $cfg_mass_sect->{"kmin"} : $kmin;
+$kmax = $cfg_mass_sect->{"kmax"} ? $cfg_mass_sect->{"kmax"} : $kmax;
+
+# Override kmers again if specified at the command line (command line has precedence)
+$kmin = $opt{kmin} ? $opt{kmin} : $kmin;
+$kmax = $opt{kmax} ? $opt{kmax} : $kmax;
+
+
+# Will die if kmers are invalid
+validateKmers($kmin, $kmax);
+
+
+# Other arg validation
 die "Error: Invalid number of cores requested.  Must request at least 1 core per assembly.\n\n" unless ($qst->getThreads() >= 1);
-
 die "Error: Invalid memory setting.  Must request at least " . $MIN_MEM . "GB.\n\n" unless ($qst->getMemoryGB() >= $MIN_MEM);
 
 print "Validated arguments\n\n" if $qst->isVerbose();
-
-
-
-# We shouldn't have to do this but abyss
 
 
 
@@ -124,29 +133,18 @@ print "Validated arguments\n\n" if $qst->isVerbose();
 my $job_prefix = $qst->getJobName();
 my $output_dir = $qst->getOutput();
 
-my $cfg = new Configuration( $opt{config} );
 
-
-# Assembly job loop
+# Set tool and version info
 my $tool = $qst->getTool();
 my $tool_version = "x.x";
+
+# Setup/Create main directories
+my ($contigs_dir, $scaffolds_dir, $log_dir, $stat_scaffolds) = create_support_directories();
+
+
+# Main loop
 my $j = 0;
-
-# Create directory for links to assembled contigs
-my $contigs_dir = $output_dir . "/contigs";
-system("mkdir", $contigs_dir) unless (-e $contigs_dir);
-
-# Abyss automatically creates scaffolds so create a directory for links to assembled scaffolds
-my $scaffolds_dir = $output_dir . "/scaffolds";
-my $stat_scaffolds = 0;
-if ($tool eq $T_ABYSS) {
-	$stat_scaffolds = 1;
-	$tool_version = $T_ABYSS_VERSION;
-	system("mkdir", $scaffolds_dir) unless (-e $scaffolds_dir);	
-}
-
-
-for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
+for(my $i=$kmin; $i<=$kmax;) {
 
 	my $i_dir = $output_dir . "/" . $i;
 	my $job_name = $job_prefix . "-k" . $i;
@@ -159,7 +157,7 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 		$qst_ass->setExtraArgs("-Rselect[hname!='n57142.tgaccluster']");
 		
 		# Build up the command line for abyss
-		$cmd_line = buildAbyssCmdLine($i);
+		$cmd_line = buildAbyssCmdLine($i, $log_dir);
 		
 		# Make links to assembled contigs at a predicatable location
 		my $abyss_config_file = "../" . $i . "/" . $ASM_NAME_PREFIX . $i . "-contigs.fa"; #Expected abyss contig file
@@ -208,45 +206,40 @@ for(my $i=$opt{kmin}; $i<=$opt{kmax};) {
 	$j++;
 }
 
-
 # Change back to the original directory before exiting.
-
 chdir $PWD;
 
-
 # If requested, produce statistics and graphs for this run
-if ($opt{stats}) {
-	
-	# Create the job options	
-	my $qst_stats = createStatJobOptions();
-	
-	# Create the command line
-	my @stat_args;
-	push @stat_args, buildStatCmdLine($contigs_dir);
-	push @stat_args, buildStatCmdLine($scaffolds_dir) if $stat_scaffolds;
-	
-	my $stat_cmd_line = join "; ", @stat_args;
-	
-	# Submit the stat job
-	SubmitJob::submit($qst_stats, $stat_cmd_line);
-}
+stats($contigs_dir, $scaffolds_dir, $stat_scaffolds) if ($opt{stats});
 
-
-if ($opt{log}) {
-	open (LOGFILE, ">", $output_dir . "/mass.log");
-	print LOGFILE "[MASS]\n";
-	print LOGFILE "tool=" . $tool . "\n";
-	print LOGFILE "version=" . $tool_version . "\n";
-	print LOGFILE "memory=" . $qst->getMemoryGB() . "\n";
-	print LOGFILE "kmin=" . $opt{kmin} . "\n";
-	print LOGFILE "kmax=" . $opt{kmax} . "\n";
-	close(LOGFILE);
-}
+# Log settings used for this run if requested
+log_settings($log_dir . "/mass.settings") if ($opt{log});
 
 
 # Script finished successfully... but the jobs will still be running...
-
 exit 0;
+
+
+sub create_support_directories {
+	# Create directory for links to assembled contigs
+	my $contigs_dir = $output_dir . "/contigs";
+	system("mkdir", $contigs_dir) unless (-e $contigs_dir);
+	
+	# Abyss automatically creates scaffolds so create a directory for links to assembled scaffolds
+	my $scaffolds_dir = $output_dir . "/scaffolds";
+	my $stat_scaffolds = 0;
+	if ($tool eq $T_ABYSS) {
+		$stat_scaffolds = 1;
+		$tool_version = $T_ABYSS_VERSION;
+		system("mkdir", $scaffolds_dir) unless (-e $scaffolds_dir);	
+	}
+	
+	# Create directory for logs
+	my $logs_dir = $output_dir . "/logs";
+	system("mkdir", $logs_dir) unless (-e $logs_dir);
+	
+	return ($contigs_dir, $scaffolds_dir, $logs_dir, $stat_scaffolds);
+}
 
 
 sub buildStatCmdLine {
@@ -268,7 +261,7 @@ sub buildStatCmdLine {
 
 sub buildAbyssCmdLine {
 	
-	my ($kmer) = @_;
+	my ($kmer, $log_dir) = @_;
 	
 	# Create argument list
 	my $abyss_core_args = "n=10 mpirun=mpirun.lsf";
@@ -281,14 +274,19 @@ sub buildAbyssCmdLine {
 	my @lib_args = ();
 	my @single_ends = ();
 	
-	for(my $j = 1; $j < $cfg->getNbSections(); $j++) {
-		my $sect = $cfg->getSectionAt($j);
-		if ($sect->{usage} eq "ASSEMBLY" || $sect->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {			
-			my $sect_name = $cfg->getSectionNameAt($j);
-			my $se = $sect->{file_se};
-			push(@libs, $sect_name);
-			push(@lib_args, ($sect_name . "='" . $sect->{file_paired_1} . " " . $sect->{file_paired_2} . "'"));
-			push(@single_ends, $se) if $se;
+	for(my $j = 0; $j < $cfg->getNbSections(); $j++) {
+		# Get info for this section
+		my $lib = $cfg->getSectionAt($j);
+		my $sect_name = $cfg->getSectionNameAt($j);
+		
+		# Only interested if this config section starts with "LIB"
+		if ($sect_name =~ m/^LIB/) {
+			if ($lib->{usage} eq "ASSEMBLY_ONLY" || $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {			
+				my $se = $lib->{file_se};
+				push(@libs, $sect_name);
+				push(@lib_args, ($sect_name . "='" . $lib->{file_paired_1} . " " . $lib->{file_paired_2} . "'"));
+				push(@single_ends, $se) if $se;
+			}
 		}
 	}
 	
@@ -296,6 +294,7 @@ sub buildAbyssCmdLine {
 	my $abyss_lib_args = (join " ", @lib_args);
 	my $abyss_ses = @single_ends > 0 ? "se='" . (join " ", @single_ends) . "'" : "";
 	my $abyss_libs = "-j" . ($cfg->getNbSections() - 1);
+	my $abyss_log = $log_dir . "/" . $ASM_NAME_PREFIX . $kmer . ".log";
 	
 	# Put together all the arguments
 	my @abyss_args = grep {$_} (
@@ -308,7 +307,9 @@ sub buildAbyssCmdLine {
 		$abyss_libs,
 		$abyss_lib,
 		$abyss_lib_args,
-		$abyss_ses
+		$abyss_ses,
+		">",
+		$abyss_log
 	);
 	
 	my $cmd_line = join " ", @abyss_args;
@@ -366,6 +367,49 @@ sub validKmer {
 	else {
 		return 0;
 	}
+}
+
+
+sub validateKmers {
+	
+	my ($kmin,$kmax) = @_;
+	die "Error: K-mer limits must be >= " . $KMER_MIN . "nt\n\n" unless ($kmin >= $KMER_MIN && $kmax >= $KMER_MIN);
+	die "Error: K-mer limits must be <= " . $KMER_MAX . "nt\n\n" unless ($kmin <= $KMER_MAX && $kmax <= $KMER_MAX);
+	die "Error: Min K-mer value must be <= Max K-mer value\n\n" unless ($kmin <= $kmax);
+	die "Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.\n\n" unless (validKmer($kmin) && validKmer($kmax));
+}
+
+sub stats {
+	
+	my ($contigs_dir, $scaffolds_dir, $stat_scaffolds) = @_;
+	
+	# Create the job options	
+	my $qst_stats = createStatJobOptions();
+	
+	# Create the command line
+	my @stat_args;
+	push @stat_args, buildStatCmdLine($contigs_dir);
+	push @stat_args, buildStatCmdLine($scaffolds_dir) if $stat_scaffolds;
+	
+	my $stat_cmd_line = join "; ", @stat_args;
+	
+	# Submit the stat job
+	SubmitJob::submit($qst_stats, $stat_cmd_line);
+}
+
+
+sub log_settings {
+	
+	my $log_file = shift;
+	
+	open (LOGFILE, ">", $log_file);
+	print LOGFILE "[MASS]\n";
+	print LOGFILE "tool=" . $tool . "\n";
+	print LOGFILE "version=" . $tool_version . "\n";
+	print LOGFILE "memory=" . $qst->getMemoryGB() . "\n";
+	print LOGFILE "kmin=" . $kmin . "\n";
+	print LOGFILE "kmax=" . $kmax . "\n";
+	close(LOGFILE);
 }
 
 __END__

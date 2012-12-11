@@ -120,60 +120,64 @@ if ($opt{qt}) {
 	$raw_cfg = new Configuration( $job_fs->getRawConfigFile() );
 	$qt_cfg = new Configuration( $job_fs->getQtConfigFile() );
 	
-	for(my $i = 1; $i < $raw_cfg->getNbSections(); $i++) {
+	for(my $i = 0; $i < $raw_cfg->getNbSections(); $i++) {
 		
 		# Get info for this section
 		my $cfg_sect = $raw_cfg->getSectionAt($i);
 		my $sect_name = $raw_cfg->getSectionNameAt($i);
 		
-		# Get the file paths pointed to by the original config file.
-		my $file1 = $cfg_sect->{file_paired_1};
-		my $file2 = $cfg_sect->{file_paired_2};
+		# Only interested if this config section starts with "LIB"
+		if ($sect_name =~ m/^LIB/) {
+			
+			# Get the file paths pointed to by the original config file.
+			my $file1 = $cfg_sect->{file_paired_1};
+			my $file2 = $cfg_sect->{file_paired_2};
+			
+			# Configure file paths for reads dir
+			my $read_file_prefix = $job_fs->getReadsDir() . "/" . $cfg_sect->{name};
+			my $in_file1 = $read_file_prefix . "_1.fastq";
+			my $in_file2 = $read_file_prefix . "_2.fastq";
+			my $out_file1 = $read_file_prefix . "_1.qt.fastq";
+			my $out_file2 = $read_file_prefix . "_2.qt.fastq";
+			my $sout_file = $read_file_prefix . "_se.qt.fastq";
+					
+			# Link the original files to the reads dir
+			system("ln -s -f " . $file1 . " " . $in_file1);
+			system("ln -s -f " . $file2 . " " . $in_file2);
+			
+			
+			my $qt_job_name = $qt_job_prefix . "-" . $i;
+			
+			my @qt_args = grep {$_} (
+				$QT_PATH,
+				$qst->getGridEngineAsParam(),
+				$qst->getProjectNameAsParam(),
+				"--job_name " . $qt_job_name,
+				$qst->getQueueAsParam(),
+				$qst->getExtraArgs(),
+				$qst->isVerboseAsParam(),
+				"--output " . $job_fs->getReadsDir(),
+				"--log",
+				"--in1 " . $in_file1,
+				"--in2 " . $in_file2,
+				"--out1 " . $out_file1,
+				"--out2 " . $out_file2,
+				"--sout " . $sout_file
+			);
+					
+			my $qt_cmd_line = join " ", @qt_args;
 		
-		# Configure file paths for reads dir
-		my $read_file_prefix = $job_fs->getReadsDir() . "/" . $cfg_sect->{name};
-		my $in_file1 = $read_file_prefix . "_1.fastq";
-		my $in_file2 = $read_file_prefix . "_2.fastq";
-		my $out_file1 = $read_file_prefix . "_1.qt.fastq";
-		my $out_file2 = $read_file_prefix . "_2.qt.fastq";
-		my $sout_file = $read_file_prefix . "_se.qt.fastq";
-				
-		# Link the original files to the reads dir
-		system("ln -s -f " . $file1 . " " . $in_file1);
-		system("ln -s -f " . $file2 . " " . $in_file2);
-		
-		
-		my $qt_job_name = $qt_job_prefix . "-" . $i;
-		
-		my @qt_args = grep {$_} (
-			$QT_PATH,
-			$qst->getGridEngineAsParam(),
-			$qst->getProjectNameAsParam(),
-			"--job_name " . $qt_job_name,
-			$qst->getQueueAsParam(),
-			$qst->getExtraArgs(),
-			$qst->isVerboseAsParam(),
-			"--output " . $job_fs->getReadsDir(),
-			"--log",
-			"--in1 " . $in_file1,
-			"--in2 " . $in_file2,
-			"--out1 " . $out_file1,
-			"--out2 " . $out_file2,
-			"--sout " . $sout_file
-		);
-				
-		my $qt_cmd_line = join " ", @qt_args;
-	
-		system($qt_cmd_line);
-		
-		# Also we must change the new configuration files for consisitency
-		$raw_cfg->getSectionAt($i)->{file_paired_1} = $in_file1;
-		$raw_cfg->getSectionAt($i)->{file_paired_2} = $in_file2;
-		$raw_cfg->getRawStructure()->newval($sect_name, "dataset", "RAW" );
-		$qt_cfg->getSectionAt($i)->{file_paired_1} = $out_file1;
-		$qt_cfg->getSectionAt($i)->{file_paired_2} = $out_file2;
-		$qt_cfg->getRawStructure()->newval($sect_name, "file_se", $sout_file );
-		$qt_cfg->getRawStructure()->newval($sect_name, "dataset", "QT" );
+			system($qt_cmd_line);
+			
+			# Also we must change the new configuration files for consisitency
+			$raw_cfg->getSectionAt($i)->{file_paired_1} = $in_file1;
+			$raw_cfg->getSectionAt($i)->{file_paired_2} = $in_file2;
+			$raw_cfg->getRawStructure()->newval($sect_name, "dataset", "RAW" );
+			$qt_cfg->getSectionAt($i)->{file_paired_1} = $out_file1;
+			$qt_cfg->getSectionAt($i)->{file_paired_2} = $out_file2;
+			$qt_cfg->getRawStructure()->newval($sect_name, "file_se", $sout_file );
+			$qt_cfg->getRawStructure()->newval($sect_name, "dataset", "QT" );
+		}
 	}
 	
 	# Save the new configuration files
@@ -202,7 +206,7 @@ if ($opt{mass}) {
 	run_mass($job_fs->getQtConfigFile(), $qt_mass_job_prefix, $job_fs->getMassQtDir(), $qt_wait_job);
 	
 	# Just link to one of the mass.log files produced in one of the sub directories... they both should be the same.
-	system("cp -f " . $job_fs->getMassRawDir() . "/mass.log " . $job_fs->getMassDir() . "/mass.log");
+	system("cp -f " . $job_fs->getMassRawSettingsFile() . " " . $job_fs->getMassSettingsFile());
 }
 
 ## Run mass selector to find the best assembly
@@ -248,6 +252,7 @@ if ($opt{mass_selector}) {
 	$get_best_job->setGridEngine($qst->getGridEngine());
 	$get_best_job->setProjectName($qst->getProjectName());
 	$get_best_job->setJobName($get_best_job_name);
+	$get_best_job->setQueue($qst->getQueue());
 	$get_best_job->setWaitCondition("ended(" . $ms_job_name . ")");
 	$get_best_job->setVerbose($qst->isVerbose());
 	SubmitJob::submit($get_best_job, join " ", @gb_args);
@@ -312,6 +317,7 @@ if ($opt{report} || $opt{persist}) {
 	$helper_job->setGridEngine($qst->getGridEngine());
 	$helper_job->setProjectName($qst->getProjectName());
 	$helper_job->setJobName($helper_job_name);
+	$helper_job->setQueue($qst->getQueue());
 	
 	if ($opt{improver}) {
 		$helper_job->setWaitCondition("ended(" . $improver_job_name . ")");
@@ -331,7 +337,7 @@ if (1){#$qst->isVerbose()) {
 			"RAMPART has successfully submitted all child jobs to the grid engine.  " .
 			"You will be notified by email when the jobs have completed.  " .
 			"In case you need to kill all grid engine jobs produced by this run the job prefix is: " . $qst->getJobName() . ".  " .
-			"So, for example, if you are using LSF type \"bkill -J " . $qst->getJobName() . "*\" to kill all jobs from this run.\n";
+			"So, for example, if you are using LSF, type \"bkill -J " . $qst->getJobName() . "*\" to kill all jobs from this run.\n";
 }
 
 

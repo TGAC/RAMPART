@@ -116,6 +116,21 @@ sub getMassStatsFile {
 	return $self->getMassStatsDir() . "/score.tab";
 }
 
+sub getMassSettingsFile {
+	my ( $self ) = @_;
+	return $self->getMassDir() . "/mass.settings";
+}
+
+sub getMassRawSettingsFile {
+	my ( $self ) = @_;
+	return $self->getMassRawDir() . "/logs/mass.settings";
+}
+
+sub getMassQtSettingsFile {
+	my ( $self ) = @_;
+	return $self->getMassQtDir() . "/logs/mass.settings";
+}
+
 sub getBestPathFile {
 	my ( $self ) = @_;
 	return $self->getMassStatsDir() . "/best.path.txt";

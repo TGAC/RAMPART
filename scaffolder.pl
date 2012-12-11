@@ -169,30 +169,36 @@ sub write_sspace_cfg {
 	
 	open OUT, ">", $out_file;
 	
-	for( my $i = 1; $i < $config->getNbSections(); $i++ ) {
+	for( my $i = 0; $i < $config->getNbSections(); $i++ ) {
 		
+		# Get info for this section
 		my $lib = $config->getSectionAt($i);
+		my $sect_name = $config->getSectionNameAt($i);
 		
-		if ($lib->{usage} eq "SCAFFOLDING" || $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {
+		# Only interested if this config section starts with "LIB"
+		if ($sect_name =~ m/^LIB/) {
 		
-			my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
-			my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
+			if ($lib->{usage} eq "SCAFFOLDING" || $lib->{usage} eq "ASSEMBLY_AND_SCAFFOLDING") {
 			
-			# We expect to have a valid configuration file here so don't bother throwing
-			# any errors from this point... sspace will error anyway if there is a problem.
-					
-			my @sspace_args = (
-				"LIB" . $i,
-				$file1,
-				$file2,
-				$lib->{avg_insert_size},
-				$lib->{insert_err_tolerance},
-				$lib->{seq_orientation} 
-			);
-			
-			my $line = join " ", @sspace_args;
-			
-			print OUT $line . "\n";
+				my $file1 = $lib->{file_paired_1} ? $lib->{file_paired_1} : undef;
+				my $file2 = $lib->{file_paired_2} ? $lib->{file_paired_2} : undef;
+				
+				# We expect to have a valid configuration file here so don't bother throwing
+				# any errors from this point... sspace will error anyway if there is a problem.
+						
+				my @sspace_args = grep{$_} (
+					"LIB" . $i,
+					$file1,
+					$file2,
+					$lib->{avg_insert_size},
+					$lib->{insert_err_tolerance},
+					$lib->{seq_orientation} 
+				);
+				
+				my $line = join " ", @sspace_args;
+				
+				print OUT $line . "\n";
+			}
 		}
 	}
 	
