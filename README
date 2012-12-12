@@ -1,7 +1,7 @@
 RAMPART README
 
 Version: 0.3
-Date: 3rd December 2012
+Date: 12th December 2012
 
 
 What does RAMPART do?:
@@ -45,9 +45,13 @@ this section is used for building an automatic report at the end of the assembly
 - [LIB<x>] - which represents a library that should be processed by RAMPART.  The <x> represents the order in which this library should
 be processed.  Generally, we start with [LIB1] and increment this value as necessary.
 
+- [MASS] - which contains properties for the Multiple Assembly stage.  Typically use this to set kmer range.
+
+- [IMPROVER] - which contains properties for the Improver stage.  Typically use this to set the tool order.
+
 Each section can contain properties, which take the following format: "<key>=<value>".  Each property should be separated by a new line.  
 
-The job section can contain the following properties:
+The JOB section can contain the following properties:
 
 - "author"        - The author of the job / report
 - "collaborator"  - Any partner who is involved with this job.
@@ -56,7 +60,7 @@ The job section can contain the following properties:
 - "jira_seqinfo"  - For linking to TGAC ticketing service
 - "miso_id"       - For linking to TGAC MISO LIMS. 
 
-Each lib section can contain the following properties:
+Each LIB section can contain the following properties:
 
 - "name"                 - The library name, for use in the report.
 - "read_length"          - The maximum read length for reads in this library
@@ -69,6 +73,14 @@ from the expected insert_size
 - "file_paired_2"        - If this is a paired end of mate pair library, this represents the second file of the pair.
 - "se_file"              - For use if this is a single end read library.
 
+The MASS section can contain the following properties:
+
+- "kmin"		- The minimum kmer value to process (don't pick even numbers, preferably pick a number which has a unit digit of 1, i.e. 41)
+- "kmax"		- The maximum kmer value to process (don't pick even numbers, preferably pick a number which has a unit digit of 1 or 5, i.e. 91 or 95)
+
+The IMPROVER section can contain the following properties:
+
+- <INDEX NUM>	- This key should be a number describing the position in the queue in an assembly enhancement tool should be run.  Available assembly enhancement tools include: SCAFFOLD, DEGAP, DEDUP, CLIP
 
 
 Output:
@@ -99,9 +111,6 @@ LaTeX: texlive 2012, ...
 Often it's not possible to keep all these tools with the specified versions on the PATH.  There is a file in the rampart root directory called: 
 "grid_engine_app_startup.cfg", which enables the user to execute any commands that would bring the specified tools onto the PATH.  The current
 version of the file is intended for use on the TGAC cluster.
-
-
-Additional Tools:
 
 
 
