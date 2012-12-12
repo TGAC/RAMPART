@@ -87,7 +87,10 @@ public class RampartJobFileStructure {
 	public void makeReportDirs() throws IOException {
 		
 		// Clean the report dir first...
-		this.reportDir.delete();		
+		File[] contents = this.reportDir.listFiles();
+		for(File file : contents) {
+			file.delete();
+		}
 		
 		// ... then rebuild
 		this.reportDir.mkdir();

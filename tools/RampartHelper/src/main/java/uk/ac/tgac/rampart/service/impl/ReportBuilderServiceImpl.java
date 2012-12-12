@@ -70,7 +70,6 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		this.rampartJobService.seperatePlots(jobFS.getImproverPlotsFile(), jobFS.getReportImagesDir(), "Improver");
 		log.debug("Seperated Improver plots into seperate files for report");
 
-
 		// Merge the template and context
 		this.velocityMergerService.merge(jobFS.getReportTemplateFile(), context, jobFS.getReportMergedFile());
 		log.debug("Merged report template and context");

@@ -46,6 +46,7 @@ GetOptions(
 	'degap_args|dg_args=s',
 	'clip_args=s',
 	'config|cfg=s',
+	'backup_config|bcfg=s',
 	'stats',
 	'log',
 	'simulate|sim',
@@ -89,7 +90,8 @@ mkdir $stages_dir;
 mkdir $logs_dir;
 
 # Want some code here to interpret improver pipeline from configuration file
-my @enhancer_stages = load_stages($opt{config});
+my $stage_cfg = $opt{backup_config} ? $opt{backup_config} : $opt{config};
+my @enhancer_stages = load_stages($stage_cfg);
 
 # Generate the execution command list
 my $input_file = abs_path($qst->getInput());
@@ -133,7 +135,7 @@ sub process_stages {
 	
 	my @stages = @{$ref_stages};
 	
-	my $current_assembly = $assembly_dir . "/0.fa";
+	my $current_assembly = $assembly_dir . "/0-scaffolds.fa";
 	
 	my @commands;
 	
@@ -356,7 +358,15 @@ Any additional arguments to send to the clipping tool (e.g. --min_length 500)
 =item B<--config>,B<--cfg>
 
 REQUIRED: The rampart configuration file describing the read libraries which are used to enhance the input scaffolds file.
+Note that this file may not exist at script execution time if running RAMPART in a pipeline.  In this case use B<--backup_config>
+to specify the improver stages to submit to the grid engine.
   
+=item B<--backup_config>,B<--bcfg>
+
+If improver is run in a pipeline we may not know which config file to use at the point of executation.  
+This backup_config file must exist at script execution time, and should contain an [IMPROVER] section describing the
+stages improver is to execute. 
+    
 =item B<--simulate>
 
 Runs the script without sending any jobs to the queue.  Used for testing purposes only.

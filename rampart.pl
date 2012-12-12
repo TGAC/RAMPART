@@ -106,7 +106,8 @@ my $helper_job_name = $qst->getJobName() . "-helper";
 
 
 # Contains locations of all files in a RAMPART job
-my $job_fs = new RampartJobFileStructure($qst->getOutput(), $opt{config});
+my $abs_config_path = abs_path($opt{config});
+my $job_fs = new RampartJobFileStructure($qst->getOutput(), $abs_config_path);
 
 
 # Optionally do quality trimming on the input data
@@ -282,6 +283,7 @@ if ($opt{improver}) {
 			"--output " . $imp_dir,
 			"--input " . $job_fs->getBestAssemblyFile(),
 			"--config " . $job_fs->getBestConfigFile(),
+			"--backup_config " . $abs_config_path,
 			"--stats",
 			"--log",
 			$opt{simulate} ? "--simulate" : "",

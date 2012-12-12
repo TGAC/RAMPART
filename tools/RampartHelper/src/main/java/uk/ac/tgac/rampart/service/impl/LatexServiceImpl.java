@@ -20,10 +20,16 @@ public class LatexServiceImpl implements LatexService {
 		
 		log.debug("Starting LaTeX document compilation procedure.");
 		
-		// Assumes latex is installed and pdflatex is on the path
-		String command = "pdflatex -interaction=nonstopmode " + texFile.getName();
+		final String texFileName = texFile.getName();
+		final String workingDir = new File(".").getAbsolutePath();
 		
-		log.debug("Executing \"" + command + "\"");
+		// Check if report file exists first
+		if (!texFile.exists())
+			throw new IOException("Could not find: \"" + texFileName + "\" in : \"" + workingDir + "\"");
+		
+		// Assumes latex is installed and pdflatex is on the path
+		String command = "pdflatex -interaction=nonstopmode " + texFile.getPath();		
+		log.debug("Executing: \"" + command + "\" in: " + workingDir + "\" 3 times");
 
 		// We have to run Latex 3 times to ensure the document is fully compiled.
 		for(int i = 1; i <= 3; i++) {
@@ -34,7 +40,7 @@ public class LatexServiceImpl implements LatexService {
 			int code = psm.runInForeground(false);
 	
 			if (code != 0) {
-				throw new IOException("PDFLATEX returned code " + code);
+				throw new IOException("PDFLATEX returned code " + code + " on run: " + i);
 			}
 		}
 		
