@@ -38,7 +38,6 @@ public class RampartSettingsDaoImplTest {
 		List<RampartSettings> rsl = rsd.getAllRampartSettings();
 		
 		RampartSettings row0 = rsl.get(0);
-		RampartSettings row1 = rsl.get(1);
 		
 		assertTrue(row0.getRampartVersion().equals("0.2"));
 	}

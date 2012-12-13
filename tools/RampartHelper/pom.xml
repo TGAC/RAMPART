@@ -14,7 +14,36 @@
 - Creating job report
 - Building rampart config files
 - Linking to MISO
-- Persisting job information to a DB for future reference.</description>
+- Persisting job information to a DB for future reference.
+	</description>
+
+
+	<!-- Licensing -->
+	<licenses>
+		<license>
+			<name>GNU General Public License v3</name>
+			<url>http://www.gnu.org/licenses/gpl.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<!-- Developer Listing -->
+	<developers>
+		<developer>
+			<id>maplesod</id>
+			<name>Daniel Mapleson</name>
+			<email>daniel.mapleson@tgac.ac.uk</email>
+			<organization>TGAC</organization>
+			<organizationUrl>http://www.tgac.ac.uk</organizationUrl>
+			<roles>
+				<role>Scientific Programmer</role>
+			</roles>
+			<timezone>0</timezone>
+			<properties />
+		</developer>
+	</developers>
+
+
 	<build>
 
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -90,6 +119,16 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>hasbanana-repo</id>
+			<url>http://www.hasbanana.com/maven/repo</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.velocity</groupId>
@@ -116,8 +155,6 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>4.1.7.Final</version>
 		</dependency>
-		<!-- <dependency> <groupId>org.hibernate</groupId> <artifactId>hibernate-annotations</artifactId> 
-			<version>3.5.6-Final</version> </dependency> -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -144,8 +181,6 @@
 			<artifactId>spring-orm</artifactId>
 			<version>3.1.2.RELEASE</version>
 		</dependency>
-		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-dao</artifactId> 
-			<version>2.0.8</version> </dependency> -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -177,10 +212,29 @@
 			<version>2.2.2</version>
 		</dependency>
 		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.6.6</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.6</version>
+		</dependency>
+		<dependency>
+			<groupId>uk.ac.ebi.fgpt</groupId>
+			<artifactId>conan-service</artifactId>
+			<version>2.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>uk.ac.ebi.fgpt</groupId>
+			<artifactId>conan-core-services</artifactId>
+			<version>2.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>uk.ac.ebi.fgpt</groupId>
+			<artifactId>conan-demo-processes</artifactId>
+			<version>1.0</version>
+		</dependency>
 	</dependencies>
 </project>

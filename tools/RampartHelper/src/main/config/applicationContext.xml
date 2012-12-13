@@ -16,7 +16,7 @@
 		default-autowire="byName">
 	
 	<context:component-scan	base-package="uk.ac.tgac.rampart">
-		<context:include-filter type="regex" expression="(service|dao)\..*"/> 
+		<context:include-filter type="regex" expression="(service|dao|conan)\..*"/> 
 	</context:component-scan>
 	
 	<tx:annotation-driven transaction-manager="transactionManager"/>
