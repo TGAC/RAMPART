@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<conan-pipelines xmlns="http://www.ebi.ac.uk/arrayexpress/conan/pipelines"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.ebi.ac.uk/arrayexpress/conan/pipelines
+                                     http://www.ebi.ac.uk/arrayexpress/conan/pipelines.xsd">
+
+    <!-- Demo processes -->
+    <pipeline name="rampart" creator="maplesod">
+        <processes>
+            <process name="quality trimming" 	displayName="step 1" />
+            <process name="mass" 				displayName="step 2"/>
+            <process name="mass selector" 		displayName="step 3"/>
+            <process name="improver" 			displayName="step 4"/>
+            <process name="helper" 				displayName="step 5"/>
+        </processes>
+    </pipeline>
+
+
+</conan-pipelines>
