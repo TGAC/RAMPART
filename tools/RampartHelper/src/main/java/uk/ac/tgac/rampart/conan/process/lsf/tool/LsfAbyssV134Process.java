@@ -4,22 +4,16 @@ import java.util.Collection;
 import java.util.Map;
 
 import net.sourceforge.fluxion.spi.ServiceProvider;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.tool.AbyssV134Params;
 import uk.ac.tgac.rampart.conan.process.lsf.AbstractRampartLsfProcess;
-import uk.ac.tgac.rampart.service.ToolLoaderService;
+import uk.ac.tgac.rampart.util.ToolCommandLoader;
 
 @ServiceProvider
 public class LsfAbyssV134Process extends AbstractRampartLsfProcess {
 
 	private static final long serialVersionUID = -7311765587559938252L;
 	
-	@Autowired 
-	private ToolLoaderService toolLoaderService;
-		
 	private static final String CMD = "abyss-pe";
 	
 	private AbyssV134Params params;
@@ -34,7 +28,7 @@ public class LsfAbyssV134Process extends AbstractRampartLsfProcess {
 	
 	@Override
 	protected String getLoadToolCommand() {
-		return "";//	toolLoaderService.getLoadToolCommand(ToolLoaderService.ABYSS_1_3_4);
+		return ToolCommandLoader.getInstance().getLoadToolCommand(ToolCommandLoader.ABYSS_1_3_4);
 	}
 
 	@Override
@@ -61,7 +55,7 @@ public class LsfAbyssV134Process extends AbstractRampartLsfProcess {
 
 	@Override
 	public String getName() {
-		return "Abyss v1.3.4 (LSF)";
+		return "AbyssV1.3.4_LSF";
 	}
 
 	@Override

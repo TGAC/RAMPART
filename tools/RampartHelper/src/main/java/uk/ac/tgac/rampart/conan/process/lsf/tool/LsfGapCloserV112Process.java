@@ -4,21 +4,15 @@ import java.util.Collection;
 import java.util.Map;
 
 import net.sourceforge.fluxion.spi.ServiceProvider;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.tool.GapCloserV112Params;
 import uk.ac.tgac.rampart.conan.process.lsf.AbstractRampartLsfProcess;
-import uk.ac.tgac.rampart.service.ToolLoaderService;
+import uk.ac.tgac.rampart.util.ToolCommandLoader;
 
 @ServiceProvider
 public class LsfGapCloserV112Process extends AbstractRampartLsfProcess {
 
 	private static final long serialVersionUID = -7311765587559938252L;
-	
-	@Autowired
-	private ToolLoaderService toolLoaderService;
 	
 	private static final String CMD = "GapCloser";
 	
@@ -30,7 +24,7 @@ public class LsfGapCloserV112Process extends AbstractRampartLsfProcess {
 	
 	@Override
 	protected String getLoadToolCommand() {
-		return 	toolLoaderService.getLoadToolCommand(ToolLoaderService.GAPCLOSER_1_12);
+		return ToolCommandLoader.getInstance().getLoadToolCommand(ToolCommandLoader.GAPCLOSER_1_12);
 	}
 
 	@Override

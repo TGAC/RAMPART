@@ -1,3 +1,4 @@
+package uk.ac.tgac.rampart.frontend.cli;
 import static org.junit.Assert.*;
 
 import org.junit.Test;

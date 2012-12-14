@@ -32,11 +32,10 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		this.setQueueName("production");
 		
 		// Standard job name
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd_HH:mm:ss");
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
 		Date date = new Date();
-		this.setJobName(dateFormat.format(date) + "_" + this.getClass().getName());
-		
-		
+		this.setJobName(dateFormat.format(date) + "_" + this.getClass().getSimpleName());
+				
 		this.projectName = "RAMPART";
 		this.memoryRequired = null;
 		this.threads = 1;
@@ -81,7 +80,7 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 	}
 	
 	@Override
-	public String getCommand(Map<ConanParameter, String> parameters)
+	protected String getCommand(Map<ConanParameter, String> parameters)
 			throws IllegalArgumentException {
 		this.logExecuteStart(log,parameters);
 				
@@ -104,9 +103,9 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 	@Override
 	protected String getLSFOptions(Map<ConanParameter, String> parameterStringMap) {
 		
-		return 	(this.threads == null || this.threads <= 1 ? "" : "-n " + this.threads) +
-				(this.openmpi == false ? "" : "-a openmpi") +
-				(this.waitCondition == null ? "" : this.waitCondition.toString()) +
+		return 	(this.threads == null || this.threads <= 1 ? "" : "-n " + this.threads + " ") +
+				(this.openmpi == false ? "" : "-a openmpi ") +
+				(this.waitCondition == null ? "" : this.waitCondition.toString() + " ") +
 				(this.extraLsfOptions == null || this.extraLsfOptions.equals("") ? "" : this.extraLsfOptions);
 	}
 

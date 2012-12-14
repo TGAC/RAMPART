@@ -15,9 +15,7 @@
 							http://www.springframework.org/schema/aop/spring-aop-3.0.xsd            "						      
 		default-autowire="byName">
 	
-	<context:component-scan	base-package="uk.ac.tgac.rampart">
-		<context:include-filter type="regex" expression="(service|dao|conan)\..*"/> 
-	</context:component-scan>
+	<context:component-scan	annotation-config="true" base-package="uk.ac.tgac.rampart"/>
 	
 	<tx:annotation-driven transaction-manager="transactionManager"/>
 		

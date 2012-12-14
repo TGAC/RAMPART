@@ -4,21 +4,15 @@ import java.util.Collection;
 import java.util.Map;
 
 import net.sourceforge.fluxion.spi.ServiceProvider;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.tool.SSpaceBasicV2Params;
 import uk.ac.tgac.rampart.conan.process.lsf.AbstractRampartLsfProcess;
-import uk.ac.tgac.rampart.service.ToolLoaderService;
+import uk.ac.tgac.rampart.util.ToolCommandLoader;
 
 @ServiceProvider
 public class LsfSSpaceBasicV2Process extends AbstractRampartLsfProcess {
 
 	private static final long serialVersionUID = -7311765587559938252L;
-	
-	@Autowired
-	private ToolLoaderService toolLoaderService;
 	
 	private static final String CMD = "SSPACE_Basic_v2.0.pl";
 	
@@ -31,8 +25,8 @@ public class LsfSSpaceBasicV2Process extends AbstractRampartLsfProcess {
 	
 	@Override
 	protected String getLoadToolCommand() {
-		return 	toolLoaderService.getLoadToolCommand(ToolLoaderService.PERL_5_16_1) + "; " +
-				toolLoaderService.getLoadToolCommand(ToolLoaderService.SSPACE_BASIC_2_0);
+		return 	ToolCommandLoader.getInstance().getLoadToolCommand(ToolCommandLoader.PERL_5_16_1) + "; " +
+				ToolCommandLoader.getInstance().getLoadToolCommand(ToolCommandLoader.SSPACE_BASIC_2_0);
 	}
 
 	@Override
