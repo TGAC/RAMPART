@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>uk.ac.tgac.rampart</groupId>
+	<artifactId>rampart</artifactId>
+	<version>0.4</version>
+	<packaging>pom</packaging>
+
+	<name>Rampart</name>
+	<url>http://www.tgac.ac.uk</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<!-- Licensing -->
+	<licenses>
+		<license>
+			<name>GNU General Public License v3</name>
+			<url>http://www.gnu.org/licenses/gpl.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<!-- Developer Listing -->
+	<developers>
+		<developer>
+			<id>maplesod</id>
+			<name>Daniel Mapleson</name>
+			<email>daniel.mapleson@tgac.ac.uk</email>
+			<organization>TGAC</organization>
+			<organizationUrl>http://www.tgac.ac.uk</organizationUrl>
+			<roles>
+				<role>Scientific Programmer</role>
+			</roles>
+			<timezone>0</timezone>
+			<properties />
+		</developer>
+	</developers>
+
+
+	<build>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<showDeprecation>true</showDeprecation>
+					<showWarnings>true</showWarnings>
+				</configuration>
+			</plugin>
+		</plugins>
+
+	</build>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.6.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<modules>
+		<module>rampart-conan</module>
+		<module>rampart-core</module>
+		<module>rampart-helper</module>
+	</modules>
+
+</project>
