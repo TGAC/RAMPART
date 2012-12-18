@@ -1,3 +1,20 @@
+/**
+ * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+ * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
 package uk.ac.tgac.rampart.conan.process.lsf;
 
 import java.io.File;
@@ -15,7 +32,7 @@ import org.apache.log4j.Logger;
 import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.ToolParameter;
-import uk.ac.tgac.rampart.util.ToolCommandLoader;
+import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
 
 public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 
@@ -89,14 +106,6 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		// files to write output to
 		File outputDir = new File(parentDir, ".rampart");
 
-		for (ConanParameter parameter : parameters.keySet()) {
-			if (parameter.getName().contains("Accession")) {
-				outputDir = new File(new File(parentDir, ".rampart"),
-						parameters.get(parameter));
-				break;
-			}
-		}
-
 		// lsf output file
 		return new File(outputDir, getName() + ".lsfoutput.txt")
 				.getAbsolutePath();
@@ -107,7 +116,7 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 			throws IllegalArgumentException {
 		this.logExecuteStart(log,parameters);
 				
-		String loadCommand = this.getLoadToolCommand();
+		String loadCommand = this.loadToolCommand();
 		
 		List<String> commands = new ArrayList<String>();
 		
@@ -220,7 +229,6 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 				" with the following parameters: " + parameters.toString());
 	}
 	
-	@Override
 	public String getName() {
 		return this.name;
 	}
@@ -230,7 +238,6 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		return this.componentName;
 	}
 	
-	@Override
 	public Collection<ConanParameter> getParameters() {
 		Collection<ConanParameter> parameters = new ArrayList<ConanParameter>();
 		for(ToolParameter p : this.params) {
@@ -239,7 +246,7 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		return parameters;
 	}
 	
-	public String getLoadToolCommand() {
+	public String loadToolCommand() {
 		return ToolCommandLoader.getInstance().getLoadToolCommand(this.componentName);
 	}
 }
