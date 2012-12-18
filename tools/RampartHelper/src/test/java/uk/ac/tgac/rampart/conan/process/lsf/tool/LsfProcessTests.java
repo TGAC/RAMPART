@@ -16,9 +16,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
-import uk.ac.tgac.rampart.conan.parameter.tool.AbyssV134Params;
-import uk.ac.tgac.rampart.conan.parameter.tool.AbyssV134Params.AbyssInputLibrariesParam;
 import uk.ac.tgac.rampart.conan.process.lsf.AbstractRampartLsfProcess;
+import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134Args;
+import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134InputLibsArg;
+import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134LsfProcess;
+import uk.ac.tgac.rampart.conan.tool.sspace.SSpaceBasicV2Args;
+import uk.ac.tgac.rampart.conan.tool.sspace.SSpaceBasicV2LsfProcess;
+import uk.ac.tgac.rampart.util.ToolCommandLoader;
+import uk.ac.tgac.rampart.util.Tools;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations={"/applicationContext.xml"})
@@ -27,12 +32,7 @@ public class LsfProcessTests {
 	@Before
 	public void setup() throws URISyntaxException, IOException {
 		
-		// Setup logging
-		BasicConfigurator.configure();
-		
-		// Tell conan about the properties file
-		File conanPropertiesFile = new File(ClassLoader.getSystemResource("conan.properties").toURI());
-		ConanProperties.getConanProperties().setPropertiesFile(conanPropertiesFile);
+		Tools.configureProperties();
 	}
 	
 	@Test
@@ -40,18 +40,16 @@ public class LsfProcessTests {
 		
 		Map<String, File> peLibs = new HashMap<String,File>();
 		
-		AbyssInputLibrariesParam inputLibraries = new AbyssInputLibrariesParam();
+		AbyssV134InputLibsArg inputLibraries = new AbyssV134InputLibsArg();
 		inputLibraries.setPairedEndLibraries(peLibs);
 		
-		AbyssV134Params params = new AbyssV134Params();
-		params.setInputlibraries(inputLibraries);
-		params.setKmer(61);
-		params.setNbPairsForContigs(12);
-		params.setNbPairsForScaffolds(11);
-		params.setOutputBaseName("OUTPUT_FILE");
-		params.setThreads(16);
+		AbyssV134Args args = new AbyssV134Args();
+		args.setInputlibraries(inputLibraries);
+		args.setKmer(61);
+		args.setName("OUTPUT_FILE");
+		args.setThreads(16);
 		
-		AbstractRampartLsfProcess process = new LsfAbyssV134Process(params);
+		AbstractRampartLsfProcess process = new AbyssV134LsfProcess();
 		process.setMemoryRequired(150000);
 		process.setProjectName("TEST");
 		process.setJobName("TEST_ABYSS");
@@ -59,7 +57,7 @@ public class LsfProcessTests {
 		process.setQueueName("lsf_testing");
 		
 		try {
-			process.execute(params.getParameterValuePairs());
+			process.execute(args.getParameterValuePairs());
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -70,28 +68,18 @@ public class LsfProcessTests {
 	@Test
 	public void testSSpaceBasicV2() {
 		
-		Map<String, File> peLibs = new HashMap<String,File>();
+		SSpaceBasicV2Args args = new SSpaceBasicV2Args();
+		args.setLibraryFile(new File("testlib.lib"));
+		args.setBowtieThreads(8);
+		args.setContigFile(new File("contigs.fa"));
 		
-		AbyssInputLibrariesParam inputLibraries = new AbyssInputLibrariesParam();
-		inputLibraries.setPairedEndLibraries(peLibs);
-		
-		AbyssV134Params params = new AbyssV134Params();
-		params.setInputlibraries(inputLibraries);
-		params.setKmer(61);
-		params.setNbPairsForContigs(12);
-		params.setNbPairsForScaffolds(11);
-		params.setOutputBaseName("OUTPUT_FILE");
-		params.setThreads(16);
-		
-		AbstractRampartLsfProcess process = new LsfAbyssV134Process(params);
-		process.setMemoryRequired(150000);
+		AbstractRampartLsfProcess process = new SSpaceBasicV2LsfProcess();
 		process.setProjectName("TEST");
-		process.setJobName("TEST_ABYSS");
-		process.setOpenmpi(true);
+		process.setJobName("TEST_SSPACE");
 		process.setQueueName("lsf_testing");
 		
 		try {
-			boolean bool = process.execute(params.getParameterValuePairs());
+			process.execute(args.getParameterValuePairs());
 		}
 		catch(Exception e) {
 			e.printStackTrace();

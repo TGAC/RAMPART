@@ -4,6 +4,7 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +14,20 @@ import org.apache.log4j.Logger;
 
 import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.tgac.rampart.conan.parameter.ToolParameter;
+import uk.ac.tgac.rampart.util.ToolCommandLoader;
 
 public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 
 	private static final long serialVersionUID = -1289512647365536443L;
 
 	private static Logger log = Logger.getLogger(AbstractRampartLsfProcess.class);
+	
+	private String name;
+	private String componentName;
+	private String command;
+	private String paramPrefix;
+	private ToolParameter[] params;
 	
 	private String projectName;
 	private Integer memoryRequired;
@@ -27,7 +36,9 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 	private boolean openmpi;
 	private String extraLsfOptions;
 	
-	public AbstractRampartLsfProcess() {
+	public AbstractRampartLsfProcess(String name, String componentName, String command, String paramPrefix,
+			ToolParameter[] params) {
+		
 		// Assume we want to default to production queue
 		this.setQueueName("production");
 		
@@ -42,20 +53,32 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		this.waitCondition = null;
 		this.openmpi = false;
 		this.extraLsfOptions = "";
+		
+		this.name = name;
+		this.componentName = componentName;
+		this.command = command;
+		this.paramPrefix = paramPrefix;
+		this.params = params;
 	}
 	
-	/**
-	 * Override this method for loading any dependencies onto the environment PATH variable. 
-	 * @return The command that brings the tool onto the PATH
-	 */
-	protected abstract String getLoadToolCommand(); 
 	
-	/**
-	 * Override this method to return the command that this tool process should execute.
-	 * @return The command to execute.
-	 */
-	protected abstract String getToolCommand(Map<ConanParameter, String> parameters)
-			throws IllegalArgumentException;
+	public String getToolCommand(Map<ConanParameter, String> parameters)
+			throws IllegalArgumentException {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(this.command);
+		sb.append(" ");
+		for (Map.Entry<ConanParameter, String> param : parameters.entrySet()) {
+			sb.append(this.paramPrefix);
+			sb.append(param.getKey().getName());
+			sb.append(" ");
+			sb.append(param.getValue());
+			sb.append(" ");
+		}
+
+		return sb.toString().trim();
+
+	}
 	
 		
 	@Override
@@ -64,11 +87,11 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		final File parentDir = new File(System.getProperty("user.home"));
 
 		// files to write output to
-		File outputDir = new File(parentDir, ".conan");
+		File outputDir = new File(parentDir, ".rampart");
 
 		for (ConanParameter parameter : parameters.keySet()) {
 			if (parameter.getName().contains("Accession")) {
-				outputDir = new File(new File(parentDir, ".conan"),
+				outputDir = new File(new File(parentDir, ".rampart"),
 						parameters.get(parameter));
 				break;
 			}
@@ -197,4 +220,26 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 				" with the following parameters: " + parameters.toString());
 	}
 	
+	@Override
+	public String getName() {
+		return this.name;
+	}
+	
+	@Override
+	protected String getComponentName() {
+		return this.componentName;
+	}
+	
+	@Override
+	public Collection<ConanParameter> getParameters() {
+		Collection<ConanParameter> parameters = new ArrayList<ConanParameter>();
+		for(ToolParameter p : this.params) {
+			parameters.add(p.getConanParameter());
+		}
+		return parameters;
+	}
+	
+	public String getLoadToolCommand() {
+		return ToolCommandLoader.getInstance().getLoadToolCommand(this.componentName);
+	}
 }

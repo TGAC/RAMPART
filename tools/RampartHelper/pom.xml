@@ -2,20 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>RampartHelper</groupId>
-	<artifactId>RampartHelper</artifactId>
-	<version>0.3</version>
-	<name>RampartHelper</name>
+	<groupId>Rampart</groupId>
+	<artifactId>Rampart</artifactId>
+	<version>0.4</version>
+	<name>Rampart</name>
 	<packaging>jar</packaging>
-	<description>Provides a number of helpful services for RAMPART such as:
-
-- Gathering RAMPART job/project information.
-- Manipulating PDF graphs
-- Creating job report
-- Building rampart config files
-- Linking to MISO
-- Persisting job information to a DB for future reference.
-	</description>
 
 
 	<!-- Licensing -->
@@ -79,7 +70,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>uk.ac.tgac.rampart.frontend.cli.RampartHelper</mainClass>
+							<mainClass>uk.ac.tgac.rampart.frontend.cli.Rampart</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -117,6 +108,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<skipTests>true</skipTests>
 	</properties>
 
 	<repositories>
@@ -180,11 +172,25 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-orm</artifactId>
 			<version>3.1.2.RELEASE</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>3.1.2.RELEASE</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-dbcp</groupId>
@@ -205,6 +211,13 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
 			<version>2.5</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
@@ -212,15 +225,30 @@
 			<version>2.2.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.6.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.6.6</version>
-		</dependency>
+	      <groupId>org.slf4j</groupId>
+	      <artifactId>jcl-over-slf4j</artifactId>
+	      <version>1.7.0</version>
+	      <scope>runtime</scope>
+	   </dependency>
+	   <dependency>
+	      <groupId>org.slf4j</groupId>
+	      <artifactId>slf4j-api</artifactId>
+	      <version>1.7.0</version>
+	      <scope>runtime</scope>
+	   </dependency>
+	   <dependency>
+	      <groupId>org.slf4j</groupId>
+	      <artifactId>slf4j-log4j12</artifactId>
+	      <version>1.7.0</version>
+	      <scope>runtime</scope>
+	   </dependency>
+	   <dependency>
+	      <groupId>log4j</groupId>
+	      <artifactId>log4j</artifactId>
+	      <version>1.2.14</version>
+	      <scope>runtime</scope>
+	   </dependency>
+
 		<dependency>
 			<groupId>uk.ac.ebi.fgpt</groupId>
 			<artifactId>conan-service</artifactId>
@@ -230,6 +258,13 @@
 			<groupId>uk.ac.ebi.fgpt</groupId>
 			<artifactId>conan-core-services</artifactId>
 			<version>2.1-SNAPSHOT</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>uk.ac.ebi.fgpt</groupId>

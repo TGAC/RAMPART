@@ -1,35 +1,25 @@
 package uk.ac.tgac.rampart.conan.parameter;
 
-import org.springframework.util.StringUtils;
-import uk.ac.ebi.fgpt.conan.model.AbstractConanParameter;
-
 import java.io.File;
 import java.io.IOException;
 
+import org.springframework.util.StringUtils;
+
 /**
- * @author Rob Davey
+ * @author Dan Mapleson
  */
-public class PathCreatingPathParameter extends AbstractConanParameter implements
+public class PathCreatingPathParameter extends DefaultConanParameter implements
 		Optionable {
 
 	private static final long serialVersionUID = -4219816838322594970L;
-	private boolean optional = false;
-
+	
 	public PathCreatingPathParameter(String name) {
-		super(name);
-	}
-
-	public PathCreatingPathParameter(String name, boolean isBoolean) {
-		super(name, isBoolean);
-	}
-
-	public PathCreatingPathParameter(String name, String description) {
-		super(name, description);
+		this(name, name, false);
 	}
 
 	public PathCreatingPathParameter(String name, String description,
-			boolean isBoolean) {
-		super(name, description, isBoolean);
+			boolean isOptional) {
+		super(name, description, false, isOptional, false);
 	}
 
 	@Override
@@ -54,13 +44,4 @@ public class PathCreatingPathParameter extends AbstractConanParameter implements
 		return false;
 	}
 
-	@Override
-	public boolean isOptional() {
-		return optional;
-	}
-
-	@Override
-	public void setOptional(boolean optional) {
-		this.optional = optional;
-	}
 }

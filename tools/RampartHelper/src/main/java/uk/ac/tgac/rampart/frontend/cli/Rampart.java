@@ -1,9 +1,14 @@
 package uk.ac.tgac.rampart.frontend.cli;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -12,18 +17,29 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.beans.factory.support.PropertiesBeanDefinitionReader;
+import org.springframework.context.ApplicationContext;
 
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
-import uk.ac.tgac.rampart.conan.parameter.tool.AbyssV134Params;
-import uk.ac.tgac.rampart.conan.parameter.tool.AbyssV134Params.AbyssInputLibrariesParam;
-import uk.ac.tgac.rampart.conan.process.lsf.tool.LsfAbyssV134Process;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134Args;
+import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134InputLibsArg;
+import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134LsfProcess;
 import uk.ac.tgac.rampart.util.ApplicationContextLoader;
 import uk.ac.tgac.rampart.util.ToolCommandLoader;
+import uk.ac.tgac.rampart.util.Tools;
 
 public class Rampart {
 
 	private static Logger log = Logger.getLogger(Rampart.class);
 
+	@Autowired
+	private ApplicationContext context;
+	
+	
 	private RampartOptions options;
 
 	public Rampart(RampartOptions options) {
@@ -33,11 +49,11 @@ public class Rampart {
 	public void process() throws Exception {
 		
 		// Load all Rampart load tool commands.  
-		ToolCommandLoader.getInstance().loadPropertiesFile("load_tool_commands.properties");
+		/*ToolCommandLoader.getInstance().loadPropertiesFile("load_tool_commands.properties");*/
 		
 		// Tell conan about the properties file
-		File conanPropertiesFile = new File(ClassLoader.getSystemResource("conan.properties").toURI());
-		ConanProperties.getConanProperties().setPropertiesFile(conanPropertiesFile);
+		/*File conanPropertiesFile = new File(Rampart.class.getResource("conan.properties").toURI());
+		ConanProperties.getConanProperties().setPropertiesFile(conanPropertiesFile);*/
 		
 		
 		// Start daemon
@@ -50,17 +66,17 @@ public class Rampart {
 		peLibs.put("f1", new File("f1"));
 		peLibs.put("f2", new File("f2"));
 		
-		AbyssInputLibrariesParam inputLibraries = new AbyssInputLibrariesParam();
+		AbyssV134InputLibsArg inputLibraries = new AbyssV134InputLibsArg();
 		inputLibraries.setPairedEndLibraries(peLibs);
 		
 		
-		AbyssV134Params abyssParams = new AbyssV134Params();
-		abyssParams.setKmer(65);
-		abyssParams.setInputlibraries(inputLibraries);
+		AbyssV134Args abyssArgs = new AbyssV134Args();
+		abyssArgs.setKmer(65);
+		abyssArgs.setInputlibraries(inputLibraries);
 		
-		LsfAbyssV134Process abyssProcess = new LsfAbyssV134Process(abyssParams);
+		AbyssV134LsfProcess abyssProcess = new AbyssV134LsfProcess();
 		
-		abyssProcess.execute(abyssParams.getParameterValuePairs());
+		abyssProcess.execute(abyssArgs.getParameterValuePairs());
 
 		/*List<ConanProcess> rampartProcesses = new ArrayList<ConanProcess>();
 		rampartProcesses.add(abyssProcess);
@@ -89,28 +105,25 @@ public class Rampart {
 		rampartTask.execute();*/
 	}
 	
+	
 	/**
 	 * @param args
+	 * @throws URISyntaxException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws URISyntaxException {
 
-		BasicConfigurator.configure();
 		
-		log.info("Starting RAMPART Helper");
 		
 		// Create the available options
 		Options options = RampartOptions.createOptions();
 		
-		log.debug("Command line options created");
-
-		// Parse the actual arguments
+				// Parse the actual arguments
 		CommandLineParser parser = new PosixParser();
 		Rampart rampart = null;
 		try {
 			// parse the command line arguments
 			CommandLine line = parser.parse(options, args);
 			RampartOptions rampartOptions = new RampartOptions(line);
-			log.debug("Command line arguments processed");
 			
 			// If help was requested output that and finish before starting Spring 
 			if (rampartOptions.doHelp()) {
@@ -123,26 +136,31 @@ public class Rampart {
 			
 			// Load Spring
 			new ApplicationContextLoader().load(rampart, "applicationContext.xml");
-			log.debug("Spring configured -- dependencies injected");
 			
-			
+			Tools.configureProperties();
 			
 		} catch (ParseException exp) {
 			log.fatal(exp.getMessage(), exp);
 			System.exit(1);
+		} catch (IOException e) {
+			log.fatal(e.getMessage(), e);
+			System.exit(2);
 		}
 		
 		// Run RAMPART
 		try {
 			rampart.process();
 		}
+		catch(ProcessExecutionException pee) {
+			System.exit(3);
+		}
 		catch (IOException ioe) {
 			log.fatal(ioe.getMessage(), ioe);
-			System.exit(2);
+			System.exit(4);
 		}
 		catch (Exception e) {
 			log.fatal(e.getMessage(), e);
-			System.exit(3);
+			System.exit(5);
 		}
 
 		log.info("Finished RAMPART");

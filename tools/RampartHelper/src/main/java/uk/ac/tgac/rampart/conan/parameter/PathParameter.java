@@ -2,56 +2,23 @@ package uk.ac.tgac.rampart.conan.parameter;
 
 import org.springframework.util.StringUtils;
 
-import uk.ac.ebi.fgpt.conan.model.AbstractConanParameter;
-
 /**
- * @author Rob Davey
+ * @author Dan Mapleson
  */
-public class PathParameter extends AbstractConanParameter implements
-		Optionable, Transientable {
+public class PathParameter extends DefaultConanParameter {
 
-	private static final long serialVersionUID = -3887080676113159103L;
-	private boolean optional = false;
-	private boolean t = false;
+	private static final long serialVersionUID = -7472585120471067656L;
 
 	public PathParameter(String name) {
-		super(name);
+		this(name, name, false);
 	}
 
-	public PathParameter(String name, boolean isBoolean) {
-		super(name, isBoolean);
-	}
-
-	public PathParameter(String name, String description) {
-		super(name, description);
-	}
-
-	public PathParameter(String name, String description, boolean isBoolean) {
-		super(name, description, isBoolean);
+	public PathParameter(String name, String description, boolean isOptional) {
+		super(name, description, false, isOptional, false);
 	}
 
 	@Override
 	public boolean validateParameterValue(String value) {
 		return !StringUtils.containsWhitespace(value) && !value.contains("~");
-	}
-
-	@Override
-	public boolean isOptional() {
-		return optional;
-	}
-
-	@Override
-	public void setOptional(boolean optional) {
-		this.optional = optional;
-	}
-
-	@Override
-	public boolean isTransient() {
-		return t;
-	}
-
-	@Override
-	public void setTransient(boolean t) {
-		this.t = t;
 	}
 }
