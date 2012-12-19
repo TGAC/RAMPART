@@ -20,69 +20,113 @@ package uk.ac.tgac.rampart.conan.tool.abyss;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
+
+import uk.ac.tgac.rampart.conan.parameter.FilePair;
+import uk.ac.tgac.rampart.core.data.Library;
+
 
 public class AbyssV134InputLibsArg {
 	
-	private Map<String, File> pairedEndLibraries;
-	private List<File> singleEndLibraries;
-
+	private Set<Library> libs;
+	
 	public AbyssV134InputLibsArg() {
-		this(new HashMap<String, File>(), new ArrayList<File>());
+		this(new HashSet<Library>());
+	}
+	
+	public AbyssV134InputLibsArg(Set<Library> libs) {
+		this.libs = libs;
+	}
+	
+	
+	public Set<Library> getLibs() {
+		return libs;
 	}
 
-	public AbyssV134InputLibsArg(Map<String, File> pairedEndLibraries,
-			List<File> singleEndLibraries) {
-		this.pairedEndLibraries = pairedEndLibraries;
-		this.singleEndLibraries = singleEndLibraries;
+	public void setLibs(Set<Library> libs) {
+		this.libs = libs;
 	}
 
-	public Map<String, File> getPairedEndLibraries() {
-		return pairedEndLibraries;
+	protected String joinPairedLibs(Map<String, FilePair> libs) {
+		List<String> list = new ArrayList<String>();
+		
+		for (Map.Entry<String, FilePair> pp : libs.entrySet()) {
+			list.add(pp.getKey() + "='" + pp.getValue().toString() + "'");
+		}
+		
+		return StringUtils.join(list, " ");
 	}
-
-	public void setPairedEndLibraries(Map<String, File> pairedEndLibraries) {
-		this.pairedEndLibraries = pairedEndLibraries;
+	
+	public Map<String, FilePair> getPairedLibs(Library.Type type) {
+		
+		Map<String, FilePair> peLibs = new HashMap<String, FilePair>();
+		
+		for(Library lib : this.libs) {
+			if (lib.getType() == type) {
+				peLibs.put(lib.getName(), new FilePair(lib.getFilePaired1().getFile(), lib.getFilePaired2().getFile()));
+			}
+		}
+		
+		return peLibs;
 	}
-
-	public List<File> getSingleEndLibraries() {
-		return singleEndLibraries;
+	
+	public Set<File> getSingleEndLibs() {
+		Set<File> seLibs = new HashSet<File>();
+		
+		for(Library lib : this.libs) {
+			if (lib.getSeFile() != null) {
+				seLibs.add(lib.getSeFile().getFile());
+			}
+		}
+		
+		return seLibs;
 	}
-
-	public void setSingleEndLibraries(List<File> singleEndLibraries) {
-		this.singleEndLibraries = singleEndLibraries;
-	}
-
+	
+	
 	@Override
 	public String toString() {
+		
+		Map<String, FilePair> peLibs = getPairedLibs(Library.Type.PAIRED_END);
+		Map<String, FilePair> mpLibs = getPairedLibs(Library.Type.MATE_PAIR);
+		Set<File> seLibs = getSingleEndLibs();
+		
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("'");
-		for (Map.Entry<String, File> pp : this.pairedEndLibraries.entrySet()) {
-			sb.append(pp.getKey());
+		if (peLibs.size() > 0) {
+		
+			sb.append("lib='");		
+			sb.append(StringUtils.join(peLibs.keySet(), " "));
+			sb.append("'");
+			
+			sb.append(" ");
+			
+			sb.append(joinPairedLibs(peLibs));
+			
 			sb.append(" ");
 		}
-		sb.append("' -j");
-		sb.append(this.pairedEndLibraries.size());
-		sb.append(" ");
-		for (Map.Entry<String, File> pp : this.pairedEndLibraries.entrySet()) {
-			sb.append(pp.getKey());
-			sb.append("='");
-			sb.append(pp.getValue().getPath());
-			sb.append("' ");
+		
+		if (mpLibs != null && mpLibs.size() > 0) {
+			
+			sb.append("mp='");
+			sb.append(StringUtils.join(mpLibs.keySet(), " "));
+			sb.append("'");
+			
+			sb.append(" ");
+			
+			sb.append(joinPairedLibs(mpLibs));
+			
+			sb.append(" ");
 		}
-
-		if (this.singleEndLibraries != null
-				&& this.singleEndLibraries.size() > 0) {
+		
+		if (seLibs != null	&& seLibs.size() > 0) {
+			
 			sb.append("se='");
-			int i = 0;
-			for (File f : this.singleEndLibraries) {
-				sb.append(f.getPath());
-				if (i != this.singleEndLibraries.size() - 1) {
-					sb.append(" ");
-				}
-			}
+			sb.append(StringUtils.join(seLibs, " "));
 			sb.append("'");
 		}
 

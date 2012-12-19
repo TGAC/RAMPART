@@ -31,7 +31,8 @@ import org.apache.log4j.Logger;
 
 import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolParameter;
+import uk.ac.tgac.rampart.conan.parameter.GEArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolParameter;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
 
 public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
@@ -150,18 +151,22 @@ public abstract class AbstractRampartLsfProcess extends AbstractLSFProcess {
 		return !span.isEmpty() || !rusage.isEmpty() ? "-R" + rusage + span : "";
 	}
 	
+	@Override
 	public String getJobName() {
 		return super.getJobName();
 	}
 	
+	@Override
 	public void setJobName(String jobName) {
 		super.setJobName(jobName);
 	}
 	
+	@Override
 	public String getQueueName() {
 		return super.getQueueName();
 	}
 	
+	@Override
 	public void setQueueName(String queueName) {
 		super.setQueueName(queueName);
 	}

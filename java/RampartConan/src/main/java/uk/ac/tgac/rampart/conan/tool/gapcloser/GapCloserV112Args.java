@@ -18,25 +18,51 @@
 package uk.ac.tgac.rampart.conan.tool.gapcloser;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.DegapArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.core.data.Library;
 
-public class GapCloserV112Args implements ToolArgs {
+public class GapCloserV112Args implements ToolArgs, DegapArgs {
 
+	// GapCloser vars
 	private File inputScaffoldFile;
 	private File libraryFile;
-	private File outputFile;
+	private File outputScaffoldFile;
 	private Integer maxReadLength;
 	private Integer overlap;
-	private Integer threads;
+	private int threads;
 	
+	// DegapArgs vars
+	private Set<Library> libs;
+	
+	
+	
+	public GapCloserV112Args() {
+		this.inputScaffoldFile = null;
+		this.libraryFile = null;
+		this.outputScaffoldFile = null;
+		this.maxReadLength = null;
+		this.overlap = null;
+		this.threads = 1;
+	}
+	
+	@Override
 	public File getInputScaffoldFile() {
 		return inputScaffoldFile;
 	}
 	
+	@Override
 	public void setInputScaffoldFile(File inputScaffoldFile) {
 		this.inputScaffoldFile = inputScaffoldFile;
 	}
@@ -47,14 +73,6 @@ public class GapCloserV112Args implements ToolArgs {
 	
 	public void setLibraryFile(File libraryFile) {
 		this.libraryFile = libraryFile;
-	}
-	
-	public File getOutputFile() {
-		return outputFile;
-	}
-	
-	public void setOutputFile(File outputFile) {
-		this.outputFile = outputFile;
 	}
 	
 	public Integer getMaxReadLength() {
@@ -73,13 +91,66 @@ public class GapCloserV112Args implements ToolArgs {
 		this.overlap = overlap;
 	}
 	
-	public Integer getThreads() {
+	@Override
+	public int getThreads() {
 		return threads;
 	}
 	
-	public void setThreads(Integer threads) {
+	@Override
+	public void setThreads(int threads) {
 		this.threads = threads;
 	}
+	
+	@Override
+	public Set<Library> getLibraries() {
+		return libs;
+	}
+
+	@Override
+	public void setLibraries(Set<Library> libraries) {
+		this.libs = libraries;
+	}
+
+	@Override
+	public File getOutputScaffoldFile() {
+		return this.outputScaffoldFile;
+	}
+
+	@Override
+	public void setOutputScaffoldFile(File outputScaffoldFile) {
+		this.outputScaffoldFile = outputScaffoldFile;
+	}
+	
+	
+	public void setLibraryFile(Set<Library> libs, File outputLibFile) throws IOException {
+		
+		List<String> lines = new ArrayList<String>();
+		
+		for(Library lib : libs) {
+			
+			if (lib.getUsage() == Library.Usage.ASSEMBLY_AND_SCAFFOLDING || 
+					lib.getUsage() == Library.Usage.SCAFFOLDING_ONLY) {
+				
+				String[] parts = new String[] {
+					lib.getName(),
+					lib.getFilePaired1().getFilePath(),
+					lib.getFilePaired2().getFilePath(),
+					lib.getAverageInsertSize().toString(),
+					lib.getInsertErrorTolerance().toString(),
+					lib.getSeqOrientation().toString()
+				};
+				
+				lines.add(StringUtils.join(parts, " "));
+			}
+			
+		}
+		
+		FileUtils.writeLines(outputLibFile, lines);
+		
+		this.libs = libs;
+		this.libraryFile = outputLibFile;
+	}
+	
 
 	@Override
 	public Map<ConanParameter, String> getParameterValuePairs() {
@@ -92,8 +163,8 @@ public class GapCloserV112Args implements ToolArgs {
 		if (this.libraryFile != null)
 			pvp.put(GapCloserV112Param.LIBRARY_FILE.getConanParameter(), this.inputScaffoldFile.getPath());
 		
-		if (this.outputFile != null)
-			pvp.put(GapCloserV112Param.OUTPUT_FILE.getConanParameter(), this.outputFile.getPath());
+		if (this.outputScaffoldFile != null)
+			pvp.put(GapCloserV112Param.OUTPUT_FILE.getConanParameter(), this.outputScaffoldFile.getPath());
 		
 		if (this.maxReadLength != null)
 			pvp.put(GapCloserV112Param.MAX_READ_LENGTH.getConanParameter(), this.maxReadLength.toString());
@@ -101,12 +172,10 @@ public class GapCloserV112Args implements ToolArgs {
 		if (this.overlap != null)
 			pvp.put(GapCloserV112Param.OVERLAP.getConanParameter(), this.overlap.toString());
 		
-		if (this.threads != null)
-			pvp.put(GapCloserV112Param.THREADS.getConanParameter(), this.threads.toString());
+		if (this.threads > 1)
+			pvp.put(GapCloserV112Param.THREADS.getConanParameter(), String.valueOf(this.threads));
 		
-		return pvp;
-		
+		return pvp;		
 	}
-	
 	
 }

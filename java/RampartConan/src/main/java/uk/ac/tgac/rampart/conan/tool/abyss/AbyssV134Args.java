@@ -19,50 +19,56 @@ package uk.ac.tgac.rampart.conan.tool.abyss;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.DeBrujinAssemblerArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.core.data.Library;
 
-public class AbyssV134Args implements ToolArgs {
+public class AbyssV134Args implements DeBrujinAssemblerArgs {
 
-	private AbyssV134InputLibsArg inputlibraries;
+	private AbyssV134InputLibsArg libs;
 	private Integer nbContigPairs;
-	private Integer kmer;
+	private int kmer;
 	private Integer threads;
 	private String name;
 
 	
 	public AbyssV134Args() {
 	
-		this.inputlibraries = null;
+		this.libs = null;
 		this.nbContigPairs = null;
-		this.kmer = null;
+		this.kmer = 65;
 		this.threads = null;
 		this.name = null;
 	}
 	
-
-	public AbyssV134InputLibsArg getInputlibraries() {
-		return inputlibraries;
+	@Override
+	public Set<Library> getLibraries() {
+		return libs.getLibs();
 	}
 
-	public void setInputlibraries(AbyssV134InputLibsArg inputlibraries) {
-		this.inputlibraries = inputlibraries;
+	@Override
+	public void setLibraries(Set<Library> libs) {		
+		this.libs = new AbyssV134InputLibsArg(libs);
 	}
 
 	public int getNbContigPairs() {
 		return nbContigPairs;
 	}
 
-	public void setNbContigPairs(int AbyssV134InputLibsParameter) {
-		this.nbContigPairs = AbyssV134InputLibsParameter;
+	public void setNbContigPairs(int nbContigPairs) {
+		this.nbContigPairs = nbContigPairs;
 	}
 
-	public Integer getKmer() {
+	@Override
+	public int getKmer() {
 		return kmer;
 	}
 
-	public void setKmer(Integer kmer) {
+	@Override
+	public void setKmer(int kmer) {
 		this.kmer = kmer;
 	}
 
@@ -87,14 +93,13 @@ public class AbyssV134Args implements ToolArgs {
 		
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		
-		if (this.inputlibraries != null)
-			pvp.put(AbyssV134Param.LIBRARIES.getConanParameter(), this.inputlibraries.toString());
+		if (this.libs != null)
+			pvp.put(AbyssV134Param.LIBRARIES.getConanParameter(), this.libs.toString());
 		
 		if (this.nbContigPairs != null)
 			pvp.put(AbyssV134Param.NB_CONTIG_PAIRS.getConanParameter(), this.nbContigPairs.toString());
 		
-		if (this.kmer != null)
-			pvp.put(AbyssV134Param.KMER.getConanParameter(), this.kmer.toString());
+		pvp.put(AbyssV134Param.KMER.getConanParameter(), String.valueOf(this.kmer));
 		
 		if (this.threads != null) 
 			pvp.put(AbyssV134Param.THREADS.getConanParameter(), this.threads.toString());
@@ -105,4 +110,18 @@ public class AbyssV134Args implements ToolArgs {
 		
 		return pvp;
 	}
+
+	@Override
+	public DeBrujinAssemblerArgs copy() {
+		
+		AbyssV134Args copy = new AbyssV134Args();
+		copy.setName(this.getName());
+		copy.setKmer(this.getKmer());
+		copy.setThreads(this.getThreads());
+		copy.setNbContigPairs(this.getNbContigPairs());
+		copy.setLibraries(this.getLibraries());
+		
+		return copy;
+	}
+	
 }

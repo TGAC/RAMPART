@@ -21,7 +21,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.FlagParameter;
 import uk.ac.tgac.rampart.conan.parameter.NumericParameter;
 import uk.ac.tgac.rampart.conan.parameter.PathParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolParameter;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolParameter;
 
 public enum SicklePeV11Param implements ToolParameter {
 	

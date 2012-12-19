@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.gapcloser;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.NumericParameter;
 import uk.ac.tgac.rampart.conan.parameter.PathParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolParameter;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolParameter;
 
 public enum GapCloserV112Param implements ToolParameter {
 

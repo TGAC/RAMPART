@@ -18,28 +18,46 @@
 package uk.ac.tgac.rampart.conan.tool.sspace;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.ScaffolderArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.core.data.Library;
 
-public class SSpaceBasicV2Args implements ToolArgs {
+public class SSpaceBasicV2Args implements ToolArgs, ScaffolderArgs {
 
+	// SSPACE vars
 	private File libraryFile;
-	private File contigFile;
+	private File inputContigFile;
 	private Integer extend;
 	private Integer bowtieThreads;
 	private String baseName;
 	
+	// Vars to support ScaffolderArgs interface
+	private File outputScaffoldFile;
+	private Set<Library> libs;
+		
 	public SSpaceBasicV2Args() {
 		this.libraryFile = null;
-		this.contigFile = null;
+		this.inputContigFile = null;
 		this.extend = null;
 		this.bowtieThreads = null;
 		this.baseName = null;
+		
+		this.outputScaffoldFile = null;
+		this.libs = new HashSet<Library>();
 	}
-
+	
 	public File getLibraryFile() {
 		return libraryFile;
 	}
@@ -48,12 +66,14 @@ public class SSpaceBasicV2Args implements ToolArgs {
 		this.libraryFile = libraryFile;
 	}
 
-	public File getContigFile() {
-		return contigFile;
+	@Override
+	public File getInputContigFile() {
+		return inputContigFile;
 	}
 
-	public void setContigFile(File contigFile) {
-		this.contigFile = contigFile;
+	@Override
+	public void setInputContigFile(File inputContigFile) {
+		this.inputContigFile = inputContigFile;
 	}
 
 	public int getExtend() {
@@ -64,11 +84,11 @@ public class SSpaceBasicV2Args implements ToolArgs {
 		this.extend = extend;
 	}
 
-	public int getBowtieThreads() {
+	public Integer getBowtieThreads() {
 		return bowtieThreads;
 	}
 
-	public void setBowtieThreads(int bowtieThreads) {
+	public void setBowtieThreads(Integer bowtieThreads) {
 		this.bowtieThreads = bowtieThreads;
 	}
 
@@ -79,24 +99,56 @@ public class SSpaceBasicV2Args implements ToolArgs {
 	public void setBaseName(String baseName) {
 		this.baseName = baseName;
 	}
+	
+	public void setLibraryFile(Set<Library> libs, File outputLibFile) throws IOException {
+		
+		List<String> lines = new ArrayList<String>();
+		
+		for(Library lib : libs) {
+			
+			if (lib.getUsage() == Library.Usage.ASSEMBLY_AND_SCAFFOLDING || 
+					lib.getUsage() == Library.Usage.SCAFFOLDING_ONLY) {
+				
+				String[] parts = new String[] {
+					lib.getName(),
+					lib.getFilePaired1().getFilePath(),
+					lib.getFilePaired2().getFilePath(),
+					lib.getAverageInsertSize().toString(),
+					lib.getInsertErrorTolerance().toString(),
+					lib.getSeqOrientation().toString()
+				};
+				
+				lines.add(StringUtils.join(parts, " "));
+			}
+			
+		}
+		
+		FileUtils.writeLines(outputLibFile, lines);
+		this.libs = libs;
+		this.libraryFile = outputLibFile;
+	}
+	
 
 	@Override
 	public Map<ConanParameter, String> getParameterValuePairs() {
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
 		if (this.libraryFile != null)
-			pvp.put(SSpaceBasicV2Param.LIBRARY_FILE  .getConanParameter(),
+			pvp.put(SSpaceBasicV2Param.LIBRARY_FILE.getConanParameter(),
 					this.libraryFile.getPath());
+		else {
+			throw new IllegalArgumentException("Must have a library file specified.  If working from a Set<Library> you can call setLibraryFile(Set<Library> libs, File outputLibFile) to automatically generate a SSPACE library file and set the class variable.");
+		}
 
-		if (this.contigFile != null)
+		if (this.inputContigFile != null)
 			pvp.put(SSpaceBasicV2Param.CONTIG_FILE.getConanParameter(),
-					this.contigFile.getPath());
+					this.inputContigFile.getPath());
 
 		if (this.extend != null)
 			pvp.put(SSpaceBasicV2Param.EXTEND.getConanParameter(),
 					this.extend.toString());
 
-		if (this.bowtieThreads != null)
+		if (this.bowtieThreads != null && this.bowtieThreads > 1)
 			pvp.put(SSpaceBasicV2Param.BOWTIE_THREADS.getConanParameter(),
 					this.bowtieThreads.toString());
 
@@ -105,6 +157,37 @@ public class SSpaceBasicV2Args implements ToolArgs {
 					this.baseName);
 		
 		return pvp;
+	}
+
+
+	@Override
+	public Set<Library> getLibraries() {
+		return libs;
+	}
+
+	@Override
+	public void setLibraries(Set<Library> libraries) {
+		this.libs = libraries;
+	}
+
+	@Override
+	public int getThreads() {		
+		return getBowtieThreads() == null ? 1 : getBowtieThreads();
+	}
+
+	@Override
+	public void setThreads(int threads) {
+		this.setBowtieThreads(new Integer(threads));
+	}
+
+	@Override
+	public File getOutputScaffoldFile() {
+		return this.outputScaffoldFile;
+	}
+
+	@Override
+	public void setOutputScaffoldFile(File outputScaffoldFile) {		
+		this.outputScaffoldFile = outputScaffoldFile;
 	}
 
 }

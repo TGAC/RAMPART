@@ -22,15 +22,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.ToolArgs;
+import uk.ac.tgac.rampart.conan.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.parameter.tools.QualityTrimmingArgs;
+import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
 import uk.ac.tgac.rampart.conan.tool.sickle.SicklePeV11QualityTypeParameter.SickleQualityTypeOptions;
 
-public class SicklePeV11Args implements ToolArgs {
+public class SicklePeV11Args implements ToolArgs, QualityTrimmingArgs {
 	
-	private File peFile1;
-	private File peFile2;
-	private File outputPe1;
-	private File outputPe2;
+	private FilePair inputFilePair;
+	private FilePair outputFilePair;
 	private File singlesOut;
 	private Integer qualThreshold;
 	private Integer lengthThreshold;
@@ -38,10 +38,8 @@ public class SicklePeV11Args implements ToolArgs {
 	private SickleQualityTypeOptions qualType;
 		
 	public SicklePeV11Args() {
-		this.peFile1 = null;
-		this.peFile2 = null;
-		this.outputPe1 = null;
-		this.outputPe2 = null;
+		this.inputFilePair = null;
+		this.outputFilePair = null;
 		this.singlesOut = null;
 		this.qualThreshold = 20;
 		this.lengthThreshold = 20;
@@ -49,26 +47,36 @@ public class SicklePeV11Args implements ToolArgs {
 		this.qualType = null;
 	}
 	
-	public File getPeFile1() {
-		return peFile1;
+	@Override
+	public FilePair getInputFilePair() {
+		return inputFilePair;
+	}
+	
+	@Override
+	public void setInputFilePair(FilePair inputFilePair) {
+		this.inputFilePair = inputFilePair;
 	}
 
-	public File getPeFile2() {
-		return peFile2;
+	@Override
+	public FilePair getOutputFilePair() {
+		return outputFilePair;
 	}
-
-	public File getOutputPe1() {
-		return outputPe1;
+	
+	@Override
+	public void setOutputFilePair(FilePair outputFilePair) {
+		this.outputFilePair = outputFilePair;
 	}
-
-	public File getOutputPe2() {
-		return outputPe2;
-	}
-
-	public File getSinglesOut() {
+	
+	@Override
+	public File getOutputSingleEndFile() {
 		return singlesOut;
 	}
 
+	@Override
+	public void setOutputSingleEndFile(File outputSingleEndFile) {
+		this.singlesOut = outputSingleEndFile;
+	}
+	
 	public Integer getQualThreshold() {
 		return qualThreshold;
 	}
@@ -79,28 +87,6 @@ public class SicklePeV11Args implements ToolArgs {
 
 	public Boolean isDiscardN() {
 		return discardN;
-	}
-	
-	
-
-	public void setPeFile1(File peFile1) {
-		this.peFile1 = peFile1;
-	}
-
-	public void setPeFile2(File peFile2) {
-		this.peFile2 = peFile2;
-	}
-
-	public void setOutputPe1(File outputPe1) {
-		this.outputPe1 = outputPe1;
-	}
-
-	public void setOutputPe2(File outputPe2) {
-		this.outputPe2 = outputPe2;
-	}
-
-	public void setSinglesOut(File singlesOut) {
-		this.singlesOut = singlesOut;
 	}
 
 	public void setQualThreshold(Integer qualThreshold) {
@@ -128,17 +114,15 @@ public class SicklePeV11Args implements ToolArgs {
 		
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		
-		if (this.peFile1 != null)
-			pvp.put(SicklePeV11Param.PE_FILE_1.getConanParameter(), this.peFile1.getPath());
+		if (this.inputFilePair != null) {
+			pvp.put(SicklePeV11Param.PE_FILE_1.getConanParameter(), this.inputFilePair.getFile1().getPath());
+			pvp.put(SicklePeV11Param.PE_FILE_2.getConanParameter(), this.inputFilePair.getFile2().getPath());
+		}
 		
-		if (this.peFile2 != null)
-			pvp.put(SicklePeV11Param.PE_FILE_2.getConanParameter(), this.peFile2.getPath());
-		
-		if (this.outputPe1 != null)
-			pvp.put(SicklePeV11Param.OUTPUT_PE_1.getConanParameter(), this.outputPe1.getPath());
-		
-		if (this.outputPe2 != null)
-			pvp.put(SicklePeV11Param.OUTPUT_PE_1.getConanParameter(), this.outputPe2.getPath());
+		if (this.outputFilePair != null) {
+			pvp.put(SicklePeV11Param.OUTPUT_PE_1.getConanParameter(), this.outputFilePair.getFile1().getPath());
+			pvp.put(SicklePeV11Param.OUTPUT_PE_2.getConanParameter(), this.outputFilePair.getFile2().getPath());
+		}
 		
 		if (this.singlesOut != null)
 			pvp.put(SicklePeV11Param.SINGLES_FILE_1.getConanParameter(), this.singlesOut.getPath());
@@ -157,4 +141,5 @@ public class SicklePeV11Args implements ToolArgs {
 		
 		return pvp;
 	}
+	
 }

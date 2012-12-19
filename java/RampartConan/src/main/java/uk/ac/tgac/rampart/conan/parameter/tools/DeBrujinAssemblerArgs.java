@@ -15,13 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.parameter;
+package uk.ac.tgac.rampart.conan.parameter.tools;
 
-import java.util.Map;
+import java.util.Set;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.tgac.rampart.core.data.Library;
 
-public interface ToolArgs {
+public interface DeBrujinAssemblerArgs extends ToolArgs {
 
-	Map<ConanParameter, String> getParameterValuePairs();
+	DeBrujinAssemblerArgs copy();	
+	
+	Set<Library> getLibraries();
+	
+	void setLibraries(Set<Library> libraries);
+	
+	int getKmer();
+	
+	void setKmer(int kmer);
+	
+	int getThreads();
+	
+	void setThreads(int threads);
+
 }
