@@ -85,6 +85,16 @@ public class Library implements Serializable {
 		
 	}
 	
+	public enum Type {
+		PE,
+		MP,
+		SE;
+		
+		public static final Type PAIRED_END = PE;
+		public static final Type MATE_PAIR = MP;
+		public static final Type SINGLE_END = SE;
+	}
+	
 	
 	public static final String SECTION_PREFIX = "LIB";
 	
@@ -135,6 +145,10 @@ public class Library implements Serializable {
 	@Enumerated(EnumType.STRING)
 	@Column(name="lib_usage")
 	private Usage usage;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name="lib_type")
+	private Type type;
 	
 	@Column(name="process_order")
 	private Integer index;
@@ -223,6 +237,15 @@ public class Library implements Serializable {
 
 	public void setUsage(Usage usage) {
 		this.usage = usage;
+	}
+	
+
+	public Type getType() {
+		return type;
+	}
+
+	public void setType(Type type) {
+		this.type = type;
 	}
 
 	public Integer getIndex() {
