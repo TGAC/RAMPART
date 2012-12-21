@@ -1,0 +1,41 @@
+/**
+ * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+ * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+package uk.ac.tgac.rampart.conan.tool.gapcloser;
+
+import net.sourceforge.fluxion.spi.ServiceProvider;
+import uk.ac.tgac.rampart.conan.process.lsf.DefaultRampartLsfProcess;
+import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
+
+import java.lang.annotation.Annotation;
+
+
+public class GapCloserV112LsfProcess extends DefaultRampartLsfProcess {
+
+	private static final long serialVersionUID = -875700673055262789L;
+
+	public static final String NAME = "SOAP_GapCloser_v1.12-LSF";
+	public static final String COMPONENT_NAME = ToolCommandLoader.GAPCLOSER_1_12;
+	public static final String COMMAND = "GapCloser";
+	public static final String PARAM_PREFIX = "-";
+	
+	public GapCloserV112LsfProcess() {
+		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
+				GapCloserV112Param.values());
+	}
+
+}
