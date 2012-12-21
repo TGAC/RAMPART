@@ -20,7 +20,8 @@ package uk.ac.tgac.rampart.core.service.impl;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.velocity.VelocityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ import uk.ac.tgac.rampart.core.service.VelocityMergerService;
 @Service
 public class ReportBuilderServiceImpl implements ReportBuilderService {
 
-	private static Logger log = Logger.getLogger(ReportBuilderServiceImpl.class.getName());
+	private static Logger log = LoggerFactory.getLogger(ReportBuilderServiceImpl.class);
 	
 	@Autowired
 	private RampartJobService rampartJobService;

@@ -29,14 +29,15 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.tgac.rampart.core.service.impl.VelocityMergerServiceImpl;
 
 
 public class ReportGen {
 	
-	private static Logger log = Logger.getLogger(RampartHelper.class.getName());
+	private static Logger log = LoggerFactory.getLogger(RampartHelper.class.getName());
 		
 	private static final String OPT_TEMPLATE 	= "template";
 	private static final String OPT_CONTEXT 	= "context";

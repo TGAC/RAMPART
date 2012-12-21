@@ -23,11 +23,11 @@ import java.util.Map;
 import net.sourceforge.fluxion.spi.ServiceProvider;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.parameter.GEArgs;
 import uk.ac.tgac.rampart.conan.parameter.tools.DeBrujinAssembler;
 import uk.ac.tgac.rampart.conan.parameter.tools.DeBrujinAssemblerArgs;
 import uk.ac.tgac.rampart.conan.process.lsf.AbstractRampartLsfProcess;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
+import uk.ac.tgac.rampart.conan.env.arch.ge.GridEngineArgs;
 
 @ServiceProvider
 public class AbyssV134LsfProcess extends AbstractRampartLsfProcess implements DeBrujinAssembler {
@@ -71,7 +71,7 @@ public class AbyssV134LsfProcess extends AbstractRampartLsfProcess implements De
 		return sb.toString().trim();
 	}
 	
-	protected void setFromGEArgs(GEArgs geArgs) {
+	protected void setFromGEArgs(GridEngineArgs geArgs) {
 		this.setJobName(geArgs.getJobName());
 		this.setProjectName(geArgs.getProjectName());
 		this.setQueueName(geArgs.getQueueName());
@@ -80,7 +80,7 @@ public class AbyssV134LsfProcess extends AbstractRampartLsfProcess implements De
 	}
 
 	@Override
-	public void execute(DeBrujinAssemblerArgs assemblerArgs, GEArgs geArgs, File workingDir) 
+	public void execute(DeBrujinAssemblerArgs assemblerArgs, GridEngineArgs geArgs, File workingDir) 
 			throws IllegalArgumentException, ProcessExecutionException, InterruptedException {
 		
 		setFromGEArgs(geArgs);

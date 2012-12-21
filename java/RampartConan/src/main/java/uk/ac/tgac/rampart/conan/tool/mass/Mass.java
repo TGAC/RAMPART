@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.parameter.GEArgs;
+import uk.ac.tgac.rampart.conan.env.arch.ge.GridEngineArgs;
 import uk.ac.tgac.rampart.conan.parameter.tools.DeBrujinAssembler;
 import uk.ac.tgac.rampart.conan.parameter.tools.DeBrujinAssemblerArgs;
 
@@ -38,7 +38,7 @@ public class Mass {
 	
 	private DeBrujinAssembler assembler;
 	private DeBrujinAssemblerArgs assemblerArgs;
-	private GEArgs geArgs;
+	private GridEngineArgs geArgs;
 	private File config;
 	private int kmin;
 	private int kmax;
@@ -61,11 +61,11 @@ public class Mass {
 		this.outputDir = null;
 	}
 	
-	public GEArgs getGeArgs() {
+	public GridEngineArgs getGeArgs() {
 		return geArgs;
 	}
 
-	public void setGeArgs(GEArgs geArgs) {
+	public void setGeArgs(GridEngineArgs geArgs) {
 		this.geArgs = geArgs;
 	}
 
@@ -247,7 +247,7 @@ public class Mass {
 			
 			// May not want to run on a grid engine (although that's probably unlikely)
 			// so check before creating some GE arguments.
-			GEArgs kGeArgs = null;
+			GridEngineArgs kGeArgs = null;
 			if (this.geArgs != null) {
 				kGeArgs = this.geArgs.copy();
 				kGeArgs.setJobName(this.jobPrefix + "-k" + k);
@@ -283,7 +283,7 @@ public class Mass {
 	
 	protected void dispatchStatsJob() {
 		
-		GEArgs geStatJobArgs = null;
+		GridEngineArgs geStatJobArgs = null;
 		
 		if (this.geArgs != null) {
 			geStatJobArgs = this.geArgs.copy();

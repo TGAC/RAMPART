@@ -20,8 +20,9 @@ package uk.ac.tgac.rampart.conan.parameter.tools;
 import java.io.File;
 
 import uk.ac.tgac.rampart.conan.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 
-public interface QualityTrimmingArgs {
+public interface QualityTrimmingArgs extends RampartProcessArgs  {
 
 	FilePair getInputFilePair();
 	

@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.core.data;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class RampartProjectFileStructure {
 
@@ -30,10 +31,12 @@ public class RampartProjectFileStructure {
 	private File dataDir;
 	private File dataReportDir;
 	private File dataReportImagesDir;
+	private File perlDir;
 	
 	// Important Files
 	private File reportTemplateFile;
 	private File weightingsFile;
+	private File massGPFile;
 	
 	
 	public RampartProjectFileStructure(File rampartDir) {
@@ -41,18 +44,31 @@ public class RampartProjectFileStructure {
 		
 		setupFileStructure();
 	}
+	
+	/**
+	 * WARNING - This method is  
+	 * @return 
+	 * @throws URISyntaxException
+	 */
+	public static File determineProjectRoot() throws URISyntaxException {
+		File rampartCore = new File(RampartProjectFileStructure.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+		
+		return new File(rampartCore, "../../../");
+	}
 
 
 	public void setupFileStructure() {
 		
 		// Record all important directories and make sure they exist
-		this.toolsDir = new File(rampartDir.getPath() + "/tools");
-		this.dataDir = new File(rampartDir.getPath() + "/data");
-		this.dataReportDir = new File(dataDir.getPath() + "/report_template");
-		this.dataReportImagesDir = new File(dataReportDir.getPath() + "/images");
+		this.toolsDir = new File(rampartDir, "tools");
+		this.dataDir = new File(rampartDir, "data");
+		this.dataReportDir = new File(dataDir, "report_template");
+		this.dataReportImagesDir = new File(dataReportDir, "images");
+		this.perlDir = new File(rampartDir, "perl");
 		
-		this.reportTemplateFile = new File(this.dataReportDir.getPath() + "/template.tex");
-		this.weightingsFile = new File(rampartDir.getPath() + "/weightings.tab");
+		this.reportTemplateFile = new File(dataReportDir, "template.tex");
+		this.weightingsFile = new File(rampartDir, "weightings.tab");
+		this.massGPFile = new File(perlDir, "mass_gp.pl");
 	}
 	
 	
@@ -72,24 +88,24 @@ public class RampartProjectFileStructure {
 		return rampartDir;
 	}
 
-
 	public File getToolsDir() {
 		return toolsDir;
 	}
-
 
 	public File getDataDir() {
 		return dataDir;
 	}
 
-
 	public File getDataReportDir() {
 		return dataReportDir;
 	}
 
-
 	public File getDataReportImagesDir() {
 		return dataReportImagesDir;
+	}
+	
+	public File getPerlDir() {
+		return perlDir;
 	}
 
 
@@ -101,5 +117,7 @@ public class RampartProjectFileStructure {
 		return weightingsFile;
 	}
 
-	
+	public File getMassGPFile() {
+		return massGPFile;
+	}
 }

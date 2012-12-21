@@ -22,7 +22,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import uk.ac.tgac.rampart.core.service.PdfOperationsService;
@@ -35,7 +36,7 @@ import com.itextpdf.text.pdf.PdfReader;
 @Service
 public class PdfOperationsServiceImpl implements PdfOperationsService {
 	
-	private static Logger log = Logger.getLogger(PdfOperationsServiceImpl.class.getName());
+	private static Logger log = LoggerFactory.getLogger(PdfOperationsServiceImpl.class);
 		
 	@Override
 	public void extractPage(File in, File out, int page) throws IOException, DocumentException {

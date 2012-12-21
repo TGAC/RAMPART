@@ -1,0 +1,58 @@
+/**
+ * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+ * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+package uk.ac.tgac.rampart.conan.env;
+
+import java.net.ConnectException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.env.arch.Architecture;
+import uk.ac.tgac.rampart.conan.env.locality.Locality;
+import uk.ac.tgac.rampart.conan.process.RampartProcess;
+
+/**
+ * This environment will execute all internal aspects of the job but will not
+ * dispatch any command for submission outside the JVM. This is a useful
+ * environment for sanity testing process to see if commands are being generated
+ * correctly.
+ * 
+ * @author maplesod
+ */
+public class NullEnvironment implements RampartEnvironment {
+
+	Logger log = LoggerFactory.getLogger(NullEnvironment.class);
+	
+	@Override
+	public void submitProcess(RampartProcess rampartProcess,
+			EnvironmentArgs args) throws IllegalArgumentException,
+			ProcessExecutionException, InterruptedException, ConnectException {
+		
+		// Do not execute anything... just log the request. 
+		log.info("Process will not be executed on a Null Environment: {0}.", rampartProcess.getName());
+	}
+
+	@Override
+	public void setup(Locality locality, Architecture architecture) {
+		
+		// Do not execute anything... just log the request. 
+		log.info("Setup Null Enivonment");
+	}
+
+}

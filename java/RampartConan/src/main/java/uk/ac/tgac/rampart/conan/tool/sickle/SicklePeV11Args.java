@@ -24,10 +24,10 @@ import java.util.Map;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.FilePair;
 import uk.ac.tgac.rampart.conan.parameter.tools.QualityTrimmingArgs;
-import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.sickle.SicklePeV11QualityTypeParameter.SickleQualityTypeOptions;
 
-public class SicklePeV11Args implements ToolArgs, QualityTrimmingArgs {
+public class SicklePeV11Args implements RampartProcessArgs, QualityTrimmingArgs {
 	
 	private FilePair inputFilePair;
 	private FilePair outputFilePair;

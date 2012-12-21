@@ -72,7 +72,7 @@ public class Rampart {
 		peLibs.put("f1", new File("f1"));
 		peLibs.put("f2", new File("f2"));
 		
-		AbyssV134InputLibsArg inputLibraries = new AbyssV134InputLibsArg();
+		/*AbyssV134InputLibsArg inputLibraries = new AbyssV134InputLibsArg();
 		inputLibraries.setPairedEndLibraries(peLibs);
 		
 		
@@ -82,7 +82,7 @@ public class Rampart {
 		
 		AbyssV134LsfProcess abyssProcess = new AbyssV134LsfProcess();
 		
-		abyssProcess.execute(abyssArgs.getParameterValuePairs());
+		abyssProcess.execute(abyssArgs.getParameterValuePairs());*/
 
 		/*List<ConanProcess> rampartProcesses = new ArrayList<ConanProcess>();
 		rampartProcesses.add(abyssProcess);

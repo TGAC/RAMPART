@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +37,7 @@ import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134InputLibsArg;
 import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134LsfProcess;
 import uk.ac.tgac.rampart.conan.tool.sspace.SSpaceBasicV2Args;
 import uk.ac.tgac.rampart.conan.tool.sspace.SSpaceBasicV2LsfProcess;
+import uk.ac.tgac.rampart.core.data.Library;
 
 public class LsfProcessTests {
 
@@ -47,13 +50,10 @@ public class LsfProcessTests {
 	@Test
 	public void testAbyssV134() {
 		
-		Map<String, File> peLibs = new HashMap<String,File>();
-		
-		AbyssV134InputLibsArg inputLibraries = new AbyssV134InputLibsArg();
-		inputLibraries.setPairedEndLibraries(peLibs);
+		Set<Library> libs = new HashSet<Library>();
 		
 		AbyssV134Args args = new AbyssV134Args();
-		args.setInputlibraries(inputLibraries);
+		args.setLibraries(libs);
 		args.setKmer(61);
 		args.setName("OUTPUT_FILE");
 		args.setThreads(16);
@@ -80,7 +80,7 @@ public class LsfProcessTests {
 		SSpaceBasicV2Args args = new SSpaceBasicV2Args();
 		args.setLibraryFile(new File("testlib.lib"));
 		args.setBowtieThreads(8);
-		args.setContigFile(new File("contigs.fa"));
+		args.setInputContigFile(new File("contigs.fa"));
 		
 		AbstractRampartLsfProcess process = new SSpaceBasicV2LsfProcess();
 		process.setProjectName("TEST");

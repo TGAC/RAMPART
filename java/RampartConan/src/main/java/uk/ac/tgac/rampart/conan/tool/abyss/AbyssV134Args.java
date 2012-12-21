@@ -23,7 +23,7 @@ import java.util.Set;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.tools.DeBrujinAssemblerArgs;
-import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 public class AbyssV134Args implements DeBrujinAssemblerArgs {

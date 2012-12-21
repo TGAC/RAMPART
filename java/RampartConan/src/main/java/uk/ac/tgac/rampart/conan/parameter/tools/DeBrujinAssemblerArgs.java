@@ -19,9 +19,10 @@ package uk.ac.tgac.rampart.conan.parameter.tools;
 
 import java.util.Set;
 
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
-public interface DeBrujinAssemblerArgs extends ToolArgs {
+public interface DeBrujinAssemblerArgs extends RampartProcessArgs {
 
 	DeBrujinAssemblerArgs copy();	
 	

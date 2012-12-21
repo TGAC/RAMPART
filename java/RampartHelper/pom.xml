@@ -15,17 +15,6 @@
 		<plugins>
 
 			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<showDeprecation>true</showDeprecation>
-					<showWarnings>true</showWarnings>
-				</configuration>
-			</plugin>
-
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.5</version>
@@ -49,59 +38,19 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.dstovall</groupId>
-				<artifactId>onejar-maven-plugin</artifactId>
-				<version>1.4.4</version>
-				<executions>
-					<execution>
-						<configuration>
-							<!-- Optional -->
-							<onejarVersion>0.97</onejarVersion>
-							<!-- Optional, default is false -->
-							<attachToBuild>true</attachToBuild>
-							<!-- Optional, default is "onejar" -->
-							<classifier>onejar</classifier>
-						</configuration>
-						<goals>
-							<goal>one-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>onejar-maven-plugin.googlecode.com</id>
-			<url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-		</pluginRepository>
-	</pluginRepositories>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<skipTests>true</skipTests>
-	</properties>
-
-	<repositories>
-		<repository>
-			<id>hasbanana-repo</id>
-			<url>http://www.hasbanana.com/maven/repo</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
 	<dependencies>
+
 		<dependency>
 			<groupId>uk.ac.tgac.rampart</groupId>
 			<artifactId>rampart-core</artifactId>
 			<version>0.4</version>
 		</dependency>
+
 	</dependencies>
-	
+
 	<parent>
 		<groupId>uk.ac.tgac.rampart</groupId>
 		<artifactId>rampart</artifactId>

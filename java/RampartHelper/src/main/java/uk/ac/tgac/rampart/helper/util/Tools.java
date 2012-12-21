@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 package uk.ac.tgac.rampart.helper.util;
+
 import static org.apache.commons.io.IOUtils.LINE_SEPARATOR;
 
 import java.io.File;
@@ -28,31 +29,30 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class Tools {
 
-	 public static String getStackTrace(Throwable t)
-	  {
-	    StringBuilder sb = new StringBuilder();
-	    
-	    for(StackTraceElement e : t.getStackTrace())
-	    {
-	      sb.append( e.toString() ).append( String.valueOf(LINE_SEPARATOR) );
-	    }
-	    
-	    return sb.toString();
-	  }
-	 
-	 public static void configureProperties() throws IOException {
-			
-			final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
-			
-			final File loggingPropsFile = new File(rampartSettingsDir + "logging.properties");
+	public static String getStackTrace(Throwable t) {
+		StringBuilder sb = new StringBuilder();
 
-			if (loggingPropsFile.exists()) {
-				Properties loggingProps = new Properties();
-				loggingProps.load(new FileInputStream(loggingPropsFile));
-				PropertyConfigurator.configure(loggingProps);
-			}
-			else {
-				BasicConfigurator.configure();
-			}
+		for (StackTraceElement e : t.getStackTrace()) {
+			sb.append(e.toString()).append(String.valueOf(LINE_SEPARATOR));
 		}
+
+		return sb.toString();
+	}
+
+	public static void configureProperties() throws IOException {
+
+		final String rampartSettingsDir = System.getProperty("user.home")
+				+ "/.rampart/";
+
+		final File loggingPropsFile = new File(rampartSettingsDir
+				+ "logging.properties");
+
+		if (loggingPropsFile.exists()) {
+			Properties loggingProps = new Properties();
+			loggingProps.load(new FileInputStream(loggingPropsFile));
+			PropertyConfigurator.configure(loggingProps);
+		} else {
+			BasicConfigurator.configure();
+		}
+	}
 }

@@ -30,10 +30,10 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.tools.DegapArgs;
-import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
-public class GapCloserV112Args implements ToolArgs, DegapArgs {
+public class GapCloserV112Args implements DegapArgs {
 
 	// GapCloser vars
 	private File inputScaffoldFile;

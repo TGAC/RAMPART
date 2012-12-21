@@ -20,9 +20,10 @@ package uk.ac.tgac.rampart.conan.parameter.tools;
 import java.io.File;
 import java.util.Set;
 
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
-public interface DegapArgs {
+public interface DegapArgs extends RampartProcessArgs {
 	
 	Set<Library> getLibraries();
 	

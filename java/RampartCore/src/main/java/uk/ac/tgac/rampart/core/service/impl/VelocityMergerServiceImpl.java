@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ import uk.ac.tgac.rampart.core.service.VelocityMergerService;
 @Service
 public class VelocityMergerServiceImpl implements VelocityMergerService {
 
-	private static Logger log = Logger.getLogger(VelocityMergerServiceImpl.class.getName());
+	private static Logger log = LoggerFactory.getLogger(VelocityMergerServiceImpl.class);
 	
 	
 	@Override

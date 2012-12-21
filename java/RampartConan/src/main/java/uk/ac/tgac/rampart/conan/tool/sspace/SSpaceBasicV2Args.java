@@ -31,10 +31,10 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.parameter.tools.ScaffolderArgs;
-import uk.ac.tgac.rampart.conan.parameter.tools.ToolArgs;
+import uk.ac.tgac.rampart.conan.process.RampartProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
-public class SSpaceBasicV2Args implements ToolArgs, ScaffolderArgs {
+public class SSpaceBasicV2Args implements RampartProcessArgs, ScaffolderArgs {
 
 	// SSPACE vars
 	private File libraryFile;

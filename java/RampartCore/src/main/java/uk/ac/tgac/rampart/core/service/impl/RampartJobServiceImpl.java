@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.velocity.VelocityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,7 +54,7 @@ import com.itextpdf.text.DocumentException;
 @Service
 public class RampartJobServiceImpl implements RampartJobService {
 	
-	private static Logger log = Logger.getLogger(RampartJobServiceImpl.class.getName());
+	private static Logger log = LoggerFactory.getLogger(RampartJobServiceImpl.class);
 	
 	// Services
 	@Autowired private PdfOperationsService pdfOperationsService;

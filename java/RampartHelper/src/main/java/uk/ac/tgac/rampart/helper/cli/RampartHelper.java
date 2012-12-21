@@ -25,7 +25,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.velocity.VelocityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -36,7 +37,7 @@ import uk.ac.tgac.rampart.helper.util.ApplicationContextLoader;
 
 public class RampartHelper {
 	
-	private static Logger log = Logger.getLogger(RampartHelper.class.getName());
+	private static Logger log = LoggerFactory.getLogger(RampartHelper.class);
 	
 	@Autowired
 	private ApplicationContext applicationContext;
@@ -104,7 +105,7 @@ public class RampartHelper {
 			log.debug("Spring configured -- dependencies injected");
 			
 		} catch (ParseException exp) {
-			log.fatal(exp.getMessage(), exp);
+			log.error(exp.getMessage(), exp);
 			System.exit(1);
 		}
 		
@@ -113,11 +114,11 @@ public class RampartHelper {
 			rampartHelper.process(options);
 		}
 		catch (IOException ioe) {
-			log.fatal(ioe.getMessage(), ioe);
+			log.error(ioe.getMessage(), ioe);
 			System.exit(2);
 		}
 		catch (Exception e) {
-			log.fatal(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 			System.exit(3);
 		}
 
