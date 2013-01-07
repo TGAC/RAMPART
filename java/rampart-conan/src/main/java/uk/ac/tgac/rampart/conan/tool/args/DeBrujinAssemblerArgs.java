@@ -15,19 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.tool.args;
 
-import java.net.ConnectException;
+import java.util.Set;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+import uk.ac.tgac.rampart.conan.process.ProcessArgs;
+import uk.ac.tgac.rampart.core.data.Library;
 
-public abstract class GridEngine implements Architecture {
+public interface DeBrujinAssemblerArgs extends ProcessArgs {
 
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	DeBrujinAssemblerArgs copy();	
+	
+	Set<Library> getLibraries();
+	
+	void setLibraries(Set<Library> libraries);
+	
+	int getKmer();
+	
+	void setKmer(int kmer);
+	
+	int getThreads();
+	
+	void setThreads(int threads);
+
 }

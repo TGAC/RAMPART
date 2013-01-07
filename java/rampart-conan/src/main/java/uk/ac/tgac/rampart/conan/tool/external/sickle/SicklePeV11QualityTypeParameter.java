@@ -15,19 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.tool.external.sickle;
 
-import java.net.ConnectException;
+import uk.ac.tgac.rampart.conan.parameter.DefaultConanParameter;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+public class SicklePeV11QualityTypeParameter extends DefaultConanParameter {
 
-public abstract class GridEngine implements Architecture {
+	private static final long serialVersionUID = 3065149558945750682L;
 
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	public static enum SickleQualityTypeOptions {
+		
+		ILLUMINA,
+		PHRED,
+		SANGER;
+	}
+	
+	public SicklePeV11QualityTypeParameter() {
+		super("qual-type", "Type of quality values (illumina, phred, sanger) (required)", false, false, false);
+	}
+	
+	@Override
+	public boolean validateParameterValue(String value) {
+		try {
+			SickleQualityTypeOptions.valueOf(value.toUpperCase());
+			return true;
+		}
+		catch (IllegalArgumentException e) {
+			return false;
+		}
+	}
 }

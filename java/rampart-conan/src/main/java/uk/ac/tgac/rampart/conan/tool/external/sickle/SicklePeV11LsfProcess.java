@@ -15,19 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.tool.external.sickle;
 
-import java.net.ConnectException;
+import uk.ac.tgac.rampart.conan.process.lsf.DefaultRampartLsfProcess;
+import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+public class SicklePeV11LsfProcess extends DefaultRampartLsfProcess  {
 
-public abstract class GridEngine implements Architecture {
+	private static final long serialVersionUID = 7102159667412634823L;
 
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	public static final String NAME = "Sickle_V1.1-LSF";
+	public static final String COMPONENT_NAME = ToolCommandLoader.SICKLE_1_1;
+	public static final String COMMAND = "sickle pe";
+	public static final String PARAM_PREFIX = "--";
+	
+	public SicklePeV11LsfProcess() {
+		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
+				SicklePeV11Param.values());
+	}
+
 }

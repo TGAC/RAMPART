@@ -15,19 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.tool.external.gapcloser;
 
-import java.net.ConnectException;
+import uk.ac.tgac.rampart.conan.process.lsf.DefaultRampartLsfProcess;
+import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
-public abstract class GridEngine implements Architecture {
+public class GapCloserV112LsfProcess extends DefaultRampartLsfProcess {
 
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	private static final long serialVersionUID = -875700673055262789L;
+
+	public static final String NAME = "SOAP_GapCloser_v1.12-LSF";
+	public static final String COMPONENT_NAME = ToolCommandLoader.GAPCLOSER_1_12;
+	public static final String COMMAND = "GapCloser";
+	public static final String PARAM_PREFIX = "-";
+	
+	public GapCloserV112LsfProcess() {
+		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
+				GapCloserV112Param.values());
+	}
+
 }

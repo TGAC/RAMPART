@@ -22,7 +22,7 @@ import java.net.ConnectException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
 import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 public interface Locality {
 
@@ -37,7 +37,7 @@ public interface Locality {
 	/**
 	 * Executes the supplied process using the supplied args, on the requested architecture at the locality indicated
 	 * by this object.
-	 * @param rampartProcess
+	 * @param process
 	 * @param args
 	 * @param architecture
 	 * @return
@@ -46,7 +46,7 @@ public interface Locality {
 	 * @throws InterruptedException
 	 * @throws ConnectException
 	 */
-	boolean submitProcess(RampartProcess rampartProcess, EnvironmentArgs args, Architecture architecture)
+	boolean submitProcess(ExtendedProcess process, EnvironmentArgs args, Architecture architecture)
 			throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException;
 	
 	/**

@@ -27,15 +27,13 @@ public enum GridEngineType {
 
         @Override
 		public GridEngine create() {
-			// TODO Auto-generated method stub
-			return null;
+			return new LSF();
 		}
 	},
 	PBS {
 		@Override
 		public GridEngine create() {
-			// TODO Auto-generated method stub
-			return null;
+			return new PBS();
 		}
 
         @Override

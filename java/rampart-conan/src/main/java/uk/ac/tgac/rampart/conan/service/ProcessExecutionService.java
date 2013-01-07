@@ -17,11 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.service;
 
-import uk.ac.tgac.rampart.conan.env.RampartEnvironment;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.env.Environment;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 public interface ProcessExecutionService {
 
 	
-	boolean execute(RampartProcess process, RampartEnvironment env);
+	boolean execute(ExtendedProcess process, Environment env);
 }

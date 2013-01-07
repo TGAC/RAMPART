@@ -33,9 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134Args;
-import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134InputLibsArg;
-import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134LsfProcess;
 
 
 public class Rampart {

@@ -23,7 +23,7 @@ import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
 import uk.ac.tgac.rampart.conan.env.arch.ge.LSFWaitCondition;
-import uk.ac.tgac.rampart.conan.parameter.tools.ToolParameter;
+import uk.ac.tgac.rampart.conan.tool.ToolParameter;
 
 import java.io.File;
 import java.text.DateFormat;

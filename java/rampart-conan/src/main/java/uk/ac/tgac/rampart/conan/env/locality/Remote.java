@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
 import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -102,7 +102,7 @@ public class Remote implements Locality {
 	}
 
 	@Override
-	public boolean submitProcess(RampartProcess rampartProcess, EnvironmentArgs args, Architecture architecture)
+	public boolean submitProcess(ExtendedProcess process, EnvironmentArgs args, Architecture architecture)
 			throws IllegalArgumentException, ProcessExecutionException,
 			InterruptedException, ConnectException {
 
@@ -113,7 +113,7 @@ public class Remote implements Locality {
 			// this is all rubbish atm.  I know I'll need to do something with the session here though.
 			this.session.connect();
 			this.session.run();
-			success = architecture.submitProcess(rampartProcess, args);	
+			success = architecture.submitProcess(process, args);
 		}
 		catch(JSchException je) {
 			

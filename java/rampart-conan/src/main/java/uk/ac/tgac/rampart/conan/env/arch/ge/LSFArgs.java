@@ -111,7 +111,6 @@ public class LSFArgs extends GridEngineArgs {
 
         LSFArgs copy = new LSFArgs();
 
-
         return copy;
     }
 }

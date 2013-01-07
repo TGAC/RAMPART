@@ -15,19 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.process;
 
-import java.net.ConnectException;
+import java.util.Map;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 
-public abstract class GridEngine implements Architecture {
+public interface ProcessArgs {
 
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	Map<ConanParameter, String> getParameterValuePairs();
 }

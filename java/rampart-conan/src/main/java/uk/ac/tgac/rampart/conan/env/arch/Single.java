@@ -21,7 +21,7 @@ import java.net.ConnectException;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 
 public class Single implements Architecture {
@@ -32,7 +32,7 @@ public class Single implements Architecture {
 	}
 
 	@Override
-	public boolean submitProcess(RampartProcess rampartProcess,	EnvironmentArgs args)
+	public boolean submitProcess(ExtendedProcess process,	EnvironmentArgs args)
 			throws IllegalArgumentException, ProcessExecutionException,
 			InterruptedException, ConnectException {
 		

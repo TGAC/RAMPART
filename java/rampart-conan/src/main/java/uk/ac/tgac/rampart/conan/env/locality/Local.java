@@ -22,7 +22,7 @@ import java.net.ConnectException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
 import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 /**
  * This environment is used to execute code on the localhost. If the localhost
@@ -50,7 +50,7 @@ public class Local implements Locality {
 	}
 
 	@Override
-	public boolean submitProcess(RampartProcess rampartProcess,
+	public boolean submitProcess(ExtendedProcess process,
 			EnvironmentArgs args, Architecture architecture)
 			throws IllegalArgumentException, ProcessExecutionException,
 			InterruptedException, ConnectException {
@@ -59,10 +59,10 @@ public class Local implements Locality {
 		if (architecture.isGridEngine()) {
 			
 			// Been asked to run locally on a grid engine.
-			// Do something... maybe some validation
+			// Do something? maybe some validation?
 		}
 		
-		return architecture.submitProcess(rampartProcess, args);
+		return architecture.submitProcess(process, args);
 	}
 
 }

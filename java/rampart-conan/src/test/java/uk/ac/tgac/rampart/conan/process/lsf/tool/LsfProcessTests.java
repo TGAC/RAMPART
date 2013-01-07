@@ -20,8 +20,8 @@ package uk.ac.tgac.rampart.conan.process.lsf.tool;
 import org.junit.Before;
 import org.junit.Test;
 import uk.ac.tgac.rampart.conan.cli.Configure;
-import uk.ac.tgac.rampart.conan.tool.abyss.AbyssV134Args;
-import uk.ac.tgac.rampart.conan.tool.sspace.SSpaceBasicV2Args;
+import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Args;
+import uk.ac.tgac.rampart.conan.tool.external.sspace.SSpaceBasicV2Args;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;

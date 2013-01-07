@@ -17,22 +17,24 @@
  **/
 package uk.ac.tgac.rampart.conan.env.arch;
 
+import uk.ac.tgac.rampart.conan.env.arch.ge.GridEngineType;
+
 public enum ArchitectureType {
 
 	SINGLE
 	{
 		@Override
 		public Architecture create() {
-			// TODO Auto-generated method stub
-			return null;
+			return new Single();
 		}
 	},
 	GRID_ENGINE {
 		@Override
 		public Architecture create() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+
+			// Select LSF as the default grid engine.  If user wants PBS they'll have to do the leg work.
+            return GridEngineType.LSF.create();
+        }
 	};
 	
 	public abstract Architecture create();

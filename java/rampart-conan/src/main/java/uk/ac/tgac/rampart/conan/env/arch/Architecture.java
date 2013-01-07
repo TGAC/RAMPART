@@ -21,14 +21,14 @@ import java.net.ConnectException;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 
 public interface Architecture {
 
 	boolean isGridEngine();
 	
-	boolean submitProcess(RampartProcess rampartProcess, EnvironmentArgs args)
+	boolean submitProcess(ExtendedProcess rampartProcess, EnvironmentArgs args)
 			throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException;
 	
 }

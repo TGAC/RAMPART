@@ -15,19 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.tool.external.abyss;
 
-import java.net.ConnectException;
+import uk.ac.tgac.rampart.conan.parameter.DefaultConanParameter;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+public class AbyssV134InputLibsParameter extends DefaultConanParameter {
+	
+	private static final long serialVersionUID = 4497529578973609010L;
 
-public abstract class GridEngine implements Architecture {
-
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	public AbyssV134InputLibsParameter() {
+		super(
+				"lib", 
+				"Required.  The input libraries to assemble with abyss.  Can include paired end and single end.  Will run paired end assemblies in parallel.", 
+				false, false, false);
+	}
+	
+	@Override
+	public boolean validateParameterValue(String value) {
+		
+		// Pretty tricky to validate this in String form.  Just let Abyss do the validation for the time being...
+		return true;
+	}
 }

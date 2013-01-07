@@ -15,19 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.env.arch.ge;
+package uk.ac.tgac.rampart.conan.process;
 
-import java.net.ConnectException;
+import org.apache.commons.lang.StringUtils;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+/**
+ * Because we need some common functionality across classes  
+ */
+public class ExtendedProcessHelper {
 
-public abstract class GridEngine implements Architecture {
-
-    @Override
-    public boolean isGridEngine() {
-        return true;
-    }
+	
+	public static String createFullCommand(ExtendedProcess process, ProcessArgs args) {
+		
+		String[] commands = new String[]{
+			process.getPreCommand(),
+			process.getCommand(args),
+			process.getPostCommand()
+		};
+		
+		String command = StringUtils.join(commands, "; ");
+		
+		return command;
+	}
 }

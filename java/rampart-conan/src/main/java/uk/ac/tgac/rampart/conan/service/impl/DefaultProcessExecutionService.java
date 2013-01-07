@@ -19,15 +19,15 @@ package uk.ac.tgac.rampart.conan.service.impl;
 
 import org.springframework.stereotype.Service;
 
-import uk.ac.tgac.rampart.conan.env.RampartEnvironment;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.env.Environment;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 
 @Service
 public class DefaultProcessExecutionService implements ProcessExecutionService {
 
 	@Override
-	public boolean execute(RampartProcess process, RampartEnvironment env) {
+	public boolean execute(ExtendedProcess process, Environment env) {
 		// TODO Auto-generated method stub
 		return false;
 	}

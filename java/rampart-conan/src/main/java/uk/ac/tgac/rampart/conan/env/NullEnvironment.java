@@ -25,22 +25,22 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.arch.Architecture;
 import uk.ac.tgac.rampart.conan.env.locality.Locality;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
 /**
  * This environment will execute all internal aspects of the job but will not
  * dispatch any command for submission outside the JVM. This is a useful
- * environment for sanity testing process to see if commands are being generated
+ * environment for sanity testing processes to see if commands are being generated
  * correctly.
  * 
  * @author maplesod
  */
-public class NullEnvironment implements RampartEnvironment {
+public class NullEnvironment implements Environment {
 
 	Logger log = LoggerFactory.getLogger(NullEnvironment.class);
 	
 	@Override
-	public void submitProcess(RampartProcess rampartProcess,
+	public void submitProcess(ExtendedProcess rampartProcess,
 			EnvironmentArgs args) throws IllegalArgumentException,
 			ProcessExecutionException, InterruptedException, ConnectException {
 		

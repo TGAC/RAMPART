@@ -21,25 +21,17 @@ import java.net.ConnectException;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.process.RampartProcess;
+import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
 
-public class LSF implements GridEngine {
+public class LSF extends GridEngine {
 
-	@Override
-	public boolean isGridEngine() {
-		
-		return true;
-	}
 
-	@Override
-	public boolean submitProcess(RampartProcess rampartProcess,
-			EnvironmentArgs args) throws IllegalArgumentException,
-			ProcessExecutionException, InterruptedException, ConnectException {
-				
-		
-		// Do whatever here... maybe call out to existing code???
-		
-		return false;
-	}
+    @Override
+    public boolean submitProcess(ExtendedProcess process, EnvironmentArgs args)
+            throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException {
 
+        //TODO
+
+        return false;
+    }
 }
