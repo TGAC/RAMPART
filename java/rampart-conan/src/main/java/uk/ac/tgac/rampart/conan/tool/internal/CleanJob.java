@@ -26,7 +26,7 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.PathParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 
 public class CleanJob extends AbstractLSFProcess {

@@ -43,6 +43,6 @@ public class StringJoiner {
 	}
 	
 	public String toString() {		
-		return StringUtils.join(this.parts, this.sep == null ? "" : this.sep);
+		return StringUtils.join(this.parts, this.sep == null ? " " : this.sep);
 	}
 }

@@ -17,11 +17,14 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.sspace;
 
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
-import uk.ac.tgac.rampart.conan.process.lsf.DefaultRampartLsfProcess;
+import uk.ac.tgac.rampart.conan.tool.AbstractRampartLSFProcess;
+
+import java.util.Map;
 
 
-public class SSpaceBasicV2LsfProcess extends DefaultRampartLsfProcess {
+public class SSpaceBasicV2LsfProcess extends AbstractRampartLSFProcess {
 	
 	private static final long serialVersionUID = -9137766834408006360L;
 	
@@ -33,9 +36,14 @@ public class SSpaceBasicV2LsfProcess extends DefaultRampartLsfProcess {
 	public SSpaceBasicV2LsfProcess() {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
 				SSpaceBasicV2Param.values());
-	}	
-	
-	@Override
+	}
+
+    @Override
+    protected String getCommand(Map<ConanParameter, String> parameters) throws IllegalArgumentException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
 	public String loadToolCommand() {
 		return 	ToolCommandLoader.getInstance().getLoadToolCommand(ToolCommandLoader.PERL_5_16_1) + "; " +
 				ToolCommandLoader.getInstance().getLoadToolCommand(ToolCommandLoader.SSPACE_BASIC_2_0);

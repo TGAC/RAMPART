@@ -17,11 +17,17 @@
  **/
 package uk.ac.tgac.rampart.conan.service;
 
-import uk.ac.tgac.rampart.conan.env.Environment;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.Environment;
+import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
+
+import java.net.ConnectException;
 
 public interface ProcessExecutionService {
 
-	
-	boolean execute(ExtendedProcess process, Environment env);
+	void execute(ExtendedConanProcess process, Environment env)
+            throws InterruptedException, ProcessExecutionException, ConnectException;
+
+    void execute(String command, Environment env)
+            throws InterruptedException, ProcessExecutionException, ConnectException;
 }

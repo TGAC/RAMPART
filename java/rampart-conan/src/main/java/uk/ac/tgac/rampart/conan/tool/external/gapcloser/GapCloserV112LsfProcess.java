@@ -17,11 +17,14 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.gapcloser;
 
-import uk.ac.tgac.rampart.conan.process.lsf.DefaultRampartLsfProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
+import uk.ac.tgac.rampart.conan.tool.AbstractRampartLSFProcess;
+
+import java.util.Map;
 
 
-public class GapCloserV112LsfProcess extends DefaultRampartLsfProcess {
+public class GapCloserV112LsfProcess extends AbstractRampartLSFProcess {
 
 	private static final long serialVersionUID = -875700673055262789L;
 
@@ -34,5 +37,10 @@ public class GapCloserV112LsfProcess extends DefaultRampartLsfProcess {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
 				GapCloserV112Param.values());
 	}
+
+    @Override
+    protected String getCommand(Map<ConanParameter, String> parameters) throws IllegalArgumentException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
 }

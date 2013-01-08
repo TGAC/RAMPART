@@ -18,8 +18,8 @@
 package uk.ac.tgac.rampart.conan.tool.external.r;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.DefaultConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.PathParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.DefaultConanParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
 import uk.ac.tgac.rampart.conan.tool.ToolParameter;
 
 public enum RV2122Param implements ToolParameter {

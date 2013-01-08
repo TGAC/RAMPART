@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 
 public class RV2122Args implements ProcessArgs {
 

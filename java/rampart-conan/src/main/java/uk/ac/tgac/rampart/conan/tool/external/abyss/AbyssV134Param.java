@@ -18,9 +18,13 @@
 package uk.ac.tgac.rampart.conan.tool.external.abyss;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.DefaultConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.NumericParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.DefaultConanParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.NumericParameter;
 import uk.ac.tgac.rampart.conan.tool.ToolParameter;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public enum AbyssV134Param implements ToolParameter {
 	
@@ -71,4 +75,11 @@ public enum AbyssV134Param implements ToolParameter {
 		}
 	};
 
+    public static Collection<ConanParameter> getParameters() {
+        List<ConanParameter> params = new ArrayList<ConanParameter>();
+        for(AbyssV134Param param : AbyssV134Param.values()) {
+            params.add(param.getConanParameter());
+        }
+        return params;
+    }
 }

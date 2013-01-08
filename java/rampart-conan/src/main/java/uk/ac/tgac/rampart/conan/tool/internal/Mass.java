@@ -17,35 +17,39 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.env.arch.ge.GridEngineArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.Environment;
+import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
+import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
 import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.ConnectException;
 
 public class Mass {
 
+    // Constants
 	public static final int KMER_MIN = 11;
 	public static final int KMER_MAX = 125;
-	
-	
+
+    @Autowired
+    private ProcessExecutionService processExecutionService;
+
+    // Class vars
 	private DeBrujinAssembler assembler;
 	private DeBrujinAssemblerArgs assemblerArgs;
-	private GridEngineArgs geArgs;
 	private File config;
 	private int kmin;
 	private int kmax;
 	private String jobPrefix;
 	private File outputDir;
 	
-	// Generated args
+	// Generated vars
 	private File contigsDir;
 	private File scaffoldsDir;
 	private File logsDir;
@@ -53,21 +57,13 @@ public class Mass {
 	public Mass() {
 		this.assembler = null;
 		this.assemblerArgs = null;
-		this.geArgs = null;
 		this.config = null;
 		this.kmin = 41;
 		this.kmax = 95;
 		this.jobPrefix = "";
 		this.outputDir = null;
 	}
-	
-	public GridEngineArgs getGeArgs() {
-		return geArgs;
-	}
 
-	public void setGeArgs(GridEngineArgs geArgs) {
-		this.geArgs = geArgs;
-	}
 
 	public File getOutputDir() {
 		return outputDir;
@@ -165,7 +161,12 @@ public class Mass {
 			return rest + tens + 1;
 		}
 	}
-		
+
+    /**
+     * Retrieves the next k-mer value in the sequence
+     * @param kmer The current k-mer value
+     * @return The next kmer value
+     */
 	protected int nextKmer(int kmer) {
 		
 		int mod1 = (kmer - 1) % 10;
@@ -181,7 +182,12 @@ public class Mass {
 			throw new IllegalArgumentException("Kmer values have somehow got out of step!!");
 		}
 	}
-	
+
+    /**
+     * Determines whether or not the supplied k-mer value is valid
+     * @param kmer The k-mer value to validate
+     * @return True if valid, false otherwise
+     */
 	public boolean validKmer(int kmer) {
 		
 		int mod1 = (kmer - 1) % 10;
@@ -189,7 +195,12 @@ public class Mass {
 
 		return (mod1 == 0 || mod2 == 0 ) ? true : false;
 	}
-	
+
+    /**
+     * Determines whether or not the supplied kmer range is valid.  Throws an exception if not.
+     * @param kmin The bottom end of the k-mer range
+     * @param kmax The top end of the k-mer range
+     */
 	public void validateKmers(int kmin, int kmax) {
 		
 		if (kmin < KMER_MIN || kmax < KMER_MIN)
@@ -220,17 +231,39 @@ public class Mass {
 		// Create directory for logs
 		this.logsDir.mkdir();
 	}
-	
 
-	public void dispatchJobs() throws IOException, IllegalArgumentException, 
+    /**
+     * Dispatches assembly jobs to the specfied environments
+     * @param env The environment to dispatch jobs too
+     * @throws IOException
+     * @throws IllegalArgumentException
+     * @throws ProcessExecutionException
+     * @throws InterruptedException
+     */
+	public void dispatchJobs(Environment env) throws IOException, IllegalArgumentException,
 		ProcessExecutionException, InterruptedException {
 
 		// Check the range looks reasonable
 		//TODO This logic isn't bullet proof... we can still nudge the minKmer above the maxKmer 
 		validateKmers(this.kmin, this.kmax);
-		
-		createSupportDirectories();
-		
+
+        // Create a copy of the environment info (we're going to modify this)
+		Environment envCopy = env.copy();
+
+        // Set mem required to 60GB if no memory requested
+        if (envCopy.getEnvironmentArgs().getMemoryMB() == 0) {
+            envCopy.getEnvironmentArgs().setMemoryMB(60000);
+        }
+
+        // Set num threads to 8 if none specified
+        if (envCopy.getEnvironmentArgs().getThreads() == 0) {
+            envCopy.getEnvironmentArgs().setThreads(8);
+        }
+
+		// Create any required directories for this job
+        createSupportDirectories();
+
+        // Dispatch an assembly job for each requested kmer
 		for(int k = getFirstValidKmer(this.kmin); k <= this.kmax; nextKmer(k)) {
 			
 			File kDir = new File(this.outputDir, String.valueOf(k));
@@ -241,23 +274,18 @@ public class Mass {
 			}			
 			kDir.mkdir();
 			
-			// Create customer DeBrujinAssemblerArgs for this kmer
+			// Modify the ProcessArgs kmer value
 			DeBrujinAssemblerArgs kAssemblerArgs = this.assemblerArgs.copy();
 			kAssemblerArgs.setKmer(k);
-			
-			// May not want to run on a grid engine (although that's probably unlikely)
-			// so check before creating some GE arguments.
-			GridEngineArgs kGeArgs = null;
-			if (this.geArgs != null) {
-				kGeArgs = this.geArgs.copy();
-				kGeArgs.setJobName(this.jobPrefix + "-k" + k);
-			}
-			
-			// Execute the assembler with this kmer value
-			this.assembler.execute(kAssemblerArgs, kGeArgs, kDir);	
-		}
+
+            // Modify the environment jobname
+            envCopy.getEnvironmentArgs().setJobName(this.jobPrefix + "-k" + k);
+
+            // Create process
+            this.processExecutionService.execute(this.assembler, env);
+        }
 		
-		this.dispatchStatsJob();
+		this.dispatchStatsJob(envCopy);
 		
 		// Not sure if this is required in a java env
 		//this.log();
@@ -267,51 +295,32 @@ public class Mass {
 	
 	protected String buildStatCmdLine(File statDir) {
 		
-		/*my @mgp_args = grep {$_} (
-			$MASS_GP_PATH,
-			"--grid_engine NONE",
-			$qst->isVerboseAsParam(),
-			"--input " .  $stat_dir,
-			"--output " . $stat_dir
-		);
+		StringJoiner mgpArgs = new StringJoiner(" ");
 
-		my $mgp_cmd_line = join " ", @mgp_args;*/
-
-        List<String> mgpArgs = new ArrayList<String>();
-
-        mgpArgs.add(PerlHelper.MASS_GP.getPath());
+       // mgpArgs.add(PerlHelper.MASS_GP.getPath());
         mgpArgs.add("--grid_engine NONE");
         mgpArgs.add("--input " + statDir.getPath());
         mgpArgs.add("--output " + statDir.getPath());
+        //mgpArgs.add(this.isVerbose(), "", "--verbose");
 
-        if (this.isVerbose()) {
-
-        }
-
-		return "";
+		return mgpArgs.toString();
 	}
 	
 	
-	protected void dispatchStatsJob() {
+	protected void dispatchStatsJob(Environment env) throws InterruptedException, ProcessExecutionException, ConnectException {
 		
-		GridEngineArgs geStatJobArgs = null;
+		// Alter the environment for this job
+        env.getEnvironmentArgs().setJobName(this.jobPrefix + "-stats");
+        env.getEnvironmentArgs().setThreads(0);
+        env.getEnvironmentArgs().setMemoryMB(0);
 		
-		if (this.geArgs != null) {
-			geStatJobArgs = this.geArgs.copy();
-		} 
-		
-		List<String> statCommands = new ArrayList<String>();
-		
-		statCommands.add(buildStatCmdLine(this.contigsDir));
-		
-		if (scaffoldsDir != null) {
-			statCommands.add(buildStatCmdLine(this.scaffoldsDir));
-		}
-		
-		String statCommand = StringUtils.join(statCommands, "; ");
-		
-		// Submit the job with 	geStatJobArgs	and statCommand
+		StringJoiner statCommands = new StringJoiner("; ");
 
+        statCommands.add(buildStatCmdLine(this.contigsDir));
+		statCommands.add(this.scaffoldsDir != null, "", buildStatCmdLine(this.scaffoldsDir));
+
+        // Create process
+        this.processExecutionService.execute(statCommands.toString(), env);
 	}
 
 }

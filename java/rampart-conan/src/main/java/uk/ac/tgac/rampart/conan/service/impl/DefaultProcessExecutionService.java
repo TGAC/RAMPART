@@ -18,18 +18,26 @@
 package uk.ac.tgac.rampart.conan.service.impl;
 
 import org.springframework.stereotype.Service;
-
-import uk.ac.tgac.rampart.conan.env.Environment;
-import uk.ac.tgac.rampart.conan.process.ExtendedProcess;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.Environment;
+import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
+
+import java.net.ConnectException;
 
 @Service
 public class DefaultProcessExecutionService implements ProcessExecutionService {
 
 	@Override
-	public boolean execute(ExtendedProcess process, Environment env) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    public void execute(ExtendedConanProcess process, Environment env)
+            throws InterruptedException, ProcessExecutionException, ConnectException {
+
+        env.submitProcess(process);
+    }
+
+    @Override
+    public void execute(String command, Environment env) throws InterruptedException, ProcessExecutionException, ConnectException {
+        env.submitCommand(command);
+    }
 
 }

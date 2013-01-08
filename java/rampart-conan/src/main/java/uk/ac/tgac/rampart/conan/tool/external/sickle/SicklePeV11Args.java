@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.conan.tool.args.QualityTrimmingArgs;
-import uk.ac.tgac.rampart.conan.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.external.sickle.SicklePeV11QualityTypeParameter.SickleQualityTypeOptions;
 
 public class SicklePeV11Args implements ProcessArgs, QualityTrimmingArgs {

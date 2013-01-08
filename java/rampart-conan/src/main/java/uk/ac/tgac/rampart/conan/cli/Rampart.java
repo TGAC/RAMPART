@@ -77,7 +77,7 @@ public class Rampart {
 		abyssArgs.setKmer(65);
 		abyssArgs.setInputlibraries(inputLibraries);
 		
-		AbyssV134LsfProcess abyssProcess = new AbyssV134LsfProcess();
+		AbyssV134ProcessLSF abyssProcess = new AbyssV134ProcessLSF();
 		
 		abyssProcess.execute(abyssArgs.getParameterValuePairs());*/
 

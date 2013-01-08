@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.tool.args.ScaffolderArgs;
-import uk.ac.tgac.rampart.conan.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 public class SSpaceBasicV2Args implements ProcessArgs, ScaffolderArgs {

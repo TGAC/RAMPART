@@ -17,10 +17,13 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.sickle;
 
-import uk.ac.tgac.rampart.conan.process.lsf.DefaultRampartLsfProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
+import uk.ac.tgac.rampart.conan.tool.AbstractRampartLSFProcess;
 
-public class SicklePeV11LsfProcess extends DefaultRampartLsfProcess  {
+import java.util.Map;
+
+public class SicklePeV11LsfProcess extends AbstractRampartLSFProcess {
 
 	private static final long serialVersionUID = 7102159667412634823L;
 
@@ -33,5 +36,10 @@ public class SicklePeV11LsfProcess extends DefaultRampartLsfProcess  {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
 				SicklePeV11Param.values());
 	}
+
+    @Override
+    protected String getCommand(Map<ConanParameter, String> parameters) throws IllegalArgumentException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
 }

@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.abyss;
 
-import uk.ac.tgac.rampart.conan.parameter.DefaultConanParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.DefaultConanParameter;
 
 public class AbyssV134InputLibsParameter extends DefaultConanParameter {
 	

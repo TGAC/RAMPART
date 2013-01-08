@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
-import uk.ac.tgac.rampart.conan.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.core.data.Library;
 
 

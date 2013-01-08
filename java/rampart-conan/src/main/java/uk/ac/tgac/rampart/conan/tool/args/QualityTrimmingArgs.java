@@ -19,8 +19,8 @@ package uk.ac.tgac.rampart.conan.tool.args;
 
 import java.io.File;
 
-import uk.ac.tgac.rampart.conan.parameter.FilePair;
-import uk.ac.tgac.rampart.conan.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 
 public interface QualityTrimmingArgs extends ProcessArgs  {
 

@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.args;
 import java.io.File;
 import java.util.Set;
 
-import uk.ac.tgac.rampart.conan.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 public interface DegapArgs extends ProcessArgs {
