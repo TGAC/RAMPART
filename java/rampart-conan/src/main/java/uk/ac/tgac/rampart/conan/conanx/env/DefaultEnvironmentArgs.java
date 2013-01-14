@@ -71,4 +71,14 @@ public class DefaultEnvironmentArgs implements EnvironmentArgs {
     public void setCmdLineOutputFile(File cmdLineOutputFile) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public boolean isBackgroundTask() {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void setBackgroundTask(boolean state) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

@@ -15,13 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-
-import uk.ac.tgac.rampart.conan.conanx.env.arch.ge.LSFWaitCondition.ExitStatus;
 
 public class LSFArgsTest {
 
@@ -58,7 +56,7 @@ public class LSFArgsTest {
 		args.setQueueName("production");
 		args.setThreads(8);
 		args.setOpenmpi(true);
-		args.setWaitCondition(new LSFWaitCondition(ExitStatus.ENDED, "Job0"));
+		args.setWaitCondition(new LSFWaitCondition(LSFExitStatusType.ENDED, "Job0"));
 		args.setMemoryMB(60000);
 		
 		String test = args.toString();

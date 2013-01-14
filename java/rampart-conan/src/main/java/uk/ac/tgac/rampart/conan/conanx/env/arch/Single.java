@@ -41,4 +41,14 @@ public class Single extends AbstractArchitecture {
 		return false;
 	}
 
+    @Override
+    public int waitFor(WaitCondition waitCondition, EnvironmentArgs args) throws InterruptedException, ProcessExecutionException, ConnectException {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public WaitCondition createWaitCondition(ExitStatusType exitStats, String condition) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
 }

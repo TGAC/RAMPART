@@ -39,14 +39,6 @@ public class NullEnvironment implements Environment {
 
 	Logger log = LoggerFactory.getLogger(NullEnvironment.class);
 	
-	@Override
-	public void submitProcess(ConanProcess conanProcess) throws IllegalArgumentException,
-			ProcessExecutionException, InterruptedException, ConnectException {
-		
-		// Do not execute anything... just log the request. 
-		log.info("Process will not be executed on a Null Environment: {0}.", conanProcess.getName());
-	}
-
     @Override
     public void submitCommand(String command) throws IllegalArgumentException,
             ProcessExecutionException, InterruptedException, ConnectException {

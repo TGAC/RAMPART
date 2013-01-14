@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,20 +24,17 @@ import uk.ac.ebi.fgpt.conan.lsf.LSFProcessEvent;
 import uk.ac.ebi.fgpt.conan.lsf.LSFProcessListener;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.ProcessRunner;
 import uk.ac.ebi.fgpt.conan.utils.ProcessUtils;
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatus;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatusType;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
-public class LSF extends AbstractGridEngine {
+public class LSF extends AbstractScheduler {
 
     private static Logger log = LoggerFactory.getLogger(LSF.class);
     
@@ -87,15 +84,52 @@ public class LSF extends AbstractGridEngine {
 
         // set up monitoring of the lsfOutputFile
         String lsfOutputFile = envArgs.getCmdLineOutputFile().getAbsolutePath();
+
+        // Execute the command in the foreground as normal, however as this is an LSF job it will be executing on a cluster
+        // node somewhere for a while.
+        super.submitCommand(cmd, envArgs);
+
+        // If the this was run as a foreground task then we monitor the LSF output file to track progress and wait until
+        // we see evidence that the task has completed. Otherwise we either don't care when it finishes, or we have to
+        // explicitly wait for the job to complete using the wait method.
+        if (!envArgs.isBackgroundTask()) {
+
+            int exitCode = waitFor(envArgs.getCmdLineOutputFile());
+        }
+    }
+
+    @Override
+    public int waitFor(WaitCondition waitCondition, EnvironmentArgs args) throws InterruptedException, ProcessExecutionException, ConnectException {
+
+        //TODO Could do some validation to see if the job exists before executing the wait job
+
+        // get email address to use as backup in case process fails
+        String backupEmail = ConanProperties.getProperty("lsf.backup.email");
+
+        StringJoiner sb = new StringJoiner(" ");
+        sb.add(this.getSubmitCommand());
+        sb.add(waitCondition.getCommand());
+
+        super.submitCommand(sb.toString(), args);
+
+        return waitFor(args.getCmdLineOutputFile());
+    }
+
+    @Override
+    public WaitCondition createWaitCondition(ExitStatusType exitStatus, String condition) {
+
+        ExitStatus type = new LSFExitStatus().create(ExitStatusType.COMPLETED_SUCCESS);
+
+        //return new LSFWaitCondition(type.getExitStatus(), condition);
+        return null;
+    }
+
+    protected int waitFor(File monitorFile) throws ProcessExecutionException, InterruptedException {
+
         InvocationTrackingLSFProcessListener listener = new InvocationTrackingLSFProcessListener();
 
-        final LSFProcessAdapter adapter = new LSFProcessAdapter(lsfOutputFile, this.getMonitorInterval());
+        final LSFProcessAdapter adapter = new LSFProcessAdapter(monitorFile.getAbsolutePath(), this.getMonitorInterval());
         adapter.addLSFProcessListener(listener);
-
-        // Execute the command in the foreground as normal, however LSF jobs will hang around executing on a cluster node
-        // for a while, so we need to wait for the job to complete before exiting this method as well.  We do this by monitoring
-        // the LSF output file.
-        super.submitCommand(cmd, envArgs);
 
         // process exit value, initialise to -1
         int exitValue = -1;
@@ -108,7 +142,7 @@ public class LSF extends AbstractGridEngine {
 
             ProcessExecutionException pex = this.processExecutor.interpretExitValue(exitValue);
             if (pex == null) {
-                return;
+                return exitValue;
             }
             else {
                 pex.setProcessOutput(adapter.getProcessOutput());
@@ -120,8 +154,8 @@ public class LSF extends AbstractGridEngine {
             // this process DID start, so only delete output files to cleanup if the process actually exited,
             // and wasn't e.g. interrupted prior to completion
             if (exitValue != -1) {
-                log.debug("Deleting " + lsfOutputFile);
-                ProcessUtils.deleteFiles(envArgs.getCmdLineOutputFile());
+                log.debug("Deleting " + monitorFile.getAbsolutePath());
+                ProcessUtils.deleteFiles(monitorFile);
             }
         }
     }

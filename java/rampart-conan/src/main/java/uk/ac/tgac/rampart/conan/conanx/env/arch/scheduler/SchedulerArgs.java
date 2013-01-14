@@ -1,29 +1,32 @@
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
 
 import java.io.File;
 
-public abstract class GridEngineArgs implements EnvironmentArgs {
+public abstract class SchedulerArgs implements EnvironmentArgs {
 
 	private String jobName;
 	private String queueName;
 	private int threads;
 	private int memoryMB;
     private File cmdLineOutputFile;
+    private boolean backgroundTask;
 
-    protected GridEngineArgs() {
+    protected SchedulerArgs() {
         this.jobName = "";
         this.queueName = "";
         this.threads = 0;
         this.memoryMB = 0;
+        this.backgroundTask = false;
     }
 
-    protected GridEngineArgs(GridEngineArgs args) {
+    protected SchedulerArgs(SchedulerArgs args) {
         this.jobName = args.getJobName();
         this.queueName = args.getQueueName();
         this.threads = args.getThreads();
         this.memoryMB = args.getMemoryMB();
+        this.backgroundTask = args.isBackgroundTask();
     }
 
 	@Override
@@ -71,5 +74,15 @@ public abstract class GridEngineArgs implements EnvironmentArgs {
     @Override
     public File getCmdLineOutputFile() {
         return this.cmdLineOutputFile;
+    }
+
+    @Override
+    public boolean isBackgroundTask() {
+        return this.backgroundTask;
+    }
+
+    @Override
+    public void setBackgroundTask(boolean state) {
+        this.backgroundTask = state;
     }
 }

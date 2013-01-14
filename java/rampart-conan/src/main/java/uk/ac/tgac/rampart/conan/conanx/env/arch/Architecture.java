@@ -31,5 +31,8 @@ public interface Architecture {
 
     void submitCommand(String command, EnvironmentArgs envArgs)
             throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException;
-	
+
+    int waitFor(WaitCondition waitCondition, EnvironmentArgs args)  throws InterruptedException, ProcessExecutionException, ConnectException;
+
+    WaitCondition createWaitCondition(ExitStatusType exitStats, String condition);
 }

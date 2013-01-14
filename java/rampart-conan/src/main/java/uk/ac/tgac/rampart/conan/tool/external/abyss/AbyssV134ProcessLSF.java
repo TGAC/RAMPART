@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.external.abyss;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.ge.GridEngineArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler.SchedulerArgs;
 import uk.ac.tgac.rampart.conan.tool.AbstractRampartLSFProcess;
 import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 
@@ -51,14 +51,14 @@ public class AbyssV134ProcessLSF extends AbstractRampartLSFProcess {
 		this.setExtraLsfOptions("-Rselect[hname!='n57142.tgaccluster']");
 	}
 
-	protected void setFromGEArgs(GridEngineArgs geArgs) {
+	protected void setFromGEArgs(SchedulerArgs geArgs) {
 		this.setJobName(geArgs.getJobName());
 		this.setQueueName(geArgs.getQueueName());
 		this.setMemoryRequired(geArgs.getMemoryMB());
 		this.setThreads(geArgs.getThreads());
 	}
 
-	public void execute(DeBrujinAssemblerArgs assemblerArgs, GridEngineArgs geArgs, File workingDir)
+	public void execute(DeBrujinAssemblerArgs assemblerArgs, SchedulerArgs geArgs, File workingDir)
 			throws IllegalArgumentException, ProcessExecutionException, InterruptedException {
 		
 		setFromGEArgs(geArgs);

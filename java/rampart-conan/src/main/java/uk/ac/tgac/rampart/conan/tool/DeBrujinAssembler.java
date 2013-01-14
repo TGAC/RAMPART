@@ -4,5 +4,9 @@ import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
 
 public interface DeBrujinAssembler extends ExtendedConanProcess {
 
-	boolean makesScaffolds();
+	boolean makesUnitigs();
+
+    boolean makesContigs();
+
+    boolean makesScaffolds();
 }

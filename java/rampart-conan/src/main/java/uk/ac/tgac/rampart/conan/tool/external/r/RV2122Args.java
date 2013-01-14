@@ -57,7 +57,7 @@ public class RV2122Args implements ProcessArgs {
 		
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		
-		if (this.args != null) {
+		/*if (this.args != null) {
 			pvp.put(RV2122Param.ARGS.getConanParameter(), StringUtils.join(this.args, " "));
 		}
 		
@@ -67,7 +67,7 @@ public class RV2122Args implements ProcessArgs {
 		
 		if (this.output != null) {
 			pvp.put(RV2122Param.OUTPUT.getConanParameter(), this.script.getPath());
-		}
+		}   */
 		
 		return pvp;
 	}

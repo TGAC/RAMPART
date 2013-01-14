@@ -34,7 +34,7 @@ import uk.ac.tgac.rampart.conan.tool.args.ScaffolderArgs;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
-public class SSpaceBasicV2Args implements ProcessArgs, ScaffolderArgs {
+public class SSpaceBasicV2Args implements ScaffolderArgs {
 
 	// SSPACE vars
 	private File libraryFile;

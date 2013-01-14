@@ -15,45 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
-public class LSFWaitCondition {
+public enum SchedulerType {
 
-	public enum ExitStatus {
-		ENDED("ended"),
-		DONE("done");
-		
-		private String cmd;
-		
-		private ExitStatus(String cmd) {
-			this.cmd = cmd;
+	LSF {
+        @Override
+        public SchedulerArgs createArgs() {
+            return new LSFArgs();  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+		public AbstractScheduler create() {
+			return new LSF();
 		}
-		
-		public String getCommand() {
-			return this.cmd;
+	},
+	PBS {
+		@Override
+		public AbstractScheduler create() {
+			return new PBS();
 		}
-	}
-	
-	private ExitStatus exitStatus;
-	private String condition;
-	
-	public LSFWaitCondition(ExitStatus exitStatus, String condition) {
-		super();
-		this.exitStatus = exitStatus;
-		this.condition = condition;
-	}
 
-	public ExitStatus getExitStatus() {
-		return exitStatus;
-	}
-
-	public String getCondition() {
-		return condition;
-	}
+        @Override
+        public SchedulerArgs createArgs() {
+            return new PBSArgs();  //To change body of implemented methods use File | Settings | File Templates.
+        }
+    };
 	
-	@Override
-	public String toString() {
-		return "-w " + this.exitStatus.getCommand() + "(" + this.condition + ")";
-	}
-	
+	public abstract AbstractScheduler create();
+    public abstract SchedulerArgs createArgs();
 }

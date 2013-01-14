@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env.arch;
 
-import uk.ac.tgac.rampart.conan.conanx.env.arch.ge.GridEngineType;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler.SchedulerType;
 
 public enum ArchitectureType {
 
@@ -33,7 +33,7 @@ public enum ArchitectureType {
 		public Architecture create() {
 
 			// Select LSF as the default grid engine.  If user wants PBS they'll have to do the leg work.
-            return GridEngineType.LSF.create();
+            return SchedulerType.LSF.create();
         }
 	};
 	

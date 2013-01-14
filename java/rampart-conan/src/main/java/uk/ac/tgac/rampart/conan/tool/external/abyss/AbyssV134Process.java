@@ -63,6 +63,16 @@ public class AbyssV134Process implements DeBrujinAssembler {
     }
 
     @Override
+    public boolean makesUnitigs() {
+        return true;
+    }
+
+    @Override
+    public boolean makesContigs() {
+        return true;
+    }
+
+    @Override
     public boolean makesScaffolds() {
         return true;
     }

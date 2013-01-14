@@ -24,5 +24,13 @@ package uk.ac.tgac.rampart.conan.tool;
  */
 public enum PerlHelper {
 
-    MASS_GP
+    MASS_GP {
+        @Override
+        public String getPath() {
+            return "mass_gp.pl";
+        }
+    };
+
+
+    public abstract String getPath();
 }

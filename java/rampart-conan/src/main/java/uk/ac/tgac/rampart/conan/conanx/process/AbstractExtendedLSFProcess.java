@@ -19,7 +19,7 @@ package uk.ac.tgac.rampart.conan.conanx.process;
 
 import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.ge.LSFWaitCondition;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler.LSFWaitCondition;
 
 import java.util.Map;
 

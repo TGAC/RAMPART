@@ -20,6 +20,8 @@ package uk.ac.tgac.rampart.conan.service.impl;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
+import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
 import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 
@@ -32,12 +34,17 @@ public class DefaultProcessExecutionService implements ProcessExecutionService {
     public void execute(ExtendedConanProcess process, Environment env)
             throws InterruptedException, ProcessExecutionException, ConnectException {
 
-        env.submitProcess(process);
+
     }
 
     @Override
     public void execute(String command, Environment env) throws InterruptedException, ProcessExecutionException, ConnectException {
         env.submitCommand(command);
+    }
+
+    @Override
+    public int waitFor(WaitCondition waitCondition, EnvironmentArgs args) throws InterruptedException, ProcessExecutionException, ConnectException {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 }

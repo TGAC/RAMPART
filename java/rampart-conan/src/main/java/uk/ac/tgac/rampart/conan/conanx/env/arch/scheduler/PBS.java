@@ -15,24 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.service;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatusType;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
-import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
 
 import java.net.ConnectException;
 
-public interface ProcessExecutionService {
+public class PBS extends AbstractScheduler {
 
-	void execute(ExtendedConanProcess process, Environment env)
-            throws InterruptedException, ProcessExecutionException, ConnectException;
+    public static final String QSUB = "qsub";
 
-    void execute(String command, Environment env)
-            throws InterruptedException, ProcessExecutionException, ConnectException;
+    public PBS() {
+        super(QSUB);
+    }
 
-    int waitFor(WaitCondition waitCondition, EnvironmentArgs args)
-            throws InterruptedException, ProcessExecutionException, ConnectException;
+    @Override
+    public void submitCommand(String command, EnvironmentArgs args) throws IllegalArgumentException,
+            ProcessExecutionException, InterruptedException, ConnectException {
+
+        throw new UnsupportedOperationException("PBS not implemented yet!");
+    }
+
+    @Override
+    public int waitFor(WaitCondition waitCondition, EnvironmentArgs args) throws InterruptedException, ProcessExecutionException, ConnectException {
+        return 0;
+    }
+
+    @Override
+    public WaitCondition createWaitCondition(ExitStatusType exitStats, String condition) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
 }

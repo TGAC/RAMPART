@@ -15,127 +15,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal;
+package uk.ac.tgac.rampart.conan.tool.internal.Mass;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.DefaultEnvironment;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
-import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatusType;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
+import uk.ac.tgac.rampart.conan.tool.PerlHelper;
+import uk.ac.tgac.rampart.conan.tool.ToolParameter;
 import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
-public class Mass {
-
-    // Constants
-	public static final int KMER_MIN = 11;
-	public static final int KMER_MAX = 125;
+public class MassProcess implements ConanProcess {
 
     @Autowired
     private ProcessExecutionService processExecutionService;
 
-    // Class vars
-	private DeBrujinAssembler assembler;
-	private DeBrujinAssemblerArgs assemblerArgs;
-	private File config;
-	private int kmin;
-	private int kmax;
-	private String jobPrefix;
-	private File outputDir;
+    private MassArgs args;
 	
-	// Generated vars
-	private File contigsDir;
-	private File scaffoldsDir;
-	private File logsDir;
-	
-	public Mass() {
-		this.assembler = null;
-		this.assemblerArgs = null;
-		this.config = null;
-		this.kmin = 41;
-		this.kmax = 95;
-		this.jobPrefix = "";
-		this.outputDir = null;
+	public MassProcess() {
+		this(new MassArgs());
 	}
 
+    public MassProcess(MassArgs args) {
+        this.args = args;
+    }
 
-	public File getOutputDir() {
-		return outputDir;
-	}
-
-	public void setOutputDir(File outputDir) {
-		this.outputDir = outputDir;
-		
-		this.contigsDir = new File(this.outputDir, "contigs");
-		this.scaffoldsDir = new File(this.outputDir, "scaffolds");
-		this.logsDir = new File(this.outputDir, "logs");
-	}
-
-	public void setAssemblerArgs(DeBrujinAssemblerArgs assemblerArgs) {
-		this.assemblerArgs = assemblerArgs;
-	}
-
-	public DeBrujinAssemblerArgs getAssemblerArgs() {
-		return assemblerArgs;
-	}
-
-	public File getConfig() {
-		return config;
-	}
-
-	public void setConfig(File config) {
-		this.config = config;
-	}
-
-	public int getKmin() {
-		return kmin;
-	}
-
-	public void setKmin(int kmin) {
-		this.kmin = kmin;
-	}
-
-	public int getKmax() {
-		return kmax;
-	}
-
-	public void setKmax(int kmax) {
-		this.kmax = kmax;
-	}
-	
-	public DeBrujinAssembler getAssembler() {
-		return assembler;
-	}
-
-	public void setAssembler(DeBrujinAssembler assembler) {
-		this.assembler = assembler;
-	}
-
-	public String getJobPrefix() {
-		return jobPrefix;
-	}
-
-	public void setJobPrefix(String jobPrefix) {
-		this.jobPrefix = jobPrefix;
-	}
-	
-	public File getContigsDir() {
-		return this.contigsDir;
-	}
-	
-	public File getScaffoldsDir() {
-		return new File(this.outputDir, "scaffolds");
-	}
-	
-	public File getLogsDir() {
-		return new File(this.outputDir, "logs");
-	}
 
 	protected int getFirstValidKmer(int kmin) {
 		
@@ -196,40 +115,29 @@ public class Mass {
 		return (mod1 == 0 || mod2 == 0 ) ? true : false;
 	}
 
-    /**
-     * Determines whether or not the supplied kmer range is valid.  Throws an exception if not.
-     * @param kmin The bottom end of the k-mer range
-     * @param kmax The top end of the k-mer range
-     */
-	public void validateKmers(int kmin, int kmax) {
-		
-		if (kmin < KMER_MIN || kmax < KMER_MIN)
-			throw new IllegalArgumentException("K-mer values must be >= " + KMER_MIN + "nt");
-		
-		if (kmin > KMER_MAX || kmax > KMER_MAX)
-			throw new IllegalArgumentException("K-mer values must be <= " + KMER_MAX + "nt");
-		
-		if (kmin > kmax)
-			throw new IllegalArgumentException("Error: Min K-mer value must be <= Max K-mer value");
-		
-		// This test isn't required... we just make a best effort between the range provided.
-		//if (!validKmer(kmin) || !validKmer(kmax))
-		//	throw new IllegalArgumentException("Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.");
-	}
+
 	
 	
 	protected void createSupportDirectories() {
 		
+		DeBrujinAssembler assembler = this.args.getAssembler();
+
 		// Create directory for links to assembled contigs
-		this.contigsDir.mkdir();
+		if (assembler.makesUnitigs()) {
+            this.args.getUnitigsDir().mkdir();
+        }
+
+        if (assembler.makesContigs()) {
+            this.args.getContigsDir().mkdir();
+        }
 		
 		// Create dir for scaffold links if this assembler creates them
-		if (this.assembler.makesScaffolds()) {
-			this.scaffoldsDir.mkdir();
+		if (this.args.getAssembler().makesScaffolds()) {
+			this.args.getScaffoldsDir().mkdir();
 		}
 		
 		// Create directory for logs
-		this.logsDir.mkdir();
+		this.args.getLogsDir().mkdir();
 	}
 
     /**
@@ -244,8 +152,7 @@ public class Mass {
 		ProcessExecutionException, InterruptedException {
 
 		// Check the range looks reasonable
-		//TODO This logic isn't bullet proof... we can still nudge the minKmer above the maxKmer 
-		validateKmers(this.kmin, this.kmax);
+		this.args.validateKmers();
 
         // Create a copy of the environment info (we're going to modify this)
 		Environment envCopy = env.copy();
@@ -260,13 +167,18 @@ public class Mass {
             envCopy.getEnvironmentArgs().setThreads(8);
         }
 
+        // If we're running on a grid engine then make sure the assembly jobs run in the background
+        if (envCopy.getArchitecture().isGridEngine()) {
+            envCopy.getEnvironmentArgs().setBackgroundTask(true);
+        }
+
 		// Create any required directories for this job
         createSupportDirectories();
 
         // Dispatch an assembly job for each requested kmer
-		for(int k = getFirstValidKmer(this.kmin); k <= this.kmax; nextKmer(k)) {
+		for(int k = getFirstValidKmer(this.args.getKmin()); k <= this.args.getKmax(); nextKmer(k)) {
 			
-			File kDir = new File(this.outputDir, String.valueOf(k));
+			File kDir = new File(this.args.getOutputDir(), String.valueOf(k));
 						
 			// Make the output directory for this child job (delete the directory if it exists)
 			if (kDir.exists()) {
@@ -275,14 +187,22 @@ public class Mass {
 			kDir.mkdir();
 			
 			// Modify the ProcessArgs kmer value
-			DeBrujinAssemblerArgs kAssemblerArgs = this.assemblerArgs.copy();
+			DeBrujinAssemblerArgs kAssemblerArgs = this.args.getAssemblerArgs().copy();
 			kAssemblerArgs.setKmer(k);
 
             // Modify the environment jobname
-            envCopy.getEnvironmentArgs().setJobName(this.jobPrefix + "-k" + k);
+            envCopy.getEnvironmentArgs().setJobName(this.args.getJobPrefix() + "-k" + k);
 
             // Create process
-            this.processExecutionService.execute(this.assembler, env);
+            this.processExecutionService.execute(this.args.getAssembler(), env);
+        }
+
+        // Wait for all assembly jobs to finish if they are running as background tasks.
+        if (env.getEnvironmentArgs().isBackgroundTask()) {
+
+            WaitCondition waitCondition = env.getArchitecture().createWaitCondition(ExitStatusType.COMPLETED_SUCCESS, this.args.getJobPrefix());
+
+            envCopy.getArchitecture().waitFor(waitCondition, envCopy.getEnvironmentArgs());
         }
 		
 		this.dispatchStatsJob(envCopy);
@@ -297,7 +217,7 @@ public class Mass {
 		
 		StringJoiner mgpArgs = new StringJoiner(" ");
 
-       // mgpArgs.add(PerlHelper.MASS_GP.getPath());
+        mgpArgs.add(PerlHelper.MASS_GP.getPath());
         mgpArgs.add("--grid_engine NONE");
         mgpArgs.add("--input " + statDir.getPath());
         mgpArgs.add("--output " + statDir.getPath());
@@ -310,17 +230,48 @@ public class Mass {
 	protected void dispatchStatsJob(Environment env) throws InterruptedException, ProcessExecutionException, ConnectException {
 		
 		// Alter the environment for this job
-        env.getEnvironmentArgs().setJobName(this.jobPrefix + "-stats");
+        env.getEnvironmentArgs().setJobName(this.args.getJobPrefix() + "-stats");
         env.getEnvironmentArgs().setThreads(0);
         env.getEnvironmentArgs().setMemoryMB(0);
+        env.getEnvironmentArgs().setBackgroundTask(false);
 		
 		StringJoiner statCommands = new StringJoiner("; ");
 
-        statCommands.add(buildStatCmdLine(this.contigsDir));
-		statCommands.add(this.scaffoldsDir != null, "", buildStatCmdLine(this.scaffoldsDir));
+        statCommands.add(buildStatCmdLine(this.args.getUnitigsDir()));
+        statCommands.add(buildStatCmdLine(this.args.getContigsDir()));
+		statCommands.add(buildStatCmdLine(this.args.getScaffoldsDir()));
 
         // Create process
         this.processExecutionService.execute(statCommands.toString(), env);
 	}
 
+    @Override
+    public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
+
+        //this.args.setFromParameterValuePairs(parameters);
+
+        //Environment env = new DefaultEnvironment();
+
+        /*try {
+            this.dispatchJobs(env);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        return false;
+    }
+
+    @Override
+    public String getName() {
+        return "MASS";
+    }
+
+    @Override
+    public Collection<ConanParameter> getParameters() {
+        Collection<ConanParameter> parameters = new ArrayList<ConanParameter>();
+        for(ToolParameter p : MassParam.values()) {
+            parameters.add(p.getConanParameter());
+        }
+        return parameters;
+    }
 }

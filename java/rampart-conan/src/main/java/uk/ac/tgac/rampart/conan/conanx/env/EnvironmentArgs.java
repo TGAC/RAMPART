@@ -42,4 +42,8 @@ public interface EnvironmentArgs {
     File getCmdLineOutputFile();
 
     void setCmdLineOutputFile(File cmdLineOutputFile);
+
+    boolean isBackgroundTask();
+
+    void setBackgroundTask(boolean state);
 }

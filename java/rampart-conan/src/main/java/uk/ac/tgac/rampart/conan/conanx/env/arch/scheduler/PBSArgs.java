@@ -15,13 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
 
-import java.io.File;
-
-public class PBSArgs extends GridEngineArgs {
+public class PBSArgs extends SchedulerArgs {
 
     public PBSArgs() {
         super();

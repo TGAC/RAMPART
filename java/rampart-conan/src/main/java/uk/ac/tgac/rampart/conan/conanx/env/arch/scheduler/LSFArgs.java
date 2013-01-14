@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
-import java.io.File;
 
-
-public class LSFArgs extends GridEngineArgs {
+public class LSFArgs extends SchedulerArgs {
 
 	private String projectName;
 	private LSFWaitCondition waitCondition;
@@ -134,4 +132,5 @@ public class LSFArgs extends GridEngineArgs {
 
         return copy;
     }
+
 }

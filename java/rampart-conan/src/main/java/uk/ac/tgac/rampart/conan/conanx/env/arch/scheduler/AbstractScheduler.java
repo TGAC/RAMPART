@@ -15,28 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.env.arch.ge;
+package uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.arch.AbstractArchitecture;
 
-import java.net.ConnectException;
+public abstract class AbstractScheduler extends AbstractArchitecture {
 
-public class PBS extends AbstractGridEngine {
+    private String submitCommand;
 
-    public static final String QSUB = "qsub";
-
-    public PBS() {
-        super(QSUB);
+    protected AbstractScheduler(String submitCommand) {
+        this.submitCommand = submitCommand;
     }
+
+    public String getSubmitCommand() {
+        return this.submitCommand;
+    }
+
 
     @Override
-    public void submitCommand(String command, EnvironmentArgs args) throws IllegalArgumentException,
-            ProcessExecutionException, InterruptedException, ConnectException {
-
-        throw new UnsupportedOperationException("PBS not implemented yet!");
+    public boolean isGridEngine() {
+        return true;
     }
-
 }

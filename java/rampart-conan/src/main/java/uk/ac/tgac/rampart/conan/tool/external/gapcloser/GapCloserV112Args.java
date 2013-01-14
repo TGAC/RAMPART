@@ -155,7 +155,7 @@ public class GapCloserV112Args implements DegapArgs {
 	public Map<ConanParameter, String> getParameterValuePairs() {
 		
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
-		
+		/*
 		if (this.inputScaffoldFile != null)
 			pvp.put(GapCloserV112Param.INPUT_SCAFFOLD_FILE.getConanParameter(), this.inputScaffoldFile.getPath());
 		
@@ -173,7 +173,7 @@ public class GapCloserV112Args implements DegapArgs {
 		
 		if (this.threads > 1)
 			pvp.put(GapCloserV112Param.THREADS.getConanParameter(), String.valueOf(this.threads));
-		
+		*/
 		return pvp;		
 	}
 	

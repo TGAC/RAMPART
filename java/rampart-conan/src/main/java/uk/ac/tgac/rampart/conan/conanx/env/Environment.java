@@ -34,10 +34,7 @@ public interface Environment {
 
     EnvironmentArgs getEnvironmentArgs();
 
-	void submitProcess(ConanProcess process)
-			throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException;
-
-    void submitCommand(String command)
+	void submitCommand(String command)
             throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException;
 
     Environment copy();
