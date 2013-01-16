@@ -35,7 +35,7 @@ public class GapCloserV112LsfProcess extends AbstractRampartLSFProcess {
 	
 	public GapCloserV112LsfProcess() {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
-				GapCloserV112Param.values());
+				new GapCloserV112Params().getConanParameters());
 	}
 
     @Override

@@ -34,7 +34,7 @@ public class DefaultProcessExecutionService implements ProcessExecutionService {
     public void execute(ExtendedConanProcess process, Environment env)
             throws InterruptedException, ProcessExecutionException, ConnectException {
 
-
+        this.execute(process.getCommand(), env);
     }
 
     @Override

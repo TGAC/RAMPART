@@ -18,18 +18,25 @@
 package uk.ac.tgac.rampart.conan.conanx.env;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.Single;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
+
+import java.io.File;
 
 /**
  * User: maplesod
  * Date: 08/01/13
  * Time: 14:12
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={"/applicationContext.xml"})
 public class DefaultEnvironmentTest {
 
     private static Logger log = LoggerFactory.getLogger(DefaultEnvironmentTest.class);
@@ -37,10 +44,12 @@ public class DefaultEnvironmentTest {
     @Test
     public void testSubmitCommand() throws Exception {
 
+        EnvironmentArgs envArgs = new DefaultEnvironmentArgs();
+        envArgs.setCmdLineOutputFile(new File("~/test/rampart-conan/output.log"));
 
-        Environment env = new DefaultEnvironment(new Local(), new Single(), null);
+        Environment env = new DefaultEnvironment(new Local(), new Single(), envArgs);
 
-        env.submitCommand("ls .");
+        env.submitCommand("ls . > ~/rampart_output.log");
 
         log.info("Finished");
     }

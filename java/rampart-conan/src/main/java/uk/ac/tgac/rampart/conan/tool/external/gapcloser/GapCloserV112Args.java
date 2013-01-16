@@ -157,22 +157,22 @@ public class GapCloserV112Args implements DegapArgs {
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		/*
 		if (this.inputScaffoldFile != null)
-			pvp.put(GapCloserV112Param.INPUT_SCAFFOLD_FILE.getConanParameter(), this.inputScaffoldFile.getPath());
+			pvp.put(GapCloserV112Params.INPUT_SCAFFOLD_FILE.getConanParameter(), this.inputScaffoldFile.getPath());
 		
 		if (this.libraryFile != null)
-			pvp.put(GapCloserV112Param.LIBRARY_FILE.getConanParameter(), this.inputScaffoldFile.getPath());
+			pvp.put(GapCloserV112Params.LIBRARY_FILE.getConanParameter(), this.inputScaffoldFile.getPath());
 		
 		if (this.outputScaffoldFile != null)
-			pvp.put(GapCloserV112Param.OUTPUT_FILE.getConanParameter(), this.outputScaffoldFile.getPath());
+			pvp.put(GapCloserV112Params.OUTPUT_FILE.getConanParameter(), this.outputScaffoldFile.getPath());
 		
 		if (this.maxReadLength != null)
-			pvp.put(GapCloserV112Param.MAX_READ_LENGTH.getConanParameter(), this.maxReadLength.toString());
+			pvp.put(GapCloserV112Params.MAX_READ_LENGTH.getConanParameter(), this.maxReadLength.toString());
 		
 		if (this.overlap != null)
-			pvp.put(GapCloserV112Param.OVERLAP.getConanParameter(), this.overlap.toString());
+			pvp.put(GapCloserV112Params.OVERLAP.getConanParameter(), this.overlap.toString());
 		
 		if (this.threads > 1)
-			pvp.put(GapCloserV112Param.THREADS.getConanParameter(), String.valueOf(this.threads));
+			pvp.put(GapCloserV112Params.THREADS.getConanParameter(), String.valueOf(this.threads));
 		*/
 		return pvp;		
 	}

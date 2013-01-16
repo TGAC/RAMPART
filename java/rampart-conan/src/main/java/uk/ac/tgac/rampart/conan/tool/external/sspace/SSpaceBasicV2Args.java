@@ -134,26 +134,26 @@ public class SSpaceBasicV2Args implements ScaffolderArgs {
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
 		/*if (this.libraryFile != null)
-			pvp.put(SSpaceBasicV2Param.LIBRARY_FILE.getConanParameter(),
+			pvp.put(SSpaceBasicV2Params.LIBRARY_FILE.getConanParameter(),
 					this.libraryFile.getPath());
 		else {
 			throw new IllegalArgumentException("Must have a library file specified.  If working from a Set<Library> you can call setLibraryFile(Set<Library> libs, File outputLibFile) to automatically generate a SSPACE library file and set the class variable.");
 		}
 
 		if (this.inputContigFile != null)
-			pvp.put(SSpaceBasicV2Param.CONTIG_FILE.getConanParameter(),
+			pvp.put(SSpaceBasicV2Params.CONTIG_FILE.getConanParameter(),
 					this.inputContigFile.getPath());
 
 		if (this.extend != null)
-			pvp.put(SSpaceBasicV2Param.EXTEND.getConanParameter(),
+			pvp.put(SSpaceBasicV2Params.EXTEND.getConanParameter(),
 					this.extend.toString());
 
 		if (this.bowtieThreads != null && this.bowtieThreads > 1)
-			pvp.put(SSpaceBasicV2Param.BOWTIE_THREADS.getConanParameter(),
+			pvp.put(SSpaceBasicV2Params.BOWTIE_THREADS.getConanParameter(),
 					this.bowtieThreads.toString());
 
 		if (this.baseName != null)
-			pvp.put(SSpaceBasicV2Param.BASE_NAME.getConanParameter(),
+			pvp.put(SSpaceBasicV2Params.BASE_NAME.getConanParameter(),
 					this.baseName);
 		          */
 		return pvp;

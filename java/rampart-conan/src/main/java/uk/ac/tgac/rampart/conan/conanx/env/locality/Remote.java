@@ -72,7 +72,7 @@ public class Remote implements Locality {
 					connectionDetails.getHost(), connectionDetails.getPort());
 	
 			session.setPassword(connectionDetails.getPassword());
-	
+
 			session.connect();
 	
 			this.session = session;

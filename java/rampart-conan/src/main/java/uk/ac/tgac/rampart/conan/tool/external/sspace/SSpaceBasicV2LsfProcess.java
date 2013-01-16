@@ -35,7 +35,7 @@ public class SSpaceBasicV2LsfProcess extends AbstractRampartLSFProcess {
 	
 	public SSpaceBasicV2LsfProcess() {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
-				SSpaceBasicV2Param.values());
+				new SSpaceBasicV2Params().getConanParameters());
 	}
 
     @Override

@@ -28,24 +28,24 @@ import uk.ac.tgac.rampart.core.data.Library;
 public class AbyssV134Args implements DeBrujinAssemblerArgs {
 
 	private AbyssV134InputLibsArg libs;
-	private Integer nbContigPairs;
+	private int nbContigPairs;
 	private int kmer;
-	private Integer threads;
+	private int threads;
 	private String name;
 
 	
 	public AbyssV134Args() {
 	
 		this.libs = null;
-		this.nbContigPairs = null;
+		this.nbContigPairs = 10;
 		this.kmer = 65;
-		this.threads = null;
+		this.threads = 0;
 		this.name = null;
 	}
 	
 	@Override
 	public Set<Library> getLibraries() {
-		return libs.getLibs();
+		return libs == null ? null : libs.getLibs();
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class AbyssV134Args implements DeBrujinAssemblerArgs {
 		this.libs = new AbyssV134InputLibsArg(libs);
 	}
 
-	public int getNbContigPairs() {
+    public int getNbContigPairs() {
 		return nbContigPairs;
 	}
 
@@ -71,10 +71,12 @@ public class AbyssV134Args implements DeBrujinAssemblerArgs {
 		this.kmer = kmer;
 	}
 
+    @Override
 	public int getThreads() {
 		return threads;
 	}
 
+    @Override
 	public void setThreads(int threads) {
 		this.threads = threads;
 	}
@@ -91,20 +93,23 @@ public class AbyssV134Args implements DeBrujinAssemblerArgs {
 	public Map<ConanParameter, String> getParameterValuePairs() {
 		
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+
+        AbyssV134Params params = new AbyssV134Params();
+
+        if (this.libs != null) {
+            pvp.put(params.getLibs(), this.libs.toString());
+        }
 		
-		if (this.libs != null)
-			pvp.put(AbyssV134Param.LIBRARIES.getConanParameter(), this.libs.toString());
-		
-		if (this.nbContigPairs != null)
-			pvp.put(AbyssV134Param.NB_CONTIG_PAIRS.getConanParameter(), this.nbContigPairs.toString());
-		
-		pvp.put(AbyssV134Param.KMER.getConanParameter(), String.valueOf(this.kmer));
-		
-		if (this.threads != null) 
-			pvp.put(AbyssV134Param.THREADS.getConanParameter(), this.threads.toString());
-		
-		if (this.name != null)
-			pvp.put(AbyssV134Param.NAME.getConanParameter(), this.name.toString());
+		pvp.put(params.getNbContigPairs(), params.getNbContigPairs().getName() + "=" + String.valueOf(this.nbContigPairs));
+		pvp.put(params.getKmer(), params.getKmer().getName() + "=" + String.valueOf(this.kmer));
+
+        if (this.threads > 0) {
+            pvp.put(params.getThreads(), params.getThreads().getName() + "=" + String.valueOf(this.threads));
+        }
+
+		if (this.name != null) {
+            pvp.put(params.getName(), params.getName().getName() + "=" + this.name);
+        }
 		
 		
 		return pvp;
@@ -118,7 +123,7 @@ public class AbyssV134Args implements DeBrujinAssemblerArgs {
 		copy.setKmer(this.getKmer());
 		copy.setThreads(this.getThreads());
 		copy.setNbContigPairs(this.getNbContigPairs());
-		copy.setLibraries(this.getLibraries());
+		copy.setLibraries(this.getLibraries());  // Not really copying this!!
 		
 		return copy;
 	}

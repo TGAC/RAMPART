@@ -35,7 +35,7 @@ public class RV2122LsfProcess extends AbstractRampartLSFProcess {
 	
 	public RV2122LsfProcess() {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
-				RV2122Param.values());
+				new RV2122Params().getConanParameters());
 	}
 
     @Override

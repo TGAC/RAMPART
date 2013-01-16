@@ -22,6 +22,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.CommandLineBuilder;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
+import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 
 import java.util.Collection;
 import java.util.Map;
@@ -39,12 +40,17 @@ public class AbyssV134Process implements DeBrujinAssembler {
     private AbyssV134Args args;
 
     public AbyssV134Process() {
+        this(new AbyssV134Args());
+    }
+
+    public AbyssV134Process(AbyssV134Args args) {
         this.cmd = new CommandLineBuilder(EXE);
+        this.args = args;
     }
 
     @Override
     public String getCommand() {
-        return cmd.getFullCommand(this.args, "", "=");
+        return cmd.getFullCommand(this.args, false);
     }
 
     @Override
@@ -60,6 +66,11 @@ public class AbyssV134Process implements DeBrujinAssembler {
     @Override
     public void addPreCommand(String preCommand) {
         this.cmd.addPreCommand(preCommand);
+    }
+
+    @Override
+    public DeBrujinAssemblerArgs getArgs() {
+        return this.args;
     }
 
     @Override
@@ -91,6 +102,6 @@ public class AbyssV134Process implements DeBrujinAssembler {
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        return AbyssV134Param.getParameters();
+        return new AbyssV134Params().getConanParameters();
     }
 }

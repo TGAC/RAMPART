@@ -26,59 +26,80 @@ import java.io.File;
  */
 public class DefaultEnvironmentArgs implements EnvironmentArgs {
 
+    private int memoryMB;
+    private int threads;
+    private String jobName;
+    private File cmdLineOutputFile;
+    private boolean backgroundTask;
+
+    public DefaultEnvironmentArgs() {
+        this.memoryMB = 0;
+        this.threads = 0;
+        this.jobName = "";
+        this.cmdLineOutputFile = null;
+        this.backgroundTask = false;
+    }
+
+    public DefaultEnvironmentArgs(DefaultEnvironmentArgs args) {
+        this.memoryMB = args.getMemoryMB();
+        this.threads = args.getThreads();
+        this.jobName = args.getJobName();
+        this.cmdLineOutputFile = new File(args.getCmdLineOutputFile().getAbsolutePath());
+        this.backgroundTask = args.isBackgroundTask();
+    }
 
     @Override
     public EnvironmentArgs copy() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new DefaultEnvironmentArgs(this);
     }
 
     @Override
     public int getMemoryMB() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.memoryMB;
     }
 
     @Override
     public void setMemoryMB(int memoryMB) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        this.memoryMB = memoryMB;
     }
 
     @Override
     public int getThreads() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.threads;
     }
 
     @Override
     public void setThreads(int threads) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        this.threads = threads;
     }
 
     @Override
     public String getJobName() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.jobName;
     }
 
     @Override
     public void setJobName(String jobName) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        this.jobName = jobName;
     }
 
     @Override
     public File getCmdLineOutputFile() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.cmdLineOutputFile;
     }
 
     @Override
     public void setCmdLineOutputFile(File cmdLineOutputFile) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        this.cmdLineOutputFile = cmdLineOutputFile;
     }
 
     @Override
     public boolean isBackgroundTask() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.backgroundTask;
     }
 
     @Override
     public void setBackgroundTask(boolean state) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        this.backgroundTask = state;
     }
 }

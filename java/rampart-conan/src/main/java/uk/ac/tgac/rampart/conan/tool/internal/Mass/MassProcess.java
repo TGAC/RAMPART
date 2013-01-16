@@ -18,18 +18,17 @@
 package uk.ac.tgac.rampart.conan.tool.internal.Mass;
 
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.DefaultEnvironment;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatusType;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
+import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
 import uk.ac.tgac.rampart.conan.tool.PerlHelper;
-import uk.ac.tgac.rampart.conan.tool.ToolParameter;
+import uk.ac.tgac.rampart.conan.tool.ToolParams;
 import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
@@ -42,8 +41,7 @@ import java.util.Map;
 
 public class MassProcess implements ConanProcess {
 
-    @Autowired
-    private ProcessExecutionService processExecutionService;
+    protected ProcessExecutionService processExecutionService = new DefaultProcessExecutionService();
 
     private MassArgs args;
 	
@@ -172,6 +170,11 @@ public class MassProcess implements ConanProcess {
             envCopy.getEnvironmentArgs().setBackgroundTask(true);
         }
 
+        // Input the libraries to the assembler
+        if (this.args.getAssembler().getArgs().getLibraries() == null) {
+            this.args.getAssembler().getArgs().setLibraries(this.args.getLibs());
+        }
+
 		// Create any required directories for this job
         createSupportDirectories();
 
@@ -187,8 +190,7 @@ public class MassProcess implements ConanProcess {
 			kDir.mkdir();
 			
 			// Modify the ProcessArgs kmer value
-			DeBrujinAssemblerArgs kAssemblerArgs = this.args.getAssemblerArgs().copy();
-			kAssemblerArgs.setKmer(k);
+			this.args.getAssembler().getArgs().setKmer(k);
 
             // Modify the environment jobname
             envCopy.getEnvironmentArgs().setJobName(this.args.getJobPrefix() + "-k" + k);
@@ -268,10 +270,6 @@ public class MassProcess implements ConanProcess {
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        Collection<ConanParameter> parameters = new ArrayList<ConanParameter>();
-        for(ToolParameter p : MassParam.values()) {
-            parameters.add(p.getConanParameter());
-        }
-        return parameters;
+        return new MassParams().getConanParameters();
     }
 }

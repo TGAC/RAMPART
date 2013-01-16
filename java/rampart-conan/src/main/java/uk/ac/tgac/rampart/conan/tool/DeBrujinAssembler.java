@@ -1,10 +1,13 @@
 package uk.ac.tgac.rampart.conan.tool;
 
 import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
+import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 
 public interface DeBrujinAssembler extends ExtendedConanProcess {
 
-	boolean makesUnitigs();
+	DeBrujinAssemblerArgs getArgs();
+
+    boolean makesUnitigs();
 
     boolean makesContigs();
 

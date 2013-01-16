@@ -34,7 +34,7 @@ public class SicklePeV11LsfProcess extends AbstractRampartLSFProcess {
 	
 	public SicklePeV11LsfProcess() {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
-				SicklePeV11Param.values());
+				new SicklePeV11Params().getConanParameters());
 	}
 
     @Override

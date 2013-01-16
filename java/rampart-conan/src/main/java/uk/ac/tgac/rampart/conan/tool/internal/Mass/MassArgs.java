@@ -21,11 +21,11 @@ import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
 import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
-import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Param;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,8 +44,7 @@ public class MassArgs implements ProcessArgs {
 
     // Class vars
     private DeBrujinAssembler assembler;
-    private DeBrujinAssemblerArgs assemblerArgs;
-    private File config;
+    private Set<Library> libs;
     private int kmin;
     private int kmax;
     private String jobPrefix;
@@ -59,8 +58,7 @@ public class MassArgs implements ProcessArgs {
 
     public MassArgs() {
         this.assembler = null;
-        this.assemblerArgs = null;
-        this.config = null;
+        this.libs = new HashSet<Library>();
         this.kmin = 41;
         this.kmax = 95;
         this.jobPrefix = "";
@@ -80,20 +78,12 @@ public class MassArgs implements ProcessArgs {
         this.logsDir = new File(this.outputDir, "logs");
     }
 
-    public void setAssemblerArgs(DeBrujinAssemblerArgs assemblerArgs) {
-        this.assemblerArgs = assemblerArgs;
+    public Set<Library> getLibs() {
+        return libs;
     }
 
-    public DeBrujinAssemblerArgs getAssemblerArgs() {
-        return assemblerArgs;
-    }
-
-    public File getConfig() {
-        return config;
-    }
-
-    public void setConfig(File config) {
-        this.config = config;
+    public void setLibs(Set<Library> libs) {
+        this.libs = libs;
     }
 
     public int getKmin() {
@@ -146,25 +136,25 @@ public class MassArgs implements ProcessArgs {
 
     @Override
     public Map<ConanParameter, String> getParameterValuePairs() {
+
+        MassParams params = new MassParams();
+
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
         if (this.assembler != null)
-            pvp.put(MassParam.ASSEMBLER.getConanParameter(), this.assembler.getName());
+            pvp.put(params.getAssembler(), this.assembler.getName());
 
-        if (this.assemblerArgs != null)
-            pvp.put(MassParam.ASSEMBLER_ARGS.getConanParameter(), this.assemblerArgs.getParameterValuePairs().toString());
+        pvp.put(params.getKmin(), String.valueOf(this.kmin));
+        pvp.put(params.getKmax(), String.valueOf(this.kmax));
 
-        pvp.put(MassParam.K_MIN.getConanParameter(), String.valueOf(this.kmin));
-        pvp.put(MassParam.K_MAX.getConanParameter(), String.valueOf(this.kmax));
-
-        if (this.config != null)
-            pvp.put(MassParam.CONFIG.getConanParameter(), this.config.getAbsolutePath());
+        if (this.libs != null)
+            pvp.put(params.getLibs(), this.libs.toString());
 
         if (this.outputDir != null)
-            pvp.put(MassParam.OUTPUT_DIR.getConanParameter(), this.config.getAbsolutePath());
+            pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
 
         if (this.jobPrefix != null)
-            pvp.put(MassParam.JOB_PREFIX.getConanParameter(), this.config.getAbsolutePath());
+            pvp.put(params.getJobPrefix(), this.jobPrefix);
 
 
         return pvp;
@@ -179,12 +169,11 @@ public class MassArgs implements ProcessArgs {
                 throw new IllegalArgumentException("Parameter invalid: " + arg.getKey() + " : " + arg.getValue());
             };
 
-            if (arg.getKey() == MassParam.ASSEMBLER) {
+            if (arg.getKey() == MassParams.ASSEMBLER) {
                 this.assembler = arg.getValue();
             }
 
         }
-
     } */
 
     /**

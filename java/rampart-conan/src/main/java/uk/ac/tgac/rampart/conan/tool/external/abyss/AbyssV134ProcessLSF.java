@@ -40,7 +40,7 @@ public class AbyssV134ProcessLSF extends AbstractRampartLSFProcess {
 	
 	public AbyssV134ProcessLSF(AbyssV134Process abyssProcess) {
 		super(NAME, COMPONENT_NAME, COMMAND, PARAM_PREFIX, 
-				AbyssV134Param.values());
+				new AbyssV134Params().getConanParameters());
 		
 		this.abyssProcess = abyssProcess;
 

@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.conan.conanx.process;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.ProcessRunner;
@@ -30,6 +31,7 @@ import java.io.IOException;
  * Date: 08/01/13
  * Time: 10:39
  */
+@Service
 public class DefaultNativeProcessExecutor implements NativeProcessExecutor {
 
     private static Logger log = LoggerFactory.getLogger(DefaultNativeProcessExecutor.class);

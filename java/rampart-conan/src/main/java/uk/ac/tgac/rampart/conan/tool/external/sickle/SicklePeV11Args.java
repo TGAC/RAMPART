@@ -115,29 +115,29 @@ public class SicklePeV11Args implements ProcessArgs, QualityTrimmingArgs {
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		
 		/*if (this.inputFilePair != null) {
-			pvp.put(SicklePeV11Param.PE_FILE_1.getConanParameter(), this.inputFilePair.getFile1().getPath());
-			pvp.put(SicklePeV11Param.PE_FILE_2.getConanParameter(), this.inputFilePair.getFile2().getPath());
+			pvp.put(SicklePeV11Params.PE_FILE_1.getConanParameter(), this.inputFilePair.getFile1().getPath());
+			pvp.put(SicklePeV11Params.PE_FILE_2.getConanParameter(), this.inputFilePair.getFile2().getPath());
 		}
 		
 		if (this.outputFilePair != null) {
-			pvp.put(SicklePeV11Param.OUTPUT_PE_1.getConanParameter(), this.outputFilePair.getFile1().getPath());
-			pvp.put(SicklePeV11Param.OUTPUT_PE_2.getConanParameter(), this.outputFilePair.getFile2().getPath());
+			pvp.put(SicklePeV11Params.OUTPUT_PE_1.getConanParameter(), this.outputFilePair.getFile1().getPath());
+			pvp.put(SicklePeV11Params.OUTPUT_PE_2.getConanParameter(), this.outputFilePair.getFile2().getPath());
 		}
 		
 		if (this.singlesOut != null)
-			pvp.put(SicklePeV11Param.SINGLES_FILE_1.getConanParameter(), this.singlesOut.getPath());
+			pvp.put(SicklePeV11Params.SINGLES_FILE_1.getConanParameter(), this.singlesOut.getPath());
 		
 		if (this.qualThreshold != null)
-			pvp.put(SicklePeV11Param.QUALITY_THRESHOLD.getConanParameter(), this.qualThreshold.toString());
+			pvp.put(SicklePeV11Params.QUALITY_THRESHOLD.getConanParameter(), this.qualThreshold.toString());
 		
 		if (this.lengthThreshold != null)
-			pvp.put(SicklePeV11Param.LENGTH_THRESHOLD.getConanParameter(), this.lengthThreshold.toString());
+			pvp.put(SicklePeV11Params.LENGTH_THRESHOLD.getConanParameter(), this.lengthThreshold.toString());
 		
 		if (this.discardN != null)
-			pvp.put(SicklePeV11Param.DISCARD_N.getConanParameter(), this.discardN.toString());
+			pvp.put(SicklePeV11Params.DISCARD_N.getConanParameter(), this.discardN.toString());
 		
 		if (this.qualType != null)
-			pvp.put(SicklePeV11Param.QUALITY_TYPE.getConanParameter(), this.qualType.toString().toLowerCase());
+			pvp.put(SicklePeV11Params.QUALITY_TYPE.getConanParameter(), this.qualType.toString().toLowerCase());
 		            */
 		return pvp;
 	}

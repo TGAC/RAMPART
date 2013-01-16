@@ -24,6 +24,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.ProcessUtils;
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
+import uk.ac.tgac.rampart.conan.conanx.process.DefaultNativeProcessExecutor;
 import uk.ac.tgac.rampart.conan.conanx.process.NativeProcessExecutor;
 
 import java.io.File;
@@ -41,8 +42,7 @@ public abstract class AbstractArchitecture implements Architecture {
 
     private static Logger log = LoggerFactory.getLogger(Single.class);
 
-    @Autowired
-    protected NativeProcessExecutor processExecutor;
+    protected NativeProcessExecutor processExecutor = new DefaultNativeProcessExecutor();
 
     @Override
     public void submitCommand(String command, EnvironmentArgs envArgs) throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException {

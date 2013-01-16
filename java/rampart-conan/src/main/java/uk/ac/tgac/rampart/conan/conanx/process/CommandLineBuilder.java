@@ -76,10 +76,26 @@ public class CommandLineBuilder {
     }
 
     public String getFullCommand(ProcessArgs args) {
-        return getFullCommand(args, "--", " ");
+        return getFullCommand(args, false);
     }
 
-    public String getFullCommand(ProcessArgs args, String paramPrefix, String keyValSep) {
+    public String getFullCommand(ProcessArgs args, boolean build) {
+        return getFullCommand(args, build, "--", " ");
+    }
+
+    /**
+     * Creates a command line to execute from the supplied process args.  The are various means of constructing the command
+     * line to suit various use cases.  See the parameter listings for more details.  The command line will be wrapped by
+     * any pre and post commands already stored in this object.
+     * @param args The process arguments from which to build a command line to execute.
+     * @param build If true, the paramPrefix and keyValSep args are used to construct each arg in the following way:
+     *              [paramPrefix][paramName][keyValSep][argValue]. If false, it is assumed the the arg values contains all
+     *              the complete argument string.
+     * @param paramPrefix The prefix to apply before each argument.  e.g. "--" is used for long posix style arguments.
+     * @param keyValSep The string that separates the param name from the arg value. e.g. " " is used for posix style arguments.
+     * @return A complete command to execute, including any pre or post commands.
+     */
+    public String getFullCommand(ProcessArgs args, boolean build, String paramPrefix, String keyValSep) {
 
         List<String> commands = new ArrayList<String>();
 
@@ -91,9 +107,11 @@ public class CommandLineBuilder {
         sb.append(this.executable);
         sb.append(" ");
         for(Map.Entry<ConanParameter, String> param : args.getParameterValuePairs().entrySet()) {
-            sb.append(paramPrefix);
-            sb.append(param.getKey());
-            sb.append(keyValSep);
+            if (build) {
+                sb.append(paramPrefix);
+                sb.append(param.getKey());
+                sb.append(keyValSep);
+            }
             sb.append(param.getValue());
             sb.append(" ");
         }

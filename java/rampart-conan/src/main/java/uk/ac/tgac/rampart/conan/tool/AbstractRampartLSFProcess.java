@@ -26,10 +26,7 @@ import uk.ac.tgac.rampart.conan.conanx.process.AbstractExtendedLSFProcess;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractRampartLSFProcess extends AbstractExtendedLSFProcess {
 
@@ -41,10 +38,10 @@ public abstract class AbstractRampartLSFProcess extends AbstractExtendedLSFProce
 	private String componentName;
 	private String command;
 	private String paramPrefix;
-	private ToolParameter[] params;
+	private Set<ConanParameter> params;
 
 	public AbstractRampartLSFProcess(String name, String componentName, String command, String paramPrefix,
-			ToolParameter[] params) {
+			Set<ConanParameter> params) {
 		
 		// Rampart LSF defaults
 		this.setQueueName("production");
@@ -109,11 +106,7 @@ public abstract class AbstractRampartLSFProcess extends AbstractExtendedLSFProce
 	}
 	
 	public Collection<ConanParameter> getParameters() {
-		Collection<ConanParameter> parameters = new ArrayList<ConanParameter>();
-		for(ToolParameter p : this.params) {
-			parameters.add(p.getConanParameter());
-		}
-		return parameters;
+		return this.params;
 	}
 	
 	public String loadToolCommand() {
