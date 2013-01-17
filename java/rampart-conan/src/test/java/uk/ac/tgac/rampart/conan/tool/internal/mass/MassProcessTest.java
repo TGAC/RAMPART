@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal.Mass;
+package uk.ac.tgac.rampart.conan.tool.internal.mass;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,18 +27,11 @@ import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.Single;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
-import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
-import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
-import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Args;
 import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Process;
 import uk.ac.tgac.rampart.conan.util.PETestLibrary;
-import uk.ac.tgac.rampart.core.data.Library;
-import uk.ac.tgac.rampart.core.data.SeqFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * User: maplesod

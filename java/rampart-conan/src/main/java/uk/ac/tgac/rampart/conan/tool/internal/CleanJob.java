@@ -26,14 +26,26 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
+import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
+import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 
-public class CleanJob extends AbstractLSFProcess {
+public class CleanJob extends DefaultExtendedConanProcess {
 
 	private static final long serialVersionUID = 4737931558914661948L;
 
-	@Override
+    public static final String PARAM_JOB_DIR = "job_dir";
+
+    @Override
+    public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
 	public String getName() {
 		
 		return "CleanJob-LSF"; 
@@ -43,22 +55,16 @@ public class CleanJob extends AbstractLSFProcess {
 	public Collection<ConanParameter> getParameters() {
 		
 		Collection<ConanParameter> a = new ArrayList<ConanParameter>();
-		a.add(new PathParameter("job_dir", "The job directory to clean", false));
+		a.add(new PathParameter(PARAM_JOB_DIR, "The job directory to clean", false));
 		return a;
 	}
 
-	@Override
-	protected String getComponentName() {
-		return "Cleaner";
-	}
-
-	@Override
-	protected String getCommand(Map<ConanParameter, String> parameters)
+	protected String buildCommand(Map<ConanParameter, String> parameters)
 			throws IllegalArgumentException {
 		
 		File jobDir = new File(".");
-		if (parameters.containsKey("job_dir")) {
-			jobDir = new File(parameters.get("job_dir"));
+		if (parameters.containsKey(PARAM_JOB_DIR)) {
+			jobDir = new File(parameters.get(PARAM_JOB_DIR));
 		}
 		
 		RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
@@ -76,18 +82,19 @@ public class CleanJob extends AbstractLSFProcess {
 		return command;
 	}
 
-	@Override
-	protected String getLSFOutputFilePath(Map<ConanParameter, String> parameters)
-			throws IllegalArgumentException {
-		final File parentDir = new File(System.getProperty("user.home"));
 
-		// files to write output to
-		File outputDir = new File(parentDir, ".rampart");
+    @Override
+    public String getCommand() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-		// lsf output file
-		return new File(outputDir, getName() + ".lsfoutput.txt")
-				.getAbsolutePath();
-	}
+    @Override
+    public void setProcessArgs(ProcessArgs args) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-	
+    @Override
+    public ProcessArgs getProcessArgs() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

@@ -55,19 +55,21 @@ public class RV2122Args implements ProcessArgs {
 	@Override
 	public Map<ConanParameter, String> getParameterValuePairs() {
 		
-		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+		RV2122Params params = new RV2122Params();
+
+        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		
-		/*if (this.args != null) {
-			pvp.put(RV2122Params.ARGS.getConanParameter(), StringUtils.join(this.args, " "));
+		if (this.args != null) {
+			pvp.put(params.getArgs(), StringUtils.join(this.args, " "));
 		}
 		
 		if (this.script != null) {
-			pvp.put(RV2122Params.SCRIPT.getConanParameter(), this.script.getPath());
+			pvp.put(params.getScript(), this.script.getPath());
 		}
 		
 		if (this.output != null) {
-			pvp.put(RV2122Params.OUTPUT.getConanParameter(), this.script.getPath());
-		}   */
+			pvp.put(params.getOutput(), this.script.getPath());
+		}
 		
 		return pvp;
 	}

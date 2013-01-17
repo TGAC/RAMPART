@@ -19,7 +19,6 @@ package uk.ac.tgac.rampart.conan.tool.external.sspace;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.cli.ToolCommandLoader;
-import uk.ac.tgac.rampart.conan.tool.AbstractRampartLSFProcess;
 
 import java.util.Map;
 

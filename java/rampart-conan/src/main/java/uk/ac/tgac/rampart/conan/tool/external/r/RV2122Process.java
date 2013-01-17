@@ -15,48 +15,47 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.external.abyss;
+package uk.ac.tgac.rampart.conan.tool.external.r;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.process.CommandLineBuilder;
 import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
-import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
-import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * User: maplesod
- * Date: 07/01/13
- * Time: 12:12
+ * Date: 16/01/13
+ * Time: 16:13
  */
-public class AbyssV134Process extends DefaultExtendedConanProcess implements DeBrujinAssembler {
+public class RV2122Process extends DefaultExtendedConanProcess {
 
-    public static final String EXE = "abyss-pe";
+    public static final String EXE = "Rscript";
 
+    private RV2122Args args;
 
-    private AbyssV134Args args;
+    public RV2122Process() {
 
-    public AbyssV134Process() {
-        this(new AbyssV134Args());
+        this(new RV2122Args());
     }
 
-    public AbyssV134Process(AbyssV134Args args) {
+    public RV2122Process(RV2122Args args) {
+
         super(EXE);
         this.args = args;
     }
 
+
     @Override
     public String getCommand() {
-        return this.getCommandLineBuilder().getFullCommand(this.args, false);
+        return this.getCommandLineBuilder().getFullCommand(args, false);
     }
 
     @Override
     public void setProcessArgs(ProcessArgs args) {
-        this.args = (AbyssV134Args)args;
+        this.args = (RV2122Args) args;
     }
 
     @Override
@@ -64,42 +63,18 @@ public class AbyssV134Process extends DefaultExtendedConanProcess implements DeB
         return this.args;
     }
 
-
-
-    @Override
-    public DeBrujinAssemblerArgs getArgs() {
-        return this.args;
-    }
-
-    @Override
-    public boolean makesUnitigs() {
-        return true;
-    }
-
-    @Override
-    public boolean makesContigs() {
-        return true;
-    }
-
-    @Override
-    public boolean makesScaffolds() {
-        return true;
-    }
-
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
-
-        //TODO
-        return false;
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public String getName() {
-        return "AbyssV134";
+        return "R V2.12.2";
     }
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        return new AbyssV134Params().getConanParameters();
+        return new RV2122Params().getConanParameters();
     }
 }

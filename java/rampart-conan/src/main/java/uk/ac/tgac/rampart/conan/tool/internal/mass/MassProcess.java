@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal.Mass;
+package uk.ac.tgac.rampart.conan.tool.internal.mass;
 
 import org.apache.commons.io.FileUtils;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
@@ -28,14 +28,11 @@ import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
 import uk.ac.tgac.rampart.conan.tool.PerlHelper;
-import uk.ac.tgac.rampart.conan.tool.ToolParams;
-import uk.ac.tgac.rampart.conan.tool.args.DeBrujinAssemblerArgs;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 

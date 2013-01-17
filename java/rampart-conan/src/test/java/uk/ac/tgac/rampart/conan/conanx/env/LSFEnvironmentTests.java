@@ -57,12 +57,16 @@ public class LSFEnvironmentTests {
 		args.setThreads(16);
 
         AbyssV134Process abyss = new AbyssV134Process(args);
+        abyss.addPreCommand("source abyss_cb-1.3.4");
 
-        EnvironmentArgs envArgs = new LSFArgs();
+        LSFArgs envArgs = new LSFArgs();
         envArgs.setCmdLineOutputFile(new File("~/test/rampart-conan/output.log"));
         envArgs.setMemoryMB(60000);
-        envArgs.setThreads(8);
+        envArgs.setThreads(16);
         envArgs.setJobName("testAbyssV134");
+        envArgs.setOpenmpi(true);
+        envArgs.setProjectName("test");
+        envArgs.setExtraLsfOptions("-Rselect[hname!='n57142.tgaccluster']"); // Abyss doesn't like this node
 
         Environment env = new DefaultEnvironment(
                 new Local(),

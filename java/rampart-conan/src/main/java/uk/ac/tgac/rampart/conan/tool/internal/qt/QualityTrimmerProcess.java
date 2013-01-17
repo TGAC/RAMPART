@@ -15,24 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.conanx.process;
-
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+package uk.ac.tgac.rampart.conan.tool.internal.qt;
 
 /**
+ * Created with IntelliJ IDEA.
  * User: maplesod
  * Date: 07/01/13
- * Time: 17:30
+ * Time: 10:54
+ * To change this template use File | Settings | File Templates.
  */
-public interface ExtendedConanProcess extends ConanProcess {
+public class QualityTrimmerProcess {
 
-    String getCommand();
-
-    void setProcessArgs(ProcessArgs args);
-
-    ProcessArgs getProcessArgs();
-
-    void addPreCommand(String preCommand);
-
-    void addPostCommand(String postCommand);
 }

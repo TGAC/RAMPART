@@ -71,7 +71,7 @@ public class LSF extends AbstractScheduler {
         //log.debug("Executing an LSF process with parameters: " + parameters);
 
         // get email address to use as backup in case process fails
-        String backupEmail = ConanProperties.getProperty("lsf.backup.email");
+        String backupEmail = "";//ConanProperties.getProperty("lsf.backup.email");
 
         // Create command to execute
         StringJoiner sj = new StringJoiner(" ");

@@ -17,22 +17,30 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.process;
 
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-
 /**
  * User: maplesod
- * Date: 07/01/13
- * Time: 17:30
+ * Date: 16/01/13
+ * Time: 13:55
  */
-public interface ExtendedConanProcess extends ConanProcess {
+public abstract class DefaultExtendedConanProcess implements ExtendedConanProcess {
 
-    String getCommand();
+    private CommandLineBuilder cmd;
 
-    void setProcessArgs(ProcessArgs args);
+    protected DefaultExtendedConanProcess(String exePath) {
+        this.cmd = new CommandLineBuilder(exePath);
+    }
 
-    ProcessArgs getProcessArgs();
+    @Override
+    public void addPreCommand(String preCommand) {
+        this.cmd.addPreCommand(preCommand);
+    }
 
-    void addPreCommand(String preCommand);
+    @Override
+    public void addPostCommand(String postCommand) {
+        this.cmd.addPostCommand(postCommand);
+    }
 
-    void addPostCommand(String postCommand);
+    protected CommandLineBuilder getCommandLineBuilder() {
+        return this.cmd;
+    }
 }
