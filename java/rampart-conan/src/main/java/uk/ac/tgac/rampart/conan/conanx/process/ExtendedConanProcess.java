@@ -28,10 +28,6 @@ public interface ExtendedConanProcess extends ConanProcess {
 
     String getCommand();
 
-    void setProcessArgs(ProcessArgs args);
-
-    ProcessArgs getProcessArgs();
-
     void addPreCommand(String preCommand);
 
     void addPostCommand(String postCommand);

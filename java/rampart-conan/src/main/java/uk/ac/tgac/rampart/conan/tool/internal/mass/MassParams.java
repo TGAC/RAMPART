@@ -37,6 +37,7 @@ public class MassParams implements ToolParams {
     private ConanParameter assembler;
     private ConanParameter kmin;
     private ConanParameter kmax;
+    private ConanParameter stepSize;
     private ConanParameter libs;
     private ConanParameter outputDir;
     private ConanParameter jobPrefix;
@@ -44,7 +45,7 @@ public class MassParams implements ToolParams {
     public MassParams() {
 
         this.assembler = new DefaultConanParameter(
-                "assembler",
+                "asm",
                 "De Brujin Assembler to use",
                 false,
                 true,
@@ -59,6 +60,13 @@ public class MassParams implements ToolParams {
                 "kmax",
                 "The maximum k-mer value to assemble",
                 true);
+
+        this.stepSize = new DefaultConanParameter(
+                "step",
+                "The kmer step size between each assembly: FINE, MEDIUM, COARSE",
+                false,
+                true,
+                false);
 
         this.libs = new DefaultConanParameter(
                 "libs",
@@ -92,6 +100,10 @@ public class MassParams implements ToolParams {
         return kmax;
     }
 
+    public ConanParameter getStepSize() {
+        return stepSize;
+    }
+
     public ConanParameter getLibs() {
         return libs;
     }
@@ -112,6 +124,7 @@ public class MassParams implements ToolParams {
                         this.assembler,
                         this.kmin,
                         this.kmax,
+                        this.stepSize,
                         this.libs,
                         this.outputDir,
                         this.jobPrefix}));

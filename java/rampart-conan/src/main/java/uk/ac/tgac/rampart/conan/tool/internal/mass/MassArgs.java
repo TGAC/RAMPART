@@ -19,7 +19,7 @@ package uk.ac.tgac.rampart.conan.tool.internal.mass;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
-import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
+import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
@@ -35,6 +35,45 @@ import java.util.Set;
  */
 public class MassArgs implements ProcessArgs {
 
+    public static enum StepSize {
+        FINE {
+            @Override
+            public int nextKmer(int kmer) {
+                return kmer += 2;
+            }
+        },
+        MEDIUM {
+            @Override
+            public int nextKmer(int kmer) {
+                int mod1 = (kmer - 1) % 10;
+                int mod2 = (kmer - 5) % 10;
+
+                if (mod1 == 0) {
+                    return kmer + 4;
+                }
+                else if (mod2 == 0) {
+                    return kmer + 6;
+                }
+                else {
+                    throw new IllegalArgumentException("Kmer values have somehow got out of step!!");
+                }
+            }
+        },
+        COARSE {
+            @Override
+            public int nextKmer(int kmer) {
+                return kmer += 10;
+            }
+        };
+
+        /**
+         * Retrieves the next k-mer value in the sequence
+         * @param kmer The current k-mer value
+         * @return The next kmer value
+         */
+        public abstract int nextKmer(int kmer);
+    }
+
 
     // Constants
     public static final int KMER_MIN = 11;
@@ -42,10 +81,11 @@ public class MassArgs implements ProcessArgs {
 
 
     // Class vars
-    private DeBrujinAssembler assembler;
+    private Assembler assembler;
     private Set<Library> libs;
     private int kmin;
     private int kmax;
+    private StepSize stepSize;
     private String jobPrefix;
     private File outputDir;
 
@@ -60,6 +100,7 @@ public class MassArgs implements ProcessArgs {
         this.libs = new HashSet<Library>();
         this.kmin = 41;
         this.kmax = 95;
+        this.stepSize = StepSize.MEDIUM;
         this.jobPrefix = "";
         this.outputDir = null;
     }
@@ -101,11 +142,19 @@ public class MassArgs implements ProcessArgs {
         this.kmax = kmax;
     }
 
-    public DeBrujinAssembler getAssembler() {
+    public StepSize getStepSize() {
+        return stepSize;
+    }
+
+    public void setStepSize(StepSize stepSize) {
+        this.stepSize = stepSize;
+    }
+
+    public Assembler getAssembler() {
         return assembler;
     }
 
-    public void setAssembler(DeBrujinAssembler assembler) {
+    public void setAssembler(Assembler assembler) {
         this.assembler = assembler;
     }
 
@@ -145,6 +194,7 @@ public class MassArgs implements ProcessArgs {
 
         pvp.put(params.getKmin(), String.valueOf(this.kmin));
         pvp.put(params.getKmax(), String.valueOf(this.kmax));
+        pvp.put(params.getStepSize(), this.stepSize.toString());
 
         if (this.libs != null)
             pvp.put(params.getLibs(), this.libs.toString());
@@ -169,7 +219,7 @@ public class MassArgs implements ProcessArgs {
             };
 
             if (arg.getKey() == MassParams.ASSEMBLER) {
-                this.assembler = arg.getValue();
+                this.asm = arg.getValue();
             }
 
         }

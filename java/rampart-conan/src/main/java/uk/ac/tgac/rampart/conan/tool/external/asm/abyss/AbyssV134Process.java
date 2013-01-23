@@ -15,56 +15,86 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.external.r;
+package uk.ac.tgac.rampart.conan.tool.external.asm.abyss;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
+import uk.ac.tgac.rampart.conan.tool.external.asm.AssemblerArgs;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * User: maplesod
- * Date: 16/01/13
- * Time: 16:13
+ * Date: 07/01/13
+ * Time: 12:12
  */
-public class RV2122Process extends DefaultExtendedConanProcess {
+public class AbyssV134Process extends DefaultExtendedConanProcess implements Assembler {
 
-    public static final String EXE = "Rscript";
+    public static final String EXE = "abyss-pe";
 
-    private RV2122Args args;
 
-    public RV2122Process() {
+    private AbyssV134Args args;
 
-        this(new RV2122Args());
+    public AbyssV134Process() {
+        this(new AbyssV134Args());
     }
 
-    public RV2122Process(RV2122Args args) {
-
+    public AbyssV134Process(AbyssV134Args args) {
         super(EXE);
         this.args = args;
     }
 
-
     @Override
     public String getCommand() {
-        return this.getCommandLineBuilder().getFullCommand(args, false);
+        return this.getCommandLineBuilder().getFullCommand(this.args, false);
+    }
+
+    public void setProcessArgs(AbyssV134Args args) {
+        this.args = args;
+    }
+
+    public AbyssV134Args getProcessArgs() {
+        return this.args;
+    }
+
+
+    @Override
+    public AssemblerArgs getArgs() {
+        return getProcessArgs();
+    }
+
+    @Override
+    public boolean makesUnitigs() {
+        return true;
+    }
+
+    @Override
+    public boolean makesContigs() {
+        return true;
+    }
+
+    @Override
+    public boolean makesScaffolds() {
+        return true;
     }
 
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+
+        //TODO
+        return false;
     }
 
     @Override
     public String getName() {
-        return "R V2.12.2";
+        return "AbyssV134";
     }
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        return new RV2122Params().getConanParameters();
+        return new AbyssV134Params().getConanParameters();
     }
 }

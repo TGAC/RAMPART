@@ -17,29 +17,21 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env;
 
-import org.junit.Before;
 import org.junit.Test;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.cli.Configure;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Single;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler.LSF;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.scheduler.LSFArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.ConnectionDetails;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.Remote;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
-import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Args;
-import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Process;
-import uk.ac.tgac.rampart.conan.tool.external.sspace.SSpaceBasicV2Args;
+import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Args;
+import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Process;
+import uk.ac.tgac.rampart.conan.tool.external.scaffold.sspace.SSpaceBasicV2Args;
 import uk.ac.tgac.rampart.conan.util.PETestLibrary;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.ConnectException;
-import java.net.URISyntaxException;
-import java.util.HashSet;
 import java.util.Set;
 
 public class LSFEnvironmentTests {

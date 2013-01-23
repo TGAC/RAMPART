@@ -26,8 +26,8 @@ import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatusType;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
-import uk.ac.tgac.rampart.conan.tool.DeBrujinAssembler;
-import uk.ac.tgac.rampart.conan.tool.PerlHelper;
+import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
+import uk.ac.tgac.rampart.conan.tool.internal.PerlHelper;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.io.File;
@@ -115,7 +115,7 @@ public class MassProcess implements ConanProcess {
 	
 	protected void createSupportDirectories() {
 		
-		DeBrujinAssembler assembler = this.args.getAssembler();
+		Assembler assembler = this.args.getAssembler();
 
 		// Create directory for links to assembled contigs
 		if (assembler.makesUnitigs()) {
@@ -126,7 +126,7 @@ public class MassProcess implements ConanProcess {
             this.args.getContigsDir().mkdir();
         }
 		
-		// Create dir for scaffold links if this assembler creates them
+		// Create dir for scaffold links if this asm creates them
 		if (this.args.getAssembler().makesScaffolds()) {
 			this.args.getScaffoldsDir().mkdir();
 		}
@@ -167,7 +167,7 @@ public class MassProcess implements ConanProcess {
             envCopy.getEnvironmentArgs().setBackgroundTask(true);
         }
 
-        // Input the libraries to the assembler
+        // Input the libraries to the asm
         if (this.args.getAssembler().getArgs().getLibraries() == null) {
             this.args.getAssembler().getArgs().setLibraries(this.args.getLibs());
         }

@@ -15,42 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.external.r;
+package uk.ac.tgac.rampart.conan.tool.external.scaffold.sspace;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.tool.external.scaffold.Scaffolder;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * User: maplesod
- * Date: 16/01/13
- * Time: 16:13
+ * Date: 23/01/13
+ * Time: 16:00
  */
-public class RV2122Process extends DefaultExtendedConanProcess {
+public class SSpaceBasicV2Process extends DefaultExtendedConanProcess implements Scaffolder {
 
-    public static final String EXE = "Rscript";
+    public static final String EXE = "SSPACE_Basic_v2.0.pl";
 
-    private RV2122Args args;
+    private SSpaceBasicV2Args args;
 
-    public RV2122Process() {
-
-        this(new RV2122Args());
+    public SSpaceBasicV2Process() {
+        this(new SSpaceBasicV2Args());
     }
 
-    public RV2122Process(RV2122Args args) {
-
+    public SSpaceBasicV2Process(SSpaceBasicV2Args args) {
         super(EXE);
         this.args = args;
     }
 
-
     @Override
     public String getCommand() {
-        return this.getCommandLineBuilder().getFullCommand(args, false);
+        return this.getCommandLineBuilder().getFullCommand(this.args, false);
     }
 
     @Override
@@ -60,11 +57,11 @@ public class RV2122Process extends DefaultExtendedConanProcess {
 
     @Override
     public String getName() {
-        return "R V2.12.2";
+        return "SSPACE_Basic_v2.0";
     }
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        return new RV2122Params().getConanParameters();
+        return new SSpaceBasicV2Params().getConanParameters();
     }
 }

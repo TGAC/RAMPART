@@ -27,7 +27,7 @@ import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.arch.Single;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
-import uk.ac.tgac.rampart.conan.tool.external.abyss.AbyssV134Process;
+import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Process;
 import uk.ac.tgac.rampart.conan.util.PETestLibrary;
 
 import java.io.File;

@@ -15,56 +15,54 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.external.r;
+package uk.ac.tgac.rampart.conan.tool.external.degap.gapcloser;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.tool.external.degap.Degapper;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * User: maplesod
- * Date: 16/01/13
- * Time: 16:13
+ * Date: 23/01/13
+ * Time: 13:44
  */
-public class RV2122Process extends DefaultExtendedConanProcess {
+public class GapCloserV112Process extends DefaultExtendedConanProcess implements Degapper {
 
-    public static final String EXE = "Rscript";
+    public static final String EXE = "GapCloser";
 
-    private RV2122Args args;
+    private GapCloserV112Args args;
 
-    public RV2122Process() {
-
-        this(new RV2122Args());
+    public GapCloserV112Process() {
+        this(new GapCloserV112Args());
     }
 
-    public RV2122Process(RV2122Args args) {
-
+    public GapCloserV112Process(GapCloserV112Args args) {
         super(EXE);
         this.args = args;
     }
 
-
     @Override
     public String getCommand() {
-        return this.getCommandLineBuilder().getFullCommand(args, false);
+        return this.getCommandLineBuilder().getFullCommand(this.args, false);
     }
 
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        //TODO
+        return false;
     }
 
     @Override
     public String getName() {
-        return "R V2.12.2";
+        return "SOAP_GapCloser_v1.12-LSF";
     }
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        return new RV2122Params().getConanParameters();
+        return new GapCloserV112Params().getConanParameters();
     }
 }

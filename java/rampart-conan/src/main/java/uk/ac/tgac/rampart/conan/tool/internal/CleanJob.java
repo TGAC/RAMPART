@@ -40,6 +40,10 @@ public class CleanJob extends DefaultExtendedConanProcess {
 
     public static final String PARAM_JOB_DIR = "job_dir";
 
+    protected CleanJob(String exePath) {
+        super(exePath);
+    }
+
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
         return false;  //To change body of implemented methods use File | Settings | File Templates.

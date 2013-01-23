@@ -15,26 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal.qt;
+package uk.ac.tgac.rampart.conan.tool.internal.improver;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
-
-import java.util.Map;
+import java.util.List;
 
 /**
+ * Created with IntelliJ IDEA.
  * User: maplesod
- * Date: 16/01/13
- * Time: 13:37
+ * Date: 07/01/13
+ * Time: 10:55
+ * To change this template use File | Settings | File Templates.
  */
-public class QualityTrimmerArgs implements ProcessArgs {
+public class Improver {
 
-   // private QualityTrimmer qualityTrimmer;
+    private List<ImproverTask> taskList;
 
 
-
-    @Override
-    public Map<ConanParameter, String> getParameterValuePairs() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 }
