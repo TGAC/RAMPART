@@ -23,7 +23,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 
 public interface ProcessArgs {
 
-	Map<ConanParameter, String> getParameterValuePairs();
+	Map<ConanParameter, String> getArgMap();
 
-    //void setFromParameterValuePairs(Map<ConanParameter, String> pvp);
+    void setFromArgMap(Map<ConanParameter, String> pvp);
 }

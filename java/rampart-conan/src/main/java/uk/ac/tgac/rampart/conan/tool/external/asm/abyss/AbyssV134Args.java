@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.asm.abyss;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +28,9 @@ import uk.ac.tgac.rampart.core.data.Library;
 
 public class AbyssV134Args implements AssemblerArgs {
 
-	private AbyssV134InputLibsArg libs;
+    private AbyssV134Params params = new AbyssV134Params();
+
+    private AbyssV134InputLibsArg libs;
 	private int nbContigPairs;
 	private int kmer;
 	private int threads;
@@ -90,11 +93,10 @@ public class AbyssV134Args implements AssemblerArgs {
 	}
 	
 	@Override
-	public Map<ConanParameter, String> getParameterValuePairs() {
+	public Map<ConanParameter, String> getArgMap() {
 		
 		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        AbyssV134Params params = new AbyssV134Params();
 
         if (this.libs != null) {
             pvp.put(params.getLibs(), this.libs.toString());
@@ -115,7 +117,39 @@ public class AbyssV134Args implements AssemblerArgs {
 		return pvp;
 	}
 
-	@Override
+    @Override
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+        for(Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            };
+
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getLibs().getName())) {
+                //TODO this needs proper parsing
+                this.libs = null; //entry.getValue();
+            }
+            else if (param.equals(this.params.getKmer().getName())) {
+                this.kmer = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getName().getName())) {
+                this.name = entry.getValue();
+            }
+            else if (param.equals(this.params.getNbContigPairs().getName())) {
+                this.nbContigPairs = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getThreads().getName())) {
+                this.threads = Integer.parseInt(entry.getValue());
+            }
+            else {
+                throw new IllegalArgumentException("Unknown parameter found: " + param);
+            }
+        }
+    }
+
+    @Override
 	public AssemblerArgs copy() {
 		
 		AbyssV134Args copy = new AbyssV134Args();

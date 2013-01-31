@@ -17,6 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.net.URL;
+
 /**
  * User: maplesod
  * Date: 07/01/13
@@ -27,10 +32,14 @@ public enum PerlHelper {
     MASS_GP {
         @Override
         public String getPath() {
-            return "mass_gp.pl";
+            return "/scripts/perl/mass_gp.pl";
         }
     };
 
+    public File getScript() {
+        URL scriptUrl = this.getClass().getResource(this.getPath());
+        return FileUtils.toFile(scriptUrl);
+    }
 
     public abstract String getPath();
 }

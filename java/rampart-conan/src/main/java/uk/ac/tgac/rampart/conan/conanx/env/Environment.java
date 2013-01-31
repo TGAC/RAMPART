@@ -17,25 +17,45 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env;
 
-import java.net.ConnectException;
+import java.io.IOException;
 
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
 
 public interface Environment {
 
-	void setup(Locality locality, Architecture architecture, EnvironmentArgs args);
-
+    /**
+     * Retrieves the locality that this process should be executed in
+     * @return
+     */
     Locality getLocality();
 
-    Architecture getArchitecture();
+    /**
+     * Whether or not a scheduling service is present in this environment
+     * @return
+     */
+    boolean usingScheduler();
 
-    EnvironmentArgs getEnvironmentArgs();
+    /**
+     * Retrieves the scheduling service, or null if none are used
+     * @return
+     */
+    Scheduler getScheduler();
 
-	void submitCommand(String command)
-            throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException;
+    /**
+     * Executes a command in this environment
+     * @param command The command to execute
+     * @throws ProcessExecutionException Thrown if there was some problem executing the process
+     * @throws InterruptedException Thrown if the process was interrupted after it started executing
+     */
+	void execute(String command) throws ProcessExecutionException, InterruptedException;
 
+    /**
+     * Make a deep copy of this environment
+     * @return
+     */
     Environment copy();
 }

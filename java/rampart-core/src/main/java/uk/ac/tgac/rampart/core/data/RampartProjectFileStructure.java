@@ -64,7 +64,7 @@ public class RampartProjectFileStructure {
 		this.dataDir = new File(rampartDir, "data");
 		this.dataReportDir = new File(dataDir, "report_template");
 		this.dataReportImagesDir = new File(dataReportDir, "images");
-		this.perlDir = new File(rampartDir, "perl");
+		this.perlDir = new File(rampartDir, "scripts.perl");
 		
 		this.reportTemplateFile = new File(dataReportDir, "template.tex");
 		this.weightingsFile = new File(rampartDir, "weightings.tab");

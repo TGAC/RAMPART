@@ -106,13 +106,15 @@ public class CommandLineBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append(this.executable);
         sb.append(" ");
-        for(Map.Entry<ConanParameter, String> param : args.getParameterValuePairs().entrySet()) {
+        for(Map.Entry<ConanParameter, String> param : args.getArgMap().entrySet()) {
             if (build) {
                 sb.append(paramPrefix);
                 sb.append(param.getKey());
-                sb.append(keyValSep);
             }
-            sb.append(param.getValue());
+            if (!param.getKey().isBoolean()) {
+                sb.append(keyValSep);
+                sb.append(param.getValue());
+            }
             sb.append(" ");
         }
 

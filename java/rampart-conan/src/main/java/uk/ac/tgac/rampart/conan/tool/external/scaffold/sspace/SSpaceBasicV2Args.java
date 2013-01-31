@@ -19,12 +19,7 @@ package uk.ac.tgac.rampart.conan.tool.external.scaffold.sspace;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -35,7 +30,10 @@ import uk.ac.tgac.rampart.core.data.Library;
 
 public class SSpaceBasicV2Args implements ScaffolderArgs {
 
-	// SSPACE vars
+    private SSpaceBasicV2Params params = new SSpaceBasicV2Params();
+
+
+    // SSPACE vars
 	private File libraryFile;
 	private File inputContigFile;
 	private Integer extend;
@@ -129,37 +127,64 @@ public class SSpaceBasicV2Args implements ScaffolderArgs {
 	
 
 	@Override
-	public Map<ConanParameter, String> getParameterValuePairs() {
-		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+	public Map<ConanParameter, String> getArgMap() {
 
-		/*if (this.libraryFile != null)
-			pvp.put(SSpaceBasicV2Params.LIBRARY_FILE.getConanParameter(),
-					this.libraryFile.getPath());
+        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+
+		if (this.libraryFile != null)
+			pvp.put(params.getLibraryFile(), this.libraryFile.getPath());
 		else {
 			throw new IllegalArgumentException("Must have a library file specified.  If working from a Set<Library> you can call setLibraryFile(Set<Library> libs, File outputLibFile) to automatically generate a SSPACE library file and set the class variable.");
 		}
 
 		if (this.inputContigFile != null)
-			pvp.put(SSpaceBasicV2Params.CONTIG_FILE.getConanParameter(),
-					this.inputContigFile.getPath());
+			pvp.put(params.getContigFile(),	this.inputContigFile.getPath());
 
 		if (this.extend != null)
-			pvp.put(SSpaceBasicV2Params.EXTEND.getConanParameter(),
-					this.extend.toString());
+			pvp.put(params.getExtend(),	this.extend.toString());
 
 		if (this.bowtieThreads != null && this.bowtieThreads > 1)
-			pvp.put(SSpaceBasicV2Params.BOWTIE_THREADS.getConanParameter(),
-					this.bowtieThreads.toString());
+			pvp.put(params.getBowtieThreads(), this.bowtieThreads.toString());
 
 		if (this.baseName != null)
-			pvp.put(SSpaceBasicV2Params.BASE_NAME.getConanParameter(),
-					this.baseName);
-		          */
+			pvp.put(params.getBaseName(), this.baseName);
+
 		return pvp;
 	}
 
+    @Override
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+        for(Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
-	@Override
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            };
+
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getContigFile().getName())) {
+                this.inputContigFile = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getExtend().getName())) {
+                this.extend = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getBowtieThreads().getName())) {
+                this.bowtieThreads = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getBaseName().getName())) {
+                this.baseName = entry.getValue();
+            }
+            else if (param.equals(this.params.getLibraryFile().getName())) {
+                this.libraryFile = new File(entry.getValue());
+            }
+            else {
+                throw new IllegalArgumentException("Unknown parameter found: " + param);
+            }
+        }
+    }
+
+
+    @Override
 	public Set<Library> getLibraries() {
 		return libs;
 	}

@@ -18,29 +18,37 @@
 package uk.ac.tgac.rampart.conan.conanx.env;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
+import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
 
+import java.io.IOException;
 import java.net.ConnectException;
 
 public class DefaultEnvironment implements Environment {
 
     private Locality locality;
-    private Architecture architecture;
-    private EnvironmentArgs environmentArgs;
+    private Scheduler scheduler;
 
-    public DefaultEnvironment(Locality locality, Architecture architecture, EnvironmentArgs args) {
+    public DefaultEnvironment() {
+        this((Scheduler)null);
+    }
+
+    public DefaultEnvironment(Scheduler scheduler) {
+
+        this(new Local(), scheduler);
+    }
+
+    public DefaultEnvironment(Locality locality, Scheduler scheduler) {
 
         this.locality = locality;
-        this.architecture = architecture;
-        this.environmentArgs = args;
+        this.scheduler = scheduler;
     }
 
     public DefaultEnvironment(Environment env) {
 
         this.locality = env.getLocality();
-        this.architecture = env.getArchitecture();
-        this.environmentArgs = env.getEnvironmentArgs().copy();
     }
 
     @Override
@@ -48,49 +56,33 @@ public class DefaultEnvironment implements Environment {
         return locality;
     }
 
+    @Override
+    public boolean usingScheduler() {
+        return this.scheduler != null;
+    }
+
+    @Override
+    public Scheduler getScheduler() {
+        return this.scheduler;
+    }
+
     public void setLocality(Locality locality) {
         this.locality = locality;
     }
 
     @Override
-    public Architecture getArchitecture() {
-        return architecture;
-    }
-
-    public void setArchitecture(Architecture architecture) {
-        this.architecture = architecture;
-    }
-
-    @Override
-    public EnvironmentArgs getEnvironmentArgs() {
-        return environmentArgs;
-    }
-
-    public void setEnvironmentArgs(EnvironmentArgs environmentArgs) {
-        this.environmentArgs = environmentArgs;
-    }
-
-    @Override
-    public void submitCommand(String command) throws IllegalArgumentException, ProcessExecutionException, InterruptedException, ConnectException {
+    public void execute(String command)
+            throws ProcessExecutionException, InterruptedException {
         if (!this.locality.establishConnection()) {
-            throw new ConnectException("Could not establish connection to the terminal.  Command " +
+            throw new ProcessExecutionException(-1, "Could not establish connection to the terminal.  Command " +
                     command + " will not be submitted.");
         }
 
-        // Do we need to do any checking around this?
-        this.locality.submitCommand(command, this.environmentArgs, this.architecture);
+        this.locality.executeCommand(command, this.scheduler);
 
         if (!this.locality.disconnect()) {
-            throw new ConnectException("Command was submitted but could not disconnect the terminal session.  Future jobs may not work.");
+            throw new ProcessExecutionException(-1, "Command was submitted but could not disconnect the terminal session.  Future jobs may not work.");
         }
-    }
-
-    @Override
-    public void setup(Locality locality, Architecture architecture, EnvironmentArgs args) {
-
-        this.setLocality(locality);
-        this.setArchitecture(architecture);
-        this.setEnvironmentArgs(args);
     }
 
     @Override

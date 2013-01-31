@@ -17,6 +17,8 @@
  **/
 package uk.ac.tgac.rampart.core.data;
 
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
+
 import java.io.Serializable;
 
 import javax.persistence.CascadeType;
@@ -74,9 +76,15 @@ public class AssemblyStats implements Serializable {
 	
 	@Column(name="n_perc")
 	private Double nPerc;
-	
+
+    private Long n80;
+
 	@Column(name="n50")
 	private Long n50;
+
+    private Long n20;
+
+    private Long l50;
 	
 	@Column(name="min_len")
 	private Long minLen;
@@ -187,6 +195,55 @@ public class AssemblyStats implements Serializable {
 	public void setMaxLen(Long maxLen) {
 		this.maxLen = maxLen;
 	}
-	
-	
+
+    public Long getN80() {
+        return n80;
+    }
+
+    public void setN80(Long n80) {
+        this.n80 = n80;
+    }
+
+    public Long getN20() {
+        return n20;
+    }
+
+    public void setN20(Long n20) {
+        this.n20 = n20;
+    }
+
+    public Long getL50() {
+        return l50;
+    }
+
+    public void setL50(Long l50) {
+        this.l50 = l50;
+    }
+
+    public static String getStatsFileHeader() {
+        return "file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n80|n50|n20|l50";
+    }
+
+    public String toStatsFileString() {
+
+        StringJoiner sj = new StringJoiner("|");
+
+        sj.add(this.getFilePath());
+        sj.add(this.getNbContigs());
+        sj.add(this.getaPerc());
+        sj.add(this.getcPerc());
+        sj.add(this.getgPerc());
+        sj.add(this.gettPerc());
+        sj.add(this.getnPerc());
+        sj.add(this.getNbBases());
+        sj.add(this.getMinLen());
+        sj.add(this.getAvgLen());
+        sj.add(this.getMaxLen());
+        sj.add(this.getN80());
+        sj.add(this.getN50());
+        sj.add(this.getN20());
+        sj.add(this.getL50());
+
+        return sj.toString();
+    }
 }

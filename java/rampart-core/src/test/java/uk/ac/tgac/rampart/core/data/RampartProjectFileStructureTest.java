@@ -16,7 +16,7 @@ public class RampartProjectFileStructureTest {
 		
 		
 		File javaDir = new File(projectRoot, "java");
-		File perlDir = new File(projectRoot, "perl");
+		File perlDir = new File(projectRoot, "scripts.perl");
 		assertTrue(javaDir.exists());
 		assertTrue(perlDir.exists());
 		

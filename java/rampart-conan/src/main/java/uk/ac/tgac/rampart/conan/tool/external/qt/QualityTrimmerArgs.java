@@ -24,5 +24,29 @@ import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 
 public interface QualityTrimmerArgs extends ProcessArgs  {
 
+    boolean isSingleEndArgs();
 
+    FilePair getPairedEndInputFiles();
+
+    void setPairedEndInputFiles(FilePair pairedEndInputFiles);
+
+    FilePair getPairedEndOutputFiles();
+
+    void setPairedEndOutputFiles(FilePair pairedEndOutputFiles);
+
+    File getSingleEndInputFile();
+
+    void setSingleEndInputFile(File singleEndInputFile);
+
+    File getSingleEndOutputFile();
+
+    void setSingleEndOutputFile(File singleEndOutputFile);
+
+    int getQualityThreshold();
+
+    void setQualityThreshold(int qualityThreshold);
+
+    int getMinLength();
+
+    void setMinLength(int minLength);
 }

@@ -33,6 +33,11 @@ import java.util.Map;
  */
 public class SickleV11Process extends DefaultExtendedConanProcess implements QualityTrimmer {
 
+    @Override
+    public void qualityTrim() throws InterruptedException, ProcessExecutionException {
+        this.execute(this.args.getArgMap());
+    }
+
     public enum JobType {
 
         SINGLE_END {
@@ -76,6 +81,11 @@ public class SickleV11Process extends DefaultExtendedConanProcess implements Qua
         this.args = args;
     }
 
+    @Override
+    public QualityTrimmerArgs getArgs() {
+        return args;
+    }
+
 
     @Override
     public String getCommand() {
@@ -84,8 +94,7 @@ public class SickleV11Process extends DefaultExtendedConanProcess implements Qua
 
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
-        //TODO
-        return false;
+          return false;
     }
 
     @Override

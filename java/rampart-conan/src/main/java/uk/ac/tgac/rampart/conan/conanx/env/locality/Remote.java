@@ -17,19 +17,16 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env.locality;
 
-import java.net.ConnectException;
+import java.io.*;
 
+import com.jcraft.jsch.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
-
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
 
 public class Remote implements Locality {
 
@@ -67,26 +64,32 @@ public class Remote implements Locality {
 		
 		try {
 			JSch jsch = new JSch();
-	
+
 			Session session = jsch.getSession(connectionDetails.getUsername(),
 					connectionDetails.getHost(), connectionDetails.getPort());
-	
+
 			session.setPassword(connectionDetails.getPassword());
 
+            // This avoids any issues with checking the RSA fingerprint from the server
+            session.setConfig("StrictHostKeyChecking", "no");
+
 			session.connect();
-	
+
 			this.session = session;
+
 		}
 		catch(JSchException je) {
-			
+
 			log.error("Could not connect to remote machine", je);
 			return false;
 		}
-		
+
+        log.info("Connected to: " + connectionDetails.getUsername() + "@" + connectionDetails.getHost());
 		return true;
 	}
 
-	@Override
+
+    @Override
 	public boolean disconnect() {
 		
 		this.session.disconnect();
@@ -97,30 +100,110 @@ public class Remote implements Locality {
 			log.error("Remote session is still connected!");
 			return false;
 		}
-					
+
+        log.info("Disconnected from: " + connectionDetails.getHost());
 		return true;
 	}
 
-	@Override
-	public boolean submitCommand(String command, EnvironmentArgs args, Architecture architecture)
-			throws IllegalArgumentException, ProcessExecutionException,
-			InterruptedException, ConnectException {
+    @Override
+    public int executeCommand(String command) throws ProcessExecutionException, InterruptedException {
+        return this.executeCommand(command, null);
+    }
 
-		try {
-			
-			// this is all rubbish atm.  I know I'll need to do something with the session here though.
-			this.session.connect();
-			this.session.run();
-			architecture.submitCommand(command, args);
-		}
-		catch(JSchException je) {
-			
-			ConnectException ce = new ConnectException("Connection issues with remote machine");
-			ce.initCause(je);
-			throw ce;
-		}
+    @Override
+	public int executeCommand(String command, Scheduler scheduler)
+            throws ProcessExecutionException, InterruptedException {
 
-		return true;
+        String commandToExecute = scheduler.createCommand(command);
+
+        int exitValue = -1;
+
+        try {
+            Channel channel = this.session.openChannel("exec");
+
+            ((ChannelExec)channel).setCommand(commandToExecute);
+
+            // Connect channel (executes the command on the remote session)
+            channel.connect();
+
+            // Read output
+            String output = readProcessOutput(channel);
+
+            // Disconnect channel
+            channel.disconnect();
+
+            log.info("Command: \"" + commandToExecute + "\" executed on: " + session.getHost());
+
+            exitValue = 0;
+        }
+        catch(JSchException je) {
+            log.error("Remote session is still connected!");
+            throw new ProcessExecutionException(exitValue, je);
+        }
+        catch(IOException ioe) {
+            log.error("Problem reading stdout and stderr from remote process");
+            throw new ProcessExecutionException(exitValue, ioe);
+        }
+
+		return exitValue;
 	}
+
+    protected String readProcessOutput(Channel channel) throws IOException {
+
+        StringBuilder output = new StringBuilder();
+
+        InputStream inStream = channel.getInputStream();
+        BufferedReader fromChannel = new BufferedReader(new InputStreamReader(inStream, "UTF-8"));
+        OutputStream outStream = channel.getOutputStream();
+        PrintWriter toChannel = new PrintWriter(new OutputStreamWriter(outStream, "UTF-8"));
+        InputStream errStream = ((ChannelExec) channel).getErrStream();
+        BufferedReader errChannel = new BufferedReader(new InputStreamReader(errStream, "UTF-8"));
+
+        // Read the input stream
+        while(true){
+            String line = null;
+            while((line = fromChannel.readLine()) != null){
+                output.append(line);
+                output.append("\n");
+            }
+
+            if(channel.isClosed()){
+
+                log.info("SSH Channel has been closed.  Exit status: " + channel.getExitStatus());
+                return output.toString();
+            }
+
+            // Consumed everything for now... wait a bit and try again
+            try {
+                Thread.sleep(1000);
+            }
+            catch(Exception ee) {
+                // Ignore...
+            }
+        }
+
+
+    }
+
+    /**
+     * This is the same as executing a command on a remote session
+     * @param command The command that is to be executed in the background
+     * @param scheduler The architecture describing the environment on which the command is to be executed.
+     * @throws ProcessExecutionException
+     * @throws InterruptedException
+     */
+    @Override
+    public void dispatchCommand(String command, Scheduler scheduler)
+            throws ProcessExecutionException, InterruptedException {
+
+        executeCommand(command, scheduler);
+    }
+
+    @Override
+    public int waitFor(WaitCondition waitCondition, Scheduler architecture) throws ProcessExecutionException, InterruptedException {
+
+        // I can't think of an easy way to wait for a job to finish remotely yet.
+        return -1;
+    }
 
 }

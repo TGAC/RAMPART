@@ -18,21 +18,23 @@
 package uk.ac.tgac.rampart.conan.service;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
-import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
 import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
 
+import java.io.IOException;
 import java.net.ConnectException;
 
 public interface ProcessExecutionService {
 
 	void execute(ExtendedConanProcess process, Environment env)
-            throws InterruptedException, ProcessExecutionException, ConnectException;
+            throws InterruptedException, ProcessExecutionException;
 
     void execute(String command, Environment env)
-            throws InterruptedException, ProcessExecutionException, ConnectException;
+            throws InterruptedException, ProcessExecutionException;
 
-    int waitFor(WaitCondition waitCondition, EnvironmentArgs args)
-            throws InterruptedException, ProcessExecutionException, ConnectException;
+    int waitFor(WaitCondition waitCondition, SchedulerArgs args)
+            throws InterruptedException, ProcessExecutionException;
 }

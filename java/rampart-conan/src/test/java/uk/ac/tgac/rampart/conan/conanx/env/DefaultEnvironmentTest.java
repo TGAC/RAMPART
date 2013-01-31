@@ -23,10 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Single;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf.LSF;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf.LSFArgs;
 
 import java.io.File;
 
@@ -35,22 +33,15 @@ import java.io.File;
  * Date: 08/01/13
  * Time: 14:12
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations={"/applicationContext.xml"})
 public class DefaultEnvironmentTest {
 
-    private static Logger log = LoggerFactory.getLogger(DefaultEnvironmentTest.class);
-
     @Test
-    public void testSubmitCommand() throws Exception {
+    public void testExecute() throws Exception {
 
-        EnvironmentArgs envArgs = new DefaultEnvironmentArgs();
-        envArgs.setCmdLineOutputFile(new File("~/test/rampart-conan/output.log"));
+        LSFArgs envArgs = new LSFArgs();
+        envArgs.setMonitorFile(new File("~/test/rampart-conan/output.log"));
 
-        Environment env = new DefaultEnvironment(new Local(), new Single(), envArgs);
-
-        env.submitCommand("ls . > ~/rampart_output.log");
-
-        log.info("Finished");
+        Environment env = new DefaultEnvironment(new LSF(envArgs));
+        env.execute("ls . > ~/rampart_output.log");
     }
 }

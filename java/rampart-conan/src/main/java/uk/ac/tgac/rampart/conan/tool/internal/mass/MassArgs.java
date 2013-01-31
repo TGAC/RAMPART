@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.internal.mass;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
+import uk.ac.tgac.rampart.conan.tool.external.asm.Assemblers;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
@@ -79,6 +80,8 @@ public class MassArgs implements ProcessArgs {
     public static final int KMER_MIN = 11;
     public static final int KMER_MAX = 125;
 
+    // Need access to these
+    private MassParams params = new MassParams();
 
     // Class vars
     private Assembler assembler;
@@ -183,9 +186,7 @@ public class MassArgs implements ProcessArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getParameterValuePairs() {
-
-        MassParams params = new MassParams();
+    public Map<ConanParameter, String> getArgMap() {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
@@ -208,27 +209,51 @@ public class MassArgs implements ProcessArgs {
 
         return pvp;
     }
-     /*
+
     @Override
-    public void setFromParameterValuePairs(Map<ConanParameter, String> pvp) {
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+        for(Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
-        for(Map.Entry<ConanParameter, String> arg : pvp.entrySet()) {
-
-            if (!arg.getKey().validateParameterValue(arg.getValue())) {
-                throw new IllegalArgumentException("Parameter invalid: " + arg.getKey() + " : " + arg.getValue());
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
             };
 
-            if (arg.getKey() == MassParams.ASSEMBLER) {
-                this.asm = arg.getValue();
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getAssembler().getName())) {
+                this.assembler = Assemblers.valueOf(entry.getValue()).create();
+            }
+            else if (param.equals(this.params.getKmin().getName())) {
+                this.kmin = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getKmax().getName())) {
+                this.kmax = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getStepSize().getName())) {
+                this.stepSize = StepSize.valueOf(entry.getValue());
+            }
+            else if (param.equals(this.params.getJobPrefix().getName())) {
+                this.jobPrefix = entry.getValue();
+            }
+            else if (param.equals(this.params.getOutputDir())) {
+                this.outputDir = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getLibs().getName())) {
+                //TODO Need to be able to parse libs
+                this.libs = null;
+            }
+            else {
+                throw new IllegalArgumentException("Unknown parameter found: " + param);
             }
 
         }
-    } */
+    }
+
 
     /**
      * Determines whether or not the supplied kmer range in this object is valid.  Throws an IllegalArgumentException if not.
      */
-    public boolean validateKmers() {
+    public boolean validateKmers(int kmin, int kmax) {
 
         //TODO This logic isn't bullet proof... we can still nudge the minKmer above the maxKmer
 
@@ -241,9 +266,6 @@ public class MassArgs implements ProcessArgs {
         if (kmin > kmax)
             throw new IllegalArgumentException("Error: Min K-mer value must be <= Max K-mer value");
 
-        // This test isn't required... we just make a best effort between the range provided.
-        //if (!validKmer(kmin) || !validKmer(kmax))
-        //	throw new IllegalArgumentException("Error: K-mer min and K-mer max both must end with a '1' or a '5'.  e.g. 41 or 95.");
         return true;
     }
 }

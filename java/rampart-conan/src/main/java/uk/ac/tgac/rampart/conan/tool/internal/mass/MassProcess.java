@@ -21,22 +21,25 @@ import org.apache.commons.io.FileUtils;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.ExitStatusType;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.WaitCondition;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.ExitStatusType;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.AbstractSchedulerArgs;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
 import uk.ac.tgac.rampart.conan.tool.internal.PerlHelper;
+import uk.ac.tgac.rampart.conan.tool.internal.RampartProcess;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Map;
 
-public class MassProcess implements ConanProcess {
+public class MassProcess implements ConanProcess, RampartProcess {
 
     protected ProcessExecutionService processExecutionService = new DefaultProcessExecutionService();
 
@@ -143,33 +146,35 @@ public class MassProcess implements ConanProcess {
      * @throws ProcessExecutionException
      * @throws InterruptedException
      */
-	public void dispatchJobs(Environment env) throws IOException, IllegalArgumentException,
-		ProcessExecutionException, InterruptedException {
+    @Override
+	public void execute(Environment env) throws IOException, ProcessExecutionException, InterruptedException, CommandExecutionException {
 
 		// Check the range looks reasonable
-		this.args.validateKmers();
+		this.args.validateKmers(this.args.getKmin(), this.args.getKmax());
 
         // Create a copy of the environment info (we're going to modify this)
-		Environment envCopy = env.copy();
+        SchedulerArgs schArgsCopy = null;
+        SchedulerArgs schArgsBackup = env.getScheduler().getArgs();
+        if (env.usingScheduler()) {
+            schArgsCopy = env.getScheduler().getArgs().copy();
 
-        // Set mem required to 60GB if no memory requested
-        if (envCopy.getEnvironmentArgs().getMemoryMB() == 0) {
-            envCopy.getEnvironmentArgs().setMemoryMB(60000);
-        }
+            // Set mem required to 60GB if no memory requested
+            if (schArgsCopy.getMemoryMB() == 0) {
+                schArgsCopy.setMemoryMB(60000);
+            }
 
-        // Set num threads to 8 if none specified
-        if (envCopy.getEnvironmentArgs().getThreads() == 0) {
-            envCopy.getEnvironmentArgs().setThreads(8);
-        }
+            // Set num threads to 8 if none specified
+            if (schArgsCopy.getThreads() == 0) {
+                schArgsCopy.setThreads(8);
+            }
 
-        // If we're running on a grid engine then make sure the assembly jobs run in the background
-        if (envCopy.getArchitecture().isGridEngine()) {
-            envCopy.getEnvironmentArgs().setBackgroundTask(true);
-        }
+            // If we're using a job scheduler then make sure the assembly jobs run in the background
+            schArgsCopy.setBackgroundTask(true);
 
-        // Input the libraries to the asm
-        if (this.args.getAssembler().getArgs().getLibraries() == null) {
-            this.args.getAssembler().getArgs().setLibraries(this.args.getLibs());
+            // Input the libraries to the asm
+            if (this.args.getAssembler().getArgs().getLibraries() == null) {
+                this.args.getAssembler().getArgs().setLibraries(this.args.getLibs());
+            }
         }
 
 		// Create any required directories for this job
@@ -190,21 +195,26 @@ public class MassProcess implements ConanProcess {
 			this.args.getAssembler().getArgs().setKmer(k);
 
             // Modify the environment jobname
-            envCopy.getEnvironmentArgs().setJobName(this.args.getJobPrefix() + "-k" + k);
+            if (schArgsCopy != null) {
+                schArgsCopy.setJobName(this.args.getJobPrefix() + "-k" + k);
+                env.getScheduler().setArgs(schArgsCopy);
+            }
 
             // Create process
             this.processExecutionService.execute(this.args.getAssembler(), env);
         }
 
         // Wait for all assembly jobs to finish if they are running as background tasks.
-        if (env.getEnvironmentArgs().isBackgroundTask()) {
+        if (env.usingScheduler() && env.getScheduler().getArgs().isBackgroundTask()) {
 
-            WaitCondition waitCondition = env.getArchitecture().createWaitCondition(ExitStatusType.COMPLETED_SUCCESS, this.args.getJobPrefix());
+            WaitCondition waitCondition = env.getScheduler().createWaitCondition(ExitStatusType.COMPLETED_SUCCESS, this.args.getJobPrefix());
 
-            envCopy.getArchitecture().waitFor(waitCondition, envCopy.getEnvironmentArgs());
+            env.getScheduler().executeWaitCommand(waitCondition);
         }
+
+        env.getScheduler().setArgs(schArgsBackup);
 		
-		this.dispatchStatsJob(envCopy);
+		this.dispatchStatsJob(env);
 		
 		// Not sure if this is required in a java env
 		//this.log();
@@ -226,13 +236,20 @@ public class MassProcess implements ConanProcess {
 	}
 	
 	
-	protected void dispatchStatsJob(Environment env) throws InterruptedException, ProcessExecutionException, ConnectException {
+	protected void dispatchStatsJob(Environment env) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 		
-		// Alter the environment for this job
-        env.getEnvironmentArgs().setJobName(this.args.getJobPrefix() + "-stats");
-        env.getEnvironmentArgs().setThreads(0);
-        env.getEnvironmentArgs().setMemoryMB(0);
-        env.getEnvironmentArgs().setBackgroundTask(false);
+		// Alter the environment for this job if using a scheduler
+        SchedulerArgs schArgsCopy = null;
+        SchedulerArgs schArgsBackup = env.getScheduler().getArgs();
+        if (env.usingScheduler()) {
+            schArgsCopy = env.getScheduler().getArgs().copy();
+
+            schArgsCopy.setJobName(this.args.getJobPrefix() + "-stats");
+            schArgsCopy.setThreads(0);
+            schArgsCopy.setMemoryMB(0);
+            schArgsCopy.setBackgroundTask(false);
+            env.getScheduler().setArgs(schArgsCopy);
+        }
 		
 		StringJoiner statCommands = new StringJoiner("; ");
 
@@ -242,17 +259,21 @@ public class MassProcess implements ConanProcess {
 
         // Create process
         this.processExecutionService.execute(statCommands.toString(), env);
+
+        if (env.usingScheduler()) {
+            env.getScheduler().setArgs(schArgsBackup);
+        }
 	}
 
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
 
-        //this.args.setFromParameterValuePairs(parameters);
+        //this.args.setFromArgMap(parameters);
 
         //Environment env = new DefaultEnvironment();
 
         /*try {
-            this.dispatchJobs(env);
+            this.execute(env);
         } catch (IOException e) {
             e.printStackTrace();
         }*/

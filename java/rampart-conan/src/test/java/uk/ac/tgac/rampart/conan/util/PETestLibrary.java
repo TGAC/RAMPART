@@ -17,9 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.util;
 
+import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.SeqFile;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,7 +33,7 @@ import java.util.Set;
 public class PETestLibrary {
 
 
-    public Set<Library> createPETestLibrary() {
+    public Set<Library> createLocalPETestLibrary() {
         SeqFile peFile1 = new SeqFile();
         peFile1.setFileType(SeqFile.FileType.FASTQ);
         peFile1.setFilePath("tools/mass/LIB1896_R1.r95.fastq");
@@ -53,5 +55,46 @@ public class PETestLibrary {
         libs.add(peLib);
 
         return libs;
+    }
+
+    public Set<Library> createNorwichLSFPETestLibrary() {
+        SeqFile peFile1 = new SeqFile();
+        peFile1.setFileType(SeqFile.FileType.FASTQ);
+        peFile1.setFilePath("~maplesod/dev/rampart/test/tools/mass/LIB1896_R1.r95.fastq");
+
+        SeqFile peFile2 = new SeqFile();
+        peFile2.setFileType(SeqFile.FileType.FASTQ);
+        peFile2.setFilePath("~maplesod/dev/rampart/test/tools/mass/LIB1896_R2.r95.fastq");
+
+        Library peLib = new Library();
+        peLib.setDataset(Library.Dataset.RAW);
+        peLib.setName("peLib1");
+        peLib.setIndex(1);
+        peLib.setUsage(Library.Usage.ASSEMBLY_ONLY);
+        peLib.setType(Library.Type.PE);
+        peLib.setFilePaired1(peFile1);
+        peLib.setFilePaired2(peFile2);
+
+        Set<Library> libs = new HashSet<Library>();
+        libs.add(peLib);
+
+        return libs;
+    }
+
+
+    public FilePair getLocalPairedEndTestLib() {
+
+        File peFile1 = new File("tools/mass/LIB1896_R1.r95.fastq");
+        File peFile2 = new File("tools/mass/LIB1896_R2.r95.fastq");
+
+        return new FilePair(peFile1, peFile2);
+    }
+
+    public FilePair getNorwichLSFPairedEndTestLib() {
+
+        File peFile1 = new File("~maplesod/dev/rampart/test/tools/mass/LIB1896_R1.r95.fastq");
+        File peFile2 = new File("~maplesod/dev/rampart/test/tools/mass/LIB1896_R2.r95.fastq");
+
+        return new FilePair(peFile1, peFile2);
     }
 }

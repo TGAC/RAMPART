@@ -47,7 +47,7 @@ public class GapCloserV112Process extends DefaultExtendedConanProcess implements
 
     @Override
     public String getCommand() {
-        return this.getCommandLineBuilder().getFullCommand(this.args, false);
+        return this.getCommandLineBuilder().getFullCommand(this.args, true, "-", " ");
     }
 
     @Override

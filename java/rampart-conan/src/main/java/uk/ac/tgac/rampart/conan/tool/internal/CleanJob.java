@@ -92,13 +92,4 @@ public class CleanJob extends DefaultExtendedConanProcess {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
-    public void setProcessArgs(ProcessArgs args) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public ProcessArgs getProcessArgs() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 }

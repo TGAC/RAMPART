@@ -18,11 +18,11 @@
 package uk.ac.tgac.rampart.conan.tool.external.qt.sickle;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
-import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Params;
 import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmerArgs;
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -30,73 +30,79 @@ import java.util.Map;
  * Date: 23/01/13
  * Time: 14:59
  */
-public abstract class SickleV11Args implements ProcessArgs, QualityTrimmerArgs {
+public abstract class SickleV11Args implements QualityTrimmerArgs {
 
-    private Integer qualThreshold;
-    private Integer lengthThreshold;
-    private Boolean discardN;
+    private int qualThreshold;
+    private int lengthThreshold;
+    private boolean discardN;
     private SickleV11QualityTypeParameter.SickleQualityTypeOptions qualType;
 
     public SickleV11Args() {
         this.qualThreshold = 20;
         this.lengthThreshold = 20;
         this.discardN = false;
-        this.qualType = null;
+        this.qualType = SickleV11QualityTypeParameter.SickleQualityTypeOptions.SANGER;
     }
 
-    public Integer getQualThreshold() {
+    @Override
+    public int getQualityThreshold() {
         return qualThreshold;
     }
 
-    public Integer getLengthThreshold() {
+    @Override
+    public void setQualityThreshold(int qualityThreshold) {
+        this.qualThreshold = qualityThreshold;
+    }
+
+    @Override
+    public int getMinLength() {
         return lengthThreshold;
+    }
+
+    @Override
+    public void setMinLength(int minLength) {
+        this.lengthThreshold = minLength;
     }
 
     public Boolean isDiscardN() {
         return discardN;
     }
 
-    public void setQualThreshold(Integer qualThreshold) {
-        this.qualThreshold = qualThreshold;
-    }
-
-    public void setLengthThreshold(Integer lengthThreshold) {
-        this.lengthThreshold = lengthThreshold;
-    }
-
     public void setDiscardN(Boolean discardN) {
         this.discardN = discardN;
-    }
-
-    public void setQualType(SickleV11QualityTypeParameter.SickleQualityTypeOptions qualType) {
-        this.qualType = qualType;
     }
 
     public SickleV11QualityTypeParameter.SickleQualityTypeOptions getQualType() {
         return qualType;
     }
 
+    public void setQualType(SickleV11QualityTypeParameter.SickleQualityTypeOptions qualType) {
+        this.qualType = qualType;
+    }
 
     @Override
-    public Map<ConanParameter, String> getParameterValuePairs() {
+    public Map<ConanParameter, String> getArgMap() {
 
         // Can't instantiate a SickleV11Params object because it's abstract, so we'll get
         // what we need from SicklePeV11Params instead.
         SicklePeV11Params params = new SicklePeV11Params();
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
-		if (this.qualThreshold != null)
-			pvp.put(params.getQualityThreshold(), this.qualThreshold.toString());
+		if (this.qualThreshold != 20) {
+            pvp.put(params.getQualityThreshold(), "--" + params.getQualityThreshold().getName() + "=" + String.valueOf(this.qualThreshold));
+        }
 
-		if (this.lengthThreshold != null)
-			pvp.put(params.getLengthThreshold(), this.lengthThreshold.toString());
+		if (this.lengthThreshold != 20) {
+            pvp.put(params.getLengthThreshold(),  "--" + params.getLengthThreshold().getName() + "=" + String.valueOf(this.lengthThreshold));
+        }
 
-		if (this.discardN != null)
-			pvp.put(params.getDiscardN(), this.discardN.toString());
+		if (this.discardN) {
+            pvp.put(params.getDiscardN(), "--" + params.getDiscardN().getName());
+        }
 
 		if (this.qualType != null)
-			pvp.put(params.getQualityType(), this.qualType.toString().toLowerCase());
+			pvp.put(params.getQualityType(), "--" + params.getQualityType() + " " + this.qualType.toString().toLowerCase());
 
         return pvp;
     }

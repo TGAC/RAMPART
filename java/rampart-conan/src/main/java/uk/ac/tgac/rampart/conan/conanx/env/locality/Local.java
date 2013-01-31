@@ -18,10 +18,11 @@
 package uk.ac.tgac.rampart.conan.conanx.env.locality;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.EnvironmentArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
 
-import java.net.ConnectException;
+import java.io.IOException;
 
 /**
  * This environment is used to execute code on the localhost. If the localhost
@@ -34,33 +35,56 @@ import java.net.ConnectException;
 public class Local implements Locality {
 
 
+    /**
+     * No need to establish a connection to the local machine, so this method always returns true.
+     * @return true
+     */
     @Override
     public boolean establishConnection() {
 
-        // Always can connect to a local machine.
         return true;
     }
 
+
+
+    /**
+     * No need to disconnect from the local machine, so this method always returns true.
+     * @return true
+     */
     @Override
     public boolean disconnect() {
 
-        // Always can disconnect from a local machine.
         return true;
     }
 
     @Override
-    public boolean submitCommand(String command, EnvironmentArgs args, Architecture architecture)
-            throws IllegalArgumentException, ProcessExecutionException,
-            InterruptedException, ConnectException {
+    public int executeCommand(String command) throws ProcessExecutionException, InterruptedException {
+        return this.executeCommand(command, null);
+    }
 
-        if (architecture.isGridEngine()) {
-            // Been asked to run locally on a grid engine.
-            // Do something? maybe some validation?
+    @Override
+    public int executeCommand(String command, Scheduler scheduler)
+            throws ProcessExecutionException, InterruptedException {
+
+        if (scheduler == null) {
+            // Run direct
+            return -1;
         }
+        else {
+            return scheduler.executeCommand(command);
+        }
+    }
 
-        architecture.submitCommand(command, args);
+    @Override
+    public void dispatchCommand(String command, Scheduler scheduler)
+            throws ProcessExecutionException, InterruptedException {
 
-        return true;
+
+    }
+
+    @Override
+    public int waitFor(WaitCondition waitCondition, Scheduler architecture) throws ProcessExecutionException, InterruptedException {
+        return 0;
     }
 
 }

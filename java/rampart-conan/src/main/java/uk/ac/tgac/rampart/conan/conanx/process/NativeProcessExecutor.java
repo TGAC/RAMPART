@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.conan.conanx.process;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -30,7 +31,7 @@ import java.io.IOException;
 public interface NativeProcessExecutor {
 
     /**
-     * Creates a native system process from the given command.  Current process will wait until until process is completed.
+     * Creates a native system process from the given command.  Current process will wait until the executed command has completed.
      * After execution the result is an array of strings, where each element represents one line of stdout or stderr for
      * the executed native process.
      * @param command the command to execute
@@ -39,7 +40,8 @@ public interface NativeProcessExecutor {
      *                                   output and the process exit code.
      * @throws java.io.IOException  if the stdout or stderr of the process could not be read
      */
-    public String[] execute(String command) throws CommandExecutionException, IOException;
+    String[] execute(String command) throws CommandExecutionException, IOException;
+
 
     /**
      * Creates a native system process from the given command.  Current process will continue after dispatching command.
@@ -50,7 +52,7 @@ public interface NativeProcessExecutor {
      *                                   output and the process exit code.
      * @throws java.io.IOException  if the stdout or stderr of the process could not be read
      */
-    public int dispatch(String command) throws CommandExecutionException, IOException;
+    int dispatch(String command) throws CommandExecutionException, IOException, ProcessExecutionException;
 
 
     /**
@@ -59,9 +61,11 @@ public interface NativeProcessExecutor {
      * value inside a ProcessExecutionException and provide a generic error message, if the exit code is non-zero.  If
      * an exit code of zero is passed, this method should return null.
      *
-     * @param exitValue the exit value returned from the LSF process upon completion
+     * @param exitValue the exit value returned from the process upon completion
      * @return a ProcessExecutionException that minimally wraps the exit value of the process, and possibly provides
      *         further informative error messages if the exit value is non-zero, otherwise null
      */
-    public ProcessExecutionException interpretExitValue(int exitValue);
+    ProcessExecutionException interpretExitValue(int exitValue);
+
+
 }

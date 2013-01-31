@@ -201,16 +201,16 @@ public class RampartJobServiceImpl implements RampartJobService {
 		for (Library l : libs) {
 			
 			stopWatch.start(l.getName() + " : " + l.getFilePaired1().getFile().getName());
-			this.sequenceStatisticsService.analyse(l.getFilePaired1());
+			this.sequenceStatisticsService.analyseReads(l.getFilePaired1());
 			stopWatch.stop();
 			
 			stopWatch.start(l.getName() + " : " + l.getFilePaired2().getFile().getName());
-			this.sequenceStatisticsService.analyse(l.getFilePaired2());
+			this.sequenceStatisticsService.analyseReads(l.getFilePaired2());
 			stopWatch.stop();
 			
 			if (l.getSeFile() != null && !l.getSeFile().getFilePath().isEmpty()) {
 				stopWatch.start(l.getName() + " : " + l.getSeFile().getFile().getName());
-				this.sequenceStatisticsService.analyse(l.getSeFile());
+				this.sequenceStatisticsService.analyseReads(l.getSeFile());
 				stopWatch.stop();
 			}
 		}

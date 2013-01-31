@@ -33,7 +33,7 @@ public class Configure {
 		
 		final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
 		
-		final File loggingPropsFile = new File(rampartSettingsDir + "logging.properties");
+		final File loggingPropsFile = new File(rampartSettingsDir + "log4j.properties");
 
 		if (loggingPropsFile.exists()) {
 			Properties loggingProps = new Properties();

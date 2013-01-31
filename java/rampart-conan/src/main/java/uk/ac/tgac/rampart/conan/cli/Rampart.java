@@ -79,7 +79,7 @@ public class Rampart {
 		
 		AbyssV134ProcessLSF abyssProcess = new AbyssV134ProcessLSF();
 		
-		abyssProcess.execute(abyssArgs.getParameterValuePairs());*/
+		abyssProcess.execute(abyssArgs.getArgMap());*/
 
 		/*List<ConanProcess> rampartProcesses = new ArrayList<ConanProcess>();
 		rampartProcesses.add(abyssProcess);
@@ -94,7 +94,7 @@ public class Rampart {
 		
 		// Create task
 		
-		/*Map<ConanParameter, String> rampartPipelineParameters = abyssParams.getParameterValuePairs();
+		/*Map<ConanParameter, String> rampartPipelineParameters = abyssParams.getArgMap();
 		
 		ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
 		ConanTask<DefaultConanPipeline> rampartTask = conanTaskFactory.createTask(

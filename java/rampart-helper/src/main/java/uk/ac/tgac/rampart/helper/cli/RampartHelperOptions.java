@@ -105,13 +105,13 @@ public class RampartHelperOptions {
 
 		// Boolean options
 		Option opt_persist = new Option("pst", OPT_PERSIST, false, "Outputs job data to database");
-		Option opt_report = new Option("r", OPT_REPORT, false, "Creates a report from job data");
+		Option opt_report = new Option("scripts.r", OPT_REPORT, false, "Creates a report from job data");
 		Option opt_verbose = new Option("v", OPT_VERBOSE, false, "Output extra information while running.");
 		Option opt_help = new Option("?", OPT_HELP, false, "Print this message.");
 
 		// Options with arguments		
 		Option opt_job_dir = OptionBuilder.withArgName("file").withLongOpt(OPT_JOB_DIR).hasArg()
-				.withDescription("The job directory to analyse.").create("j");
+				.withDescription("The job directory to analyseReads.").create("j");
 		
 		Option opt_project_dir = OptionBuilder.withArgName("file").withLongOpt(OPT_PROJECT_DIR).hasArg()
 				.withDescription("The rampart project directory.").create("prj");

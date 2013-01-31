@@ -29,12 +29,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.conan.tool.external.degap.DegapperArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 public class GapCloserV112Args implements DegapperArgs {
 
-	// GapCloser vars
+    private GapCloserV112Params params = new GapCloserV112Params();
+
+    // GapCloser vars
 	private File inputScaffoldFile;
 	private File libraryFile;
 	private File outputScaffoldFile;
@@ -152,11 +155,9 @@ public class GapCloserV112Args implements DegapperArgs {
 	
 
 	@Override
-	public Map<ConanParameter, String> getParameterValuePairs() {
+	public Map<ConanParameter, String> getArgMap() {
 		
-		GapCloserV112Params params = new GapCloserV112Params();
-
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
 		if (this.inputScaffoldFile != null)
 			pvp.put(params.getInputScaffoldFile(), this.inputScaffoldFile.getPath());
@@ -178,5 +179,39 @@ public class GapCloserV112Args implements DegapperArgs {
 
         return pvp;
 	}
-	
+
+    @Override
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+        for(Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            };
+
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getInputScaffoldFile().getName())) {
+                this.inputScaffoldFile = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getLibraryFile().getName())) {
+                this.libraryFile = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getOutputFile().getName())) {
+                this.outputScaffoldFile = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getMaxReadLength().getName())) {
+                this.maxReadLength = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getOverlap().getName())) {
+                this.overlap = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getThreads().getName())) {
+                this.threads = Integer.parseInt(entry.getValue());
+            }
+            else {
+                throw new IllegalArgumentException("Unknown parameter found: " + param);
+            }
+        }
+    }
+
 }

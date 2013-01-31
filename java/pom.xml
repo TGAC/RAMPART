@@ -15,7 +15,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java-version>1.6</java-version>
 		<conan-version>2.1-SNAPSHOT</conan-version>
-		<slf4j-version>1.7.2</slf4j-version>
+		<slf4j-version>1.6.1</slf4j-version>
 	</properties>
 
 	<!-- Licensing -->

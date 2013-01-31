@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.conan.tool.external.r;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,14 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmers;
 
 public class RV2122Args implements ProcessArgs {
 
-	private List<String> args;
+    private RV2122Params params = new RV2122Params();
+
+
+    private List<String> args;
 	private File script;
 	private File output;
 	
@@ -53,11 +58,9 @@ public class RV2122Args implements ProcessArgs {
 	}
 	
 	@Override
-	public Map<ConanParameter, String> getParameterValuePairs() {
+	public Map<ConanParameter, String> getArgMap() {
 		
-		RV2122Params params = new RV2122Params();
-
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+		Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 		
 		if (this.args != null) {
 			pvp.put(params.getArgs(), StringUtils.join(this.args, " "));
@@ -73,4 +76,29 @@ public class RV2122Args implements ProcessArgs {
 		
 		return pvp;
 	}
+
+    @Override
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+        for(Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            };
+
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getArgs().getName())) {
+                this.args = Arrays.asList(entry.getValue().split(" "));
+            }
+            else if (param.equals(this.params.getScript().getName())) {
+                this.script = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getOutput().getName())) {
+                this.output = new File(entry.getValue());
+            }
+            else {
+                throw new IllegalArgumentException("Unknown parameter found: " + param);
+            }
+        }
+    }
 }

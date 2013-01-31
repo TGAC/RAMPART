@@ -19,14 +19,18 @@ package uk.ac.tgac.rampart.conan.tool.external.qt.sickle;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.tool.external.asm.Assemblers;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 public class SickleSeV11Args extends SickleV11Args {
 
-	private File inputFile;
+
+    private SickleSeV11Params params = new SickleSeV11Params();
+
+
+    private File inputFile;
 	private File outputFile;
 
 
@@ -35,30 +39,88 @@ public class SickleSeV11Args extends SickleV11Args {
 		this.outputFile = null;
 	}
 
-    public File getInputFile() {
+    @Override
+    public boolean isSingleEndArgs() {
+        return true;
+    }
+
+    @Override
+    public FilePair getPairedEndInputFiles() {
+        return null;
+    }
+
+    @Override
+    public void setPairedEndInputFiles(FilePair pairedEndInputFiles) {
+    }
+
+    @Override
+    public FilePair getPairedEndOutputFiles() {
+        return null;
+    }
+
+    @Override
+    public void setPairedEndOutputFiles(FilePair pairedEndOutputFiles) {
+    }
+
+    @Override
+    public File getSingleEndInputFile() {
         return inputFile;
     }
 
-    public File getOutputFile() {
+    @Override
+    public void setSingleEndInputFile(File singleEndInputFile) {
+        this.inputFile = singleEndInputFile;
+    }
+
+    @Override
+    public File getSingleEndOutputFile() {
         return outputFile;
     }
 
     @Override
-	public Map<ConanParameter, String> getParameterValuePairs() {
+    public void setSingleEndOutputFile(File singleEndOutputFile) {
+        this.outputFile = singleEndOutputFile;
+    }
 
-        Map<ConanParameter, String> pvp = super.getParameterValuePairs();
 
-        SicklePeV11Params params = new SicklePeV11Params();
+    @Override
+	public Map<ConanParameter, String> getArgMap() {
+
+        Map<ConanParameter, String> pvp = super.getArgMap();
 
         if (this.inputFile != null) {
-			pvp.put(params.getPeFile1(), this.inputFile.getPath());
+			pvp.put(params.getSeFile(), this.inputFile.getPath());
 		}
 		
 		if (this.outputFile != null) {
-			pvp.put(params.getOutputPe1(), this.outputFile.getPath());
+			pvp.put(params.getOutputFile(), this.outputFile.getPath());
 		}
 
 		return pvp;
 	}
-	
+
+    @Override
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+
+        for(Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            };
+
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getSeFile().getName())) {
+                this.inputFile = new File(entry.getValue());
+            }
+            else if (param.equals(this.params.getOutputFile().getName())) {
+                this.outputFile = new File(entry.getValue());
+            }
+            else {
+                throw new IllegalArgumentException("Unknown parameter found: " + param);
+            }
+
+        }
+    }
+
 }

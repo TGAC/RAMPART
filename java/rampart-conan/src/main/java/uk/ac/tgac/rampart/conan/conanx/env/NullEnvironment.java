@@ -22,9 +22,9 @@ import java.net.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.arch.Architecture;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
 
 /**
@@ -40,8 +40,8 @@ public class NullEnvironment implements Environment {
 	Logger log = LoggerFactory.getLogger(NullEnvironment.class);
 	
     @Override
-    public void submitCommand(String command) throws IllegalArgumentException,
-            ProcessExecutionException, InterruptedException, ConnectException {
+    public void execute(String command) throws IllegalArgumentException,
+            ProcessExecutionException, InterruptedException {
 
         // Do not execute anything... just log the request.
         log.info("Command will not be executed on a Null Environment: {0}.", command);
@@ -53,25 +53,19 @@ public class NullEnvironment implements Environment {
     }
 
     @Override
-	public void setup(Locality locality, Architecture architecture, EnvironmentArgs args) {
-		
-		// Do not execute anything... just log the request. 
-		log.info("Setup Null Environment");
-	}
-
-    @Override
     public Locality getLocality() {
         return null;
     }
 
     @Override
-    public Architecture getArchitecture() {
-        return null;
+    public boolean usingScheduler() {
+        return false;
     }
 
     @Override
-    public EnvironmentArgs getEnvironmentArgs() {
+    public Scheduler getScheduler() {
         return null;
     }
+
 
 }

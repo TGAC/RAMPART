@@ -17,10 +17,17 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.qt;
 
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
+
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:48
  */
-public interface QualityTrimmer {
+public interface QualityTrimmer extends ExtendedConanProcess {
+
+    QualityTrimmerArgs getArgs();
+
+    void qualityTrim() throws InterruptedException, ProcessExecutionException;
 }
