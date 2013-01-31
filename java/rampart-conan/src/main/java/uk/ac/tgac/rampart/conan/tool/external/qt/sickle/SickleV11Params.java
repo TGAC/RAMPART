@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.external.qt.sickle;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.FlagParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.NumericParameter;
-import uk.ac.tgac.rampart.conan.tool.ToolParams;
+import uk.ac.tgac.rampart.conan.conanx.parameter.ToolParams;
 
 import java.util.Arrays;
 import java.util.HashSet;

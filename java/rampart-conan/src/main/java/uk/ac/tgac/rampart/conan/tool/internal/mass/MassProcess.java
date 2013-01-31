@@ -29,7 +29,7 @@ import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
-import uk.ac.tgac.rampart.conan.tool.internal.PerlHelper;
+import uk.ac.tgac.rampart.conan.tool.internal.util.PerlHelper;
 import uk.ac.tgac.rampart.conan.tool.internal.RampartProcess;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 

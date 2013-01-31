@@ -15,31 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal;
+package uk.ac.tgac.rampart.conan.tool.external.degap;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.net.URL;
+import uk.ac.tgac.rampart.conan.tool.external.degap.gapcloser.GapCloserV112Process;
 
 /**
  * User: maplesod
- * Date: 07/01/13
- * Time: 15:36
+ * Date: 31/01/13
+ * Time: 14:03
  */
-public enum PerlHelper {
+public enum DegapperFactory {
 
-    MASS_GP {
+    SOAP_GAPCLOSER_V1_12 {
         @Override
-        public String getPath() {
-            return "/scripts/perl/mass_gp.pl";
+        public Degapper create() {
+            return new GapCloserV112Process();
         }
     };
 
-    public File getScript() {
-        URL scriptUrl = this.getClass().getResource(this.getPath());
-        return FileUtils.toFile(scriptUrl);
+
+    public abstract Degapper create();
+
+    public static Degapper createDegapper() {
+         return SOAP_GAPCLOSER_V1_12.create();
     }
 
-    public abstract String getPath();
+    public static Degapper createDegapper(String name) {
+         return DegapperFactory.valueOf(name).create();
+    }
 }

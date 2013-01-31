@@ -29,7 +29,7 @@ import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.external.r.RV2122Args;
 import uk.ac.tgac.rampart.conan.tool.external.r.RV2122Process;
-import uk.ac.tgac.rampart.conan.tool.internal.RHelper;
+import uk.ac.tgac.rampart.conan.tool.internal.util.RHelper;
 import uk.ac.tgac.rampart.conan.tool.internal.RampartProcess;
 import uk.ac.tgac.rampart.conan.tool.internal.Stage;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;

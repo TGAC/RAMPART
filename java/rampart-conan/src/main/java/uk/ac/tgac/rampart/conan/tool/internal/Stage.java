@@ -59,6 +59,17 @@ public enum Stage {
             }
         }
     },
+    BEST {
+        @Override
+        public String getStatsID() {
+            return null;
+        }
+
+        @Override
+        public String translateFilenameToKey(String filename) {
+            return null;
+        }
+    },
     IMPROVER {
         @Override
         public String getStatsID() {
@@ -69,7 +80,7 @@ public enum Stage {
         public String translateFilenameToKey(String filename) {
             Pattern pattern = Pattern.compile("\\d+");
             Matcher matcher = pattern.matcher(filename);
-            String key = matcher.group(0);
+            String key = matcher.group(1);
 
             return key;
         }

@@ -21,7 +21,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.DefaultConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.NumericParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
-import uk.ac.tgac.rampart.conan.tool.ToolParams;
+import uk.ac.tgac.rampart.conan.conanx.parameter.ToolParams;
 
 import java.util.Arrays;
 import java.util.HashSet;

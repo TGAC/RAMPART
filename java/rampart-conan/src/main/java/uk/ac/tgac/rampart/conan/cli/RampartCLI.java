@@ -30,9 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class Rampart {
+public class RampartCLI {
 
-	private static Logger log = Logger.getLogger(Rampart.class);
+	private static Logger log = Logger.getLogger(RampartCLI.class);
 
 	@Autowired
 	private ApplicationContext context;
@@ -40,17 +40,17 @@ public class Rampart {
 	
 	private RampartOptions options;
 
-	public Rampart(RampartOptions options) {
+	public RampartCLI(RampartOptions options) {
 		this.options = options;
 	}
 
 	public void process() throws Exception {
 		
-		// Load all Rampart load tool commands.  
+		// Load all RampartCLI load tool commands.
 		/*ToolCommandLoader.getInstance().loadPropertiesFile("load_tool_commands.properties");*/
 		
 		// Tell conan about the properties file
-		/*File conanPropertiesFile = new File(Rampart.class.getResource("conan.properties").toURI());
+		/*File conanPropertiesFile = new File(RampartCLI.class.getResource("conan.properties").toURI());
 		ConanProperties.getConanProperties().setPropertiesFile(conanPropertiesFile);*/
 		
 		
@@ -115,7 +115,7 @@ public class Rampart {
 		
 				// Parse the actual arguments
 		CommandLineParser parser = new PosixParser();
-		Rampart rampart = null;
+		RampartCLI rampart = null;
 		try {
 			// parse the command line arguments
 			CommandLine line = parser.parse(options, args);
@@ -128,7 +128,7 @@ public class Rampart {
 			}
 			
 			// Create RAMPART object
-			rampart = new Rampart(rampartOptions);
+			rampart = new RampartCLI(rampartOptions);
 			
 			Configure.configureProperties();
 			

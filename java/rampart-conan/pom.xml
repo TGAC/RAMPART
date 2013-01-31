@@ -28,7 +28,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>uk.ac.tgac.rampart.conan.cli.Rampart</mainClass>
+							<mainClass>uk.ac.tgac.rampart.conan.cli.RampartCLI</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

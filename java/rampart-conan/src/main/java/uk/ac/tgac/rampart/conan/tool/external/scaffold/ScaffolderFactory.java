@@ -15,22 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.external.asm;
+package uk.ac.tgac.rampart.conan.tool.external.scaffold;
 
-import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Process;
+import uk.ac.tgac.rampart.conan.tool.external.degap.Degapper;
+import uk.ac.tgac.rampart.conan.tool.external.degap.gapcloser.GapCloserV112Process;
+import uk.ac.tgac.rampart.conan.tool.external.scaffold.sspace.SSpaceBasicV2Process;
 
 /**
  * User: maplesod
- * Date: 30/01/13
- * Time: 18:49
+ * Date: 31/01/13
+ * Time: 14:03
  */
-public enum Assemblers {
-    ABYSS {
+public enum ScaffolderFactory {
+
+    SSPACE_BASIC_V2 {
         @Override
-        public Assembler create() {
-            return new AbyssV134Process();
+        public Scaffolder create() {
+            return new SSpaceBasicV2Process();
         }
     };
 
-    public abstract Assembler create();
+
+    public abstract Scaffolder create();
+
+    public static Scaffolder createDegapper() {
+         return SSPACE_BASIC_V2.create();
+    }
+
+    public static Scaffolder createDegapper(String name) {
+         return ScaffolderFactory.valueOf(name.toUpperCase()).create();
+    }
 }

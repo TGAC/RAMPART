@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 @Entity
-@DiscriminatorValue("improver")
+@DiscriminatorValue("amp")
 public class ImproverStats extends AssemblyStats implements Comparable<ImproverStats>, Serializable {
 	
 	private static final long serialVersionUID = 3838911367218298049L;

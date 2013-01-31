@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal;
+package uk.ac.tgac.rampart.conan.tool.internal.util;
 
 import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;

@@ -17,12 +17,10 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.scaffold;
 
-import uk.ac.tgac.rampart.conan.tool.internal.improver.ImproverTask;
-
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:48
  */
-public interface Scaffolder extends ImproverTask {
+public interface Scaffolder {
 }

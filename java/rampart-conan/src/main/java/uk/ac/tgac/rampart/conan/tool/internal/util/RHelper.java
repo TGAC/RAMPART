@@ -15,14 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal.improver;
+package uk.ac.tgac.rampart.conan.tool.internal.util;
+
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.net.URL;
 
 /**
  * User: maplesod
- * Date: 23/01/13
- * Time: 14:14
+ * Date: 30/01/13
+ * Time: 17:25
  */
-public interface ImproverTask {
+public enum RHelper {
 
+    STATS_PLOTTER {
 
+        @Override
+        public String getPath() {
+            return "/scripts/r/stats_plotter.R";
+        }
+    };
+
+    public File getScript() {
+        URL scriptUrl = this.getClass().getResource(this.getPath());
+        return FileUtils.toFile(scriptUrl);
+    }
+
+    public abstract String getPath();
 }

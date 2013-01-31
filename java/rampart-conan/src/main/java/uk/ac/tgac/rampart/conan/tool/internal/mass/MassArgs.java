@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.internal.mass;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;
-import uk.ac.tgac.rampart.conan.tool.external.asm.Assemblers;
+import uk.ac.tgac.rampart.conan.tool.external.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
@@ -221,7 +221,7 @@ public class MassArgs implements ProcessArgs {
             String param = entry.getKey().getName();
 
             if (param.equals(this.params.getAssembler().getName())) {
-                this.assembler = Assemblers.valueOf(entry.getValue()).create();
+                this.assembler = AssemblerFactory.valueOf(entry.getValue()).create();
             }
             else if (param.equals(this.params.getKmin().getName())) {
                 this.kmin = Integer.parseInt(entry.getValue());

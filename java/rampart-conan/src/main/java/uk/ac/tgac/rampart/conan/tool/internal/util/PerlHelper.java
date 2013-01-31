@@ -15,20 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal.improver;
+package uk.ac.tgac.rampart.conan.tool.internal.util;
 
-import java.util.List;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.net.URL;
 
 /**
- * Created with IntelliJ IDEA.
  * User: maplesod
  * Date: 07/01/13
- * Time: 10:55
- * To change this template use File | Settings | File Templates.
+ * Time: 15:36
  */
-public class Improver {
+public enum PerlHelper {
 
-    private List<ImproverTask> taskList;
+    MASS_GP {
+        @Override
+        public String getPath() {
+            return "/scripts/perl/mass_gp.pl";
+        }
+    };
 
+    public File getScript() {
+        URL scriptUrl = this.getClass().getResource(this.getPath());
+        return FileUtils.toFile(scriptUrl);
+    }
 
+    public abstract String getPath();
 }

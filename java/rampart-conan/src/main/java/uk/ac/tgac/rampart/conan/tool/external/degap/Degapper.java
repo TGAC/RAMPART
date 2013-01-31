@@ -17,12 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.degap;
 
-import uk.ac.tgac.rampart.conan.tool.internal.improver.ImproverTask;
-
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:47
  */
-public interface Degapper extends ImproverTask {
+public interface Degapper {
+
 }

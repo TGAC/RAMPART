@@ -64,7 +64,7 @@ public class RampartJobFileStructure {
 		this.readsDir = new File(jobDir.getPath() + "/reads");
 		this.massDir = new File(jobDir.getPath() + "/mass");
 		this.massStatsDir = new File(massDir.getPath() + "/stats");
-		this.improverDir = new File(jobDir.getPath() + "/improver");
+		this.improverDir = new File(jobDir.getPath() + "/amp");
 		this.improverAssembliesDir = new File(improverDir.getPath() + "/assemblies");
 		this.reportDir = new File(jobDir.getPath() + "/report");
 		this.reportImagesDir = new File(reportDir.getPath() + "/images");
@@ -79,7 +79,7 @@ public class RampartJobFileStructure {
 		this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
 		this.improverPlotsFile = new File(this.improverAssembliesDir.getPath() + "/stats.pdf");
 		this.improverStatsFile = new File(this.improverAssembliesDir.getPath() + "/stats.txt");
-		this.improverLogFile = new File(this.improverDir.getPath() + "/improver.log");
+		this.improverLogFile = new File(this.improverDir.getPath() + "/amp.log");
 		this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
 		this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");
 		this.settingsFile = new File(jobDir.getPath() + "/rampart_settings.log");

@@ -21,7 +21,7 @@ import java.net.URISyntaxException;
 
 import org.junit.Test;
 
-import uk.ac.tgac.rampart.conan.cli.Rampart;
+import uk.ac.tgac.rampart.conan.cli.RampartCLI;
 
 
 public class RampartTest {
@@ -29,10 +29,10 @@ public class RampartTest {
 	@Test
 	public void test() throws URISyntaxException {
 		
-		Rampart.main(new String[] {
-			"--config",
-			"rampart.cfg"
-		});
+		RampartCLI.main(new String[]{
+                "--config",
+                "rampart.cfg"
+        });
 		
 	}
 

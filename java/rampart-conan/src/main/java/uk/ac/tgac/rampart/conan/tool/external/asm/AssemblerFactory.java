@@ -15,14 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.internal.improver;
+package uk.ac.tgac.rampart.conan.tool.external.asm;
+
+import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Process;
 
 /**
- * Created with IntelliJ IDEA.
  * User: maplesod
- * Date: 07/01/13
- * Time: 10:56
- * To change this template use File | Settings | File Templates.
+ * Date: 30/01/13
+ * Time: 18:49
  */
-public class Deduplicator implements ImproverTask {
+public enum AssemblerFactory {
+    ABYSS {
+        @Override
+        public Assembler create() {
+            return new AbyssV134Process();
+        }
+    };
+
+    public abstract Assembler create();
 }

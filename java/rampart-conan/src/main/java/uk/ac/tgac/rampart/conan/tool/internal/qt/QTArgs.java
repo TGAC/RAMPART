@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.internal.qt;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmer;
-import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmers;
+import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmerFactory;
 import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SicklePeV11Args;
 import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleV11Process;
 
@@ -72,7 +72,7 @@ public class QTArgs implements ProcessArgs {
             String param = entry.getKey().getName();
 
             if (param.equals(this.params.getQualityTrimmer().getName())) {
-                this.qualityTrimmer = QualityTrimmers.valueOf(entry.getValue()).create();
+                this.qualityTrimmer = QualityTrimmerFactory.valueOf(entry.getValue()).create();
             }
             else {
                 throw new IllegalArgumentException("Unknown parameter found: " + param);

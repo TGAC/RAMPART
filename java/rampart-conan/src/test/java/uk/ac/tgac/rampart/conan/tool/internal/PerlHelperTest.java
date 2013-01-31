@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.conan.tool.internal;
 
 import org.junit.Test;
+import uk.ac.tgac.rampart.conan.tool.internal.util.PerlHelper;
 
 import java.io.File;
 

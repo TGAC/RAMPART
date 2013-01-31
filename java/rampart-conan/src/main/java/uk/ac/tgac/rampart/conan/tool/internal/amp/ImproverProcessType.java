@@ -15,31 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.external.qt;
+package uk.ac.tgac.rampart.conan.tool.internal.amp;
 
-import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SicklePeV11Args;
-import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleSeV11Args;
-import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleV11Process;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.tgac.rampart.conan.tool.external.degap.Degapper;
 
 /**
  * User: maplesod
- * Date: 30/01/13
- * Time: 18:42
+ * Date: 31/01/13
+ * Time: 13:48
  */
-public enum QualityTrimmers {
+public enum ImproverProcessType {
 
-    SICKLE_SE {
+    CLIP {
         @Override
-        public QualityTrimmer create() {
-            return new SickleV11Process(SickleV11Process.JobType.SINGLE_END, new SickleSeV11Args());
+        public ConanProcess create() {
+            return new Clipper();
         }
     },
-    SICKLE_PE {
+    DEDUPLICATE {
         @Override
-        public QualityTrimmer create() {
-            return new SickleV11Process(SickleV11Process.JobType.PAIRED_END, new SicklePeV11Args());
+        public ConanProcess create() {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+    },
+    DEGAP {
+        @Override
+        public ConanProcess create() {
+            return null;
+        }
+    },
+    SCAFFOLD {
+        @Override
+        public ConanProcess create() {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     };
 
-    public abstract QualityTrimmer create();
+    public abstract ConanProcess create();
 }

@@ -147,7 +147,7 @@ public class AssemblyStatsDaoImplTest {
 	public void testPersistIS() {
 		
 		ImproverStats is = new ImproverStats();
-		is.setFilePath("/test/improver.fa");
+		is.setFilePath("/test/amp.fa");
 		is.setNbContigs(100L);
 		is.setNbBases(100000L);
 		is.setaPerc(20.0);
