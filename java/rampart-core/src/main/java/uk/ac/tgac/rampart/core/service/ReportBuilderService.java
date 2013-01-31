@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.core.service;
 
-import java.io.File;
-
 import org.apache.velocity.VelocityContext;
+
+import java.io.File;
 
 public interface ReportBuilderService {
 	

@@ -17,16 +17,14 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env.locality;
 
-import java.io.*;
-
 import com.jcraft.jsch.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
+
+import java.io.*;
 
 public class Remote implements Locality {
 

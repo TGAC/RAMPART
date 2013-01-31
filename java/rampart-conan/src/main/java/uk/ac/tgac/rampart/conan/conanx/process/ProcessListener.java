@@ -17,8 +17,6 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.process;
 
-import uk.ac.ebi.fgpt.conan.lsf.LSFProcessEvent;
-
 /**
  * An {@link uk.ac.tgac.rampart.conan.conanx.process.ProcessListener} that encapsulates the state of each invocation of a process and updates flags for
  * completion and success.  Processes using this listener implementation can block on {@link #waitFor()}, which only

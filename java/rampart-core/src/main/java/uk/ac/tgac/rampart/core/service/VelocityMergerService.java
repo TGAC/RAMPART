@@ -17,10 +17,10 @@
  **/
 package uk.ac.tgac.rampart.core.service;
 
+import org.apache.velocity.VelocityContext;
+
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.velocity.VelocityContext;
 
 public interface VelocityMergerService {
 

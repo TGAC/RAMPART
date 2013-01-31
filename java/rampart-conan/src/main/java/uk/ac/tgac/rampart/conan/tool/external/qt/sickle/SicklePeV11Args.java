@@ -17,11 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.qt.sickle;
 
-import java.io.File;
-import java.util.Map;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
+
+import java.io.File;
+import java.util.Map;
 
 public class SicklePeV11Args extends SickleV11Args {
 

@@ -19,11 +19,9 @@ package uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.AbstractScheduler;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.ExitStatusType;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.AbstractScheduler;
-import uk.ac.tgac.rampart.conan.conanx.process.NativeProcessExecutor;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessAdapter;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 

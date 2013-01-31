@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.conan.tool.external.r;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 
 import java.util.Collection;
 import java.util.Map;

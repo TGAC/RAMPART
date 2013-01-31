@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal.stats;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.conan.tool.internal.Stage;

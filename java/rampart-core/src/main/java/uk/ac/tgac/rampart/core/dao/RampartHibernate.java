@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.core.dao;
 
-import java.util.List;
-
 import org.hibernate.Query;
+
+import java.util.List;
 
 public class RampartHibernate {
 

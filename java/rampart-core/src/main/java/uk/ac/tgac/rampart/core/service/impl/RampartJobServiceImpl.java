@@ -17,39 +17,28 @@
  **/
 package uk.ac.tgac.rampart.core.service.impl;
 
+import au.com.bytecode.opencsv.CSVReader;
+import com.itextpdf.text.DocumentException;
+import org.apache.velocity.VelocityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
+import uk.ac.tgac.rampart.core.dao.AssemblyStatsDao;
+import uk.ac.tgac.rampart.core.dao.JobDao;
+import uk.ac.tgac.rampart.core.data.*;
+import uk.ac.tgac.rampart.core.service.PdfOperationsService;
+import uk.ac.tgac.rampart.core.service.RampartJobService;
+import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.velocity.VelocityContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StopWatch;
-
-import uk.ac.tgac.rampart.core.dao.AssemblyStatsDao;
-import uk.ac.tgac.rampart.core.dao.JobDao;
-import uk.ac.tgac.rampart.core.data.AssemblyStats;
-import uk.ac.tgac.rampart.core.data.ImproverStats;
-import uk.ac.tgac.rampart.core.data.Job;
-import uk.ac.tgac.rampart.core.data.Library;
-import uk.ac.tgac.rampart.core.data.MassStats;
-import uk.ac.tgac.rampart.core.data.PlotFileStructure;
-import uk.ac.tgac.rampart.core.data.RampartConfiguration;
-import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
-import uk.ac.tgac.rampart.core.data.RampartProjectFileStructure;
-import uk.ac.tgac.rampart.core.data.RampartSettings;
-import uk.ac.tgac.rampart.core.service.PdfOperationsService;
-import uk.ac.tgac.rampart.core.service.RampartJobService;
-import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
-import au.com.bytecode.opencsv.CSVReader;
-
-import com.itextpdf.text.DocumentException;
 
 @Service
 public class RampartJobServiceImpl implements RampartJobService {

@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal;
 
-import com.jcraft.jsch.JSchException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;

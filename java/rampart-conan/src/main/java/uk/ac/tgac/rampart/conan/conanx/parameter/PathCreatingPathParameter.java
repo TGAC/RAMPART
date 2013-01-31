@@ -17,10 +17,10 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.parameter;
 
+import org.springframework.util.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
-
-import org.springframework.util.StringUtils;
 
 /**
  * @author Dan Mapleson

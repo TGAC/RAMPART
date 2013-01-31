@@ -19,8 +19,6 @@ package uk.ac.tgac.rampart.conan.conanx.process;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.fgpt.conan.lsf.LSFProcessEvent;
-import uk.ac.ebi.fgpt.conan.lsf.LSFProcessListener;
 
 import java.io.File;
 import java.io.FileReader;

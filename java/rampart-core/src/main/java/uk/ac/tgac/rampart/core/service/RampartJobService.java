@@ -17,21 +17,13 @@
  **/
 package uk.ac.tgac.rampart.core.service;
 
+import com.itextpdf.text.DocumentException;
+import org.apache.velocity.VelocityContext;
+import uk.ac.tgac.rampart.core.data.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
-import org.apache.velocity.VelocityContext;
-
-import uk.ac.tgac.rampart.core.data.AssemblyStats;
-import uk.ac.tgac.rampart.core.data.ImproverStats;
-import uk.ac.tgac.rampart.core.data.Library;
-import uk.ac.tgac.rampart.core.data.MassStats;
-import uk.ac.tgac.rampart.core.data.RampartConfiguration;
-import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
-import uk.ac.tgac.rampart.core.data.RampartSettings;
-
-import com.itextpdf.text.DocumentException;
 
 public interface RampartJobService {
 

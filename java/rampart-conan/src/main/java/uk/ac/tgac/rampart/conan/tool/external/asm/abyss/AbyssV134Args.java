@@ -17,14 +17,13 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.asm.abyss;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.tool.external.asm.AssemblerArgs;
 import uk.ac.tgac.rampart.core.data.Library;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class AbyssV134Args implements AssemblerArgs {
 

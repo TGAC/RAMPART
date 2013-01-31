@@ -1,11 +1,11 @@
 package uk.ac.tgac.rampart.core.data;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
 
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 public class RampartProjectFileStructureTest {
 

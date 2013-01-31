@@ -18,13 +18,9 @@
 package uk.ac.tgac.rampart.conan.conanx.env;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Local;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
-
-import java.io.IOException;
-import java.net.ConnectException;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 
 public class DefaultEnvironment implements Environment {
 

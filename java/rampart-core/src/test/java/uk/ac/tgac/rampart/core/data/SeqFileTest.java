@@ -17,12 +17,12 @@
  **/
 package uk.ac.tgac.rampart.core.data;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 public class SeqFileTest {
 

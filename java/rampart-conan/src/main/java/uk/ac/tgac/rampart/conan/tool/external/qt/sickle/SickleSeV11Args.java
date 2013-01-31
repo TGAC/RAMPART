@@ -19,7 +19,6 @@ package uk.ac.tgac.rampart.conan.tool.external.qt.sickle;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
-import uk.ac.tgac.rampart.conan.tool.external.asm.Assemblers;
 
 import java.io.File;
 import java.util.Map;

@@ -17,21 +17,15 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.degap.gapcloser;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.conan.tool.external.degap.DegapperArgs;
 import uk.ac.tgac.rampart.core.data.Library;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class GapCloserV112Args implements DegapperArgs {
 

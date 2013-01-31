@@ -17,22 +17,17 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal;
 
+import org.apache.commons.lang.StringUtils;
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
+import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
+import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-
-import uk.ac.ebi.fgpt.conan.lsf.AbstractLSFProcess;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
-import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ExtendedConanProcess;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
-import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 
 public class CleanJob extends DefaultExtendedConanProcess {
 

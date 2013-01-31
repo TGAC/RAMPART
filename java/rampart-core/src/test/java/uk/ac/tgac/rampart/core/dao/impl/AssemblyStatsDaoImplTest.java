@@ -17,10 +17,6 @@
  **/
 package uk.ac.tgac.rampart.core.dao.impl;
 
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,11 +27,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
 import uk.ac.tgac.rampart.core.dao.AssemblyStatsDao;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.data.ImproverStats;
 import uk.ac.tgac.rampart.core.data.MassStats;
+
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations={"/applicationContext.xml"})

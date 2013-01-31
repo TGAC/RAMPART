@@ -18,11 +18,7 @@
 package uk.ac.tgac.rampart.conan.conanx.env.scheduler;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessAdapter;
-
-import java.io.IOException;
-import java.net.ConnectException;
 
 
 public interface Scheduler {

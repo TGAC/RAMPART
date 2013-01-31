@@ -17,21 +17,20 @@
  **/
 package uk.ac.tgac.rampart.core.service.impl;
 
-import java.io.File;
-
 import org.apache.commons.io.FileUtils;
+import org.apache.velocity.VelocityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.velocity.VelocityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.core.data.RampartProjectFileStructure;
 import uk.ac.tgac.rampart.core.service.LatexService;
 import uk.ac.tgac.rampart.core.service.RampartJobService;
 import uk.ac.tgac.rampart.core.service.ReportBuilderService;
 import uk.ac.tgac.rampart.core.service.VelocityMergerService;
+
+import java.io.File;
 
 @Service
 public class ReportBuilderServiceImpl implements ReportBuilderService {

@@ -17,15 +17,14 @@
  **/
 package uk.ac.tgac.rampart.core.service.impl;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import uk.ac.ebi.fgpt.conan.utils.ProcessRunner;
 import uk.ac.tgac.rampart.core.service.LatexService;
+
+import java.io.File;
+import java.io.IOException;
 
 
 @Service

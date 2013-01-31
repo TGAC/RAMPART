@@ -17,10 +17,10 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.asm;
 
-import java.util.Set;
-
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
+
+import java.util.Set;
 
 public interface AssemblerArgs extends ProcessArgs {
 

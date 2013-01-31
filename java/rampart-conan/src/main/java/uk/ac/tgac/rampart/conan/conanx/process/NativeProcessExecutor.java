@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.conan.conanx.process;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 
-import java.io.File;
 import java.io.IOException;
 
 /**

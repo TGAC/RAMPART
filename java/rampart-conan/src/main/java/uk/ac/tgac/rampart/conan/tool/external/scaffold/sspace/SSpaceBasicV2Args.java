@@ -17,16 +17,15 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.scaffold.sspace;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.tool.external.scaffold.ScaffolderArgs;
 import uk.ac.tgac.rampart.core.data.Library;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class SSpaceBasicV2Args implements ScaffolderArgs {
 

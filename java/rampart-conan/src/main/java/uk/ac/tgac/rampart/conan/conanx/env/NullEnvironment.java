@@ -17,15 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env;
 
-import java.net.ConnectException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 
 /**
  * This environment will execute all internal aspects of the job but will not

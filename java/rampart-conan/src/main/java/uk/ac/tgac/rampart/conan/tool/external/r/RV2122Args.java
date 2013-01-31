@@ -17,17 +17,15 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.r;
 
+import org.apache.commons.lang.StringUtils;
+import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
-import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmers;
 
 public class RV2122Args implements ProcessArgs {
 

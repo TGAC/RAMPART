@@ -17,18 +17,15 @@
  **/
 package uk.ac.tgac.rampart.core.service.impl;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-
 import org.springframework.stereotype.Service;
-
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.data.SeqFile;
 import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
 import uk.ac.tgac.rampart.core.stats.AssemblyAnalyser;
 import uk.ac.tgac.rampart.core.stats.ReadAnalyser;
+
+import java.io.File;
+import java.io.IOException;
 
 @Service
 public class SequenceStatisticsServiceImpl implements SequenceStatisticsService {

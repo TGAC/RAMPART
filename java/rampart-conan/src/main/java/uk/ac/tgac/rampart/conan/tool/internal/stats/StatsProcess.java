@@ -24,12 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.DefaultEnvironment;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
-
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
-import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.external.r.RV2122Args;
 import uk.ac.tgac.rampart.conan.tool.external.r.RV2122Process;
 import uk.ac.tgac.rampart.conan.tool.internal.RHelper;

@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.process;
 
-import java.util.Map;
-
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+
+import java.util.Map;
 
 public interface ProcessArgs {
 

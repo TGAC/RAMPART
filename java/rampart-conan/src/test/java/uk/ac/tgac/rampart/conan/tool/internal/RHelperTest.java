@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.conan.tool.internal;
 import org.junit.Test;
 
 import java.io.File;
-import java.net.URL;
 
 import static org.junit.Assert.assertTrue;
 

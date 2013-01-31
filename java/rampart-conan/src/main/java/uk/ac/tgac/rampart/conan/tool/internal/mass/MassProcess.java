@@ -26,7 +26,6 @@ import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.ExitStatusType;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.AbstractSchedulerArgs;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
 import uk.ac.tgac.rampart.conan.tool.external.asm.Assembler;

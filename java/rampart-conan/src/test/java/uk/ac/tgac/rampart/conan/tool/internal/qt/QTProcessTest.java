@@ -17,27 +17,16 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal.qt;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.DefaultEnvironment;
-import uk.ac.tgac.rampart.conan.conanx.env.Environment;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf.LSF;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf.LSFArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.ConnectionDetails;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.Remote;
 import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SicklePeV11Args;
 import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleV11Process;
-import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleV11QualityTypeParameter;
 import uk.ac.tgac.rampart.conan.util.PETestLibrary;
 
 import java.io.File;

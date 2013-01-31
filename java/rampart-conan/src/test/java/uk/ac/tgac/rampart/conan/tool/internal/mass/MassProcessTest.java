@@ -17,18 +17,12 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal.mass;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.DefaultEnvironment;
-import uk.ac.tgac.rampart.conan.conanx.env.Environment;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.Remote;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf.LSF;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.lsf.LSFArgs;
-import uk.ac.tgac.rampart.conan.conanx.env.locality.ConnectionDetails;
 import uk.ac.tgac.rampart.conan.tool.external.asm.abyss.AbyssV134Process;
 import uk.ac.tgac.rampart.conan.util.PETestLibrary;
 

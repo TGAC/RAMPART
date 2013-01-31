@@ -17,10 +17,10 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.external.qt;
 
-import java.io.File;
-
 import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+
+import java.io.File;
 
 public interface QualityTrimmerArgs extends ProcessArgs  {
 

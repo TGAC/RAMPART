@@ -18,11 +18,8 @@
 package uk.ac.tgac.rampart.conan.conanx.env.locality;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
-
-import java.io.IOException;
 
 /**
  * This environment is used to execute code on the localhost. If the localhost

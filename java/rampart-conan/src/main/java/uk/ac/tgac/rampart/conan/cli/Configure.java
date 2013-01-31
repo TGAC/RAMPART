@@ -17,15 +17,14 @@
  **/
 package uk.ac.tgac.rampart.conan.cli;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.PropertyConfigurator;
+import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
-
-import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 
 public class Configure {
 

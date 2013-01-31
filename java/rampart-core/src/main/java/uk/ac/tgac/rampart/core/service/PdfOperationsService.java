@@ -17,10 +17,10 @@
  **/
 package uk.ac.tgac.rampart.core.service;
 
+import com.itextpdf.text.DocumentException;
+
 import java.io.File;
 import java.io.IOException;
-
-import com.itextpdf.text.DocumentException;
 
 public interface PdfOperationsService {
 

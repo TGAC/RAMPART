@@ -23,9 +23,7 @@ import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmers;
 import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SicklePeV11Args;
 import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleV11Process;
-import uk.ac.tgac.rampart.conan.tool.internal.Stage;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 

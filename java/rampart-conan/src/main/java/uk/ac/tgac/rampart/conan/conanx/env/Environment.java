@@ -17,13 +17,9 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env;
 
-import java.io.IOException;
-
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.SchedulerArgs;
 import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 
 public interface Environment {
 

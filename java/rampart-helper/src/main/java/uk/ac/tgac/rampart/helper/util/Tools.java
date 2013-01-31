@@ -17,15 +17,15 @@
  **/
 package uk.ac.tgac.rampart.helper.util;
 
-import static org.apache.commons.io.IOUtils.LINE_SEPARATOR;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
+import static org.apache.commons.io.IOUtils.LINE_SEPARATOR;
 
 public class Tools {
 

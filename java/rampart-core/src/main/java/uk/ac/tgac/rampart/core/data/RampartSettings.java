@@ -17,22 +17,12 @@
  **/
 package uk.ac.tgac.rampart.core.data;
 
-import java.io.File;
-import java.io.IOException;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
+
+import javax.persistence.*;
+import java.io.File;
+import java.io.IOException;
 
 @Entity
 @Table(schema="rampart",name="settings")

@@ -17,20 +17,19 @@
  **/
 package uk.ac.tgac.rampart.core.service.impl;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import uk.ac.tgac.rampart.core.service.VelocityMergerService;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Properties;
-
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.springframework.stereotype.Service;
-
-import uk.ac.tgac.rampart.core.service.VelocityMergerService;
 
 @Service
 public class VelocityMergerServiceImpl implements VelocityMergerService {

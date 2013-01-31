@@ -19,9 +19,7 @@ package uk.ac.tgac.rampart.conan.tool.external.qt.sickle;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmerArgs;
-import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

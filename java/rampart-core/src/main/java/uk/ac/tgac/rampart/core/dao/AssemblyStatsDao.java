@@ -17,11 +17,11 @@
  **/
 package uk.ac.tgac.rampart.core.dao;
 
-import java.util.List;
-
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.data.ImproverStats;
 import uk.ac.tgac.rampart.core.data.MassStats;
+
+import java.util.List;
 
 public interface AssemblyStatsDao {
 

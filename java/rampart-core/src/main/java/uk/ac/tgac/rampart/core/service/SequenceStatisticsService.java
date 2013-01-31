@@ -17,11 +17,11 @@
  **/
 package uk.ac.tgac.rampart.core.service;
 
-import java.io.File;
-import java.io.IOException;
-
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.data.SeqFile;
+
+import java.io.File;
+import java.io.IOException;
 
 public interface SequenceStatisticsService {
 

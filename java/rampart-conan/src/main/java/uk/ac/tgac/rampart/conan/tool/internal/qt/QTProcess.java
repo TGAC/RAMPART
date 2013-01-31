@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.internal.qt;
 
-import com.jcraft.jsch.JSchException;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -25,14 +24,9 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.Environment;
 import uk.ac.tgac.rampart.conan.service.ProcessExecutionService;
 import uk.ac.tgac.rampart.conan.service.impl.DefaultProcessExecutionService;
-import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmer;
-import uk.ac.tgac.rampart.conan.tool.external.qt.QualityTrimmerArgs;
-import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SicklePeV11Args;
-import uk.ac.tgac.rampart.conan.tool.external.qt.sickle.SickleV11Process;
 import uk.ac.tgac.rampart.conan.tool.internal.RampartProcess;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Map;
 

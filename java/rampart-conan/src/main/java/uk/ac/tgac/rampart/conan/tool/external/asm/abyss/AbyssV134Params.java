@@ -22,7 +22,9 @@ import uk.ac.tgac.rampart.conan.conanx.parameter.DefaultConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.NumericParameter;
 import uk.ac.tgac.rampart.conan.tool.ToolParams;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AbyssV134Params implements ToolParams {
 

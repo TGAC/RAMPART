@@ -18,13 +18,12 @@
 package uk.ac.tgac.rampart.conan.conanx.env.scheduler.pbs;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.conan.conanx.env.scheduler.AbstractScheduler;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.ExitStatusType;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
-import uk.ac.tgac.rampart.conan.conanx.env.scheduler.AbstractScheduler;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessAdapter;
 
 import java.io.File;
-import java.net.ConnectException;
 
 public class PBS extends AbstractScheduler {
 
