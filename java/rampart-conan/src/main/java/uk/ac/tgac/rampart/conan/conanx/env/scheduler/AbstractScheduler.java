@@ -67,21 +67,20 @@ public abstract class AbstractScheduler implements Scheduler {
     }
 
     @Override
-    public int executeCommand(String command)
+    public String[] executeCommand(String command)
             throws IllegalArgumentException, ProcessExecutionException, InterruptedException {
 
-        int exitValue = -1;
+        String[] output = null;
 
         if (!this.getArgs().isBackgroundTask()) {
-            this.monitoredDispatch(command);
-            exitValue = this.waitFor(this.createProcessAdapter());
+            output = this.monitoredDispatch(command);
+            this.waitFor(this.createProcessAdapter());
         }
         else {
-            this.dispatchCommand(command);
-            exitValue = 0;
+            output = this.dispatchCommand(command);
         }
 
-        return exitValue;
+        return output;
     }
 
 
@@ -92,16 +91,18 @@ public abstract class AbstractScheduler implements Scheduler {
      * @throws ProcessExecutionException
      */
     @Override
-    public void dispatchCommand(String command)
+    public String[] dispatchCommand(String command)
             throws IllegalArgumentException, ProcessExecutionException, InterruptedException {
 
         String schedulerCommand = this.createCommand(command);
+
+        String[] output = null;
 
         // Process dispatch
         boolean dispatched = false;
         try{
             log.debug("Dispatching command: " + schedulerCommand);
-            String[] output = this.nativeProcessExecutor.execute(schedulerCommand);
+            output = this.nativeProcessExecutor.execute(schedulerCommand);
         }
         catch (CommandExecutionException e) {
 
@@ -125,6 +126,8 @@ public abstract class AbstractScheduler implements Scheduler {
             log.debug("IOException follows", e);
             throw new ProcessExecutionException(1, message, e);
         }
+
+        return output;
     }
 
 
@@ -137,10 +140,10 @@ public abstract class AbstractScheduler implements Scheduler {
      * @throws IOException
      * @throws ProcessExecutionException
      */
-    public void monitoredDispatch(String command)
+    public String[] monitoredDispatch(String command)
             throws ProcessExecutionException {
 
-        this.monitoredDispatch(command, this.args.getMonitorFile());
+        return this.monitoredDispatch(command, this.args.getMonitorFile());
     }
 
     /**
@@ -149,15 +152,18 @@ public abstract class AbstractScheduler implements Scheduler {
      * @param command The command to schedule.
      * @param monitorFile The file that will contain the standard output from the scheduled process.  This file will be
      *                    actively monitored in order to ascertain job state and progress.
+     * @return Console output produced from executing the command.
      * @throws ProcessExecutionException
      */
-    public void monitoredDispatch(String command, File monitorFile)
+    public String[] monitoredDispatch(String command, File monitorFile)
             throws ProcessExecutionException {
 
         String schedulerCommand = this.createCommand(command);
 
         // does an existing output file exist? if so, we need to go into recovery mode
         boolean recoveryMode = monitorFile.exists();
+
+        String[] output = null;
 
         // only create our output file if we're not in recovery mode
         if (!recoveryMode) {
@@ -178,7 +184,7 @@ public abstract class AbstractScheduler implements Scheduler {
             // simultaneously
             if (!recoveryMode) {
                 log.debug("Dispatching command: " + schedulerCommand);
-                String[] output = this.nativeProcessExecutor.execute(schedulerCommand);
+                output = this.nativeProcessExecutor.execute(schedulerCommand);
             }
 
             dispatched = true;
@@ -210,6 +216,8 @@ public abstract class AbstractScheduler implements Scheduler {
             log.debug("Deleting " + monitorFile.getAbsolutePath());
             ProcessUtils.deleteFiles(monitorFile);
         }
+
+        return output;
     }
 
     /**
@@ -277,7 +285,7 @@ public abstract class AbstractScheduler implements Scheduler {
     }
 
     @Override
-    public int executeWaitCommand(WaitCondition waitCondition)
+    public String[] executeWaitCommand(WaitCondition waitCondition)
             throws InterruptedException, ProcessExecutionException {
 
         String waitCommand = this.createWaitCommand(waitCondition);

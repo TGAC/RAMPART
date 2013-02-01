@@ -17,9 +17,14 @@
  **/
 package uk.ac.tgac.rampart.conan.conanx.env.locality;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
+import uk.ac.tgac.rampart.conan.conanx.process.NativeProcessExecutor;
+
+import java.io.IOException;
 
 /**
  * This environment is used to execute code on the localhost. If the localhost
@@ -32,6 +37,9 @@ import uk.ac.tgac.rampart.conan.conanx.env.scheduler.WaitCondition;
 public class Local implements Locality {
 
 
+    @Autowired
+    private NativeProcessExecutor nativeProcessExecutor;
+
     /**
      * No need to establish a connection to the local machine, so this method always returns true.
      * @return true
@@ -41,8 +49,6 @@ public class Local implements Locality {
 
         return true;
     }
-
-
 
     /**
      * No need to disconnect from the local machine, so this method always returns true.
@@ -63,13 +69,24 @@ public class Local implements Locality {
     public int executeCommand(String command, Scheduler scheduler)
             throws ProcessExecutionException, InterruptedException {
 
+        String[] output = null;
+
         if (scheduler == null) {
-            // Run direct
-            return -1;
+            try {
+                output = this.nativeProcessExecutor.execute(command);
+            }
+            catch(IOException ioe) {
+                throw new ProcessExecutionException(-1, ioe);
+            }
+            catch(CommandExecutionException cee) {
+                throw new ProcessExecutionException(-1, cee);
+            }
         }
         else {
-            return scheduler.executeCommand(command);
+            output = scheduler.executeCommand(command);
         }
+
+        return output == null ? -1 : 0;
     }
 
     @Override

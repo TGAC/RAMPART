@@ -111,7 +111,7 @@ foreach (@sorted_assemblies) {
 	$i++;
 }
 
-# Need to do some extra sorting here to numerically order by kmer size
+# Need to do some extra sorting here to numberically order by kmer size
 my @s_table = sort {
 	my @name_pair = map { /^(\d+)(\|.*)/; $1 } ( $a, $b );
 	$name_pair[0] <=> $name_pair[1];

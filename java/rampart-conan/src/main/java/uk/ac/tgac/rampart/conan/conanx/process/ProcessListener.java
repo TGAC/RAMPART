@@ -43,7 +43,7 @@ public interface ProcessListener {
 
     /**
      * Called whenever an error occurs in monitoring this process (for example, if the output file being monitored is
-     * deleted by an external process).
+     * deleted by an process process).
      *
      * @param evt an event reporting the change to the file
      */

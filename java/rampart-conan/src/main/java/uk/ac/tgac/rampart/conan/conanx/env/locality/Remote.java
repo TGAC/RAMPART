@@ -112,7 +112,7 @@ public class Remote implements Locality {
 	public int executeCommand(String command, Scheduler scheduler)
             throws ProcessExecutionException, InterruptedException {
 
-        String commandToExecute = scheduler.createCommand(command);
+        String commandToExecute = scheduler != null ? scheduler.createCommand(command) : command;
 
         int exitValue = -1;
 

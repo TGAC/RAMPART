@@ -24,7 +24,7 @@ import uk.ac.tgac.rampart.conan.conanx.env.locality.Locality;
 import uk.ac.tgac.rampart.conan.conanx.env.scheduler.Scheduler;
 
 /**
- * This environment will execute all internal aspects of the job but will not
+ * This environment will execute all module aspects of the job but will not
  * dispatch any command for submission outside the JVM. This is a useful
  * environment for sanity testing processes to see if commands are being generated
  * correctly.

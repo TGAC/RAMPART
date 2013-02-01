@@ -60,7 +60,7 @@ public class InvocationTrackingProcessListener implements ProcessListener {
 
     public void processError(ProcessEvent evt) {
         // something went wrong
-        log.debug("File was deleted by an external process");
+        log.debug("File was deleted by an process process");
         exitValue = 1;
         complete = true;
         synchronized (this) {

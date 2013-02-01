@@ -53,7 +53,7 @@ public class PBS extends AbstractScheduler {
     }
 
     @Override
-    public int executeCommand(String command) throws IllegalArgumentException,
+    public String[] executeCommand(String command) throws IllegalArgumentException,
             ProcessExecutionException, InterruptedException {
 
         throw new UnsupportedOperationException("PBS not implemented yet!");

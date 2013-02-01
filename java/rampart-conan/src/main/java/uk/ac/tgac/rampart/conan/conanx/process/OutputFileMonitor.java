@@ -83,7 +83,7 @@ public class OutputFileMonitor implements Runnable {
                 else {
                     if (fileExisted) {
                         // the lsfOutputFile was found before, so it definitely existed at some point...
-                        // therefore it has been deleted by an external process
+                        // therefore it has been deleted by an process process
                         log.debug("File previously existed but has been deleted");
                         processAdapter.fireOutputFileDeleteEvent(outputFile.lastModified());
                     }

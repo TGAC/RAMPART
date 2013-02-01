@@ -37,6 +37,10 @@ public class AssemblyStats implements Serializable {
 	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
 	@JoinColumn(name="job_id")
 	private Job job;
+
+    private String desc;
+
+    private String dataset;
 	
 	@Column(name="file_path")
 	private String filePath;
@@ -79,21 +83,29 @@ public class AssemblyStats implements Serializable {
 	
 	@Column(name="max_len")
 	private Long maxLen;
+
+    private Double score;
 	
 	public AssemblyStats() {}
 	public AssemblyStats(String[] stats) {
-		this.filePath = stats[0];
-		this.nbContigs = Long.parseLong(stats[1]);
-		this.aPerc = Double.parseDouble(stats[2]);
-		this.cPerc = Double.parseDouble(stats[3]);
-		this.gPerc = Double.parseDouble(stats[4]);
-		this.tPerc = Double.parseDouble(stats[5]);
-		this.nPerc = Double.parseDouble(stats[6]);
-		this.nbBases = Long.parseLong(stats[7]);
-		this.minLen = Long.parseLong(stats[8]);
-		this.maxLen = Long.parseLong(stats[9]);
-		this.avgLen = Double.parseDouble(stats[10]);
-		this.n50 = Long.parseLong(stats[11]);
+		this.desc = stats[0];
+        this.dataset = stats[1];
+        this.filePath = stats[2];
+		this.nbContigs = Long.parseLong(stats[3]);
+		this.aPerc = Double.parseDouble(stats[4]);
+		this.cPerc = Double.parseDouble(stats[5]);
+		this.gPerc = Double.parseDouble(stats[6]);
+		this.tPerc = Double.parseDouble(stats[7]);
+		this.nPerc = Double.parseDouble(stats[8]);
+		this.nbBases = Long.parseLong(stats[9]);
+		this.minLen = Long.parseLong(stats[10]);
+		this.maxLen = Long.parseLong(stats[11]);
+		this.avgLen = Double.parseDouble(stats[12]);
+		this.n80 = Long.parseLong(stats[13]);
+        this.n50 = Long.parseLong(stats[14]);
+        this.n20 = Long.parseLong(stats[15]);
+        this.l50 = Long.parseLong(stats[16]);
+        this.score = Double.parseDouble(stats[17]);
 	}
 	
 	public Long getId() {
@@ -108,20 +120,37 @@ public class AssemblyStats implements Serializable {
 	public void setJob(Job job) {
 		this.job = job;
 	}
-	public String getFilePath() {
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public String getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(String dataset) {
+        this.dataset = dataset;
+    }
+
+    public String getFilePath() {
 		return filePath;
 	}
 	public void setFilePath(String filePath) {
 		this.filePath = filePath;
 	}
 	public Long getNbContigs() {
-		return nbContigs;
+		return nbContigs.longValue();
 	}
 	public void setNbContigs(Long nbContigs) {
 		this.nbContigs = nbContigs;
 	}
 	public Long getNbBases() {
-		return nbBases;
+		return nbBases.longValue();
 	}
 	public void setNbBases(Long nbBases) {
 		this.nbBases = nbBases;
@@ -205,15 +234,42 @@ public class AssemblyStats implements Serializable {
         this.l50 = l50;
     }
 
-    public static String getStatsFileHeader() {
-        return "file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n80|n50|n20|l50";
+    public double getScore() {
+        return score;
     }
 
+    public void setScore(double score) {
+        this.score = score;
+    }
+
+    public static String getStatsFileHeader() {
+        return "desc|dataset|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n80|n50|n20|l50|score";
+    }
+
+
+
     public String toStatsFileString() {
+        return this.toStatsFileString(null);
+    }
+
+    public String toStatsFileString(AssemblyStatsMatrixRow statsMatrixRow) {
 
         StringJoiner sj = new StringJoiner("|");
 
+        sj.add(this.getDesc());
+        sj.add(this.getDataset());
         sj.add(this.getFilePath());
+        sj.add(statsMatrixRow == null ? this.toStatsString() : statsMatrixRow.toString());
+        sj.add(this.getScore());
+
+        return sj.toString();
+
+    }
+
+    public String toStatsString() {
+
+        StringJoiner sj = new StringJoiner("|");
+
         sj.add(this.getNbContigs());
         sj.add(this.getaPerc());
         sj.add(this.getcPerc());
@@ -231,4 +287,5 @@ public class AssemblyStats implements Serializable {
 
         return sj.toString();
     }
+
 }

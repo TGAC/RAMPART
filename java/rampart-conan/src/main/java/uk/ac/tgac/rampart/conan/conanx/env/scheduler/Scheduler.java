@@ -45,21 +45,21 @@ public interface Scheduler {
     /**
      * Executes the provided command on this architecture in the foreground
      * @param command The command to execute
-     * @return the exit code returned from the executed process
+     * @return the output returned from the executed process
      * @throws ProcessExecutionException
      * @throws InterruptedException
      */
-    int executeCommand(String command)
+    String[] executeCommand(String command)
             throws ProcessExecutionException, InterruptedException;
 
     /**
      * Executes the provided command on this architecture in the background
      * @param command The command to execute
-     * @return the exit code returned from the executed process
+     * @return the output returned from the executed process
      * @throws ProcessExecutionException
      * @throws InterruptedException
      */
-    void dispatchCommand(String command)
+    String[] dispatchCommand(String command)
             throws ProcessExecutionException, InterruptedException;
 
 
@@ -76,11 +76,11 @@ public interface Scheduler {
     /**
      * Wait for the specified wait condition to be satisifed
      * @param waitCondition The wait condition
-     * @return The exit code return by the process that was waited for.
+     * @return The output returned by the process that was waited for.
      * @throws InterruptedException
      * @throws ProcessExecutionException
      */
-    int executeWaitCommand(WaitCondition waitCondition) throws InterruptedException, ProcessExecutionException;
+    String[] executeWaitCommand(WaitCondition waitCondition) throws InterruptedException, ProcessExecutionException;
 
     /**
      * Creates a wait condition for this architecture
