@@ -22,6 +22,7 @@ import uk.ac.tgac.rampart.conan.tool.process.asm.AssemblerArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,12 +47,12 @@ public class AbyssV134Args implements AssemblerArgs {
 	}
 	
 	@Override
-	public Set<Library> getLibraries() {
+	public List<Library> getLibraries() {
 		return libs == null ? null : libs.getLibs();
 	}
 
 	@Override
-	public void setLibraries(Set<Library> libs) {		
+	public void setLibraries(List<Library> libs) {
 		this.libs = new AbyssV134InputLibsArg(libs);
 	}
 
@@ -122,7 +123,7 @@ public class AbyssV134Args implements AssemblerArgs {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            };
+            }
 
             String param = entry.getKey().getName();
 

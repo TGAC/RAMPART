@@ -110,7 +110,7 @@ public class SicklePeV11Args extends SickleV11Args {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            };
+            }
 
             String param = entry.getKey().getName();
 

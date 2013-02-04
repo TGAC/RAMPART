@@ -63,10 +63,10 @@ public class RampartHelperOptions {
 			throw new ParseException(OPT_PROJECT_DIR + " argument not specified.");
 		}
 
-		persist = cmdLine.hasOption(OPT_PERSIST) ? true : false;
-		report = cmdLine.hasOption(OPT_REPORT) ? true : false;
-		verbose = cmdLine.hasOption(OPT_VERBOSE) ? true : false;
-		help = cmdLine.hasOption(OPT_HELP) ? true : false;
+		persist = cmdLine.hasOption(OPT_PERSIST);
+		report = cmdLine.hasOption(OPT_REPORT);
+		verbose = cmdLine.hasOption(OPT_VERBOSE);
+		help = cmdLine.hasOption(OPT_HELP);
 	}
 	
 	

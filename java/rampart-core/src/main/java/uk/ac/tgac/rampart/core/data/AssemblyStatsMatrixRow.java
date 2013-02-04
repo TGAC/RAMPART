@@ -97,8 +97,8 @@ public class AssemblyStatsMatrixRow {
 
         double sum = 0.0;
 
-        for(int i = 0; i < this.stats.length; i++) {
-            sum += this.stats[i];
+        for (double stat : this.stats) {
+            sum += stat;
         }
 
         return sum / (double)this.stats.length;
@@ -108,8 +108,8 @@ public class AssemblyStatsMatrixRow {
 
         StringJoiner sj = new StringJoiner("|");
 
-        for(int i = 0; i < this.stats.length; i++) {
-            sj.add(this.stats[i]);
+        for (double stat : this.stats) {
+            sj.add(stat);
         }
 
         return sj.toString();

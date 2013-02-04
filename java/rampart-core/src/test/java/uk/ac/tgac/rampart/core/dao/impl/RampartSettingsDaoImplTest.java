@@ -45,7 +45,7 @@ public class RampartSettingsDaoImplTest {
 	
 	@Before
 	public void before() {
-		this.rsd = (RampartSettingsDao)ctx.getAutowireCapableBeanFactory().createBean(RampartSettingsDaoImpl.class);
+		this.rsd = ctx.getAutowireCapableBeanFactory().createBean(RampartSettingsDaoImpl.class);
 	}
 	
 	@Test

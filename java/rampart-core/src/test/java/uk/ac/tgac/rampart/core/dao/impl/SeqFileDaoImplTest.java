@@ -46,7 +46,7 @@ public class SeqFileDaoImplTest {
 			
 	@Before
 	public void before() {
-		sfd = (SeqFileDao)ctx.getAutowireCapableBeanFactory().createBean(SeqFileDaoImpl.class);
+		sfd = ctx.getAutowireCapableBeanFactory().createBean(SeqFileDaoImpl.class);
 	}
 	
 	@Test

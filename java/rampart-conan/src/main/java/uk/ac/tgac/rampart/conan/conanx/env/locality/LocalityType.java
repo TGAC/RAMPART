@@ -20,5 +20,5 @@ package uk.ac.tgac.rampart.conan.conanx.env.locality;
 public enum LocalityType {
 
 	LOCAL,
-	REMOTE;
+	REMOTE
 }

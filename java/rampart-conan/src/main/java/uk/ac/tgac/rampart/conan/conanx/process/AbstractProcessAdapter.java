@@ -52,25 +52,25 @@ public abstract class AbstractProcessAdapter extends File implements ProcessAdap
 
     private static Logger log = LoggerFactory.getLogger(AbstractProcessAdapter.class);
 
-    public AbstractProcessAdapter(String pathname, int monitoringPeriod) {
+    protected AbstractProcessAdapter(String pathname, int monitoringPeriod) {
         super(pathname);
         this.fileMonitor = new OutputFileMonitor(this, monitoringPeriod);
         this.listeners = new HashSet<ProcessListener>();
     }
 
-    public AbstractProcessAdapter(String parent, String child, int monitoringPeriod) {
+    protected AbstractProcessAdapter(String parent, String child, int monitoringPeriod) {
         super(parent, child);
         this.fileMonitor = new OutputFileMonitor(this, monitoringPeriod);
         this.listeners = new HashSet<ProcessListener>();
     }
 
-    public AbstractProcessAdapter(File parent, String child, int monitoringPeriod) {
+    protected AbstractProcessAdapter(File parent, String child, int monitoringPeriod) {
         super(parent, child);
         this.fileMonitor = new OutputFileMonitor(this, monitoringPeriod);
         this.listeners = new HashSet<ProcessListener>();
     }
 
-    public AbstractProcessAdapter(URI uri, int monitoringPeriod) {
+    protected AbstractProcessAdapter(URI uri, int monitoringPeriod) {
         super(uri);
         this.fileMonitor = new OutputFileMonitor(this, monitoringPeriod);
         this.listeners = new HashSet<ProcessListener>();

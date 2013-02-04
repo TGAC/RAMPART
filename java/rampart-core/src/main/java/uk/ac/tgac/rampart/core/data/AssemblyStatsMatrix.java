@@ -67,25 +67,25 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         double min = this.getMin(index);
         double max = this.getMax(index);
 
-        for(int i = 0; i < this.size(); i++) {
+        for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
 
-            double delta = this.get(i).getAt(index) - min;
+            double delta = assemblyStatsMatrixRow.getAt(index) - min;
 
             double norm = delta / max;
 
-            this.get(i).setAt(index, invert ? 1.0 - norm : norm);
+            assemblyStatsMatrixRow.setAt(index, invert ? 1.0 - norm : norm);
         }
     }
 
     protected void deviationNormalise(int index, double mean) {
 
-        for(int i = 0; i < this.size(); i++) {
+        for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
 
-            double dev = this.get(i).getAt(index) - mean;
+            double dev = assemblyStatsMatrixRow.getAt(index) - mean;
 
             double norm = Math.abs(dev) / mean;
 
-            this.get(i).setAt(index, norm);
+            assemblyStatsMatrixRow.setAt(index, norm);
         }
     }
 

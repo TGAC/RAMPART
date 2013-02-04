@@ -31,10 +31,8 @@ public interface RampartJobService {
 	
 	RampartConfiguration loadConfiguration(File in) throws IOException;
 	
-	List<MassStats> getMassStats(File in) throws IOException;
-	
-	List<ImproverStats> getImproverStats(File in) throws IOException;
-	
+	List<AssemblyStats> getAssemblyStats(File in) throws IOException;
+
 	AssemblyStats getWeightings(File in) throws IOException;
 	
 	void calcReadStats(List<Library> libs) throws IOException;

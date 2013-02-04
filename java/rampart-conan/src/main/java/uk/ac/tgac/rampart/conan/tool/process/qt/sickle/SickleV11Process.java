@@ -68,14 +68,14 @@ public class SickleV11Process extends DefaultExtendedConanProcess implements Qua
     }
 
     private JobType jobType;
-    private SickleV11Args args;
+    private QualityTrimmerArgs args;
 
 
     public SickleV11Process() {
         this(JobType.PAIRED_END, new SicklePeV11Args());
     }
 
-    public SickleV11Process(JobType jobType, SickleV11Args args) {
+    public SickleV11Process(JobType jobType, QualityTrimmerArgs args) {
         super(jobType.getExe());
         this.jobType = jobType;
         this.args = args;

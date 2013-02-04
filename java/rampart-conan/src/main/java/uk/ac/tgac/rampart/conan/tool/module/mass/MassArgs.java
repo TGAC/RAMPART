@@ -114,7 +114,7 @@ public abstract class MassArgs implements ProcessArgs {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            };
+            }
 
             String param = entry.getKey().getName();
 

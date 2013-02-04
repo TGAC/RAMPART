@@ -62,10 +62,8 @@ public class SickleSeV11Params extends SickleV11Params {
 
         Set<ConanParameter> params = super.getConanParameters();
 
-        params.addAll(Arrays.asList(new ConanParameter[]{
-                this.inputFile,
-                this.outputFile,
-        }));
+        params.addAll(Arrays.asList(this.inputFile,
+                this.outputFile));
 
         return params;
     }

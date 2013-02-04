@@ -107,7 +107,6 @@ public class RampartClipperProcess implements Clipper {
                         lastHeader = line;
 
                         firstLine = false;
-                        continue;
                     }
                     else {
 

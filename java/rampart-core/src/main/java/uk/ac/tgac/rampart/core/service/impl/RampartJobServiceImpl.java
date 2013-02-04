@@ -85,30 +85,18 @@ public class RampartJobServiceImpl implements RampartJobService {
 	}
 
 	@Override
-	public List<MassStats> getMassStats(File in) throws IOException {
+	public List<AssemblyStats> getAssemblyStats(File in) throws IOException {
 		
 		List<String[]> stats = getStats(in);
-		List<MassStats> massStats = new ArrayList<MassStats>();
-		
+		List<AssemblyStats> asmStats = new ArrayList<AssemblyStats>();
+
 		for(String[] rawStats : stats.subList(1, stats.size()-1)) {
-			massStats.add(new MassStats(rawStats));
+            asmStats.add(new AssemblyStats(rawStats));
 		}
-		
-		return massStats;
+
+		return asmStats;
 	}
-	
-	@Override
-	public List<ImproverStats> getImproverStats(File in) throws IOException {
-		List<String[]> stats = getStats(in);
-		List<ImproverStats> improverStats = new ArrayList<ImproverStats>();
-		
-		for(String[] rawStats : stats.subList(1, stats.size()-1)) {
-			improverStats.add(new ImproverStats(rawStats));
-		}
-		
-		return improverStats;
-	}
-	
+
 	@Override
 	public AssemblyStats getWeightings(File in) throws IOException {
 		List<String[]> stats = getStats(in);
@@ -141,21 +129,21 @@ public class RampartJobServiceImpl implements RampartJobService {
 		job.setLibsQt(libsQt);
 		
 		// Get Info from Assemblies (MASS)
-		List<MassStats> massStats = this.getMassStats(jobFS.getMassStatsFile());
-		List<ImproverStats> improverStats = this.getImproverStats(jobFS.getImproverStatsFile());
+		List<AssemblyStats> massStats = this.getAssemblyStats(jobFS.getMassStatsFile());
+		List<AssemblyStats> improverStats = this.getAssemblyStats(jobFS.getImproverStatsFile());
 		AssemblyStats weights = this.getWeightings(rampartFS.getWeightingsFile());
 		
 		// Get Info from Best Assembly statistics
-		MassStats best = Collections.max(massStats);
-		best.setBest(true);
+		AssemblyStats best = Collections.max(massStats);
+		//best.setBest(true);
 		
 		// Link stats to job object and vice versa
 		job.setMassStats(massStats);
 		job.setImproverStats(improverStats);
 
 		// Get the final assembly statistics
-		ImproverStats finalAssembly = improverStats.get(improverStats.size() - 1);
-		finalAssembly.setFinalAssembly(Boolean.TRUE);
+		AssemblyStats finalAssembly = improverStats.get(improverStats.size() - 1);
+		//finalAssembly.setFinalAssembly(Boolean.TRUE);
 		
 		// Getting the structure of this is important for both report building and data persistence
 		// Build context

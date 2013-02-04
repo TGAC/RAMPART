@@ -69,14 +69,15 @@ public class Job implements Serializable {
 	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
 	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
 	@JoinColumn(name="job_id")
-	private List<MassStats> massStats;
-	
-	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
-	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
-	@JoinColumn(name="job_id")
-	private List<ImproverStats> improverStats;
-	
-	@OneToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="job", targetEntity=RampartSettings.class)
+	private List<AssemblyStats> massStats;
+
+    @OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+    @Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+    @JoinColumn(name="job_id")
+    private List<AssemblyStats> improverStats;
+
+
+    @OneToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="job", targetEntity=RampartSettings.class)
 	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
 	@JoinColumn(referencedColumnName = "job_id")
 	private RampartSettings rampartSettings;
@@ -177,32 +178,33 @@ public class Job implements Serializable {
 	
 	
 	
-	public List<MassStats> getMassStats() {
+	public List<AssemblyStats> getStats() {
 		return massStats;
 	}
 
-	public void setMassStats(List<MassStats> massStats) {
-		if (massStats != null) {
-			for(MassStats stats : massStats) {
-				stats.setJob(this);
+	public void setMassStats(List<AssemblyStats> stats) {
+		if (stats != null) {
+			for(AssemblyStats s : stats) {
+				s.setJob(this);
 			}
 		}
-		this.massStats = massStats;
+		this.massStats = stats;
 	}
 
-	public List<ImproverStats> getImproverStats() {
-		return improverStats;
-	}
+    public List<AssemblyStats> getImproverStats() {
+        return improverStats;
+    }
 
-	public void setImproverStats(List<ImproverStats> improverStats) {
-		if (improverStats != null) {
-			for(ImproverStats stats : improverStats) {
-				stats.setJob(this);
-			}
-		}
-		this.improverStats = improverStats;
-	}
-	
+    public void setImproverStats(List<AssemblyStats> stats) {
+        if (improverStats != null) {
+            for(AssemblyStats s : stats) {
+                s.setJob(this);
+            }
+        }
+        this.improverStats = stats;
+    }
+
+
 	public RampartSettings getRampartSettings() {
 		return this.rampartSettings;
 	}
@@ -219,12 +221,24 @@ public class Job implements Serializable {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("[JOB_DETAILS]\n")
-		.append(KEY_JD_AUTHOR + "=" + this.getAuthor() + "\n")
-		.append(KEY_JD_COLLABORATOR + "=" + this.getAuthor() + "\n")
-		.append(KEY_JD_INSTITUTION + "=" + this.getAuthor() + "\n")
-		.append(KEY_JD_TITLE + "=" + this.getAuthor() + "\n")
-		.append(KEY_JD_JIRA_SEQINFO_ID + "=" + this.getAuthor() + "\n")
-		.append(KEY_JD_MISO_ID + "=" + this.getAuthor() + "\n");
+                .append(KEY_JD_AUTHOR + "=")
+                .append(this.getAuthor())
+                .append("\n")
+                .append(KEY_JD_COLLABORATOR + "=")
+                .append(this.getAuthor())
+                .append("\n")
+                .append(KEY_JD_INSTITUTION + "=")
+                .append(this.getAuthor())
+                .append("\n")
+                .append(KEY_JD_TITLE + "=")
+                .append(this.getAuthor())
+                .append("\n")
+                .append(KEY_JD_JIRA_SEQINFO_ID + "=")
+                .append(this.getAuthor())
+                .append("\n")
+                .append(KEY_JD_MISO_ID + "=")
+                .append(this.getAuthor())
+                .append("\n");
 		//.append(this.getLibraries().toString());
 		
 		return sb.toString();

@@ -88,13 +88,11 @@ public class SicklePeV11Params extends SickleV11Params {
 
         Set<ConanParameter> params = super.getConanParameters();
 
-        params.addAll(Arrays.asList(new ConanParameter[] {
-                this.peFile1,
+        params.addAll(Arrays.asList(this.peFile1,
                 this.peFile2,
                 this.outputPe1,
                 this.outputPe2,
-                this.outputSingles,
-        }));
+                this.outputSingles));
 
         return params;
     }

@@ -39,8 +39,8 @@ public class RampartOptions {
 			throw new ParseException(OPT_CONFIG + " argument not specified.");
 		}
 		
-		verbose = cmdLine.hasOption(OPT_VERBOSE) ? true : false;
-		help = cmdLine.hasOption(OPT_HELP) ? true : false;
+		verbose = cmdLine.hasOption(OPT_VERBOSE);
+		help = cmdLine.hasOption(OPT_HELP);
 	}
 	
 	public File getConfig() {

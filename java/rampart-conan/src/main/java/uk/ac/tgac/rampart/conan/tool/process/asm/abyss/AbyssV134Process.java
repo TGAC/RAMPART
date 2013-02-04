@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.conan.tool.process.asm.abyss;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.process.DefaultExtendedConanProcess;
+import uk.ac.tgac.rampart.conan.tool.module.util.RampartConfig;
 import uk.ac.tgac.rampart.conan.tool.process.asm.Assembler;
 import uk.ac.tgac.rampart.conan.tool.process.asm.AssemblerArgs;
 

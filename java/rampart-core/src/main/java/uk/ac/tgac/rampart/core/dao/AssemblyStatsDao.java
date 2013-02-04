@@ -18,36 +18,20 @@
 package uk.ac.tgac.rampart.core.dao;
 
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
-import uk.ac.tgac.rampart.core.data.ImproverStats;
-import uk.ac.tgac.rampart.core.data.MassStats;
 
 import java.util.List;
 
 public interface AssemblyStatsDao {
 
-	MassStats getMassStats(Long id);
+	AssemblyStats getStats(Long id);
 	
-	ImproverStats getImproverStats(Long id);
+	List<AssemblyStats> getStatsForJob(Long jobId);
 	
-	List<AssemblyStats> getAllAssemblyStats();
-	
-	List<MassStats> getAllMassStats();
-	
-	List<ImproverStats> getAllImproverStats();
-	
-	List<MassStats> getMassStatsForJob(Long jobId);
-	
-	List<ImproverStats> getImproverStatsForJob(Long jobId);
-	
-	MassStats getBestAssembly(Long jobId);
+	AssemblyStats getBestAssembly(Long jobId);
 	
 	long count();
 	
-	void persist(MassStats massStats);
+	void persist(AssemblyStats stats);
 	
-	void persist(ImproverStats improverStats);
-	
-	void persistMassStatsList(List<MassStats> massStatsList);
-	
-	void persistImproverStatsList(List<ImproverStats> improverStatsList);
+	void persistStatsList(List<AssemblyStats> statsList);
 }

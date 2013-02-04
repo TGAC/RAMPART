@@ -69,7 +69,7 @@ public class Local implements Locality {
     public int executeCommand(String command, Scheduler scheduler)
             throws ProcessExecutionException, InterruptedException {
 
-        String[] output = null;
+        String[] output;
 
         if (scheduler == null) {
             try {

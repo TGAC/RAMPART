@@ -117,7 +117,7 @@ public class SingleMassProcess implements ConanProcess, RampartProcess {
 		int mod1 = (kmer - 1) % 10;
 		int mod2 = (kmer - 5) % 10;
 
-		return (mod1 == 0 || mod2 == 0 ) ? true : false;
+		return (mod1 == 0 || mod2 == 0);
 	}
 
 
@@ -284,9 +284,9 @@ public class SingleMassProcess implements ConanProcess, RampartProcess {
         try {
             this.execute(env);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ProcessExecutionException(-1, e);
         } catch (CommandExecutionException e) {
-            e.printStackTrace();
+            throw new ProcessExecutionException(-1, e);
         }
 
         return true;

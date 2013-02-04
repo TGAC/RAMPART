@@ -17,11 +17,15 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.module.util;
 
+import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmer;
+import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmerArgs;
+import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmerFactory;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,9 +35,18 @@ import java.util.Set;
  */
 public class RampartConfig {
 
+
+    // File keys
+    public static final String QT_MIN_LEN   = "minlen";
+    public static final String QT_MIN_QUAL  = "minqual";
+
+
+
     private File configFile;
 
     private String name;
+    private String qtTool;
+    private Map<String, String> qtArgs;
 
 
     public RampartConfig() {
@@ -62,7 +75,7 @@ public class RampartConfig {
         this.name = name;
     }
 
-    public Set<Library> getLibs() {
+    public List<Library> getLibs() {
         return null;
     }
 
@@ -95,5 +108,38 @@ public class RampartConfig {
         }
 
         return configs;
+    }
+
+    public String getQTTool() {
+        return this.qtTool;
+    }
+
+    public Map<String, String> getQTArgs() {
+        return this.qtArgs;
+    }
+
+
+
+
+    // ***** Construction methods *****
+
+    public List<QualityTrimmer> createQualityTrimmers() {
+
+        List<QualityTrimmer> qtList = new ArrayList<QualityTrimmer>();
+
+        for(Library lib : this.getLibs()) {
+
+            if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
+
+                QualityTrimmer qt = QualityTrimmerFactory.create(this.getQTTool(), lib);
+
+                qt.getArgs().setMinLength(Integer.parseInt(this.getQTArgs().get(QT_MIN_LEN)));
+                qt.getArgs().setQualityThreshold(Integer.parseInt(this.getQTArgs().get(QT_MIN_QUAL)));
+
+                qtList.add(qt);
+            }
+        }
+
+        return qtList;
     }
 }

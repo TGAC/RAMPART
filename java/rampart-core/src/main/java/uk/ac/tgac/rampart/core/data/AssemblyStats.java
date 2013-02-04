@@ -27,7 +27,7 @@ import java.io.Serializable;
 @DiscriminatorColumn(name="assembly_type",discriminatorType=DiscriminatorType.STRING)
 @Table(schema="rampart",name="assembly_stats")
 @DiscriminatorValue("generic")
-public class AssemblyStats implements Serializable {
+public class AssemblyStats implements Serializable, Comparable<AssemblyStats> {
 	
 	private static final long serialVersionUID = -1893203475167525362L;
 
@@ -144,13 +144,13 @@ public class AssemblyStats implements Serializable {
 		this.filePath = filePath;
 	}
 	public Long getNbContigs() {
-		return nbContigs.longValue();
+		return nbContigs;
 	}
 	public void setNbContigs(Long nbContigs) {
 		this.nbContigs = nbContigs;
 	}
 	public Long getNbBases() {
-		return nbBases.longValue();
+		return nbBases;
 	}
 	public void setNbBases(Long nbBases) {
 		this.nbBases = nbBases;
@@ -288,4 +288,8 @@ public class AssemblyStats implements Serializable {
         return sj.toString();
     }
 
+    @Override
+    public int compareTo(AssemblyStats o) {
+        return this.score.compareTo(o.getScore());
+    }
 }

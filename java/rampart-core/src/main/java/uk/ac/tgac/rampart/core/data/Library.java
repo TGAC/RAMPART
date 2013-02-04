@@ -18,9 +18,13 @@
 package uk.ac.tgac.rampart.core.data;
 
 import org.ini4j.Profile.Section;
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(schema="rampart",name="library")
@@ -28,28 +32,41 @@ public class Library implements Serializable {
 	
 	private static final long serialVersionUID = 9110367505701278888L;
 
-	public enum Usage {
+    public boolean testUsage(Usage qualityTrimming) {
+
+        return this.usage.contains(qualityTrimming.name());
+    }
+
+    public boolean isPairedEnd() {
+        return this.type == Type.PE || this.type == Type.MP;
+    }
+
+    public enum Usage {
 		
-		ASSEMBLY_ONLY {
+		ASM {
 			@Override
 			public String toString() {
-				return "Assembly Only";
+				return "Assembly";
 			}
 		},
-		SCAFFOLDING_ONLY {
+		SCF {
 			@Override
 			public String toString() {
-				return "Scaffolding Only";
+				return "Scaffolding";
 			}
 		},
-		ASSEMBLY_AND_SCAFFOLDING {
+		QT {
 			@Override
 			public String toString() {
-				return "Assembly and Scaffolding";
+				return "Quality Trimming";
 			}
 		};
 		
 		public abstract String toString();
+
+        public static final Usage ASSEMBLING = ASM;
+        public static final Usage SCAFFOLDING = SCF;
+        public static final Usage QUALITY_TRIMMING = QT;
 	}
 	
 	public enum Dataset {
@@ -131,7 +148,7 @@ public class Library implements Serializable {
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name="lib_usage")
-	private Usage usage;
+	private String usage;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name="lib_type")
@@ -218,13 +235,37 @@ public class Library implements Serializable {
 		this.seqOrientation = seqOrientation;
 	}
 
-	public Usage getUsage() {
+	public String getUsage() {
 		return usage;
 	}
 
-	public void setUsage(Usage usage) {
+	public void setUsage(String usage) {
 		this.usage = usage;
 	}
+
+    public Set<Usage> getUsageSet() {
+
+        Set<Usage> usageSet = new HashSet<Usage>();
+
+        String[] parts = this.usage.split(",");
+
+        for(String part : parts) {
+            usageSet.add(Usage.valueOf(part));
+        }
+
+        return usageSet;
+    }
+
+    public void setUsageSet(Set<Usage> usageSet) {
+
+        StringJoiner sj = new StringJoiner(",");
+
+        for(Usage u : usageSet) {
+            sj.add(u.name());
+        }
+
+        this.usage = sj.toString();
+    }
 	
 
 	public Type getType() {
@@ -305,7 +346,7 @@ public class Library implements Serializable {
 		ld.setInsertErrorTolerance(Double.parseDouble(iniSection.get(KEY_INSERT_ERROR_TOLERANCE)));
 		ld.setReadLength(Integer.parseInt(iniSection.get(KEY_READ_LENGTH)));
 		ld.setSeqOrientation(SeqOrientation.valueOf(iniSection.get(KEY_SEQ_ORIENTATION)));
-		ld.setUsage(Usage.valueOf(iniSection.get(KEY_USAGE)));
+		ld.setUsage(iniSection.get(KEY_USAGE));
 		ld.setFilePaired1(new SeqFile(iniSection.get(KEY_FILE_1)));	
 		ld.setFilePaired2(new SeqFile(iniSection.get(KEY_FILE_2)));
 		

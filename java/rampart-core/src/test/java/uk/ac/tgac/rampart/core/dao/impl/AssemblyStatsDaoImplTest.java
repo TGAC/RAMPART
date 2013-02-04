@@ -29,8 +29,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.ac.tgac.rampart.core.dao.AssemblyStatsDao;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
-import uk.ac.tgac.rampart.core.data.ImproverStats;
-import uk.ac.tgac.rampart.core.data.MassStats;
 
 import java.util.List;
 
@@ -47,126 +45,8 @@ public class AssemblyStatsDaoImplTest {
 	
 	@Before
 	public void before() {
-		this.asd = (AssemblyStatsDao)ctx.getAutowireCapableBeanFactory().createBean(AssemblyStatsDaoImpl.class);
-	}
-	
-	
-	
-	@Test
-	@Transactional
-	public void testGetMassStats() {
-		MassStats ms = asd.getMassStats(1L);
-		
-		assertTrue(ms.getFilePath().equals("./assembly1.fa"));
-		assertTrue(ms.getDataset().equals("RAW"));
-		assertTrue(!ms.getBest().booleanValue());
+		this.asd = ctx.getAutowireCapableBeanFactory().createBean(AssemblyStatsDaoImpl.class);
 	}
 
-	@Test
-	@Transactional
-	public void testGetImproverStats() {
-		ImproverStats is = asd.getImproverStats(3L);
-		
-		assertTrue(is.getFilePath().equals("./improver1.fa"));
-		assertTrue(is.getStage().intValue() == 1);
-	}
-	
-	
-	@Test
-	@Transactional
-	public void testGetAllAssemblyStats() {
-		List<AssemblyStats> asl = asd.getAllAssemblyStats();
-		
-		AssemblyStats as0 = asl.get(0);
-		AssemblyStats as2 = asl.get(2);
-		
-		assertTrue(as0.getFilePath().equals("./assembly1.fa"));
-		assertTrue(as2.getFilePath().equals("./improver1.fa"));
-	}
-	
-	
-	@Test
-	@Transactional
-	public void testGetAllMassStats() {
-		List<MassStats> msl = asd.getAllMassStats();
-		
-		MassStats ms0 = msl.get(0);
-		MassStats ms2 = msl.get(2);
-		
-		assertTrue(ms0.getFilePath().equals("./assembly1.fa"));
-		assertTrue(ms2.getFilePath().equals("./assembly3.fa"));
-	}
-	
-	@Test
-	@Transactional
-	public void testGetAllImproverStats() {
-		List<ImproverStats> isl = asd.getAllImproverStats();
-		
-		ImproverStats is0 = isl.get(0);
-		ImproverStats is1 = isl.get(1);
-		
-		assertTrue(is0.getFilePath().equals("./improver1.fa"));
-		assertTrue(is1.getFilePath().equals("./improver2.fa"));
-	}
-	
-	
-	@Test
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-	@Rollback(true)
-	public void testPersistMS() {
-		
-		MassStats ms = new MassStats();
-		ms.setFilePath("/test/mass.fa");
-		ms.setNbContigs(100L);
-		ms.setNbBases(100000L);
-		ms.setaPerc(20.0);
-		ms.setcPerc(20.0);
-		ms.setgPerc(20.0);
-		ms.settPerc(20.0);
-		ms.setnPerc(20.0);
-		ms.setN50(50000L);
-		ms.setMinLen(500L);
-		ms.setAvgLen(1000.0);
-		ms.setMaxLen(10000L);
-		ms.setKmer(85);
-		ms.setDataset("RAW");
-		ms.setScore(50.0);
-		ms.setBest(true);
-		
-		long count = asd.count(); 
-		asd.persist(ms);
-		long newCount = asd.count();
-		
-		assertTrue(newCount == count+1);
-		
-	}
-
-	@Test
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
-	@Rollback(true)
-	public void testPersistIS() {
-		
-		ImproverStats is = new ImproverStats();
-		is.setFilePath("/test/amp.fa");
-		is.setNbContigs(100L);
-		is.setNbBases(100000L);
-		is.setaPerc(20.0);
-		is.setcPerc(20.0);
-		is.setgPerc(20.0);
-		is.settPerc(20.0);
-		is.setnPerc(20.0);
-		is.setN50(50000L);
-		is.setMinLen(500L);
-		is.setAvgLen(1000.0);
-		is.setMaxLen(10000L);
-		is.setStage(1);
-		
-		long count = asd.count(); 
-		asd.persist(is);
-		long newCount = asd.count();
-		
-		assertTrue(newCount == count+1);
-		
-	}
 
 }

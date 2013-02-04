@@ -79,10 +79,9 @@ public class MultiMassParams extends MassParams {
         Set<ConanParameter> params = super.getConanParameters();
 
         params.addAll(Arrays.asList(
-                new ConanParameter[]{
-                        this.configs,
-                        this.outputDir,
-                        this.jobPrefix}));
+                this.configs,
+                this.outputDir,
+                this.jobPrefix));
 
         return params;
     }

@@ -103,8 +103,8 @@ public class ReportGen {
 		}
 		
 		output_path = line.hasOption(OPT_OUTPUT) ? new File(line.getOptionValue(OPT_OUTPUT)) : new File("report.pdf");
-		verbose = line.hasOption(OPT_VERBOSE) ? true : false;
-		help = line.hasOption(OPT_HELP) ? true : false;
+		verbose = line.hasOption(OPT_VERBOSE);
+		help = line.hasOption(OPT_HELP);
 	}
 	
 	
@@ -148,7 +148,6 @@ public class ReportGen {
 	    	System.out.println("Finished");
 	    }
 
-	    return;
-	}
+    }
 
 }

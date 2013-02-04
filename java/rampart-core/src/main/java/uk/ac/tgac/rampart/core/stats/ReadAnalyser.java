@@ -136,7 +136,7 @@ public enum ReadAnalyser {
                         in.addFullSequence(String.valueOf(lineBuf));
                     }
 
-                    seqLineNext = lineBuf[0] == '@' ? true : false;
+                    seqLineNext = lineBuf[0] == '@';
 
                     //nlines++;
 

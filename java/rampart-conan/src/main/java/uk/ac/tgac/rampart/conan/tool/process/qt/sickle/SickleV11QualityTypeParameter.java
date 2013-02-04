@@ -27,8 +27,8 @@ public class SickleV11QualityTypeParameter extends DefaultConanParameter {
 		
 		ILLUMINA,
 		PHRED,
-		SANGER;
-	}
+		SANGER
+    }
 	
 	public SickleV11QualityTypeParameter() {
 		super("qual-type", "Type of quality values (illumina, phred, sanger) (required)", false, false, false);

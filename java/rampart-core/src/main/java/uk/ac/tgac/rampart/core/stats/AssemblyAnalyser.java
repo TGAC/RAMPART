@@ -127,7 +127,7 @@ public class AssemblyAnalyser {
         }
 
         AssemblyStats stats = new AssemblyStats();
-        stats.setNbContigs(new Long(lengths.size()));
+        stats.setNbContigs((long) lengths.size());
         stats.setNbBases(totalNbBases);
         stats.setMinLen(lengths.get(lengths.size()-1));
         stats.setAvgLen((double)totalNbBases / (double)lengths.size());

@@ -136,8 +136,6 @@ public abstract class AbstractScheduler implements Scheduler {
      * output to the monitor file stored in this object.  If the monitor file already exists then we assume that the user
      * if trying to recover from a previous run.  In this case we do not execute the command and delete the monitored file.
      * @param command The command to schedule.
-     * @throws CommandExecutionException
-     * @throws IOException
      * @throws ProcessExecutionException
      */
     public String[] monitoredDispatch(String command)

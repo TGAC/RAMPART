@@ -124,8 +124,7 @@ public class GapCloserV112Args implements DegapperArgs {
 		
 		for(Library lib : libs) {
 			
-			if (lib.getUsage() == Library.Usage.ASSEMBLY_AND_SCAFFOLDING || 
-					lib.getUsage() == Library.Usage.SCAFFOLDING_ONLY) {
+			if (lib.testUsage(Library.Usage.SCAFFOLDING)) {
 				
 				String[] parts = new String[] {
 					lib.getName(),
@@ -180,7 +179,7 @@ public class GapCloserV112Args implements DegapperArgs {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            };
+            }
 
             String param = entry.getKey().getName();
 

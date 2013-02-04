@@ -108,7 +108,7 @@ public class MultiMassArgs extends MassArgs {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            };
+            }
 
             String param = entry.getKey().getName();
 
@@ -118,7 +118,7 @@ public class MultiMassArgs extends MassArgs {
             else if (param.equals(this.params.getJobPrefix().getName())) {
                 this.jobPrefix = entry.getValue();
             }
-            else if (param.equals(this.params.getOutputDir())) {
+            else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
             }
         }

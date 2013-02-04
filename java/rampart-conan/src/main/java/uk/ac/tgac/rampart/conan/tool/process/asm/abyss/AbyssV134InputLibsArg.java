@@ -27,22 +27,22 @@ import java.util.*;
 
 public class AbyssV134InputLibsArg {
 	
-	private Set<Library> libs;
+	private List<Library> libs;
 	
 	public AbyssV134InputLibsArg() {
-		this(new HashSet<Library>());
+		this(new ArrayList<Library>());
 	}
 	
-	public AbyssV134InputLibsArg(Set<Library> libs) {
+	public AbyssV134InputLibsArg(List<Library> libs) {
 		this.libs = libs;
 	}
 	
 	
-	public Set<Library> getLibs() {
+	public List<Library> getLibs() {
 		return libs;
 	}
 
-	public void setLibs(Set<Library> libs) {
+	public void setLibs(List<Library> libs) {
 		this.libs = libs;
 	}
 

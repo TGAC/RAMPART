@@ -25,5 +25,5 @@ package uk.ac.tgac.rampart.conan.conanx.env.scheduler;
 public enum ExitStatusType {
 
     COMPLETED_SUCCESS,
-    COMPLETED_FAILED;
+    COMPLETED_FAILED
 }

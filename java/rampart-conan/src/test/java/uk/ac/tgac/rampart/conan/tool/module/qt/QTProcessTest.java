@@ -24,6 +24,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.env.DefaultEnvironment;
 import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.tool.module.util.RampartConfig;
 import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.conan.tool.process.qt.sickle.SicklePeV11Args;
 import uk.ac.tgac.rampart.conan.tool.process.qt.sickle.SickleV11Process;
@@ -48,22 +49,9 @@ public class QTProcessTest {
 
         File outputDir = temp.newFolder("qtTest");
 
-        FilePair pairedEndInputLibrary = new PETestLibrary().getLocalPairedEndTestLib();
-
-        SicklePeV11Args args = new SicklePeV11Args();
-        args.setPairedEndInputFiles(pairedEndInputLibrary);
-        args.setPairedEndOutputFiles(new FilePair(
-                new File(outputDir, "peOut1.fastq"),
-                new File(outputDir, "peOut2.fastq")
-        ));
-        args.setSingleEndOutputFile(new File(outputDir, "seOut.fastq"));
-        args.setQualityThreshold(30);
-        args.setMinLength(50);
-
-        QualityTrimmer qt = new SickleV11Process(SickleV11Process.JobType.PAIRED_END, args);
-
         QTArgs qtArgs = new QTArgs();
-        qtArgs.setQualityTrimmer(qt);
+        qtArgs.setOutputDir(outputDir);
+        qtArgs.setConfig(new RampartConfig(new File("tools/test_rampart.cfg")));
 
         QTProcess simpleQTProcess = new QTProcess(qtArgs);
 

@@ -31,6 +31,7 @@ import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,7 +44,7 @@ public class AbyssV134ProcessTest {
     @Test
     public void testAbyssV134() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
-        Set<Library> libs = new PETestLibrary().createLocalPETestLibrary();
+        List<Library> libs = new PETestLibrary().createLocalPETestLibrary();
 
         AbyssV134Args args = new AbyssV134Args();
         args.setLibraries(libs);

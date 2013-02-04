@@ -20,15 +20,16 @@ package uk.ac.tgac.rampart.conan.tool.process.asm;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
+import java.util.List;
 import java.util.Set;
 
 public interface AssemblerArgs extends ProcessArgs {
 
 	AssemblerArgs copy();
 	
-	Set<Library> getLibraries();
+	List<Library> getLibraries();
 	
-	void setLibraries(Set<Library> libraries);
+	void setLibraries(List<Library> libraries);
 	
 	int getKmer();
 	

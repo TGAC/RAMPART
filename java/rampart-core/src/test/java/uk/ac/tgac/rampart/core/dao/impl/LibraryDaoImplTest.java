@@ -49,7 +49,7 @@ public class LibraryDaoImplTest {
 	
 	@Before
 	public void before() {
-		this.ld = (LibraryDao)ctx.getAutowireCapableBeanFactory().createBean(LibraryDaoImpl.class);
+		this.ld = ctx.getAutowireCapableBeanFactory().createBean(LibraryDaoImpl.class);
 	}
 	
 	@Test
@@ -95,7 +95,7 @@ public class LibraryDaoImplTest {
 	@Rollback(true)
 	public void testPersist() {
 		
-		JobDao jd = (JobDao)ctx.getAutowireCapableBeanFactory().createBean(JobDaoImpl.class);
+		JobDao jd = ctx.getAutowireCapableBeanFactory().createBean(JobDaoImpl.class);
 		
 		
 		Library l = new Library();
@@ -103,9 +103,9 @@ public class LibraryDaoImplTest {
 		l.setDataset(Dataset.RAW);
 		l.setAverageInsertSize(500);
 		l.setInsertErrorTolerance(0.3);
-		l.setReadLength(new Integer(150));
-		l.setUsage(Usage.ASSEMBLY_AND_SCAFFOLDING);
-		l.setIndex(new Integer(1));
+		l.setReadLength(150);
+		l.setUsage("QT,ASM,SCF");
+		l.setIndex(1);
 		
 		Job j = new Job();
 		j.setAuthor("libtest_author");

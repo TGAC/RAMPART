@@ -63,9 +63,9 @@ public class MultiMassProcess  implements ConanProcess, RampartProcess {
         try {
             this.execute(env);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ProcessExecutionException(-1, e);
         } catch (CommandExecutionException e) {
-            e.printStackTrace();
+            throw new ProcessExecutionException(-1, e);
         }
 
         return true;
@@ -123,7 +123,7 @@ public class MultiMassProcess  implements ConanProcess, RampartProcess {
         }
 
         // Do stats
-        MassSelector ms = new MassSelector(statsFiles, statsDir, -1, null);
+        MassSelector ms = new MassSelector(statsFiles, this.args.getConfigs(), statsDir, -1, null);
         ms.execute(env);
 
         // Make links to best files

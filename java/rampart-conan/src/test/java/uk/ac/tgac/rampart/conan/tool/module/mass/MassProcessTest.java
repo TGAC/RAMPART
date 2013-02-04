@@ -53,7 +53,7 @@ public class MassProcessTest {
         args.setKmax(65);
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
-        args.setLibs(new PETestLibrary().createLocalPETestLibrary());
+        args.setConfig(new File("tools/test.cfg"));
 
         SingleMassProcess simpleMass = new SingleMassProcess(args);
 

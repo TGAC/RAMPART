@@ -19,12 +19,18 @@ package uk.ac.tgac.rampart.conan.tool.module.qt;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.process.ProcessArgs;
+import uk.ac.tgac.rampart.conan.tool.module.util.RampartConfig;
 import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmer;
+import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmerArgs;
 import uk.ac.tgac.rampart.conan.tool.process.qt.QualityTrimmerFactory;
 import uk.ac.tgac.rampart.conan.tool.process.qt.sickle.SicklePeV11Args;
 import uk.ac.tgac.rampart.conan.tool.process.qt.sickle.SickleV11Process;
+import uk.ac.tgac.rampart.core.data.Library;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,27 +41,42 @@ import java.util.Map;
 public class QTArgs implements ProcessArgs {
 
     private QTParams params = new QTParams();
-    private QualityTrimmer qualityTrimmer;
+
+    private RampartConfig config;
+    private File outputDir;
 
     public QTArgs() {
-        this.qualityTrimmer = new SickleV11Process(SickleV11Process.JobType.PAIRED_END, new SicklePeV11Args());
+        this.config = null;
+        this.outputDir = null;
     }
 
-    public QualityTrimmer getQualityTrimmer() {
-        return qualityTrimmer;
+    public RampartConfig getConfig() {
+        return config;
     }
 
-    public void setQualityTrimmer(QualityTrimmer qualityTrimmer) {
-        this.qualityTrimmer = qualityTrimmer;
+    public void setConfig(RampartConfig config) {
+        this.config = config;
     }
+
+    public File getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(File outputDir) {
+        this.outputDir = outputDir;
+    }
+
 
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.qualityTrimmer != null)
-            pvp.put(params.getQualityTrimmer(), this.qualityTrimmer.getName());
+        if (this.config != null)
+            pvp.put(params.getRampartConfig(), this.config.getConfigFile().getAbsolutePath());
+
+        if (this.outputDir != null)
+            pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
 
         return pvp;
     }
@@ -67,12 +88,15 @@ public class QTArgs implements ProcessArgs {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            };
+            }
 
             String param = entry.getKey().getName();
 
-            if (param.equals(this.params.getQualityTrimmer().getName())) {
-                this.qualityTrimmer = QualityTrimmerFactory.valueOf(entry.getValue()).create();
+            if (param.equals(this.params.getRampartConfig().getName())) {
+                this.config = new RampartConfig(new File(entry.getValue()));
+            }
+            else if (param.equals(this.params.getOutputDir().getName())) {
+                this.outputDir = new File(entry.getValue());
             }
             else {
                 throw new IllegalArgumentException("Unknown parameter found: " + param);

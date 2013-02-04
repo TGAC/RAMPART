@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.conan.tool.module.qt;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.DefaultConanParameter;
+import uk.ac.tgac.rampart.conan.conanx.parameter.PathParameter;
 import uk.ac.tgac.rampart.conan.conanx.parameter.ToolParams;
 
 import java.util.Arrays;
@@ -33,6 +34,8 @@ import java.util.Set;
 public class QTParams implements ToolParams {
 
     private ConanParameter qualityTrimmer;
+    private ConanParameter rampartConfig;
+    private ConanParameter outputDir;
 
     public QTParams() {
         this.qualityTrimmer = new DefaultConanParameter(
@@ -41,17 +44,37 @@ public class QTParams implements ToolParams {
                 false,
                 true,
                 false);
+
+        this.rampartConfig = new PathParameter(
+                "config",
+                "The rampart configuration file describing the libraries to quality trim",
+                false);
+
+        this.outputDir = new PathParameter(
+                "output",
+                "The directory to place the quality trimmed libraries",
+                false);
     }
 
     public ConanParameter getQualityTrimmer() {
         return qualityTrimmer;
     }
 
+    public ConanParameter getRampartConfig() {
+        return rampartConfig;
+    }
+
+    public ConanParameter getOutputDir() {
+        return outputDir;
+    }
+
     @Override
     public Set<ConanParameter> getConanParameters() {
         return new HashSet<ConanParameter>(Arrays.asList(
                 new ConanParameter[]{
-                        this.qualityTrimmer
+                        this.qualityTrimmer,
+                        this.rampartConfig,
+                        this.outputDir
                 }));
     }
 }

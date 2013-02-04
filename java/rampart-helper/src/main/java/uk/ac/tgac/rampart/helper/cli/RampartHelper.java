@@ -117,8 +117,7 @@ public class RampartHelper {
 		}
 
 		log.info("Finished RAMPART Helper");
-		
-		return;
-	}
+
+    }
 	
 }

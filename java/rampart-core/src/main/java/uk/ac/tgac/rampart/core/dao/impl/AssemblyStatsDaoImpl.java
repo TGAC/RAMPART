@@ -26,8 +26,6 @@ import org.springframework.stereotype.Repository;
 import uk.ac.tgac.rampart.core.dao.AssemblyStatsDao;
 import uk.ac.tgac.rampart.core.dao.RampartHibernate;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
-import uk.ac.tgac.rampart.core.data.ImproverStats;
-import uk.ac.tgac.rampart.core.data.MassStats;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,46 +37,13 @@ public class AssemblyStatsDaoImpl implements AssemblyStatsDao {
     private SessionFactory sessionFactory;
 	
 	@Override
-	public MassStats getMassStats(Long id) {
+	public AssemblyStats getStats(Long id) {
 		Session session = this.sessionFactory.getCurrentSession();
-		MassStats ms = (MassStats)session.load(MassStats.class, id);
-		return ms;
+		AssemblyStats s = (AssemblyStats)session.load(AssemblyStats.class, id);
+		return s;
 	}
 
-	@Override
-	public ImproverStats getImproverStats(Long id) {
-		Session session = this.sessionFactory.getCurrentSession();
-		ImproverStats is = (ImproverStats)session.load(ImproverStats.class, id);
-		return is;
-	}
-
-	@Override
-	public List<AssemblyStats> getAllAssemblyStats() {
-		Session session = this.sessionFactory.getCurrentSession();
-		Query q = session.createQuery("from AssemblyStats");
-		List<AssemblyStats> as = RampartHibernate.listAndCast(q);
-		return as;
-	}
-
-	@Override
-	public List<MassStats> getAllMassStats() {
-		Session session = this.sessionFactory.getCurrentSession();
-		Query q = session.createQuery("from MassStats");
-		List<MassStats> ms = RampartHibernate.listAndCast(q);
-		return ms;
-	}
-
-	@Override
-	public List<ImproverStats> getAllImproverStats() {
-		Session session = this.sessionFactory.getCurrentSession();
-		Query q = session.createQuery("from ImproverStats");
-		List<ImproverStats> is = RampartHibernate.listAndCast(q);
-		return is;
-	}
-	
-	
-
-	@Override
+    @Override
 	public long count() {
 		Session session = this.sessionFactory.getCurrentSession();
 		Number c = (Number) session.createCriteria(AssemblyStats.class).setProjection(Projections.rowCount()).uniqueResult();
@@ -86,54 +51,32 @@ public class AssemblyStatsDaoImpl implements AssemblyStatsDao {
 	}
 
 	@Override
-	public void persist(MassStats ms) {
+	public void persist(AssemblyStats s) {
 		Session session = this.sessionFactory.getCurrentSession();
-		session.saveOrUpdate(ms);
+		session.saveOrUpdate(s);
 	}
 
 	@Override
-	public void persist(ImproverStats is) {
-		Session session = this.sessionFactory.getCurrentSession();
-		session.saveOrUpdate(is);
-	}
-
-	@Override
-	public void persistMassStatsList(List<MassStats> massStatsList) {
-		for(MassStats massStats : massStatsList) {
-			persist(massStats);
+	public void persistStatsList(List<AssemblyStats> statsList) {
+		for(AssemblyStats stats : statsList) {
+			persist(stats);
 		}
 	}
 
 	@Override
-	public void persistImproverStatsList(List<ImproverStats> improverStatsList) {
-		for(ImproverStats improverStats : improverStatsList) {
-			persist(improverStats);
-		}
-	}
-
-	@Override
-	public MassStats getBestAssembly(Long jobId) {
-		List<MassStats> jobMassStatsList = getMassStatsForJob(jobId);
-		MassStats best = Collections.max(jobMassStatsList);
+	public AssemblyStats getBestAssembly(Long jobId) {
+		List<AssemblyStats> jobStatsList = getStatsForJob(jobId);
+		AssemblyStats best = Collections.max(jobStatsList);
 		return best;
 	}
 
 	@Override
-	public List<MassStats> getMassStatsForJob(Long jobId) {
+	public List<AssemblyStats> getStatsForJob(Long jobId) {
 		Session session = this.sessionFactory.getCurrentSession();
-		Query q = session.createQuery("from MassStats where job_id = :job_id");
+		Query q = session.createQuery("from AssemblyStats where job_id = :job_id");
 		q.setParameter("job_id", jobId);
-		List<MassStats> ms = RampartHibernate.listAndCast(q);
+		List<AssemblyStats> ms = RampartHibernate.listAndCast(q);
 		return ms;
-	}
-
-	@Override
-	public List<ImproverStats> getImproverStatsForJob(Long jobId) {
-		Session session = this.sessionFactory.getCurrentSession();
-		Query q = session.createQuery("from ImproverStats where job_id = :job_id");
-		q.setParameter("job_id", jobId);
-		List<ImproverStats> is = RampartHibernate.listAndCast(q);
-		return is;
 	}
 
 }

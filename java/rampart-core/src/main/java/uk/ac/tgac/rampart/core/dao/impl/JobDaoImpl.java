@@ -22,6 +22,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import uk.ac.tgac.rampart.core.dao.JobDao;
 import uk.ac.tgac.rampart.core.dao.RampartHibernate;
@@ -31,8 +32,8 @@ import java.util.List;
 
 @Repository("jobDaoImpl")
 public class JobDaoImpl implements JobDao {
-	
-	@Autowired
+
+    @Autowired
     private SessionFactory sessionFactory;
 	
 	@Override

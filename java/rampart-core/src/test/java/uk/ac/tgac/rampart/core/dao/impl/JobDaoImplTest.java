@@ -49,7 +49,7 @@ public class JobDaoImplTest {
 	
 	@Before
 	public void before() {
-		this.jd = (JobDao)ctx.getAutowireCapableBeanFactory().createBean(JobDaoImpl.class);
+		this.jd = ctx.getAutowireCapableBeanFactory().createBean(JobDaoImpl.class);
 	}
 	
 	@Test
@@ -104,9 +104,9 @@ public class JobDaoImplTest {
 		l1.setDataset(Dataset.RAW);
 		l1.setAverageInsertSize(500);
 		l1.setInsertErrorTolerance(0.3);
-		l1.setReadLength(new Integer(150));
-		l1.setUsage(Usage.ASSEMBLY_AND_SCAFFOLDING);
-		l1.setIndex(new Integer(1));
+		l1.setReadLength(150);
+		l1.setUsage("QT,ASM,SCF");
+		l1.setIndex(1);
 		
 		List<Library> rawList = new ArrayList<Library>();
 		rawList.add(l1);
@@ -116,23 +116,23 @@ public class JobDaoImplTest {
 		l2.setDataset(Dataset.QT);
 		l2.setAverageInsertSize(500);
 		l2.setInsertErrorTolerance(0.3);
-		l2.setReadLength(new Integer(150));
-		l2.setUsage(Usage.ASSEMBLY_AND_SCAFFOLDING);
-		l2.setIndex(new Integer(1));
+		l2.setReadLength(150);
+		l2.setUsage("QT,ASM,SCF");
+		l2.setIndex(1);
 		
 		List<Library> qtList = new ArrayList<Library>();
 		qtList.add(l2);
 		
-		MassStats m1 = new MassStats();
+		AssemblyStats m1 = new AssemblyStats();
 		m1.setDataset(Dataset.RAW.name());
 				
-		List<MassStats> msList = new ArrayList<MassStats>();
+		List<AssemblyStats> msList = new ArrayList<AssemblyStats>();
 		msList.add(m1);
-		
-		ImproverStats i1 = new ImproverStats();
-		i1.setStage(1);
+
+        AssemblyStats i1 = new AssemblyStats();
+		i1.setDesc("1");
 				
-		List<ImproverStats> isList = new ArrayList<ImproverStats>();
+		List<AssemblyStats> isList = new ArrayList<AssemblyStats>();
 		isList.add(i1);
 		
 		RampartSettings rs = new RampartSettings();

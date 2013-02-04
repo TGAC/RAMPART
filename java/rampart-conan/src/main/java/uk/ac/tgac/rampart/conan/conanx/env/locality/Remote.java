@@ -37,18 +37,6 @@ public class Remote implements Locality {
 		this.setConnectionDetails(connectionDetails);
 	}
 
-	public void createSession()
-			throws JSchException {
-		
-	}
-
-	public void terminateSession() {
-
-		if (this.session != null) {
-			this.session.disconnect();
-		}
-	}
-
 	public ConnectionDetails getConnectionDetails() {
 		return connectionDetails;
 	}
