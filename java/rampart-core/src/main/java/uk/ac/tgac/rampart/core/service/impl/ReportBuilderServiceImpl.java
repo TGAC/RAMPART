@@ -51,9 +51,9 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 	public void buildReport(File jobDir, File projectDir) throws Exception {
 		
 		// Gather statistics and other variables
-		log.info("Gathering job context for report");
+		log.info("Gathering job exectx for report");
 		VelocityContext vc = this.rampartJobService.buildContext(jobDir, projectDir);
-		log.info("Gathered job context for report");
+		log.info("Gathered job exectx for report");
 		
 		buildReport(jobDir, projectDir, vc);
 	}
@@ -87,9 +87,9 @@ public class ReportBuilderServiceImpl implements ReportBuilderService {
 		this.rampartJobService.seperatePlots(jobFS.getImproverPlotsFile(), jobFS.getReportImagesDir(), "Improver");
 		log.debug("Seperated Improver plots into seperate files for report");
 
-		// Merge the template and context
+		// Merge the template and exectx
 		this.velocityMergerService.merge(jobFS.getReportTemplateFile(), context, jobFS.getReportMergedFile());
-		log.debug("Merged report template and context");
+		log.debug("Merged report template and exectx");
 		
 		// Compile report (If there were any errors carry on anyway, we might still be able to log the 
 		// details in the database

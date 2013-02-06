@@ -32,7 +32,7 @@ public class ReportGen {
 	private static Logger log = LoggerFactory.getLogger(RampartHelper.class.getName());
 		
 	private static final String OPT_TEMPLATE 	= "template";
-	private static final String OPT_CONTEXT 	= "context";
+	private static final String OPT_CONTEXT 	= "exectx";
 	private static final String OPT_OUTPUT 		= "output";
 	private static final String OPT_VERBOSE 	= "verbose";
 	private static final String OPT_HELP 		= "help";
@@ -62,7 +62,7 @@ public class ReportGen {
 		Option context 	= OptionBuilder.withArgName("file")
 									   .withLongOpt(OPT_CONTEXT)
 									   .hasArg()
-									   .withDescription("The context for the RAMPART report.")
+									   .withDescription("The exectx for the RAMPART report.")
 									   .create("c");
 		
 		Option output 	= OptionBuilder.withArgName("file")
@@ -140,7 +140,7 @@ public class ReportGen {
 			new VelocityMergerServiceImpl().merge(template_path, context_path, output_path);
 	    }
 	    catch(IOException ioe) {
-	    	log.error( "Problem merging template and context into latex file: " + ioe.getMessage() );
+	    	log.error( "Problem merging template and exectx into latex file: " + ioe.getMessage() );
 	    	return;
 	    }
 	    

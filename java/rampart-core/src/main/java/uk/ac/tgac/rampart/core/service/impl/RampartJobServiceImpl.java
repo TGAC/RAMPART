@@ -146,7 +146,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		//finalAssembly.setFinalAssembly(Boolean.TRUE);
 		
 		// Getting the structure of this is important for both report building and data persistence
-		// Build context
+		// Build exectx
 		VelocityContext vc = new VelocityContext();
 		vc.put("job", job);
 		vc.put("settings", rampartSettings);
@@ -170,7 +170,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 	@Override
 	public void calcReadStats(List<Library> libs) throws IOException {
 		
-		// This can be long process so log it
+		// This can be long task so log it
 		log.info("Starting analysis of input library files");
 		
 		StopWatch stopWatch = new StopWatch("Input Library Analysis");

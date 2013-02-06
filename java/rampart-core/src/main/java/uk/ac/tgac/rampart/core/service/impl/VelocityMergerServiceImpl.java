@@ -54,7 +54,7 @@ public class VelocityMergerServiceImpl implements VelocityMergerService {
 	    // Create the output writer
 	    StringWriter writer = new StringWriter();
 	    
-	    log.debug("Merging template and context");
+	    log.debug("Merging template and exectx");
 	    
 	    // Create Velocity properties
 	    Properties vp = new Properties();
@@ -63,7 +63,7 @@ public class VelocityMergerServiceImpl implements VelocityMergerService {
 	    vp.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
 	    vp.setProperty("runtime.log.logsystem.log4j.logger", VelocityMergerServiceImpl.class.getName());
 	    
-	    // Merge the template and the context
+	    // Merge the template and the exectx
 	    VelocityEngine ve = new VelocityEngine(vp);
 	    ve.init();
 	    ve.evaluate(context, writer, "LaTeX Report Builder", template_data);
@@ -76,7 +76,7 @@ public class VelocityMergerServiceImpl implements VelocityMergerService {
 	    FileUtils.writeStringToFile(output, writer.toString() );
 
 	    
-	    log.debug("Velocity template and context merged and saved successfully");
+	    log.debug("Velocity template and exectx merged and saved successfully");
 	}
 	
 	
@@ -84,7 +84,7 @@ public class VelocityMergerServiceImpl implements VelocityMergerService {
 	
 	protected VelocityContext loadContext(File context_path) throws IOException {
 		
-		log.debug("Loading velocity context from ini-style file");
+		log.debug("Loading velocity exectx from ini-style file");
 		
 		List<String> context_lines = FileUtils.readLines(context_path);
 	    VelocityContext vc = new VelocityContext();
@@ -98,7 +98,7 @@ public class VelocityMergerServiceImpl implements VelocityMergerService {
 	    	vc.put(parts[0], parts[1]);
 	    }
 	    
-	    log.debug("Velocity context loaded successfully from ini-style file");
+	    log.debug("Velocity exectx loaded successfully from ini-style file");
 			    
 	    return vc;
 	}

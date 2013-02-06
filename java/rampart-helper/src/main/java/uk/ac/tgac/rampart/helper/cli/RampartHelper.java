@@ -58,7 +58,7 @@ public class RampartHelper {
 		}
 
 		
-		// Analyse the rampart job directory and build the job context object 
+		// Analyse the rampart job directory and build the job exectx object
 		VelocityContext context = this.rampartJobService.buildContext(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir());
 		
 		// Build the report
@@ -66,7 +66,7 @@ public class RampartHelper {
 			this.reportBuilderService.buildReport(this.rhOptions.getJobDir(), this.rhOptions.getProjectDir(), context);
 		}
 		
-		// Persist the context to the database
+		// Persist the exectx to the database
 		if (this.rhOptions.doPersist()) {
 			this.rampartJobService.persistContext(context);
 		}

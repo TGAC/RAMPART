@@ -92,11 +92,11 @@ public class RampartCLI {
 		/*Map<ConanParameter, String> rampartPipelineParameters = abyssParams.getArgMap();
 		
 		ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
-		ConanTask<DefaultConanPipeline> rampartTask = conanTaskFactory.createTask(
+		ConanExternalTask<DefaultConanPipeline> rampartTask = conanTaskFactory.createTask(
 				rampartPipeline,
 				1, 
 				rampartPipelineParameters, 
-				ConanTask.Priority.HIGHEST,
+				ConanExternalTask.Priority.HIGHEST,
 				rampartUser);
 		rampartTask.setId("");
 		rampartTask.submit();		

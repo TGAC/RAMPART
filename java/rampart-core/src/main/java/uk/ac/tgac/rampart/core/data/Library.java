@@ -111,8 +111,9 @@ public class Library implements Serializable {
 	public static final String KEY_SEQ_ORIENTATION = "seq_orientation";
 	public static final String KEY_USAGE = "usage";
 	public static final String KEY_ORDER = "order";
-	
-	public static final String KEY_FILE_TYPE = "file_type";
+    public static final String KEY_TYPE = "type";
+
+    public static final String KEY_FILE_TYPE = "file_type";
 	public static final String KEY_FILE_1 = "file_paired_1";
 	public static final String KEY_FILE_2 = "file_paired_2";
 	public static final String KEY_FILE_SE = "file_single_end";
@@ -329,7 +330,8 @@ public class Library implements Serializable {
 		.append(KEY_READ_LENGTH + "=" + this.getReadLength() + "\n")
 		.append(KEY_SEQ_ORIENTATION + "=" + this.getSeqOrientation().toString() + "\n")
 		.append(KEY_USAGE + "=" + this.getUsage().toString() + "\n")
-		.append(KEY_FILE_1 + "=" + this.getFilePaired1().getFilePath() + "\n")
+        .append(KEY_TYPE + "=" + this.getType().toString() + "\n")
+        .append(KEY_FILE_1 + "=" + this.getFilePaired1().getFilePath() + "\n")
 		.append(KEY_FILE_2 + "=" + this.getFilePaired2().getFilePath() + "\n")
 		.append(KEY_FILE_SE + "=" + this.getSeFile().getFilePath() + "\n");
 		
@@ -345,8 +347,9 @@ public class Library implements Serializable {
 		ld.setAverageInsertSize(Integer.parseInt(iniSection.get(KEY_AVG_INSERT_SIZE)));
 		ld.setInsertErrorTolerance(Double.parseDouble(iniSection.get(KEY_INSERT_ERROR_TOLERANCE)));
 		ld.setReadLength(Integer.parseInt(iniSection.get(KEY_READ_LENGTH)));
-		ld.setSeqOrientation(SeqOrientation.valueOf(iniSection.get(KEY_SEQ_ORIENTATION)));
+		ld.setSeqOrientation(SeqOrientation.valueOf(iniSection.get(KEY_SEQ_ORIENTATION).toUpperCase()));
 		ld.setUsage(iniSection.get(KEY_USAGE));
+        ld.setType(Type.valueOf(iniSection.get(KEY_TYPE).toUpperCase()));
 		ld.setFilePaired1(new SeqFile(iniSection.get(KEY_FILE_1)));	
 		ld.setFilePaired2(new SeqFile(iniSection.get(KEY_FILE_2)));
 		

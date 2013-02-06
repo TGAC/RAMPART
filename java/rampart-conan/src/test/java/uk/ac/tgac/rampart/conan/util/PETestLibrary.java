@@ -17,15 +17,13 @@
  **/
 package uk.ac.tgac.rampart.conan.util;
 
-import uk.ac.tgac.rampart.conan.conanx.parameter.FilePair;
+import uk.ac.tgac.rampart.conan.conanx.param.FilePair;
 import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.SeqFile;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * User: maplesod

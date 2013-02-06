@@ -24,14 +24,14 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  * Bootstraps Spring-managed beans into an application. How to use:
  * <ul>
- * <li>Create application context XML configuration files and put them where
+ * <li>Create application exectx XML configuration files and put them where
  * they can be loaded as class path resources. The configuration must include
- * the {@code <context:annotation-config/>} element to enable annotation-based
- * configuration, or the {@code <context:component-scan base-package="..."/>}
+ * the {@code <exectx:annotation-config/>} element to enable annotation-based
+ * configuration, or the {@code <exectx:component-scan base-package="..."/>}
  * element to also detect bean definitions from annotated classes.
  * <li>Create a "main" class that will receive references to Spring-managed
  * beans. Add the {@code @Autowired} annotation to any properties you want to be
- * injected with beans from the application context.
+ * injected with beans from the application exectx.
  * <li>In your application {@code main} method, create an
  * {@link ApplicationContextLoader} instance, and call the {@link #load} method
  * with the "main" object and the configuration file locations as parameters.
@@ -46,8 +46,8 @@ public class ApplicationContextLoader {
     }
 
     /**
-     * Loads application context. Override this method to change how the
-     * application context is loaded.
+     * Loads application exectx. Override this method to change how the
+     * application exectx is loaded.
      * 
      * @param configLocations
      *            configuration file locations
@@ -71,7 +71,7 @@ public class ApplicationContextLoader {
     }
 
     /**
-     * Loads application context, then injects dependencies into the object.
+     * Loads application exectx, then injects dependencies into the object.
      * 
      * @param main
      *            object to inject dependencies into

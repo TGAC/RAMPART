@@ -32,19 +32,34 @@ public class RampartConfiguration {
 
 	public static final String SECTION_JOB_DETAILS = "JOB";
 	public static final String SECTION_LIB_PREFIX = "LIB";
-	
+    public static final String SECTION_QT = "QT";
+    public static final String SECTION_MASS = "MASS";
+    public static final String SECTION_AMP = "AMP";
+
+
+    private File configFile;
 	
 	private Job job;
 	private List<Library> libs;
+    private Section qtSettings;
+    private Section massSettings;
+    private Section ampSettings;
 	
-	public RampartConfiguration(File config) throws InvalidFileFormatException, IOException {
-		loadFile(config);
-	}
+	public RampartConfiguration(File config) throws IOException {
+        this.configFile = config;
+    }
+
+
+    public void loadFile() throws IOException {
+        loadFile(this.configFile);
+    }
 	
-	public void loadFile(File config) throws InvalidFileFormatException, IOException {
+	public void loadFile(File config) throws IOException {
 		Ini ini = new Ini(config);
 		
-		this.job = Job.parseIniSection(ini.get(SECTION_JOB_DETAILS));
+		this.configFile = config;
+
+        this.job = Job.parseIniSection(ini.get(SECTION_JOB_DETAILS));
 		
 		this.libs = new ArrayList<Library>();
 		for(Map.Entry<String,Section> e : ini.entrySet()) {
@@ -54,6 +69,10 @@ public class RampartConfiguration {
 				this.libs.add(ld);
 			}
 		}
+
+        this.qtSettings = ini.get(SECTION_QT);
+        this.massSettings = ini.get(SECTION_MASS);
+        this.ampSettings = ini.get(SECTION_AMP);
 		
 	}
 	
@@ -68,12 +87,66 @@ public class RampartConfiguration {
 		FileUtils.writeStringToFile(outFile, sb.toString());
 	}
 
-	public Job getJob() {
+    public File getConfigFile() {
+        return configFile;
+    }
+
+    public Job getJob() {
 		return job;
 	}
 
 	public List<Library> getLibs() {
 		return libs;
 	}
-	
+
+    public Section getQtSettings() {
+        return qtSettings;
+    }
+
+    public Section getMassSettings() {
+        return massSettings;
+    }
+
+    public Section getAmpSettings() {
+        return ampSettings;
+    }
+
+
+    public static List<RampartConfiguration> parseList(String list, boolean load) throws IOException {
+
+        List<RampartConfiguration> configs = new ArrayList<RampartConfiguration>();
+
+        String[] parts = list.split(",");
+
+        for(String part : parts) {
+            if (load){
+                RampartConfiguration rc = new RampartConfiguration(new File(part.trim()));
+                rc.loadFile();
+                configs.add(rc);
+            }
+            else {
+                configs.add(new RampartConfiguration(new File(part.trim())));
+            }
+        }
+
+        return configs;
+    }
+
+    public static List<RampartConfiguration> createList(List<File> configFiles, boolean load) throws IOException {
+
+        List<RampartConfiguration> configs = new ArrayList<RampartConfiguration>();
+
+        for(File configFile : configFiles) {
+            if (load){
+                RampartConfiguration rc = new RampartConfiguration(configFile);
+                rc.loadFile();
+                configs.add(rc);
+            }
+            else {
+                configs.add(new RampartConfiguration(configFile));
+            }
+        }
+
+        return configs;
+    }
 }

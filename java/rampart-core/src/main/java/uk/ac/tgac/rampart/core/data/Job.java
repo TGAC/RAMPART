@@ -36,8 +36,10 @@ public class Job implements Serializable {
 	public static final String KEY_JD_TITLE = "title";
 	public static final String KEY_JD_JIRA_SEQINFO_ID = "jira_seqinfo_id";
 	public static final String KEY_JD_MISO_ID = "miso_id";
-	
-	private static final long serialVersionUID = -8280863990140875866L;
+    public static final String KEY_JD_NAME = "name";
+
+
+    private static final long serialVersionUID = -8280863990140875866L;
 
 	@Id 
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -63,6 +65,8 @@ public class Job implements Serializable {
 	private String collaborator;
 	private String institution;
 	private String title;
+    private String name;
+
 	
 	//private Date startDate;
 	
@@ -138,7 +142,16 @@ public class Job implements Serializable {
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	/*
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /*
 	public Date getStartDate() {
 		return startDate;
 	}
@@ -238,6 +251,9 @@ public class Job implements Serializable {
                 .append("\n")
                 .append(KEY_JD_MISO_ID + "=")
                 .append(this.getAuthor())
+                .append("\n")
+                .append(KEY_JD_NAME + "=")
+                .append(this.getName())
                 .append("\n");
 		//.append(this.getLibraries().toString());
 		
@@ -245,13 +261,37 @@ public class Job implements Serializable {
 	}
 	
 	public static Job parseIniSection(Section iniSection) {
-		Job jd = new Job();
-		jd.setAuthor(iniSection.get(KEY_JD_AUTHOR));
-		jd.setCollaborator(iniSection.get(KEY_JD_COLLABORATOR));
-		jd.setInstitution(iniSection.get(KEY_JD_INSTITUTION));
-		jd.setTitle(iniSection.get(KEY_JD_TITLE));
-		jd.setJiraSeqinfoId(Long.parseLong(iniSection.get(KEY_JD_JIRA_SEQINFO_ID).replaceAll("SEQINFO-", "")));
-		jd.setMisoId(Long.parseLong(iniSection.get(KEY_JD_MISO_ID).replaceAll("PRO", "")));	
+
+        Job jd = new Job();
+
+        if (iniSection.containsKey(KEY_JD_AUTHOR)) {
+            jd.setAuthor(iniSection.get(KEY_JD_AUTHOR));
+        }
+
+		if (iniSection.containsKey(KEY_JD_COLLABORATOR)) {
+            jd.setCollaborator(iniSection.get(KEY_JD_COLLABORATOR));
+        }
+
+        if (iniSection.containsKey(KEY_JD_INSTITUTION)) {
+		    jd.setInstitution(iniSection.get(KEY_JD_INSTITUTION));
+        }
+
+        if (iniSection.containsKey(KEY_JD_TITLE)) {
+            jd.setTitle(iniSection.get(KEY_JD_TITLE));
+        }
+
+        if (iniSection.containsKey(KEY_JD_JIRA_SEQINFO_ID)) {
+            jd.setJiraSeqinfoId(Long.parseLong(iniSection.get(KEY_JD_JIRA_SEQINFO_ID).replaceAll("SEQINFO-", "")));
+        }
+
+        if (iniSection.containsKey(KEY_JD_MISO_ID)) {
+		    jd.setMisoId(Long.parseLong(iniSection.get(KEY_JD_MISO_ID).replaceAll("PRO", "")));
+        }
+
+        if (iniSection.containsKey(KEY_JD_NAME)) {
+            jd.setName(iniSection.get(KEY_JD_NAME));
+        }
+
 		return jd;
 	}
 }
