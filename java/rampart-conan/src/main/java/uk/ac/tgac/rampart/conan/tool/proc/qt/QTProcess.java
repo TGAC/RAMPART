@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.proc.qt;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
@@ -30,7 +31,9 @@ import uk.ac.tgac.rampart.conan.tool.proc.RampartProcess;
 import uk.ac.tgac.rampart.conan.tool.task.external.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.conan.tool.task.external.qt.QualityTrimmerFactory;
 import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -107,6 +110,38 @@ public class QTProcess implements ConanProcess, RampartProcess {
                     executionContext.getScheduler().createWaitCondition(ExitStatusType.COMPLETED_SUCCESS, jobPrefix + "*"),
                     executionContext);
         }
+
+        createConfigs(qtList);
+    }
+
+    private void createConfigs(List<QualityTrimmer> qtList) throws IOException {
+
+        RampartConfiguration rawConfig = null;
+        RampartConfiguration qtConfig = null;
+
+        // Create the basics of the configuration object, preferably using the orginal config file if present
+        if (this.args.getConfig() != null && this.args.getConfig().exists()) {
+            rawConfig = RampartConfiguration.loadFile(this.args.getConfig());
+            qtConfig = RampartConfiguration.loadFile(this.args.getConfig());
+        }
+        else {
+            rawConfig = this.args.createRampartConfiguration();
+            qtConfig = this.args.createRampartConfiguration();
+        }
+
+        // Modify the dataset names
+        rawConfig.getJob().setName("RAW");
+        qtConfig.getJob().setName("QT");
+
+        // TODO Modify the files
+
+
+        // Save configs to disk
+        File rawConfigFile = new File(this.args.getOutputDir(), "raw.cfg");
+        File qtConfigFile = new File(this.args.getOutputDir(), "qt.cfg");
+
+        rawConfig.save(rawConfigFile);
+        qtConfig.save(qtConfigFile);
     }
 
 

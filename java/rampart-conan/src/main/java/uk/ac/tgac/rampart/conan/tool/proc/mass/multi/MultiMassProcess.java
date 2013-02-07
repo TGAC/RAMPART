@@ -141,7 +141,7 @@ public class MultiMassProcess  implements ConanProcess, RampartProcess {
         for(RampartConfiguration config : configs) {
 
             // Assume we're using args gathered from the config file for now
-            SingleMassArgs singleMassArgs = SingleMassArgs.parseConfig(config.getConfigFile());
+            SingleMassArgs singleMassArgs = SingleMassArgs.parseConfig(config.getFile());
 
             // Override args loaded from file if explicitly specified by the MultiMassArgs
             if (args.getAssembler() != null) {
@@ -163,7 +163,7 @@ public class MultiMassProcess  implements ConanProcess, RampartProcess {
             // These args are automatically set.
             singleMassArgs.setOutputDir(new File(args.getOutputDir(), config.getJob().getName()));
             singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + config.getJob().getName());
-            singleMassArgs.setConfig(config.getConfigFile());
+            singleMassArgs.setConfig(config.getFile());
 
             // Add to list
             singleMassArgsList.add(singleMassArgs);

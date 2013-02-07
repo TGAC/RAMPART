@@ -105,11 +105,11 @@ public class QTArgs implements ProcessArgs {
 
     public static QTArgs parseConfig(File config) throws IOException {
 
-        RampartConfiguration rampartConfig = new RampartConfiguration(config);
+        RampartConfiguration rampartConfig = new RampartConfiguration();
 
         QTArgs args = new QTArgs();
 
-        rampartConfig.loadFile();
+        rampartConfig.load(config);
         args.setLibs(rampartConfig.getLibs());
         Profile.Section section = rampartConfig.getQtSettings();
 
@@ -173,5 +173,15 @@ public class QTArgs implements ProcessArgs {
         } catch (IOException e) {
             throw new IllegalArgumentException("Config file does not exist of could not be parsed");
         }
+    }
+
+    public RampartConfiguration createRampartConfiguration() {
+
+        RampartConfiguration config = new RampartConfiguration();
+        config.getQtSettings();
+
+        // TODO set all the relevant vars here.
+
+        return config;
     }
 }

@@ -34,14 +34,14 @@ import java.util.List;
  */
 public class AmpPipeline implements ConanPipeline {
 
-    private List<AmpTask> tasks;
+    private List<AmpStage> tasks;
 
 
-    public List<AmpTask> getTasks() {
+    public List<AmpStage> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<AmpTask> tasks) {
+    public void setTasks(List<AmpStage> tasks) {
         this.tasks = tasks;
     }
 
@@ -87,7 +87,7 @@ public class AmpPipeline implements ConanPipeline {
         // Not sure why this is necessary... should be polymorphic
         List<ConanProcess> processes = new ArrayList<ConanProcess>();
 
-        for(AmpTask task : this.tasks) {
+        for(AmpStage task : this.tasks) {
             processes.add(task);
         }
 

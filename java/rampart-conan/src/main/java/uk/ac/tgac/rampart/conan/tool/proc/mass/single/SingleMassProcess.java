@@ -157,8 +157,8 @@ public class SingleMassProcess implements ConanProcess, RampartProcess {
 	public void execute(ExecutionContext executionContext) throws IOException, ProcessExecutionException, InterruptedException, CommandExecutionException {
 
         // Load the config file
-        RampartConfiguration config = new RampartConfiguration(this.args.getConfig());
-        config.loadFile();
+        RampartConfiguration config = new RampartConfiguration();
+        config.load(this.args.getConfig());
 
 
         // Check the range looks reasonable

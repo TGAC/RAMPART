@@ -70,7 +70,7 @@ public enum Stage {
             return null;
         }
     },
-    IMPROVER {
+    AMP {
         @Override
         public String getStatsID() {
             return "index";

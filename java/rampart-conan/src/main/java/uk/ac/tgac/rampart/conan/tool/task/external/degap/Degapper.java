@@ -17,13 +17,13 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.task.external.degap;
 
-import uk.ac.tgac.rampart.conan.tool.proc.amp.AmpTask;
+import uk.ac.tgac.rampart.conan.tool.proc.amp.AmpStage;
 
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:47
  */
-public interface Degapper extends AmpTask {
+public interface Degapper extends AmpStage {
 
 }

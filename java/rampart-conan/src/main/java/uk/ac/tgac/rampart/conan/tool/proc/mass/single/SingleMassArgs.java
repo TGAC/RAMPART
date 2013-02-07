@@ -81,11 +81,11 @@ public class SingleMassArgs extends MassArgs {
 
     public static SingleMassArgs parseConfig(File config) throws IOException {
 
-        RampartConfiguration rampartConfig = new RampartConfiguration(config);
+        RampartConfiguration rampartConfig = new RampartConfiguration();
 
         SingleMassArgs args = new SingleMassArgs();
 
-        rampartConfig.loadFile();
+        rampartConfig.load(config);
         args.setLibs(rampartConfig.getLibs());
         Profile.Section section = rampartConfig.getMassSettings();
 

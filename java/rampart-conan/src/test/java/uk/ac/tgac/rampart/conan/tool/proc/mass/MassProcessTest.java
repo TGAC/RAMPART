@@ -103,6 +103,7 @@ public class MassProcessTest {
         simpleMass.execute(ec);
 
         assertDirExists(outputDir, "51");
+        assertDirExists(outputDir, "65");
         assertDirExists(outputDir, "contigs");
         assertDirExists(outputDir, "logs");
     }

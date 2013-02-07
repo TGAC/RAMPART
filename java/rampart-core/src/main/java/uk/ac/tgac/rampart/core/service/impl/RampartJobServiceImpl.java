@@ -208,7 +208,8 @@ public class RampartJobServiceImpl implements RampartJobService {
 	@Override
 	public RampartConfiguration loadConfiguration(File in) throws IOException {
 		
-		RampartConfiguration rc = new RampartConfiguration(in);
+		RampartConfiguration rc = new RampartConfiguration();
+        rc.load(in);
 		return rc;
 	}
 

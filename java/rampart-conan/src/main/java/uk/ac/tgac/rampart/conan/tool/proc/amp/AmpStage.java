@@ -26,7 +26,7 @@ import java.io.File;
  * Date: 31/01/13
  * Time: 14:30
  */
-public interface AmpTask extends ConanProcess {
+public interface AmpStage extends ConanProcess {
 
     void setInputAssembly(File inputFile);
 

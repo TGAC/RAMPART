@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.tool.task.external.scaffold.sspace;
+package uk.ac.tgac.rampart.conan.tool.task.external.degap.gapcloser;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.conanx.exec.task.AbstractConanExternalTask;
-import uk.ac.tgac.rampart.conan.tool.task.external.scaffold.Scaffolder;
+import uk.ac.tgac.rampart.conan.tool.task.external.degap.Degapper;
 
 import java.io.File;
 import java.util.Collection;
@@ -29,19 +29,19 @@ import java.util.Map;
 /**
  * User: maplesod
  * Date: 23/01/13
- * Time: 16:00
+ * Time: 13:44
  */
-public class SSpaceBasicV2Task extends AbstractConanExternalTask implements Scaffolder {
+public class GapCloserV112Stage extends AbstractConanExternalTask implements Degapper {
 
-    public static final String EXE = "SSPACE_Basic_v2.0.pl";
+    public static final String EXE = "GapCloser";
 
-    private SSpaceBasicV2Args args;
+    private GapCloserV112Args args;
 
-    public SSpaceBasicV2Task() {
-        this(new SSpaceBasicV2Args());
+    public GapCloserV112Stage() {
+        this(new GapCloserV112Args());
     }
 
-    public SSpaceBasicV2Task(SSpaceBasicV2Args args) {
+    public GapCloserV112Stage(GapCloserV112Args args) {
         super(EXE);
         this.args = args;
     }
@@ -53,26 +53,27 @@ public class SSpaceBasicV2Task extends AbstractConanExternalTask implements Scaf
 
     @Override
     public boolean execute(Map<ConanParameter, String> parameters) throws ProcessExecutionException, IllegalArgumentException, InterruptedException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        //TODO
+        return false;
     }
 
     @Override
     public String getName() {
-        return "SSPACE_Basic_v2.0";
+        return "SOAP_GapCloser_v1.12-LSF";
     }
 
     @Override
     public Collection<ConanParameter> getParameters() {
-        return new SSpaceBasicV2Params().getConanParameters();
+        return new GapCloserV112Params().getConanParameters();
     }
 
     @Override
     public void setInputAssembly(File inputFile) {
-        this.args.setInputContigFile(inputFile);
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public File getOutputAssembly() {
-        return this.args.getOutputScaffoldFile();
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

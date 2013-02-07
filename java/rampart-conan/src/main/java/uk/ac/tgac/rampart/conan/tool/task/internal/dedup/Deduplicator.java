@@ -19,7 +19,7 @@ package uk.ac.tgac.rampart.conan.tool.task.internal.dedup;
 
 import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.conan.tool.proc.amp.AmpTask;
+import uk.ac.tgac.rampart.conan.tool.proc.amp.AmpStage;
 
 import java.io.File;
 import java.util.Collection;
@@ -32,7 +32,7 @@ import java.util.Map;
  * Time: 10:56
  * To change this template use File | Settings | File Templates.
  */
-public class Deduplicator implements AmpTask {
+public class Deduplicator implements AmpStage {
 
     /*
 

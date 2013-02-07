@@ -19,16 +19,16 @@ package uk.ac.tgac.rampart.core.data;
 
 import org.apache.commons.io.FileUtils;
 import org.ini4j.Ini;
-import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile.Section;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class RampartConfiguration {
+public class RampartConfiguration implements Serializable {
 
 	public static final String SECTION_JOB_DETAILS = "JOB";
 	public static final String SECTION_LIB_PREFIX = "LIB";
@@ -36,81 +36,110 @@ public class RampartConfiguration {
     public static final String SECTION_MASS = "MASS";
     public static final String SECTION_AMP = "AMP";
 
-
-    private File configFile;
-	
-	private Job job;
+    private Job job;
 	private List<Library> libs;
     private Section qtSettings;
     private Section massSettings;
     private Section ampSettings;
+
+    private File file;
 	
-	public RampartConfiguration(File config) throws IOException {
-        this.configFile = config;
+	public RampartConfiguration() {
+        this.job = new Job();
+        this.libs = new ArrayList<Library>();
+        this.qtSettings = null;
+        this.massSettings = null;
+        this.ampSettings = null;
+
+        this.file = null;
     }
 
+    /**
+     * Loads a rampart configuration file from disk and stores the contents in this object.
+     * @param configFile The rampart configuration file to load
+     * @throws IOException Thrown if there was any problems loading the file.
+     */
+    public void load(File configFile) throws IOException {
+        Ini ini = new Ini(configFile);
 
-    public void loadFile() throws IOException {
-        loadFile(this.configFile);
+        this.file = configFile;
+
+        this.setJob(Job.parseIniSection(ini.get(SECTION_JOB_DETAILS)));
+
+        List<Library> libs = new ArrayList<Library>();
+
+        for(Map.Entry<String,Section> e : ini.entrySet()) {
+            if (e.getKey().startsWith(SECTION_LIB_PREFIX)) {
+                int index = Integer.parseInt(e.getKey().substring(SECTION_LIB_PREFIX.length()));
+                libs.add(Library.parseIniSection(e.getValue(), index));
+            }
+        }
+
+        this.setLibs(libs);
+
+        this.setQtSettings(ini.get(SECTION_QT));
+        this.setMassSettings(ini.get(SECTION_MASS));
+        this.setAmpSettings(ini.get(SECTION_AMP));
     }
-	
-	public void loadFile(File config) throws IOException {
-		Ini ini = new Ini(config);
-		
-		this.configFile = config;
 
-        this.job = Job.parseIniSection(ini.get(SECTION_JOB_DETAILS));
-		
-		this.libs = new ArrayList<Library>();
-		for(Map.Entry<String,Section> e : ini.entrySet()) {
-			if (e.getKey().startsWith(SECTION_LIB_PREFIX)) {
-				int index = Integer.parseInt(e.getKey().substring(SECTION_LIB_PREFIX.length()));
-				Library ld = Library.parseIniSection(e.getValue(), index);
-				this.libs.add(ld);
-			}
-		}
-
-        this.qtSettings = ini.get(SECTION_QT);
-        this.massSettings = ini.get(SECTION_MASS);
-        this.ampSettings = ini.get(SECTION_AMP);
-		
-	}
-	
-	public void saveFile(File outFile) throws IOException {
+    /**
+     * Saves this object to disk at the specified location
+     * @param configFile The location to save this config file.
+     * @throws IOException Thrown if there were any problems saving to disk
+     */
+	public void save(File configFile) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.job.toString());
 		for(Library ld : this.libs) {
 			sb.append(ld.toString());
 		}
-		
-		
-		FileUtils.writeStringToFile(outFile, sb.toString());
-	}
 
-    public File getConfigFile() {
-        return configFile;
-    }
+		FileUtils.writeStringToFile(configFile, sb.toString());
+	}
 
     public Job getJob() {
-		return job;
-	}
+        return job;
+    }
 
-	public List<Library> getLibs() {
-		return libs;
-	}
+    public void setJob(Job job) {
+        this.job = job;
+    }
+
+    public List<Library> getLibs() {
+        return libs;
+    }
+
+    public void setLibs(List<Library> libs) {
+        this.libs = libs;
+    }
 
     public Section getQtSettings() {
         return qtSettings;
+    }
+
+    public void setQtSettings(Section qtSettings) {
+        this.qtSettings = qtSettings;
     }
 
     public Section getMassSettings() {
         return massSettings;
     }
 
+    public void setMassSettings(Section massSettings) {
+        this.massSettings = massSettings;
+    }
+
     public Section getAmpSettings() {
         return ampSettings;
     }
 
+    public void setAmpSettings(Section ampSettings) {
+        this.ampSettings = ampSettings;
+    }
+
+    public File getFile() {
+        return file;
+    }
 
     public static List<RampartConfiguration> parseList(String list, boolean load) throws IOException {
 
@@ -120,12 +149,10 @@ public class RampartConfiguration {
 
         for(String part : parts) {
             if (load){
-                RampartConfiguration rc = new RampartConfiguration(new File(part.trim()));
-                rc.loadFile();
-                configs.add(rc);
+                configs.add(RampartConfiguration.loadFile(new File(part.trim())));
             }
             else {
-                configs.add(new RampartConfiguration(new File(part.trim())));
+                configs.add(new RampartConfiguration());
             }
         }
 
@@ -138,15 +165,20 @@ public class RampartConfiguration {
 
         for(File configFile : configFiles) {
             if (load){
-                RampartConfiguration rc = new RampartConfiguration(configFile);
-                rc.loadFile();
-                configs.add(rc);
+                configs.add(RampartConfiguration.loadFile(configFile));
             }
             else {
-                configs.add(new RampartConfiguration(configFile));
+                configs.add(new RampartConfiguration());
             }
         }
 
         return configs;
     }
+
+    public static RampartConfiguration loadFile(File file) throws IOException {
+        RampartConfiguration config = new RampartConfiguration();
+        config.load(file);
+        return config;
+    }
+
 }

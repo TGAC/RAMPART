@@ -17,12 +17,12 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.task.external.scaffold;
 
-import uk.ac.tgac.rampart.conan.tool.proc.amp.AmpTask;
+import uk.ac.tgac.rampart.conan.tool.proc.amp.AmpStage;
 
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:48
  */
-public interface Scaffolder extends AmpTask {
+public interface Scaffolder extends AmpStage {
 }

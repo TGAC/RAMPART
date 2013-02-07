@@ -31,58 +31,58 @@ public enum AmpFactory {
 
     CLIP {
         @Override
-        public AmpTask create() {
+        public AmpStage create() {
             return new RampartClipperProcess();
         }
 
         @Override
-        public AmpTask create(String ampTaskName) {
+        public AmpStage create(String ampTaskName) {
             return new RampartClipperProcess();
         }
     },
     DEDUPLICATE {
         @Override
-        public AmpTask create() {
+        public AmpStage create() {
             return new Deduplicator();
         }
 
         @Override
-        public AmpTask create(String ampTaskName) {
+        public AmpStage create(String ampTaskName) {
             return new Deduplicator();
         }
     },
     DEGAP {
         @Override
-        public AmpTask create() {
+        public AmpStage create() {
             return DegapperFactory.createDegapper();
         }
 
         @Override
-        public AmpTask create(String ampTaskName) {
+        public AmpStage create(String ampTaskName) {
             return DegapperFactory.createDegapper(ampTaskName);
         }
     },
     SCAFFOLD {
         @Override
-        public AmpTask create() {
+        public AmpStage create() {
             return ScaffolderFactory.createScaffolder();
         }
 
         @Override
-        public AmpTask create(String ampTaskName) {
+        public AmpStage create(String ampTaskName) {
             return ScaffolderFactory.createScaffolder(ampTaskName);
         }
     };
 
-    public abstract AmpTask create();
-    public abstract AmpTask create(String ampTaskName);
+    public abstract AmpStage create();
+    public abstract AmpStage create(String ampTaskName);
 
 
-    public static AmpTask createAmpTask(String taskType) {
+    public static AmpStage createAmpTask(String taskType) {
         return AmpFactory.valueOf(taskType.toUpperCase()).create();
     }
 
-    public static AmpTask createAmpTask(String taskType, String taskName) {
+    public static AmpStage createAmpTask(String taskType, String taskName) {
         return AmpFactory.valueOf(taskType.toUpperCase()).create(taskName);
     }
 }

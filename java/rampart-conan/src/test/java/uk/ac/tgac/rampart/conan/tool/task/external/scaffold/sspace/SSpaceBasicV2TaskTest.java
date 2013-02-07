@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.conan.tool.task.external.scaffold.sspace;
 
 import org.junit.Test;
-import uk.ac.tgac.rampart.conan.tool.task.external.asm.abyss.AbyssV134Task;
 
 import java.io.File;
 
@@ -39,7 +38,7 @@ public class SSpaceBasicV2TaskTest {
         args.setBowtieThreads(8);
         args.setInputContigFile(new File("contigs.fa"));
 
-        SSpaceBasicV2Task task = new SSpaceBasicV2Task(args);
+        SSpaceBasicV2Stage task = new SSpaceBasicV2Stage(args);
         task.addPreCommand("source SSPACE_Basic_V2.0");
 
         String command = task.getCommand();

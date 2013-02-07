@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.task.external.scaffold;
 
-import uk.ac.tgac.rampart.conan.tool.task.external.scaffold.sspace.SSpaceBasicV2Task;
+import uk.ac.tgac.rampart.conan.tool.task.external.scaffold.sspace.SSpaceBasicV2Stage;
 
 /**
  * User: maplesod
@@ -29,7 +29,7 @@ public enum ScaffolderFactory {
     SSPACE_BASIC_V2 {
         @Override
         public Scaffolder create() {
-            return new SSpaceBasicV2Task();
+            return new SSpaceBasicV2Stage();
         }
     };
 

@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.tool.task.external.degap;
 
-import uk.ac.tgac.rampart.conan.tool.task.external.degap.gapcloser.GapCloserV112Task;
+import uk.ac.tgac.rampart.conan.tool.task.external.degap.gapcloser.GapCloserV112Stage;
 
 /**
  * User: maplesod
@@ -29,7 +29,7 @@ public enum DegapperFactory {
     SOAP_GAPCLOSER_V1_12 {
         @Override
         public Degapper create() {
-            return new GapCloserV112Task();
+            return new GapCloserV112Stage();
         }
     };
 
