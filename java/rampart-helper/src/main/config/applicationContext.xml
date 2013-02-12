@@ -13,8 +13,8 @@
        default-autowire="byName">
 	
 	<context:component-scan	annotation-config="true" base-package="uk.ac.tgac.rampart"/>
-	
-	<tx:annotation-driven transaction-manager="transactionManager"/>
+    
+    <tx:annotation-driven transaction-manager="transactionManager"/>
 		
 	<!-- <bean id="applicationContextLoader" class="uk.ac.tgac.rampart.util.ApplicationContextLoader" />-->
 	

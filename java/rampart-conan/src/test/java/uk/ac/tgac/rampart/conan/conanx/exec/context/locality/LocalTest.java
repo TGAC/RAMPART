@@ -18,19 +18,12 @@
 package uk.ac.tgac.rampart.conan.conanx.exec.context.locality;
 
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.tgac.rampart.conan.conanx.exec.context.ExecutionContext;
-import uk.ac.tgac.rampart.conan.conanx.exec.context.scheduler.lsf.LSF;
-import uk.ac.tgac.rampart.conan.conanx.exec.context.scheduler.lsf.LSFArgs;
 
-import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 /**
  * User: maplesod
@@ -43,7 +36,7 @@ public class LocalTest {
     public void testLocal() throws InterruptedException, ProcessExecutionException, CommandExecutionException, IOException {
 
         String CMD = "ls ~";
-        
+
         Local local = new Local();
 
         int exitCode = local.execute(CMD);

@@ -23,12 +23,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.ProcessRunner;
 import uk.ac.ebi.fgpt.conan.utils.ProcessUtils;
-import uk.ac.tgac.rampart.conan.conanx.exec.context.scheduler.Scheduler;
 import uk.ac.tgac.rampart.conan.conanx.exec.context.WaitCondition;
-import uk.ac.tgac.rampart.conan.conanx.exec.task.monitor.InvocationTrackingTaskListener;
-import uk.ac.tgac.rampart.conan.conanx.exec.task.monitor.TaskAdapter;
+import uk.ac.tgac.rampart.conan.conanx.exec.process.monitor.InvocationTrackingProcessListener;
+import uk.ac.tgac.rampart.conan.conanx.exec.process.monitor.ProcessAdapter;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -49,6 +47,7 @@ public class Local implements Locality {
 
     /**
      * No need to establish a connection to the local machine, so this method always returns true.
+     *
      * @return true
      */
     @Override
@@ -59,6 +58,7 @@ public class Local implements Locality {
 
     /**
      * No need to disconnect from the local machine, so this method always returns true.
+     *
      * @return true
      */
     @Override
@@ -67,33 +67,42 @@ public class Local implements Locality {
         return true;
     }
 
+    /**
+     * This is pretty simple as a Local locality does not contain any state.
+     *
+     * @return
+     */
     @Override
-    public int monitoredExecute(String command, TaskAdapter taskAdapter) throws InterruptedException, ProcessExecutionException {
+    public Locality copy() {
+        return new Local();
+    }
+
+    @Override
+    public int monitoredExecute(String command, ProcessAdapter processAdapter) throws InterruptedException, ProcessExecutionException {
 
         boolean dispatched = false;
-        boolean recoveryMode = taskAdapter.inRecoveryMode();
+        boolean recoveryMode = processAdapter.inRecoveryMode();
 
         log.debug("In recovery mode? " + recoveryMode);
 
-        // Only dispatch the task if not in recovery mode... otherwise we will probably have two jobs running
+        // Only dispatch the proc if not in recovery mode... otherwise we will probably have two jobs running
         // simultaneously
         try {
             if (!recoveryMode) {
 
-                // Create the task monitor
-                taskAdapter.createMonitor();
+                // Create the proc monitor
+                processAdapter.createMonitor();
 
-                // Execute the task (this is a scheduled task so it should run in the background, managed by the scheduler,
+                // Execute the proc (this is a scheduled proc so it should run in the background, managed by the scheduler,
                 // therefore we call the normal foreground execute method)
                 this.execute(command);
 
-                // Wait for the task to complete by using the task monitor
-                return this.waitFor(taskAdapter);
+                // Wait for the proc to complete by using the proc monitor
+                return this.waitFor(processAdapter);
             }
-        }
-        finally {
+        } finally {
             // Remove the monitor, even if we are in recovery mode or there was an error.
-            taskAdapter.removeMonitor();
+            processAdapter.removeMonitor();
         }
 
         // Hopefully we don't reach here but if we do then just return exit code 1 to signal an error.
@@ -115,8 +124,7 @@ public class Local implements Locality {
                 log.debug("Response from command [" + command + "]: " +
                         output.length + " lines, first line was " + output[0]);
             }
-        }
-        catch (CommandExecutionException e) {
+        } catch (CommandExecutionException e) {
 
             String message = "Failed to execute job (exited with exit code " + e.getExitCode() + ")";
 
@@ -126,14 +134,12 @@ public class Local implements Locality {
             pex.setProcessOutput(e.getErrorOutput());
             try {
                 pex.setProcessExecutionHost(InetAddress.getLocalHost().getHostName());
-            }
-            catch (UnknownHostException e1) {
+            } catch (UnknownHostException e1) {
                 log.debug("Unknown host", e1);
             }
             throw pex;
-        }
-        catch (IOException e) {
-            String message = "Failed to read output stream of native system task";
+        } catch (IOException e) {
+            String message = "Failed to read output stream of native system proc";
             log.error(message);
             log.debug("IOException follows", e);
             throw new ProcessExecutionException(1, message, e);
@@ -162,38 +168,38 @@ public class Local implements Locality {
      * it is added to the file.  This way we can monitor job progress and wait for it to complete in this method before
      * starting another job.  Once the job has completed the exit value is returned from this method, otherwise an exception
      * is thrown.
-     * @param adapter The TaskAdapter which monitors an output file, which contains details of the progress of the scheduled
+     *
+     * @param adapter The ProcessAdapter which monitors an output file, which contains details of the progress of the scheduled
      *                job.
      * @return An exit value describing the completion status of the job.
      * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
+     *
      * @throws InterruptedException
      */
-    protected int waitFor(TaskAdapter adapter) throws ProcessExecutionException, InterruptedException {
+    protected int waitFor(ProcessAdapter adapter) throws ProcessExecutionException, InterruptedException {
 
-        InvocationTrackingTaskListener listener = new InvocationTrackingTaskListener();
+        InvocationTrackingProcessListener listener = new InvocationTrackingProcessListener();
         adapter.addTaskListener(listener);
 
-        // task exit value, initialise to -1
+        // proc exit value, initialise to -1
         int exitValue = -1;
 
-        // task monitoring
+        // proc monitoring
         try {
-            log.debug("Monitoring task, waiting for completion");
+            log.debug("Monitoring proc, waiting for completion");
             exitValue = listener.waitFor();
             log.debug("Process completed with exit value " + exitValue);
 
             if (exitValue != 0) {
                 return exitValue;
-            }
-            else {
+            } else {
                 ProcessExecutionException pex = new ProcessExecutionException(exitValue);
                 pex.setProcessOutput(adapter.getProcessOutput());
                 pex.setProcessExecutionHost(adapter.getProcessExecutionHost());
                 throw pex;
             }
-        }
-        finally {
-            // this task DID start, so only delete output files to cleanup if the task actually exited,
+        } finally {
+            // this proc DID start, so only delete output files to cleanup if the proc actually exited,
             // and wasn't e.g. interrupted prior to completion
             if (exitValue != -1) {
                 log.debug("Deleting " + adapter.getFile().getAbsolutePath());

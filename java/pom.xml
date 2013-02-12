@@ -102,12 +102,14 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>failsafe-integration-tests</id>
+                        <phase>integration-test</phase>
                         <goals>
                             <goal>integration-test</goal>
                         </goals>
                         <configuration>
                             <includes>
-                                <include>**/*.class</include>
+                                <include>**/*IT.class</include>
                             </includes>
                         </configuration>
                     </execution>

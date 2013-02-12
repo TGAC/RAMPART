@@ -170,7 +170,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 	@Override
 	public void calcReadStats(List<Library> libs) throws IOException {
 		
-		// This can be long task so log it
+		// This can be long proc so log it
 		log.info("Starting analysis of input library files");
 		
 		StopWatch stopWatch = new StopWatch("Input Library Analysis");

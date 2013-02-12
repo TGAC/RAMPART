@@ -4,10 +4,10 @@ import java.io.File;
 
 public abstract class AbstractSchedulerArgs implements SchedulerArgs {
 
-	private String jobName;
-	private String queueName;
-	private int threads;
-	private int memoryMB;
+    private String jobName;
+    private String queueName;
+    private int threads;
+    private int memoryMB;
     private File monitorFile;
     private int monitorInterval;
     private boolean backgroundTask;
@@ -32,45 +32,45 @@ public abstract class AbstractSchedulerArgs implements SchedulerArgs {
         this.monitorInterval = args.getMonitorInterval();
     }
 
-	@Override
-	public String getJobName() {
-		return jobName;
-	}
+    @Override
+    public String getJobName() {
+        return jobName;
+    }
 
     @Override
-	public void setJobName(String jobName) {
-		this.jobName = jobName;
-	}
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
 
     @Override
-	public String getQueueName() {
-		return queueName;
-	}
+    public String getQueueName() {
+        return queueName;
+    }
 
     @Override
-	public void setQueueName(String queueName) {
-		this.queueName = queueName;
-	}
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
+    }
 
     @Override
-	public int getThreads() {
-		return threads;
-	}
+    public int getThreads() {
+        return threads;
+    }
 
     @Override
-	public void setThreads(int threads) {
-		this.threads = threads;
-	}
+    public void setThreads(int threads) {
+        this.threads = threads;
+    }
 
     @Override
-	public int getMemoryMB() {
-		return memoryMB;
-	}
+    public int getMemoryMB() {
+        return memoryMB;
+    }
 
     @Override
-	public void setMemoryMB(int memoryMB) {
-		this.memoryMB = memoryMB;
-	}
+    public void setMemoryMB(int memoryMB) {
+        this.memoryMB = memoryMB;
+    }
 
     @Override
     public void setMonitorFile(File monitorFile) {

@@ -51,6 +51,7 @@ public enum LSFExitStatusType {
     };
 
     public abstract ExitStatusType getExitStatus();
+
     public abstract String getCommand();
 
     public static LSFExitStatusType select(ExitStatusType type) {

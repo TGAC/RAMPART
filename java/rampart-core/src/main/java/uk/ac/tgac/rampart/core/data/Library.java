@@ -147,7 +147,6 @@ public class Library implements Serializable {
 	@Column(name="seq_orientation")
 	private SeqOrientation seqOrientation;
 	
-	@Enumerated(EnumType.STRING)
 	@Column(name="lib_usage")
 	private String usage;
 	

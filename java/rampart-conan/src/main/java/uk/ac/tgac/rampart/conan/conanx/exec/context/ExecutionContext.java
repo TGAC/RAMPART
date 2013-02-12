@@ -47,6 +47,13 @@ public class ExecutionContext {
         this.foregroundJob = foregroundJob;
     }
 
+    public ExecutionContext(ExecutionContext copy) {
+
+        this.locality = copy.getLocality().copy();
+        this.scheduler = copy.usingScheduler() ? copy.getScheduler().copy() : null;
+        this.foregroundJob = copy.isForegroundJob();
+    }
+
     public Locality getLocality() {
         return locality;
     }

@@ -1,17 +1,17 @@
 /**
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
  * Copyright (C) 2013  Daniel Mapleson - TGAC
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
@@ -23,71 +23,127 @@ import java.io.File;
 
 public class RampartOptions {
 
-	public static final String OPT_CONFIG = "config";
-	public static final String OPT_VERBOSE = "verbose";
-	public static final String OPT_HELP = "help";
-	
-	private File config;
-	private boolean verbose;
-	private boolean help;
-	
-	public RampartOptions(CommandLine cmdLine) throws ParseException {
-		
-		if (cmdLine.hasOption(OPT_CONFIG)) {
-			config = new File(cmdLine.getOptionValue(OPT_CONFIG));
-		} else {
-			throw new ParseException(OPT_CONFIG + " argument not specified.");
-		}
-		
-		verbose = cmdLine.hasOption(OPT_VERBOSE);
-		help = cmdLine.hasOption(OPT_HELP);
-	}
-	
-	public File getConfig() {
-		return config;
-	}
-	public void setConfig(File config) {
-		this.config = config;
-	}
-	public boolean isVerbose() {
-		return verbose;
-	}
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
-	}
-	public boolean doHelp() {
-		return help;
-	}
-	public void setHelp(boolean help) {
-		this.help = help;
-	}
-	
-	public void printUsage() {
-		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp(this.getClass().getName(), createOptions());
-	}
-	
-	@SuppressWarnings("static-access")
-	public static Options createOptions() {
+    public static final String OPT_CLEAN = "clean";
+    public static final String OPT_CONFIG = "config";
+    public static final String OPT_OUTPUT = "output";
+    public static final String OPT_VERBOSE = "verbose";
+    public static final String OPT_HELP = "help";
 
-		// Boolean options
-		Option opt_verbose = new Option("v", OPT_VERBOSE, false, "Output extra information while running.");
-		Option opt_help = new Option("?", OPT_HELP, false, "Print this message.");
+    private File config = null;
+    private File output = null;
+    private File clean = null;
+    private boolean verbose = false;
+    private boolean help = false;
 
-		// Options with arguments		
-		Option opt_config = OptionBuilder.withArgName("file").withLongOpt(OPT_CONFIG).hasArg()
-				.withDescription("The rampart configuration file.").create("c");
-		
-		// create Options object
-		Options options = new Options();
 
-		// add t option
-		options.addOption(opt_verbose);
-		options.addOption(opt_help);
-		options.addOption(opt_config);
 
-		return options;
-	}
-	
-	
+    public RampartOptions(CommandLine cmdLine) throws ParseException {
+
+        help = cmdLine.hasOption(OPT_HELP);
+
+        if (cmdLine.hasOption(OPT_CLEAN)) {
+
+            String cleanFilePath = cmdLine.getOptionValue(OPT_CLEAN);
+
+            clean = cleanFilePath != null ? new File(cmdLine.getOptionValue(OPT_CLEAN)) : new File(".");
+        }
+        else {
+            clean = null;
+        }
+
+        if (!help && clean == null) {
+            if (cmdLine.hasOption(OPT_CONFIG)) {
+                config = new File(cmdLine.getOptionValue(OPT_CONFIG));
+            }
+            else {
+                throw new ParseException(OPT_CONFIG + " argument not specified.");
+            }
+
+            if (cmdLine.hasOption(OPT_OUTPUT)) {
+                output = new File(cmdLine.getOptionValue(OPT_OUTPUT));
+            }
+            else {
+                output = new File(".");
+            }
+
+            verbose = cmdLine.hasOption(OPT_VERBOSE);
+        }
+    }
+
+    public File getConfig() {
+        return config;
+    }
+
+    public void setConfig(File config) {
+        this.config = config;
+    }
+
+    public File getOutput() {
+        return output;
+    }
+
+    public void setOutput(File output) {
+        this.output = output;
+    }
+
+    public File getClean() {
+        return clean;
+    }
+
+    public void setClean(File clean) {
+        this.clean = clean;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    public boolean doHelp() {
+        return help;
+    }
+
+    public void setHelp(boolean help) {
+        this.help = help;
+    }
+
+    public void printUsage() {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp(this.getClass().getName(), createOptions());
+    }
+
+    @SuppressWarnings("static-access")
+    public static Options createOptions() {
+
+        // Boolean options
+        Option opt_verbose = new Option("v", OPT_VERBOSE, false, "Output extra information while running.");
+        Option opt_help = new Option("?", OPT_HELP, false, "Print this message.");
+
+        // Options with arguments
+        Option opt_config = OptionBuilder.withArgName("file").withLongOpt(OPT_CONFIG).hasArg()
+                .withDescription("The rampart configuration file.").create("c");
+
+        Option opt_output = OptionBuilder.withArgName("file").withLongOpt(OPT_OUTPUT).hasArg()
+                .withDescription("The directory to put output from this job.").create("o");
+
+        Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasArg()
+                .withDescription("The directory to clean.").create("clean");
+
+        // create Options object
+        Options options = new Options();
+
+        // add t option
+        options.addOption(opt_verbose);
+        options.addOption(opt_help);
+        options.addOption(opt_config);
+        options.addOption(opt_output);
+        options.addOption(opt_clean);
+
+        return options;
+    }
+
+
 }

@@ -63,8 +63,8 @@ public class LatexServiceImpl implements LatexService {
 			
 			/* UEA sRNA Workbench way */
 			/* Assumes we are in the correct directory and output should go here too.
-			Process task = Runtime.getRuntime().exec(command);
-			ProcessStreamManager psm = new ProcessStreamManager(task, "PDFLATEX");
+			Process proc = Runtime.getRuntime().exec(command);
+			ProcessStreamManager psm = new ProcessStreamManager(proc, "PDFLATEX");
 	
 			int code = psm.runInForeground(false);
 	
