@@ -17,12 +17,12 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single.SingleMassParams;
-import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.util.ArrayList;

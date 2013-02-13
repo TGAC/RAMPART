@@ -27,8 +27,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
 import uk.ac.tgac.rampart.pipeline.tool.Rampart;
 
 import java.io.File;

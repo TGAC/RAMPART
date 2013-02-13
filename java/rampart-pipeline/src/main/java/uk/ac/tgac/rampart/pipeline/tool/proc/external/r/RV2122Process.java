@@ -17,14 +17,14 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.r;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 
 /**
  * User: maplesod
  * Date: 16/01/13
  * Time: 16:13
  */
-public class RV2122Process extends AbstractConanXProcess {
+public class RV2122Process extends AbstractConanProcess {
 
     public static final String EXE = "Rscript";
 

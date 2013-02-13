@@ -17,11 +17,11 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.FilePair;
+import uk.ac.ebi.fgpt.conan.core.param.FilePair;
+import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle.SicklePeV11Args;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle.SickleSeV11Args;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle.SickleV11Process;
-import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 

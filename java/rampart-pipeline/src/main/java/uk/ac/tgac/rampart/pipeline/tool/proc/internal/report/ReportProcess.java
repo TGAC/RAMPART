@@ -17,14 +17,14 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.report;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 
 /**
  * User: maplesod
  * Date: 05/02/13
  * Time: 17:48
  */
-public class ReportProcess extends AbstractConanXProcess {
+public class ReportProcess extends AbstractConanProcess {
 
     @Override
     public String getName() {

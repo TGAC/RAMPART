@@ -17,8 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 import java.util.Map;
 

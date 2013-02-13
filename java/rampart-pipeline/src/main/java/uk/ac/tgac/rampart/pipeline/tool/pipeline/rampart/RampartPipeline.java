@@ -17,10 +17,10 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpPipeline;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassParams;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassProcess;

@@ -21,13 +21,15 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
-import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -39,10 +41,20 @@ import static org.junit.Assert.assertTrue;
  * Date: 30/01/13
  * Time: 19:49
  */
+@RunWith(MockitoJUnitRunner.class)
 public class StatsTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
+
+    @Mock
+    ExecutionContext ec;
+
+    @Mock
+    ConanProcessService conanProcessService;
+
+    @Mock
+    SequenceStatisticsService sequenceStatisticsService;
 
     @Test
     public void localQTTest() throws InterruptedException, ProcessExecutionException, URISyntaxException {
@@ -50,23 +62,18 @@ public class StatsTest {
         File outputDir = temp.newFolder("statsTest");
         File statsAssemblyDir = FileUtils.toFile(this.getClass().getResource("/tools/stats/MASS-k75-scaffolds.fa")).getParentFile();
 
-        SequenceStatisticsService sequenceStatisticsService = Mockito.mock(SequenceStatisticsService.class);
-        ProcessExecutionService processExecutionService = Mockito.mock(ProcessExecutionService.class);
-
         StatsArgs statsArgs = new StatsArgs();
         statsArgs.setInputDir(statsAssemblyDir);
         statsArgs.setOutputDir(outputDir);
         statsArgs.setRampartStage(RampartStage.MASS);
 
-        ExecutionContext env = new ExecutionContext();
-
         StatsProcess statsProcess = new StatsProcess(statsArgs);
 
         // Inject mocks
         ReflectionTestUtils.setField(statsProcess, "sequenceStatisticsService", sequenceStatisticsService);
-        ReflectionTestUtils.setField(statsProcess, "processExecutionService", processExecutionService);
+        ReflectionTestUtils.setField(statsProcess, "conanProcessService", conanProcessService);
 
-        statsProcess.execute(env);
+        statsProcess.execute(ec);
 
         File[] files = outputDir.listFiles();
         boolean foundStats = false;

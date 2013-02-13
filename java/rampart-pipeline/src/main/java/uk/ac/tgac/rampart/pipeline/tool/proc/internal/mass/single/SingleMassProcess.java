@@ -18,26 +18,22 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single;
 
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.context.scheduler.ExitStatusType;
-import uk.ac.ebi.fgpt.conan.context.scheduler.SchedulerArgs;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.PerlHelper;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
+import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.PerlHelper;
 
 import java.io.File;
 import java.io.IOException;
 
-public class SingleMassProcess extends AbstractConanXProcess {
-
-    @Autowired
-    private ProcessExecutionService processExecutionService;
+public class SingleMassProcess extends AbstractConanProcess {
 
     public SingleMassProcess() {
         this(new SingleMassArgs());
@@ -179,15 +175,15 @@ public class SingleMassProcess extends AbstractConanXProcess {
                 }
 
                 // Create proc
-                this.processExecutionService.execute(args.getAssembler(), asmExeCtx);
+                this.conanProcessService.execute(args.getAssembler(), asmExeCtx);
             }
 
             // Wait for all assembly jobs to finish if they are running as background tasks.
             if (asmExeCtx.usingScheduler() && !asmExeCtx.isForegroundJob()) {
 
-                this.processExecutionService.waitFor(
+                this.conanProcessService.waitFor(
                         asmExeCtx.getScheduler().createWaitCondition(
-                                ExitStatusType.COMPLETED_SUCCESS,
+                                ExitStatus.Type.COMPLETED_SUCCESS,
                                 args.getJobPrefix() + "*"),
                         asmExeCtx);
             }
@@ -206,7 +202,7 @@ public class SingleMassProcess extends AbstractConanXProcess {
 
     protected ExecutionContext createAssemblerExecutionContext(ExecutionContext executionContext) {
 
-        ExecutionContext newExecutionContext = new ExecutionContext(executionContext);
+        ExecutionContext newExecutionContext = executionContext.copy();
 
         if (newExecutionContext.usingScheduler()) {
             SchedulerArgs schArgs = newExecutionContext.getScheduler().getArgs().copy();
@@ -269,7 +265,7 @@ public class SingleMassProcess extends AbstractConanXProcess {
         statCommands.add(buildStatCmdLine(args.getScaffoldsDir()));
 
         // Create proc
-        this.processExecutionService.execute(statCommands.toString(), env);
+        this.conanProcessService.execute(statCommands.toString(), env);
 
         if (env.usingScheduler()) {
             env.getScheduler().setArgs(schArgsBackup);

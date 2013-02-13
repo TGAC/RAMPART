@@ -1,8 +1,8 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ConanXProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 
-public interface Assembler extends ConanXProcess {
+public interface Assembler extends ConanProcess {
 
     AssemblerArgs getArgs();
 

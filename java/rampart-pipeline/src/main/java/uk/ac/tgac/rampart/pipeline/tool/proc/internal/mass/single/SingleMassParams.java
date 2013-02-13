@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.DefaultConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.MassParams;
 
 import java.util.ArrayList;

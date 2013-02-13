@@ -14,7 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java-version>1.6</java-version>
-		<conan-version>2.1-SNAPSHOT</conan-version>
+		<conan-version>3.0-SNAPSHOT</conan-version>
 		<slf4j-version>1.6.1</slf4j-version>
 	</properties>
 
@@ -84,7 +84,7 @@
                     <includes>
                         <include>**/*.class</include>
                     </includes>
-                    <excludedGroups>uk.ac.tgac.rampart.conan.ui.IntegrationTest</excludedGroups>
+                    <excludedGroups>uk.ac.tgac.rampart.pipeline.ui.IntegrationTest</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
@@ -98,7 +98,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <groups>uk.ac.tgac.rampart.conan.ui.IntegrationTest</groups>
+                    <groups>uk.ac.tgac.rampart.pipeline.ui.IntegrationTest</groups>
                 </configuration>
                 <executions>
                     <execution>
@@ -157,7 +157,7 @@
 
 	<modules>
 		<module>rampart-core</module>
-		<module>rampart-conan</module>
+		<module>rampart-pipeline</module>
 		<module>rampart-helper</module>
 	</modules>
 

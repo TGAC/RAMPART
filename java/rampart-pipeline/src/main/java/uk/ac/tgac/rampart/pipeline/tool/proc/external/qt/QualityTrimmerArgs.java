@@ -17,8 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.FilePair;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.core.param.FilePair;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 import java.io.File;
 

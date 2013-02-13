@@ -19,9 +19,9 @@ package uk.ac.tgac.rampart.pipeline.tool.proc.external.degap.gapcloser;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.degap.DegapperArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.degap.DegapperArgs;
 
 import java.io.File;
 import java.io.IOException;

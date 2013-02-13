@@ -25,17 +25,16 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle.SickleV11Process;
 
 import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -53,7 +52,7 @@ public class QTProcessTest {
     ExecutionContext ec;
 
     @Mock
-    ProcessExecutionService processExecutionService;
+    ConanProcessService conanProcessService;
 
     @Mock
     SickleV11Process sickle;
@@ -71,9 +70,9 @@ public class QTProcessTest {
 
         QTProcess qtProcess = new QTProcess(qtArgs);
 
-        when(processExecutionService.execute(sickle, ec)).thenReturn(0);
+        when(conanProcessService.execute(sickle, ec)).thenReturn(0);
 
-        ReflectionTestUtils.setField(qtProcess, "processExecutionService", processExecutionService);
+        ReflectionTestUtils.setField(qtProcess, "conanProcessService", conanProcessService);
 
         boolean success = qtProcess.execute(ec);
 

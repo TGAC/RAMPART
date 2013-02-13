@@ -18,12 +18,12 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
 
 import org.ini4j.Profile;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmer;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerFactory;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmer;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerFactory;
 
 import java.io.File;
 import java.io.IOException;

@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.util.List;

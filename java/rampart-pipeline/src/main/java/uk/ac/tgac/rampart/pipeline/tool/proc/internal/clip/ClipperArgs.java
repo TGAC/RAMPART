@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 /**
  * User: maplesod

@@ -25,10 +25,10 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.context.locality.Local;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public class MultiMassProcessTest {
     ExecutionContext ec;
 
     @Mock
-    ProcessExecutionService processExecutionService;
+    ConanProcessService conanProcessService;
 
     @Test
     public void testExecute() throws InterruptedException, ProcessExecutionException {
@@ -77,10 +77,10 @@ public class MultiMassProcessTest {
 
         MultiMassProcess multiMass = new MultiMassProcess(args);
 
-        when(processExecutionService.execute(multiMass, ec)).thenReturn(0);
+        when(conanProcessService.execute(multiMass, ec)).thenReturn(0);
         when(ec.getLocality()).thenReturn(new Local());
 
-        ReflectionTestUtils.setField(multiMass, "processExecutionService", processExecutionService);
+        ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
 
         multiMass.execute(ec);
 

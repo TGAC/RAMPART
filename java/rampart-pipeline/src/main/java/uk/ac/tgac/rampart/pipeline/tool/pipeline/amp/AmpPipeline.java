@@ -17,12 +17,11 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

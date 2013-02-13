@@ -23,13 +23,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.context.locality.Local;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss.AbyssV134Process;
 
 import java.io.File;
@@ -52,7 +51,7 @@ public class SingleMassProcessTest {
     ExecutionContext ec;
 
     @Mock
-    ProcessExecutionService processExecutionService;
+    ConanProcessService conanProcessService;
 
     @Test
     public void testExecute() throws ProcessExecutionException, InterruptedException {
@@ -69,14 +68,12 @@ public class SingleMassProcessTest {
         args.setOutputDir(outputDir);
         args.setConfig(cfgFile);
 
-        ProcessExecutionService processExecutionService = Mockito.mock(ProcessExecutionService.class);
-
         SingleMassProcess singleMassProcess = new SingleMassProcess(args);
 
-        when(processExecutionService.execute(singleMassProcess, ec)).thenReturn(0);
+        when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(0);
         when(ec.getLocality()).thenReturn(new Local());
 
-        ReflectionTestUtils.setField(singleMassProcess, "processExecutionService", processExecutionService);
+        ReflectionTestUtils.setField(singleMassProcess, "conanProcessService", conanProcessService);
 
         singleMassProcess.execute(ec);
 

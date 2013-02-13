@@ -18,10 +18,10 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean;
 
 import org.apache.commons.lang.StringUtils;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 
-public class CleanJobProcess extends AbstractConanXProcess {
+public class CleanJobProcess extends AbstractConanProcess {
 
     public CleanJobProcess(CleanJobArgs args) {
         super("", args, new CleanJobParams());

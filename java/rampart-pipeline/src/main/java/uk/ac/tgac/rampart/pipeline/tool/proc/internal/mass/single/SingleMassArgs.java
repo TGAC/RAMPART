@@ -18,11 +18,11 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single;
 
 import org.ini4j.Profile;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.MassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.StepSize;
-import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 
 import java.io.File;
 import java.io.IOException;

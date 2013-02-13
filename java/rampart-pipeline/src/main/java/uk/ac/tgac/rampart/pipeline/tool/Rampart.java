@@ -18,16 +18,16 @@
 package uk.ac.tgac.rampart.pipeline.tool;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.pipeline.cli.RampartOptions;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobArgs;
@@ -41,7 +41,7 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobProcess
 public class Rampart {
 
     @Autowired
-    private ProcessExecutionService processExecutionService;
+    private ConanProcessService conanProcessService;
 
     private RampartOptions options;
 
@@ -68,7 +68,7 @@ public class Rampart {
 
         CleanJobProcess cleanJobProcess = new CleanJobProcess(cleanJobArgs);
 
-        this.processExecutionService.execute(cleanJobProcess, new ExecutionContext());
+        this.conanProcessService.execute(cleanJobProcess, new DefaultExecutionContext());
     }
 
     protected void startJob() throws InterruptedException, TaskExecutionException {

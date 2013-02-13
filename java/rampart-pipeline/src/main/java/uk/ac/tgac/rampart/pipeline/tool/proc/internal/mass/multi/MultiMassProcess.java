@@ -17,19 +17,17 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.context.scheduler.ExitStatusType;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
+import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.MassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single.SingleMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.stats.MassSelectorArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.stats.MassSelectorProcess;
-import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,10 +40,7 @@ import java.util.List;
  * Date: 01/02/13
  * Time: 11:10
  */
-public class MultiMassProcess extends AbstractConanXProcess {
-
-    @Autowired
-    private ProcessExecutionService processExecutionService;
+public class MultiMassProcess extends AbstractConanProcess {
 
     public MultiMassProcess() {
         this(new MultiMassArgs());
@@ -91,15 +86,15 @@ public class MultiMassProcess extends AbstractConanXProcess {
                 statsFiles.add(singleMassArgs.getStatsFile());
 
                 // Execute the single MASS run
-                this.processExecutionService.execute(new SingleMassProcess(singleMassArgs), executionContext);
+                this.conanProcessService.execute(new SingleMassProcess(singleMassArgs), executionContext);
             }
 
             // Wait for all assembly jobs to finish if they are running as background tasks.
             if (executionContext.usingScheduler() && !executionContext.isForegroundJob()) {
 
-                this.processExecutionService.waitFor(
+                this.conanProcessService.waitFor(
                         executionContext.getScheduler().createWaitCondition(
-                                ExitStatusType.COMPLETED_SUCCESS,
+                                ExitStatus.Type.COMPLETED_SUCCESS,
                                 args.getJobPrefix() + "*"),
                         executionContext);
             }
@@ -130,7 +125,7 @@ public class MultiMassProcess extends AbstractConanXProcess {
 
         MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
 
-        this.processExecutionService.execute(massSelectorProcess, executionContext);
+        this.conanProcessService.execute(massSelectorProcess, executionContext);
     }
 
     private List<SingleMassArgs> createSingleMassArgsList(MultiMassArgs args) throws IOException {

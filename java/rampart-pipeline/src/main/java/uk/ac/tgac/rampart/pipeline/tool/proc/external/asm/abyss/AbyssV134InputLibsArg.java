@@ -18,7 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss;
 
 import org.apache.commons.lang.StringUtils;
-import uk.ac.tgac.rampart.pipeline.conanx.param.FilePair;
+import uk.ac.ebi.fgpt.conan.core.param.FilePair;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;

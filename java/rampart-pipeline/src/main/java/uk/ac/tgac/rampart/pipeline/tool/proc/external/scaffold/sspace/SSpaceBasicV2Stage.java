@@ -17,8 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.scaffold.sspace;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.scaffold.Scaffolder;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.scaffold.ScaffolderArgs;
 
@@ -30,7 +30,7 @@ import java.util.Collection;
  * Date: 23/01/13
  * Time: 16:00
  */
-public class SSpaceBasicV2Stage extends AbstractConanXProcess implements Scaffolder {
+public class SSpaceBasicV2Stage extends AbstractConanProcess implements Scaffolder {
 
     public static final String EXE = "SSPACE_Basic_v2.0.pl";
 

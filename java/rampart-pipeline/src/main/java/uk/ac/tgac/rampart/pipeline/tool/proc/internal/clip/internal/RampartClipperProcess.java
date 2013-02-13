@@ -17,14 +17,10 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip.internal;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip.Clipper;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,7 +29,7 @@ import java.util.Map;
  * Time: 10:56
  * To change this template use File | Settings | File Templates.
  */
-public class RampartClipperProcess extends AbstractConanXProcess implements Clipper {
+public class RampartClipperProcess extends AbstractConanProcess implements Clipper {
 
     private RampartClipperArgs args;
 

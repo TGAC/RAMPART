@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerArgs;
 
@@ -26,7 +26,7 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerArgs;
  * Date: 07/01/13
  * Time: 12:12
  */
-public class AbyssV134Process extends AbstractConanXProcess implements Assembler {
+public class AbyssV134Process extends AbstractConanProcess implements Assembler {
 
     public static final String EXE = "abyss-pe";
 

@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.PathParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessParams;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;

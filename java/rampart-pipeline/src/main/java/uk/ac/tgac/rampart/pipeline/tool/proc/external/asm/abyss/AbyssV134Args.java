@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerArgs;
 
 import java.util.HashMap;
 import java.util.List;

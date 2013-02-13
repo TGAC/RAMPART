@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.MassArgs;
 
 import java.io.File;

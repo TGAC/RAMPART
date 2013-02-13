@@ -17,14 +17,14 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ConanXProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:48
  */
-public interface QualityTrimmer extends ConanXProcess {
+public interface QualityTrimmer extends ConanProcess {
 
     QualityTrimmerArgs getArgs();
 }

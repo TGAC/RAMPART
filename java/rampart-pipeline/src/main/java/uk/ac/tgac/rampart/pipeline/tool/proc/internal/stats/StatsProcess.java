@@ -21,17 +21,16 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
+import uk.ac.tgac.rampart.core.data.AssemblyStats;
+import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.r.RV2122Args;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.r.RV2122Process;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.RHelper;
-import uk.ac.tgac.rampart.core.data.AssemblyStats;
-import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
 
 import java.io.*;
 import java.util.*;
@@ -41,14 +40,10 @@ import java.util.*;
  * Date: 30/01/13
  * Time: 14:49
  */
-public class StatsProcess extends AbstractConanXProcess {
+public class StatsProcess extends AbstractConanProcess {
 
     @Autowired
     private SequenceStatisticsService sequenceStatisticsService;
-
-    @Autowired
-    private ProcessExecutionService processExecutionService;
-
 
     private static Logger log = LoggerFactory.getLogger(StatsProcess.class);
 
@@ -148,6 +143,6 @@ public class StatsProcess extends AbstractConanXProcess {
         RV2122Process statsPlotterProcess = new RV2122Process(rArgs);
 
         // Execute the Mass Plotter R script.
-        this.processExecutionService.execute(statsPlotterProcess, env);
+        this.conanProcessService.execute(statsPlotterProcess, env);
     }
 }

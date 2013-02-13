@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip.internal;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip.ClipperArgs;
 
 import java.io.File;

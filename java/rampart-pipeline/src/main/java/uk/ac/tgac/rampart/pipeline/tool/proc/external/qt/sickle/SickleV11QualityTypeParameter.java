@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 
 public class SickleV11QualityTypeParameter extends DefaultConanParameter {
 

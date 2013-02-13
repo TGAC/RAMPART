@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.util;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.FilePair;
+import uk.ac.ebi.fgpt.conan.core.param.FilePair;
 import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.SeqFile;
 

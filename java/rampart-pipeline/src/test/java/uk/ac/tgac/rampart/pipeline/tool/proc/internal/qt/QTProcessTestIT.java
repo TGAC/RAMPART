@@ -22,8 +22,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
 import uk.ac.tgac.rampart.pipeline.ui.IntegrationTest;
 
 import java.io.File;
@@ -54,7 +54,7 @@ public class QTProcessTestIT {
 
         QTProcess qtProcess = new QTProcess(qtArgs);
 
-        boolean success = qtProcess.execute(new ExecutionContext());
+        boolean success = qtProcess.execute(new DefaultExecutionContext());
 
         assertTrue(success);
     }

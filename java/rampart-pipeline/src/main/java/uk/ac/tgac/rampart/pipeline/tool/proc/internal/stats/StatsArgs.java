@@ -17,8 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.stats;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 
 import java.io.File;

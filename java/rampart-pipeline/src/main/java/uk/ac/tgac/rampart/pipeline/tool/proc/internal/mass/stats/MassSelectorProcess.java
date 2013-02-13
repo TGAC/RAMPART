@@ -17,9 +17,9 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.stats;
 
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.data.AssemblyStatsMatrix;
 import uk.ac.tgac.rampart.core.data.AssemblyStatsMatrixRow;
@@ -35,7 +35,7 @@ import java.util.List;
  * Date: 01/02/13
  * Time: 12:39
  */
-public class MassSelectorProcess extends AbstractConanXProcess {
+public class MassSelectorProcess extends AbstractConanProcess {
 
     private List<File> statsFiles;
     private List<File> configs;

@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss;
 
-import uk.ac.tgac.rampart.pipeline.conanx.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 
 public class AbyssV134InputLibsParameter extends DefaultConanParameter {
 

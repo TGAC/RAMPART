@@ -24,9 +24,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ProcessExecutionService;
 
 import java.io.File;
 
@@ -48,7 +48,7 @@ public class CleanJobProcessTest {
     ExecutionContext ec;
 
     @Mock
-    ProcessExecutionService processExecutionService;
+    ConanProcessService conanProcessService;
 
     @Test
     public void testCleanJob() throws ProcessExecutionException, InterruptedException {
@@ -60,9 +60,9 @@ public class CleanJobProcessTest {
 
         CleanJobProcess cleanJobProcess = new CleanJobProcess(args);
 
-        when(processExecutionService.execute(cleanJobProcess, ec)).thenReturn(0);
+        when(conanProcessService.execute(cleanJobProcess, ec)).thenReturn(0);
 
-        ReflectionTestUtils.setField(cleanJobProcess, "processExecutionService", processExecutionService);
+        ReflectionTestUtils.setField(cleanJobProcess, "conanProcessService", conanProcessService);
 
         boolean success = cleanJobProcess.execute(ec);
 

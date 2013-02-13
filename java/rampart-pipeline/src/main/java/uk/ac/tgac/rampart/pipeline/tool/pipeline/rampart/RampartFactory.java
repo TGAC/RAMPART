@@ -17,16 +17,13 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ConanXProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpStage;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTProcess;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.report.ReportProcess;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,41 +35,41 @@ public enum RampartFactory {
 
     QT {
         @Override
-        public ConanXProcess create() {
+        public ConanProcess create() {
             return new QTProcess();
         }
     },
     MASS {
         @Override
-        public ConanXProcess create() {
+        public ConanProcess create() {
             return new MultiMassProcess();
         }
     },
     AMP {
         @Override
-        public ConanXProcess create() {
+        public ConanProcess create() {
             return new AmpProcess();
         }
     },
     ANALYSIS {
         @Override
-        public ConanXProcess create() {
+        public ConanProcess create() {
             return null;
         }
     },
     REPORT {
         @Override
-        public ConanXProcess create() {
+        public ConanProcess create() {
             return new ReportProcess();
         }
     };
 
-    public abstract ConanXProcess create();
+    public abstract ConanProcess create();
 
 
-    public static List<ConanXProcess> createFrom(RampartFactory startStage) {
+    public static List<ConanProcess> createFrom(RampartFactory startStage) {
 
-        List<ConanXProcess> list = new ArrayList<ConanXProcess>();
+        List<ConanProcess> list = new ArrayList<ConanProcess>();
         boolean add = false;
         for(RampartFactory stage : RampartFactory.values()) {
 
@@ -88,9 +85,9 @@ public enum RampartFactory {
         return list;
     }
 
-    public static List<ConanXProcess> createAfterAndIncluding(RampartFactory startStage) {
+    public static List<ConanProcess> createAfterAndIncluding(RampartFactory startStage) {
 
-        List<ConanXProcess> list = new ArrayList<ConanXProcess>();
+        List<ConanProcess> list = new ArrayList<ConanProcess>();
         boolean add = true;
         for(RampartFactory stage : RampartFactory.values()) {
 
@@ -106,9 +103,9 @@ public enum RampartFactory {
         return list;
     }
 
-    public static List<ConanXProcess> createAll() {
+    public static List<ConanProcess> createAll() {
 
-        List<ConanXProcess> list = new ArrayList<ConanXProcess>();
+        List<ConanProcess> list = new ArrayList<ConanProcess>();
         for(RampartFactory stage : RampartFactory.values()) {
              list.add(stage.create());
         }

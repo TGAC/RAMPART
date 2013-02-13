@@ -17,8 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessParams;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerArgs;
 
@@ -27,7 +27,7 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerArgs;
  * Date: 23/01/13
  * Time: 14:36
  */
-public class SickleV11Process extends AbstractConanXProcess implements QualityTrimmer {
+public class SickleV11Process extends AbstractConanProcess implements QualityTrimmer {
 
 
     public enum JobType {

@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.ConanXProcess;
 
 import java.io.File;
 
@@ -27,7 +26,7 @@ import java.io.File;
  * Date: 31/01/13
  * Time: 14:30
  */
-public interface AmpStage extends ConanXProcess {
+public interface AmpStage extends ConanProcess {
 
     void setInputAssembly(File inputFile);
 

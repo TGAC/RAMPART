@@ -18,8 +18,8 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.r;
 
 import org.apache.commons.lang.StringUtils;
-import uk.ac.ebi.fgpt.conan.model.ConanParameter;
-import uk.ac.tgac.rampart.pipeline.conanx.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 import java.io.File;
 import java.util.Arrays;

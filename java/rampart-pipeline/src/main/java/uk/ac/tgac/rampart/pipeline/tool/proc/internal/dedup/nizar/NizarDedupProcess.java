@@ -17,8 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.dedup.nizar;
 
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
-import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpStage;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.dedup.Deduplicator;
 
 import java.io.File;
@@ -28,7 +27,7 @@ import java.io.File;
  * Date: 12/02/13
  * Time: 17:24
  */
-public class NizarDedupProcess extends AbstractConanXProcess implements Deduplicator {
+public class NizarDedupProcess extends AbstractConanProcess implements Deduplicator {
 
     @Override
     public void setInputAssembly(File inputFile) {

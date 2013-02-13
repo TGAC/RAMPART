@@ -17,15 +17,15 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.ebi.fgpt.conan.context.ExecutionContext;
-import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
 
 /**
  * This class wraps a Pipeline to manage each AMP stage
@@ -34,7 +34,7 @@ import uk.ac.tgac.rampart.pipeline.conanx.exec.process.AbstractConanXProcess;
  * Date: 12/02/13
  * Time: 16:30
  */
-public class AmpProcess extends AbstractConanXProcess {
+public class AmpProcess extends AbstractConanProcess {
 
     @Override
     public String getName() {
