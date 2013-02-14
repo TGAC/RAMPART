@@ -25,8 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.pipeline.spring.RampartAppContext;
 import uk.ac.tgac.rampart.pipeline.tool.Rampart;
 
 import java.io.File;
@@ -39,8 +42,6 @@ import java.util.Properties;
 public class RampartCLI {
 
     private static Logger log = LoggerFactory.getLogger(RampartCLI.class);
-
-    private ApplicationContext context;
 
     public RampartCLI() throws IOException {
 
@@ -98,12 +99,7 @@ public class RampartCLI {
                 ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
             }
 
-            final File toolPropsFile = new File(rampartSettingsDir + "load_tool_commands.properties");
-            if (toolPropsFile.exists()) {
-                ToolCommandLoader.getInstance().loadPropertiesFile(toolPropsFile.getPath());
-            }
-
-            context = new ClassPathXmlApplicationContext("applicationContext.xml");
+            RampartAppContext.INSTANCE.load("applicationContext.xml");
         }
         catch(IOException e) {
             System.err.println(e.getMessage());
@@ -111,12 +107,18 @@ public class RampartCLI {
             System.exit(2);
         }
 
-        Rampart rampart = (Rampart)context.getBean("rampart");
+        Rampart rampart = (Rampart)RampartAppContext.INSTANCE.getApplicationContext().getBean("rampart");
         rampart.setOptions(rampartOptions);
 
 
-        // Run RAMPART
         try {
+            // Load external platform specific commands
+            ExternalProcessConfiguration externalProcessConfiguration =
+                    (ExternalProcessConfiguration)RampartAppContext.INSTANCE.getApplicationContext()
+                            .getBean("externalProcessConfiguration");
+            externalProcessConfiguration.load();
+
+            // Run RAMPART
             rampart.process();
         }
         catch (ProcessExecutionException pee) {

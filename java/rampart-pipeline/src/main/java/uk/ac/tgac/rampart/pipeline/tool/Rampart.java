@@ -18,12 +18,15 @@
 package uk.ac.tgac.rampart.pipeline.tool;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
@@ -38,10 +41,17 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobProcess
  * Date: 12/02/13
  * Time: 14:55
  */
+@Component
 public class Rampart {
 
     @Autowired
     private ConanProcessService conanProcessService;
+
+    @Autowired
+    private ExecutionContext executionContext;
+
+    @Autowired
+    private RampartPipeline rampartPipeline;
 
     private RampartOptions options;
 
@@ -51,6 +61,7 @@ public class Rampart {
 
     public Rampart(RampartOptions options) {
         this.options = options;
+
     }
 
     public RampartOptions getOptions() {
@@ -59,6 +70,15 @@ public class Rampart {
 
     public void setOptions(RampartOptions options) {
         this.options = options;
+    }
+
+
+    public ExecutionContext getExecutionContext() {
+        return executionContext;
+    }
+
+    public void setExecutionContext(ExecutionContext executionContext) {
+        this.executionContext = executionContext;
     }
 
     protected void cleanJob() throws ProcessExecutionException, InterruptedException {
@@ -74,7 +94,7 @@ public class Rampart {
     protected void startJob() throws InterruptedException, TaskExecutionException {
 
         // Create RAMPART Pipeline
-        RampartPipeline rampartPipeline = new RampartPipeline();
+//        RampartPipeline rampartPipeline = new RampartPipeline();
 
         RampartArgs args = new RampartArgs();
         args.setConfig(this.options.getConfig());
@@ -93,7 +113,7 @@ public class Rampart {
                 rampartUser);
         rampartTask.setId("");
         rampartTask.submit();
-        rampartTask.execute();
+        rampartTask.execute(this.executionContext);
     }
 
     public void process() throws ProcessExecutionException, InterruptedException, TaskExecutionException {

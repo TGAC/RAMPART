@@ -24,7 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.pipeline.ui.IntegrationTest;
+import uk.ac.tgac.rampart.pipeline.cli.IntegrationTest;
 
 import java.io.File;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  * Time: 12:31
  */
 @Category(IntegrationTest.class)
-public class QTProcessTestIT {
+public class QTProcessIT {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();

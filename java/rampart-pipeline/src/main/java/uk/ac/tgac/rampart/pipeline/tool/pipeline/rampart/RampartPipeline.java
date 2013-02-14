@@ -17,6 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
@@ -37,7 +39,17 @@ import java.util.List;
  * Time: 10:48
  * To change this template use File | Settings | File Templates.
  */
+@Component
 public class RampartPipeline implements ConanPipeline {
+
+    @Autowired
+    private QTProcess qtProcess;
+
+    @Autowired
+    private MultiMassProcess multiMassProcess;
+
+    @Autowired
+    private AmpPipeline ampPipeline;
 
     @Override
     public String getName() {
@@ -64,9 +76,11 @@ public class RampartPipeline implements ConanPipeline {
 
         List<ConanProcess> list = new ArrayList<ConanProcess>();
 
-        list.add(new QTProcess());
-        list.add(new MultiMassProcess());
-        list.addAll(new AmpPipeline().getProcesses());
+        //list.add(new QTProcess());
+        //list.add(new MultiMassProcess());
+        list.add(this.qtProcess);
+        list.add(this.multiMassProcess);
+        list.addAll(this.ampPipeline.getProcesses());
 
         return list;
     }

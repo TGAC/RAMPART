@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi;
 
+import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
@@ -40,6 +41,7 @@ import java.util.List;
  * Date: 01/02/13
  * Time: 11:10
  */
+@Component
 public class MultiMassProcess extends AbstractConanProcess {
 
     public MultiMassProcess() {

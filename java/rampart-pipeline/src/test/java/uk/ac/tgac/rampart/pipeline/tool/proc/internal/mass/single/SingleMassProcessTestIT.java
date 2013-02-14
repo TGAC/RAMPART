@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single;
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.pipeline.ui.IntegrationTest;
+import uk.ac.tgac.rampart.pipeline.cli.IntegrationTest;
 
 /**
  * User: maplesod

@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
+import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
@@ -31,6 +32,7 @@ import java.util.List;
  * Time: 10:55
  * To change this template use File | Settings | File Templates.
  */
+@Component
 public class AmpPipeline implements ConanPipeline {
 
     private List<ConanParameter> params;

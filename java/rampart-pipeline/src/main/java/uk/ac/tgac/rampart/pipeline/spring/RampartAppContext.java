@@ -15,12 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.ui;
+package uk.ac.tgac.rampart.pipeline.spring;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * User: maplesod
- * Date: 07/02/13
- * Time: 17:29
+ * Date: 13/02/13
+ * Time: 16:38
  */
-public interface IntegrationTest {
+public enum RampartAppContext {
+    INSTANCE;
+
+    private ApplicationContext context;
+
+    private void RampartAppContext() {
+        context = null;
+    }
+
+    public void load(String applicationContextPath) {
+        context = new ClassPathXmlApplicationContext("applicationContext.xml");
+    }
+
+    public ApplicationContext getApplicationContext() {
+        return context;
+    }
 }

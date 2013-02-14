@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
@@ -39,10 +40,8 @@ import java.util.List;
  * Time: 10:54
  * To change this template use File | Settings | File Templates.
  */
+@Component
 public class QTProcess extends AbstractConanProcess {
-
-    @Autowired
-    protected ConanProcessService conanProcessService;
 
     public QTProcess() {
         this(new QTArgs());
@@ -84,7 +83,7 @@ public class QTProcess extends AbstractConanProcess {
                 executionContext.getScheduler().setArgs(copyArgs);
             }
 
-            List<QualityTrimmer> qtList = args.createQualityTrimmers();
+            List<QualityTrimmer> qtList = args.createQualityTrimmers(this);
 
 
             int i = 1;

@@ -15,20 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt;
-
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+package uk.ac.tgac.rampart.pipeline.cli;
 
 /**
  * User: maplesod
- * Date: 23/01/13
- * Time: 13:48
+ * Date: 07/02/13
+ * Time: 17:29
  */
-public interface QualityTrimmer extends ConanProcess {
-
-    QualityTrimmerArgs getArgs();
-
-    void configure(ConanProcessService conanProcessService, ExternalProcessConfiguration externalProcessConfiguration);
+public interface IntegrationTest {
 }

@@ -186,7 +186,7 @@ public class QTArgs implements ProcessArgs {
 
     // ***** Construction methods *****
 
-    public List<QualityTrimmer> createQualityTrimmers() {
+    public List<QualityTrimmer> createQualityTrimmers(QTProcess qtProcess) {
 
         List<QualityTrimmer> qtList = new ArrayList<QualityTrimmer>();
 
@@ -195,6 +195,8 @@ public class QTArgs implements ProcessArgs {
             if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
 
                 QualityTrimmer qt = QualityTrimmerFactory.create(this.getTool(), lib, this.getOutputDir());
+
+                qt.configure(qtProcess.getConanProcessService(), qtProcess.getExternalProcessConfiguration());
 
                 qt.getArgs().setMinLength(this.getMinLen());
                 qt.getArgs().setQualityThreshold(this.getMinQual());

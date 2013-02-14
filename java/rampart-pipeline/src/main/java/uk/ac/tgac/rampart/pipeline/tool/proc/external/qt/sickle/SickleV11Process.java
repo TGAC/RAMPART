@@ -17,8 +17,12 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.sickle;
 
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerArgs;
 
@@ -27,6 +31,7 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerArgs;
  * Date: 23/01/13
  * Time: 14:36
  */
+@Component
 public class SickleV11Process extends AbstractConanProcess implements QualityTrimmer {
 
 
@@ -74,6 +79,12 @@ public class SickleV11Process extends AbstractConanProcess implements QualityTri
     @Override
     public QualityTrimmerArgs getArgs() {
         return (QualityTrimmerArgs) this.getProcessArgs();
+    }
+
+    @Override
+    public void configure(ConanProcessService conanProcessService, ExternalProcessConfiguration externalProcessConfiguration) {
+        this.conanProcessService = conanProcessService;
+        this.externalProcessConfiguration = externalProcessConfiguration;
     }
 
     @Override

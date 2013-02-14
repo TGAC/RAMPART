@@ -15,14 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.ui;
+package uk.ac.tgac.rampart.pipeline.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.pipeline.cli.RampartCLI;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -30,7 +29,7 @@ import java.net.URISyntaxException;
 import static org.junit.Assert.assertTrue;
 
 @Category(IntegrationTest.class)
-public class RampartIT {
+public class RampartCLIIT {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();

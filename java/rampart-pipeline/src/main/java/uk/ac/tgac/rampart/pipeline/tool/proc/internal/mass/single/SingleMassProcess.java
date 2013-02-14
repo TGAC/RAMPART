@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single;
 
 import org.apache.commons.io.FileUtils;
+import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
@@ -33,6 +34,7 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.PerlHelper;
 import java.io.File;
 import java.io.IOException;
 
+@Component
 public class SingleMassProcess extends AbstractConanProcess {
 
     public SingleMassProcess() {
