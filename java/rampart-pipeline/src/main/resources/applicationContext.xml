@@ -47,7 +47,7 @@
 		<property name="locations">
 			<list>
 				<value>file:${user.home}/.rampart/jdbc.properties</value>
-				<value>classpath:logging.properties</value>
+				<value>classpath:log4j.properties</value>
 				<value>classpath:conan.properties</value>
 			</list>
 		</property>

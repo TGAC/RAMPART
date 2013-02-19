@@ -25,12 +25,14 @@ public class RampartOptions {
 
     public static final String OPT_CLEAN = "clean";
     public static final String OPT_CONFIG = "config";
+    public static final String OPT_STAGES = "stages";
     public static final String OPT_OUTPUT = "output";
     public static final String OPT_VERBOSE = "verbose";
     public static final String OPT_HELP = "help";
 
     private File config = null;
     private File output = null;
+    private String stages = null;
     private File clean = null;
     private boolean verbose = false;
     private boolean help = false;
@@ -66,6 +68,13 @@ public class RampartOptions {
                 output = new File(".");
             }
 
+            if (cmdLine.hasOption(OPT_STAGES)) {
+                stages = cmdLine.getOptionValue(OPT_STAGES);
+            }
+            else {
+                stages = "ALL";
+            }
+
             verbose = cmdLine.hasOption(OPT_VERBOSE);
         }
     }
@@ -76,6 +85,14 @@ public class RampartOptions {
 
     public void setConfig(File config) {
         this.config = config;
+    }
+
+    public String getStages() {
+        return stages;
+    }
+
+    public void setStages(String stages) {
+        this.stages = stages;
     }
 
     public File getOutput() {
@@ -129,6 +146,9 @@ public class RampartOptions {
         Option opt_output = OptionBuilder.withArgName("file").withLongOpt(OPT_OUTPUT).hasArg()
                 .withDescription("The directory to put output from this job.").create("o");
 
+        Option opt_stages = OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
+                .withDescription("The RAMPART stages to execute: QT, MASS, AMP, HELPER, ALL.  Default: ALL.").create("s");
+
         Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasArg()
                 .withDescription("The directory to clean.").create("clean");
 
@@ -140,6 +160,7 @@ public class RampartOptions {
         options.addOption(opt_help);
         options.addOption(opt_config);
         options.addOption(opt_output);
+        options.addOption(opt_stages);
         options.addOption(opt_clean);
 
         return options;

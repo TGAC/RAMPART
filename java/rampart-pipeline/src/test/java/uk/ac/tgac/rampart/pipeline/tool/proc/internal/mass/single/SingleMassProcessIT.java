@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi;
+package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.single;
 
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
@@ -28,12 +28,12 @@ import uk.ac.tgac.rampart.pipeline.cli.IntegrationTest;
  * Time: 12:12
  */
 @Category(IntegrationTest.class)
-public class MultiMassProcessTestIT {
+public class SingleMassProcessIT {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
     public void testExecute() {
-
+        // Create Conan Task, and execute just single MASS
     }
 }

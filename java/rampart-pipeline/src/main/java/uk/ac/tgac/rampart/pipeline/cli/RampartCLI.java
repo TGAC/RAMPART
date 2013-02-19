@@ -80,32 +80,14 @@ public class RampartCLI {
 
 
         // Before we run RAMPART we should initialise SPRING and any other essential systems
-        ApplicationContext context = null;
-        try {
-            final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
+        final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
 
-            final File loggingPropsFile = new File(rampartSettingsDir + "log4j.properties");
-
-            if (loggingPropsFile.exists()) {
-                Properties loggingProps = new Properties();
-                loggingProps.load(new FileInputStream(loggingPropsFile));
-                PropertyConfigurator.configure(loggingProps);
-            } else {
-                BasicConfigurator.configure();
-            }
-
-            final File conanPropsFile = new File(rampartSettingsDir + "conan.properties");
-            if (conanPropsFile.exists()) {
-                ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
-            }
-
-            RampartAppContext.INSTANCE.load("applicationContext.xml");
+        final File conanPropsFile = new File(rampartSettingsDir + "conan.properties");
+        if (conanPropsFile.exists()) {
+            ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
         }
-        catch(IOException e) {
-            System.err.println(e.getMessage());
-            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
-            System.exit(2);
-        }
+
+        RampartAppContext.INSTANCE.load("applicationContext.xml");
 
         Rampart rampart = (Rampart)RampartAppContext.INSTANCE.getApplicationContext().getBean("rampart");
         rampart.setOptions(rampartOptions);

@@ -58,17 +58,6 @@ public enum RampartStage {
             }
         }
     },
-    BEST {
-        @Override
-        public String getStatsID() {
-            return null;
-        }
-
-        @Override
-        public String translateFilenameToKey(String filename) {
-            return null;
-        }
-    },
     AMP {
         @Override
         public String getStatsID() {

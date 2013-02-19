@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
+package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,49 +27,65 @@ import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.pipeline.cli.IntegrationTest;
 import uk.ac.tgac.rampart.pipeline.cli.RampartCLI;
+import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
+import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTProcess;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * User: maplesod
- * Date: 12/02/13
- * Time: 12:31
+ * Date: 11/02/13
+ * Time: 12:12
  */
 @Category(IntegrationTest.class)
-public class QTProcessIT {
+public class MultiMassProcessIT {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
+    private List<File> configs;
+
+    @Before
+    public void setup() {
+
+        File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
+        File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));
+
+        List<File> configs = new ArrayList<File>();
+        configs.add(cfgFile1);
+        configs.add(cfgFile2);
+
+        this.configs = configs;
+    }
+
     @Test
-    public void testQTDirect() throws InterruptedException, ProcessExecutionException {
+    public void testMassDirect() throws InterruptedException, ProcessExecutionException {
 
-        File outputDir = temp.newFolder("qtTest");
+        File outputDir = temp.newFolder("massTest");
 
-        File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
+        MultiMassArgs massArgs = new MultiMassArgs();
+        massArgs.setOutputDir(outputDir);
+        massArgs.setConfigs(configs);
 
-        QTArgs qtArgs = new QTArgs();
-        qtArgs.setOutputDir(outputDir);
-        qtArgs.setConfig(cfgFile);
+        MultiMassProcess massProcess = new MultiMassProcess(massArgs);
 
-        QTProcess qtProcess = new QTProcess(qtArgs);
-
-        boolean success = qtProcess.execute(new DefaultExecutionContext());
+        boolean success = massProcess.execute(new DefaultExecutionContext());
 
         assertTrue(success);
     }
 
 
     @Test
-    public void testQTViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException {
+    public void testMassViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException {
 
-        File outputDir = temp.newFolder("qtTestCLI");
+        File outputDir = temp.newFolder("massTestCLI");
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
-
 
         RampartCLI.main(new String[]{
                 "--config",
@@ -76,9 +93,7 @@ public class QTProcessIT {
                 "--output",
                 outputDir.getAbsolutePath(),
                 "--stages",
-                "QT"
+                "MASS"
         });
     }
-
-
 }

@@ -53,6 +53,9 @@ public class Rampart {
     @Autowired
     private RampartPipeline rampartPipeline;
 
+    /**
+     * Passed in from CLI.
+     */
     private RampartOptions options;
 
     public Rampart() {
@@ -100,13 +103,16 @@ public class Rampart {
         args.setConfig(this.options.getConfig());
         args.setOutputDir(this.options.getOutput());
 
+        // Set RAMPART processes to execute
+        this.rampartPipeline.setStages(this.options.getStages());
+
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
 
         // Create the RAMPART proc
         ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
         ConanTask<RampartPipeline> rampartTask = conanTaskFactory.createTask(
-                rampartPipeline,
+                this.rampartPipeline,
                 0,
                 args.getArgMap(),
                 ConanTask.Priority.HIGHEST,
