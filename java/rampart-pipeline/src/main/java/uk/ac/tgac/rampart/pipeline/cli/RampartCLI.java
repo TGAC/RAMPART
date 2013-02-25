@@ -19,14 +19,13 @@ package uk.ac.tgac.rampart.pipeline.cli;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExternalProcessConfiguration;
-import uk.ac.ebi.fgpt.conan.core.context.locality.LocalityType;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
+import uk.ac.ebi.fgpt.conan.core.context.locality.LocalityFactory;
+import uk.ac.ebi.fgpt.conan.core.context.scheduler.SchedulerFactory;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.model.context.Locality;
@@ -37,10 +36,7 @@ import uk.ac.tgac.rampart.pipeline.spring.RampartAppContext;
 import uk.ac.tgac.rampart.pipeline.tool.Rampart;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Properties;
 
 
 public class RampartCLI {
@@ -86,18 +82,21 @@ public class RampartCLI {
         }
 
         // Get execution context
-        ExecutionContext executionContext = null;
-        Locality locality = null;
-        Scheduler scheduler = null;
-        if (ConanProperties.containsKey("executionContext.locality")) {
-            LocalityFactory.valueOf(ConanProperties.getProperty("executionContext.locality"));
-        }
+        Locality locality = ConanProperties.containsKey("executionContext.locality") ?
+                LocalityFactory.createLocality(ConanProperties.getProperty("executionContext.locality")) :
+                new Local();
+
+        Scheduler scheduler = ConanProperties.containsKey("executionContext.scheduler") ?
+                SchedulerFactory.createScheduler(ConanProperties.getProperty("executionContext.scheduler")) :
+                null;
+
+        ExecutionContext executionContext = new DefaultExecutionContext(locality, scheduler, externalProcessConfiguration, true);
+
 
         // Get RAMPART bean from Spring and configure with user defined properties
         Rampart rampart = (Rampart)RampartAppContext.INSTANCE.getApplicationContext().getBean("rampart");
         rampart.setOptions(rampartOptions);
         rampart.setExecutionContext(executionContext);
-        rampart.setExternalProcessConfiguration(externalProcessConfiguration);
 
         return rampart;
     }
