@@ -25,7 +25,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -69,11 +71,14 @@ public class SingleMassProcessTest {
         args.setConfig(cfgFile);
 
         SingleMassProcess singleMassProcess = new SingleMassProcess(args);
+        AbstractConanProcess smParent = singleMassProcess;
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(0);
-        when(ec.getLocality()).thenReturn(new Local());
+        //when(ec.getLocality()).thenReturn(new Local());
+        when(ec.usingScheduler()).thenReturn(false);
+        when(ec.copy()).thenReturn(ec);
 
-        ReflectionTestUtils.setField(singleMassProcess, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(smParent, "conanProcessService", conanProcessService);
 
         singleMassProcess.execute(ec);
 

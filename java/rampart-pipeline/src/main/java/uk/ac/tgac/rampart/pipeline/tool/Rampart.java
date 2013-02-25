@@ -27,6 +27,7 @@ import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
@@ -48,23 +49,22 @@ public class Rampart {
     private ConanProcessService conanProcessService;
 
     @Autowired
-    private ExecutionContext executionContext;
-
-    @Autowired
     private RampartPipeline rampartPipeline;
 
-    /**
-     * Passed in from CLI.
-     */
+
+
     private RampartOptions options;
+    private ExecutionContext executionContext;
+    private ExternalProcessConfiguration externalProcessConfiguration;
 
     public Rampart() {
         this(null);
     }
 
+
+
     public Rampart(RampartOptions options) {
         this.options = options;
-
     }
 
     public RampartOptions getOptions() {
@@ -75,7 +75,6 @@ public class Rampart {
         this.options = options;
     }
 
-
     public ExecutionContext getExecutionContext() {
         return executionContext;
     }
@@ -84,6 +83,21 @@ public class Rampart {
         this.executionContext = executionContext;
     }
 
+    public ExternalProcessConfiguration getExternalProcessConfiguration() {
+        return externalProcessConfiguration;
+    }
+
+    public void setExternalProcessConfiguration(ExternalProcessConfiguration externalProcessConfiguration) {
+        this.externalProcessConfiguration = externalProcessConfiguration;
+    }
+
+
+    /**
+     * TBH this probably shouldn't be something that we want Conan to control.  Probably should extract this for quick
+     * execution
+     * @throws ProcessExecutionException
+     * @throws InterruptedException
+     */
     protected void cleanJob() throws ProcessExecutionException, InterruptedException {
 
         CleanJobArgs cleanJobArgs = new CleanJobArgs();
@@ -91,8 +105,10 @@ public class Rampart {
 
         CleanJobProcess cleanJobProcess = new CleanJobProcess(cleanJobArgs);
 
-        this.conanProcessService.execute(cleanJobProcess, new DefaultExecutionContext());
+        this.conanProcessService.execute(cleanJobProcess, this.executionContext);
     }
+
+
 
     protected void startJob() throws InterruptedException, TaskExecutionException {
 
@@ -130,7 +146,6 @@ public class Rampart {
         else {
             startJob();
         }
-
     }
 
 

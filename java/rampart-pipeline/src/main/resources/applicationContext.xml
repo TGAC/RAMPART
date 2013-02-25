@@ -21,24 +21,6 @@
         <property name="processConfigFilePath" value="${user.home}/.rampart/tgac-norwich-cluster.cfg"/>
     </bean>
 
-    <!--<bean id="a" abstract="true" class="uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess">
-        <property name="externalProcessConfiguration" ref="externalProcessConfiguration"/>
-        <property name="conanProcessService" ref="conanProcessService"/>
-    </bean>-->
-
-    <bean id="locality" class="uk.ac.ebi.fgpt.conan.core.context.locality.Local"/>
-    <bean id="scheduler" class="uk.ac.ebi.fgpt.conan.core.context.scheduler.lsf.LSFScheduler"/>
-    <bean id="executionContext" class="uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext">
-        <property name="locality" ref="locality"/>
-        <!--<property name="scheduler" ref="scheduler"/>-->
-    </bean>
-
-
-    <!--<bean id="rampart" class="uk.ac.tgac.rampart.pipeline.tool.Rampart">
-        <property name="executionContext" ref="executionContext"/>
-    </bean>-->
-
-
 
     <!--<tx:annotation-driven transaction-manager="transactionManager"/>-->
 		
@@ -47,8 +29,6 @@
 		<property name="locations">
 			<list>
 				<value>file:${user.home}/.rampart/jdbc.properties</value>
-				<value>classpath:log4j.properties</value>
-				<value>classpath:conan.properties</value>
 			</list>
 		</property>
 	</bean>
