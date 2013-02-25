@@ -30,5 +30,5 @@ public interface QualityTrimmer extends ConanProcess {
 
     QualityTrimmerArgs getArgs();
 
-    void configure(ConanProcessService conanProcessService, ExternalProcessConfiguration externalProcessConfiguration);
+    void configure(ConanProcessService conanProcessService);
 }

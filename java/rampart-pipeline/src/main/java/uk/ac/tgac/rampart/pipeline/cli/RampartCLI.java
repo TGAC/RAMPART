@@ -19,6 +19,8 @@ package uk.ac.tgac.rampart.pipeline.cli;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
@@ -64,6 +66,17 @@ public class RampartCLI {
 
         // Environment specific configuration options are set in the user's home directory
         final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
+
+        // Setup logging first
+        File loggingProperties = new File(rampartSettingsDir, "log4j.properties");
+
+        // If logging file exists use settings from that, otherwise use basic settings.
+        if (loggingProperties.exists()) {
+            PropertyConfigurator.configure(loggingProperties.getAbsolutePath());
+        }
+        else {
+            BasicConfigurator.configure();
+        }
 
         // Load spring
         RampartAppContext.INSTANCE.load("applicationContext.xml");

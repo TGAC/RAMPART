@@ -17,6 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -42,6 +44,9 @@ import java.util.List;
  */
 @Component
 public class QTProcess extends AbstractConanProcess {
+
+    private static Logger log = LoggerFactory.getLogger(QTProcess.class);
+
 
     public QTProcess() {
         this(new QTArgs());
@@ -72,12 +77,10 @@ public class QTProcess extends AbstractConanProcess {
 
             SchedulerArgs backupArgs = null;
             SchedulerArgs copyArgs = null;
-            String jobPrefix = "";
 
             if (executionContext.usingScheduler()) {
 
                 backupArgs = executionContext.getScheduler().getArgs();
-                jobPrefix = backupArgs.getJobName();
                 copyArgs = executionContext.getScheduler().getArgs().copy();
                 copyArgs.setBackgroundTask(true);
                 executionContext.getScheduler().setArgs(copyArgs);
@@ -85,12 +88,18 @@ public class QTProcess extends AbstractConanProcess {
 
             List<QualityTrimmer> qtList = args.createQualityTrimmers(this);
 
+            String jobPrefix = (copyArgs.getJobName() != null && !copyArgs.getJobName().trim().isEmpty()) ? backupArgs.getJobName().trim() : "QT";
 
             int i = 1;
             for (QualityTrimmer qt : qtList) {
 
                 if (executionContext.usingScheduler()) {
-                    executionContext.getScheduler().getArgs().setJobName(jobPrefix + "_" + i++);
+
+                    String jobName = jobPrefix + "_" + qt.getName() + "_" + i++;
+                    log.debug("QT Job Name: " + jobName);
+
+                    executionContext.getScheduler().getArgs().setJobName(jobName);
+                    executionContext.getScheduler().getArgs().setMonitorFile(new File(((QTArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
                 }
 
                 this.conanProcessService.execute(qt, executionContext);

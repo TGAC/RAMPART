@@ -16,11 +16,6 @@
     <!-- Inject the beans wherever they are found -->
     <context:component-scan annotation-config="true" base-package="uk.ac.tgac.rampart,uk.ac.ebi.fgpt.conan"/>
 
-    <!-- Application Beans -->
-    <bean id="externalProcessConfiguration" class="uk.ac.ebi.fgpt.conan.core.context.DefaultExternalProcessConfiguration">
-        <property name="processConfigFilePath" value="${user.home}/.rampart/tgac-norwich-cluster.cfg"/>
-    </bean>
-
 
     <!--<tx:annotation-driven transaction-manager="transactionManager"/>-->
 		

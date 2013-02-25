@@ -82,9 +82,8 @@ public class SickleV11Process extends AbstractConanProcess implements QualityTri
     }
 
     @Override
-    public void configure(ConanProcessService conanProcessService, ExternalProcessConfiguration externalProcessConfiguration) {
+    public void configure(ConanProcessService conanProcessService) {
         this.conanProcessService = conanProcessService;
-        this.externalProcessConfiguration = externalProcessConfiguration;
     }
 
     @Override

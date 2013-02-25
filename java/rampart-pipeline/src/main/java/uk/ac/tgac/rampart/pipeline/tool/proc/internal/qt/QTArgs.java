@@ -196,7 +196,7 @@ public class QTArgs implements ProcessArgs {
 
                 QualityTrimmer qt = QualityTrimmerFactory.create(this.getTool(), lib, this.getOutputDir());
 
-                qt.configure(qtProcess.getConanProcessService(), qtProcess.getExternalProcessConfiguration());
+                qt.configure(qtProcess.getConanProcessService());
 
                 qt.getArgs().setMinLength(this.getMinLen());
                 qt.getArgs().setQualityThreshold(this.getMinQual());
