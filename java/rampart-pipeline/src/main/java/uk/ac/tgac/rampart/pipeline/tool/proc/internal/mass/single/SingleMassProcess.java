@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
+import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.PerlHelper;
 
 import java.io.File;
@@ -173,7 +174,9 @@ public class SingleMassProcess extends AbstractConanProcess {
 
                 // Modify the scheduler jobname is present
                 if (asmExeCtx.usingScheduler()) {
-                    asmExeCtx.getScheduler().getArgs().setJobName(args.getJobPrefix() + "-k" + k);
+                    String jobName = args.getJobPrefix() + "-k" + k;
+                    asmExeCtx.getScheduler().getArgs().setJobName(jobName);
+                    asmExeCtx.getScheduler().getArgs().setMonitorFile(new File(((SingleMassArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
                 }
 
                 // Create proc
@@ -281,7 +284,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
     @Override
     public String getCommand() {
-        return this.getFullCommand();
+        return null;
     }
 
 }

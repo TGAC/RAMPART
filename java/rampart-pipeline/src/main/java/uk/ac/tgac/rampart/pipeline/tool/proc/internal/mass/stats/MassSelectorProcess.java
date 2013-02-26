@@ -58,7 +58,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
 
     @Override
     public String getCommand() {
-        return this.getFullCommand();
+        return null;
     }
 
     @Override

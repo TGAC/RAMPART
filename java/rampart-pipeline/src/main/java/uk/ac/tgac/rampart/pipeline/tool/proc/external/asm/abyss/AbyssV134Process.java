@@ -65,6 +65,6 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
 
     @Override
     public String getName() {
-        return "AbyssV134";
+        return "Abyss_V1.3.4";
     }
 }

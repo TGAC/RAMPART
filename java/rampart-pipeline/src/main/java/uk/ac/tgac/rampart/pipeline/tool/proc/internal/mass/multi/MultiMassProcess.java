@@ -88,7 +88,9 @@ public class MultiMassProcess extends AbstractConanProcess {
                 statsFiles.add(singleMassArgs.getStatsFile());
 
                 // Execute the single MASS run
-                this.conanProcessService.execute(new SingleMassProcess(singleMassArgs), executionContext);
+                SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
+                singleMassProcess.setConanProcessService(this.getConanProcessService());
+                singleMassProcess.execute(executionContext);
             }
 
             // Wait for all assembly jobs to finish if they are running as background tasks.

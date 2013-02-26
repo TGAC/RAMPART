@@ -25,12 +25,14 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.cli.IntegrationTest;
 import uk.ac.tgac.rampart.pipeline.cli.RampartCLI;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTProcess;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,15 +83,23 @@ public class MultiMassProcessIT {
 
 
     @Test
-    public void testMassViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException {
+    public void testMassViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException, IOException {
 
         File outputDir = temp.newFolder("massTestCLI");
 
-        File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
+        // Simulate RAMPART dir structure after QT
+        RampartJobFileStructure jobFS = new RampartJobFileStructure(outputDir);
+        jobFS.getReadsDir().mkdir();
+
+        File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
+        File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));
+
+        FileUtils.copyFile(cfgFile1, jobFS.getConfigRawFile());
+        FileUtils.copyFile(cfgFile2, jobFS.getConfigQtFile());
 
         RampartCLI.main(new String[]{
                 "--config",
-                cfgFile.getAbsolutePath(),
+                cfgFile1.getAbsolutePath(),
                 "--output",
                 outputDir.getAbsolutePath(),
                 "--stages",
