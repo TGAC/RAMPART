@@ -53,6 +53,7 @@ public class QTArgs implements ProcessArgs {
     private int minLen;
     private int minQual;
     private List<Library> libs;
+    private boolean createConfigs;
 
     private File config;
 
@@ -104,6 +105,14 @@ public class QTArgs implements ProcessArgs {
         this.config = config;
     }
 
+    public boolean isCreateConfigs() {
+        return createConfigs;
+    }
+
+    public void setCreateConfigs(boolean createConfigs) {
+        this.createConfigs = createConfigs;
+    }
+
     public void parseConfig() throws IOException {
         parseConfig(this.config);
     }
@@ -146,6 +155,8 @@ public class QTArgs implements ProcessArgs {
         if (this.outputDir != null)
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
 
+        pvp.put(params.getCreateConfigs(), Boolean.toString(this.createConfigs));
+
         return pvp;
     }
 
@@ -164,6 +175,8 @@ public class QTArgs implements ProcessArgs {
                 this.config = new File(entry.getValue());
             } else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
+            } else if (param.equals(this.params.getCreateConfigs().getName())) {
+                this.createConfigs = Boolean.parseBoolean(entry.getValue());
             } else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }

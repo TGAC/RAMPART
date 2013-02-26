@@ -119,7 +119,9 @@ public class QTProcess extends AbstractConanProcess {
                         executionContext);
             }
 
-            createConfigs(qtList, args);
+            if (((QTArgs) this.getProcessArgs()).isCreateConfigs()) {
+                createConfigs(qtList, args);
+            }
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }

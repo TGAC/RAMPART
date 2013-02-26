@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
 
+import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
@@ -34,6 +35,7 @@ public class QTParams implements ProcessParams {
 
     private ConanParameter rampartConfig;
     private ConanParameter outputDir;
+    private ConanParameter createConfigs;
 
     public QTParams() {
 
@@ -46,6 +48,10 @@ public class QTParams implements ProcessParams {
                 "qtOutput",
                 "The directory to place the quality trimmed libraries",
                 false);
+
+        this.createConfigs = new FlagParameter(
+                "createConfigs",
+                "Whether or not to create separate RAMPART configuration files for RAW and QT datasets in the output directory");
     }
 
     public ConanParameter getRampartConfig() {
@@ -56,12 +62,17 @@ public class QTParams implements ProcessParams {
         return outputDir;
     }
 
+    public ConanParameter getCreateConfigs() {
+        return createConfigs;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
         return new ArrayList<ConanParameter>(Arrays.asList(
                 new ConanParameter[]{
                         this.rampartConfig,
-                        this.outputDir
+                        this.outputDir,
+                        this.createConfigs
                 }));
     }
 }
