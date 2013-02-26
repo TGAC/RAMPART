@@ -28,14 +28,23 @@ import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.cli.RampartOptions;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
+import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassArgs;
+import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobProcess;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * User: maplesod
@@ -112,15 +121,35 @@ public class Rampart {
 
     protected void startJob() throws InterruptedException, TaskExecutionException {
 
-        // Create RAMPART Pipeline
-//        RampartPipeline rampartPipeline = new RampartPipeline();
-
+        // Configure RAMPART args based on CLI input.
         RampartArgs args = new RampartArgs();
         args.setConfig(this.options.getConfig());
         args.setOutputDir(this.options.getOutput());
 
-        // Set RAMPART processes to execute
+        // Create an object that maps expected RAMPART job directory structure based on specified output dir.
+        RampartJobFileStructure jobFS = new RampartJobFileStructure(this.options.getOutput());
+
+        // Configure RAMPART pipeline based on RAMPART arguments
         this.rampartPipeline.setStages(this.options.getStages());
+
+        // Create QT args
+        QTArgs qtArgs = new QTArgs();
+        qtArgs.setConfig(this.options.getConfig());     // Use same config as RAMPART
+        qtArgs.setOutputDir(jobFS.getReadsDir());       // QT output goes to reads directory
+
+        // Create MASS args
+        MultiMassArgs multiMassArgs = new MultiMassArgs();
+        multiMassArgs.setConfigs(new ArrayList<File>(Arrays.asList(
+                new File[]{
+                        jobFS.getConfigRawFile(),
+                        jobFS.getConfigQtFile()
+                })));
+        multiMassArgs.setOutputDir(jobFS.getMassDir());
+        multiMassArgs.setJobPrefix("rampart-mass");
+
+        // Set args to processes in pipeline
+        this.rampartPipeline.getQtProcess().setProcessArgs(qtArgs);
+        this.rampartPipeline.getMultiMassProcess().setProcessArgs(multiMassArgs);
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");

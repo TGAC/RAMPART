@@ -56,6 +56,8 @@ public class QTProcess extends AbstractConanProcess {
         super("", args, new QTParams());
     }
 
+
+
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
@@ -63,11 +65,15 @@ public class QTProcess extends AbstractConanProcess {
 
             QTArgs args = (QTArgs) this.getProcessArgs();
 
-            // If necessary parse the rampart config file to set args
+            // If config file is specified get relevant properties from that and merge results
             if ((args.getTool() == null || args.getTool().isEmpty()) &&
                     (args.getConfig() != null && args.getConfig().exists())) {
 
-                args = QTArgs.parseConfig(args.getConfig());
+                QTArgs configArgs = QTArgs.parseConfig(args.getConfig());
+                args.setMinLen(configArgs.getMinLen());
+                args.setMinQual(configArgs.getMinQual());
+                args.setTool(configArgs.getTool());
+                args.setLibs(configArgs.getLibs());
             }
 
 
@@ -77,6 +83,7 @@ public class QTProcess extends AbstractConanProcess {
 
             SchedulerArgs backupArgs = null;
             SchedulerArgs copyArgs = null;
+            String jobPrefix = "QT";
 
             if (executionContext.usingScheduler()) {
 
@@ -84,11 +91,11 @@ public class QTProcess extends AbstractConanProcess {
                 copyArgs = executionContext.getScheduler().getArgs().copy();
                 copyArgs.setBackgroundTask(true);
                 executionContext.getScheduler().setArgs(copyArgs);
+                jobPrefix = (copyArgs.getJobName() != null && !copyArgs.getJobName().trim().isEmpty()) ? backupArgs.getJobName().trim() : "QT";
             }
 
             List<QualityTrimmer> qtList = args.createQualityTrimmers(this);
 
-            String jobPrefix = (copyArgs.getJobName() != null && !copyArgs.getJobName().trim().isEmpty()) ? backupArgs.getJobName().trim() : "QT";
 
             int i = 1;
             for (QualityTrimmer qt : qtList) {

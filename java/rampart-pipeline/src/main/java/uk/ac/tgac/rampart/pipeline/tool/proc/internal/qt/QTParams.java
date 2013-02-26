@@ -38,12 +38,12 @@ public class QTParams implements ProcessParams {
     public QTParams() {
 
         this.rampartConfig = new PathParameter(
-                "config",
+                "qtConfig",
                 "The rampart configuration file describing the libraries to quality trim",
                 false);
 
         this.outputDir = new PathParameter(
-                "output",
+                "qtOutput",
                 "The directory to place the quality trimmed libraries",
                 false);
     }

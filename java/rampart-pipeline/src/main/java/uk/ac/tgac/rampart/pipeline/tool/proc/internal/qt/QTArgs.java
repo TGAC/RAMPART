@@ -44,6 +44,8 @@ public class QTArgs implements ProcessArgs {
     public static final String QT_MIN_QUAL = "minqual";
 
 
+    public static final String DEFAULT_TOOL = "SICKLE";
+
     private QTParams params = new QTParams();
 
     private File outputDir;
@@ -183,6 +185,7 @@ public class QTArgs implements ProcessArgs {
 
         return config;
     }
+
 
     // ***** Construction methods *****
 

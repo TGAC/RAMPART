@@ -74,6 +74,18 @@ public class RampartPipeline implements ConanPipeline {
         return false;
     }
 
+    public QTProcess getQtProcess() {
+        return qtProcess;
+    }
+
+    public AmpPipeline getAmpPipeline() {
+        return ampPipeline;
+    }
+
+    public MultiMassProcess getMultiMassProcess() {
+        return multiMassProcess;
+    }
+
     public void setStages(String stages) {
 
         if (stages.trim().equalsIgnoreCase("ALL")) {
