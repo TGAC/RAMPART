@@ -54,6 +54,7 @@ public class QTArgs implements ProcessArgs {
     private int minQual;
     private List<Library> libs;
     private boolean createConfigs;
+    private String jobPrefix;
 
     private File config;
 
@@ -115,6 +116,14 @@ public class QTArgs implements ProcessArgs {
 
     public void parseConfig() throws IOException {
         parseConfig(this.config);
+    }
+
+    public String getJobPrefix() {
+        return jobPrefix;
+    }
+
+    public void setJobPrefix(String jobPrefix) {
+        this.jobPrefix = jobPrefix;
     }
 
     public static QTArgs parseConfig(File config) throws IOException {

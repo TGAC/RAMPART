@@ -38,14 +38,9 @@ import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations={"/applicationContext.xml"})
 public class LibraryDaoImplTest {
 
-	@Autowired 
-	ApplicationContext ctx;
-	
-	private LibraryDao ld;
+	/*private LibraryDao ld;
 	
 	@Before
 	public void before() {
@@ -122,6 +117,6 @@ public class LibraryDaoImplTest {
 		long newCount = ld.count();
 		
 		assertTrue(newCount == count+1);
-	}
+	}   */
 
 }

@@ -42,9 +42,13 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobProcess;
 
+import javax.print.attribute.standard.DateTimeAtCompleted;
 import java.io.File;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * User: maplesod
@@ -117,7 +121,13 @@ public class Rampart {
         this.conanProcessService.execute(cleanJobProcess, this.executionContext);
     }
 
+    protected String createJobPrefix() {
+        Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String dateTime = formatter.format(new Date());
+        String jobPrefix = "rampart-" + dateTime;
 
+        return jobPrefix;
+    }
 
     protected void startJob() throws InterruptedException, TaskExecutionException {
 
@@ -129,13 +139,14 @@ public class Rampart {
         // Create an object that maps expected RAMPART job directory structure based on specified output dir.
         RampartJobFileStructure jobFS = new RampartJobFileStructure(this.options.getOutput());
 
-        // Configure RAMPART pipeline based on RAMPART arguments
-        this.rampartPipeline.setStages(this.options.getStages());
+        // Create job prefix
+        String jobPrefix = createJobPrefix();
 
         // Create QT args
         QTArgs qtArgs = new QTArgs();
         qtArgs.setConfig(this.options.getConfig());     // Use same config as RAMPART
         qtArgs.setOutputDir(jobFS.getReadsDir());       // QT output goes to reads directory
+        qtArgs.setJobPrefix(jobPrefix + "-qt");
 
         // Create MASS args
         MultiMassArgs multiMassArgs = new MultiMassArgs();
@@ -145,9 +156,10 @@ public class Rampart {
                         jobFS.getConfigQtFile()
                 })));
         multiMassArgs.setOutputDir(jobFS.getMassDir());
-        multiMassArgs.setJobPrefix("rampart-mass");
+        multiMassArgs.setJobPrefix(jobPrefix + "-mass");
 
-        // Set args to processes in pipeline
+        // Configure pipeline
+        this.rampartPipeline.setStages(this.options.getStages());
         this.rampartPipeline.getQtProcess().setProcessArgs(qtArgs);
         this.rampartPipeline.getMultiMassProcess().setProcessArgs(multiMassArgs);
 

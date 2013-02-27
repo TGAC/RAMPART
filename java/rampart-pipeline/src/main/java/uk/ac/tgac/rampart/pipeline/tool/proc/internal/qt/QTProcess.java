@@ -83,7 +83,6 @@ public class QTProcess extends AbstractConanProcess {
 
             SchedulerArgs backupArgs = null;
             SchedulerArgs copyArgs = null;
-            String jobPrefix = "QT";
 
             if (executionContext.usingScheduler()) {
 
@@ -91,7 +90,6 @@ public class QTProcess extends AbstractConanProcess {
                 copyArgs = executionContext.getScheduler().getArgs().copy();
                 copyArgs.setBackgroundTask(true);
                 executionContext.getScheduler().setArgs(copyArgs);
-                jobPrefix = (copyArgs.getJobName() != null && !copyArgs.getJobName().trim().isEmpty()) ? backupArgs.getJobName().trim() : "QT";
             }
 
             List<QualityTrimmer> qtList = args.createQualityTrimmers(this);
@@ -102,9 +100,9 @@ public class QTProcess extends AbstractConanProcess {
 
                 if (executionContext.usingScheduler()) {
 
-                    String jobName = jobPrefix + "_" + qt.getName() + "_" + i++;
-                    log.debug("QT Job Name: " + jobName);
+                    String jobName = args.getJobPrefix() + "_" + qt.getName() + "_" + i++;
 
+                    executionContext.setForegroundJob(false);
                     executionContext.getScheduler().getArgs().setJobName(jobName);
                     executionContext.getScheduler().getArgs().setMonitorFile(new File(((QTArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
                 }
@@ -114,8 +112,14 @@ public class QTProcess extends AbstractConanProcess {
 
             if (executionContext.usingScheduler()) {
 
+                String jobName = args.getJobPrefix() + "_wait";
+
+                executionContext.setForegroundJob(true);
+                executionContext.getScheduler().getArgs().setJobName(jobName);
+                executionContext.getScheduler().getArgs().setMonitorFile(new File(((QTArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
+
                 this.conanProcessService.waitFor(
-                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
+                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_FAILED, args.getJobPrefix() + "*"),
                         executionContext);
             }
 

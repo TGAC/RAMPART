@@ -79,6 +79,8 @@ public class MultiMassProcessTest {
 
         when(conanProcessService.execute(multiMass, ec)).thenReturn(0);
         when(ec.getLocality()).thenReturn(new Local());
+        when(ec.usingScheduler()).thenReturn(false);
+        when(ec.copy()).thenReturn(ec);
 
         ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
 
