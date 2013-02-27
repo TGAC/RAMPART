@@ -19,13 +19,11 @@ package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
@@ -57,80 +55,86 @@ public class QTProcess extends AbstractConanProcess {
     }
 
 
-
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
 
+            // Create shortcuts for convienience
             QTArgs args = (QTArgs) this.getProcessArgs();
-
-            // If config file is specified get relevant properties from that and merge results
-            if ((args.getTool() == null || args.getTool().isEmpty()) &&
-                    (args.getConfig() != null && args.getConfig().exists())) {
-
-                QTArgs configArgs = QTArgs.parseConfig(args.getConfig());
-                args.setMinLen(configArgs.getMinLen());
-                args.setMinQual(configArgs.getMinQual());
-                args.setTool(configArgs.getTool());
-                args.setLibs(configArgs.getLibs());
-            }
-
-
-            String qtType = args.getTool();
+            String qtType = args.getQualityTrimmer();
             List<Library> libs = args.getLibs();
+            List<QualityTrimmer> qtList = args.createQualityTrimmers();
 
-
-            SchedulerArgs backupArgs = null;
-            SchedulerArgs copyArgs = null;
-
-            if (executionContext.usingScheduler()) {
-
-                backupArgs = executionContext.getScheduler().getArgs();
-                copyArgs = executionContext.getScheduler().getArgs().copy();
-                copyArgs.setBackgroundTask(true);
-                executionContext.getScheduler().setArgs(copyArgs);
+            // If the output directory doesn't exist then make it
+            if (!args.getOutputDir().exists()) {
+                args.getOutputDir().mkdirs();
             }
 
-            List<QualityTrimmer> qtList = args.createQualityTrimmers(this);
-
-
+            // Execute quality trimmers for each library
             int i = 1;
             for (QualityTrimmer qt : qtList) {
-
-                if (executionContext.usingScheduler()) {
-
-                    String jobName = args.getJobPrefix() + "_" + qt.getName() + "_" + i++;
-
-                    executionContext.setForegroundJob(false);
-                    executionContext.getScheduler().getArgs().setJobName(jobName);
-                    executionContext.getScheduler().getArgs().setMonitorFile(new File(((QTArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
-                }
-
-                this.conanProcessService.execute(qt, executionContext);
+                 this.executeQualityTrimmer(qt, args.getJobPrefix(), args.isRunParallel(), args.getOutputDir(), i++, executionContext);
             }
 
-            if (executionContext.usingScheduler()) {
-
-                String jobName = args.getJobPrefix() + "_wait";
-
-                executionContext.setForegroundJob(true);
-                executionContext.getScheduler().getArgs().setJobName(jobName);
-                executionContext.getScheduler().getArgs().setMonitorFile(new File(((QTArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
-
-                this.conanProcessService.waitFor(
-                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_FAILED, args.getJobPrefix() + "*"),
-                        executionContext);
+            // If we're using a scheduler and we have been asked to run the quality trimming processes for each library
+            // in parallel, then we should wait for all those to complete before continueing.
+            if (executionContext.usingScheduler() && args.isRunParallel()) {
+                this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
-            if (((QTArgs) this.getProcessArgs()).isCreateConfigs()) {
-                createConfigs(qtList, args);
+            // If requested create modified configuration files which can be used to drive other RAMPART processes after
+            // QT has completed.
+            if (args.isCreateConfigs()) {
+                this.createConfigs(qtList, args);
             }
+
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
 
         return true;
+    }
+
+
+    protected void executeQualityTrimmer(QualityTrimmer qualityTrimmer, String jobPrefix, boolean runInParallel,
+                                         File outputDir, int index, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException {
+
+        // Duplicate the execution context so we don't modify the original accidentally.
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        // Ensure downstream process has access to the process service
+        qualityTrimmer.configure(this.getConanProcessService());
+
+        if (executionContext.usingScheduler()) {
+
+            String jobName = jobPrefix + "_" + index++;
+            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
+            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+            executionContextCopy.setForegroundJob(!runInParallel);
+        }
+
+        this.conanProcessService.execute(qualityTrimmer, executionContextCopy);
+    }
+
+    protected void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException {
+
+        // Duplicate the execution context so we don't modify the original accidentally.
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContext.usingScheduler()) {
+
+            String jobName = jobPrefix + "_wait";
+            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
+            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+            executionContextCopy.setForegroundJob(true);
+        }
+
+        this.conanProcessService.waitFor(
+                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
+                executionContextCopy);
     }
 
     private void createConfigs(List<QualityTrimmer> qtList, QTArgs args) throws IOException {
@@ -143,16 +147,15 @@ public class QTProcess extends AbstractConanProcess {
             rawConfig = RampartConfiguration.loadFile(args.getConfig());
             qtConfig = RampartConfiguration.loadFile(args.getConfig());
         } else {
-            rawConfig = args.createRampartConfiguration();
-            qtConfig = args.createRampartConfiguration();
+            throw new IOException("Configuration file was not provided, so raw and qt specific configs cannot be created");
         }
 
         // Modify the dataset names
-        rawConfig.getJob().setName("RAW");
-        qtConfig.getJob().setName("QT");
+        rawConfig.getJob().setName("raw");
+        qtConfig.getJob().setName("qt");
 
-        // TODO Modify the files
-
+        // Modify the QT libs
+        qtConfig.setLibs(args.createQtLibs());
 
         // Save configs to disk
         File rawConfigFile = new File(args.getOutputDir(), "raw.cfg");

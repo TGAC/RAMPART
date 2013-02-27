@@ -317,6 +317,25 @@ public class Library implements Serializable {
 		this.seFile = seFile;
 	}
 
+    public Library copy() {
+        Library copy = new Library();
+
+        copy.setIndex(this.index);
+        copy.setName(this.name);
+        copy.setDataset(this.dataset);
+        copy.setAverageInsertSize(this.averageInsertSize);
+        copy.setInsertErrorTolerance(this.insertErrorTolerance);
+        copy.setReadLength(this.readLength);
+        copy.setSeqOrientation(this.seqOrientation);
+        copy.setUsage(this.usage);
+        copy.setType(this.type);
+        copy.setFilePaired1(this.filePaired1);
+        copy.setFilePaired2(this.filePaired2);
+        copy.setSeFile(this.seFile);
+
+        return copy;
+    }
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

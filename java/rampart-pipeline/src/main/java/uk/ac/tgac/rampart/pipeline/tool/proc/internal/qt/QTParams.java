@@ -17,7 +17,9 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt;
 
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
+import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
@@ -34,28 +36,84 @@ import java.util.List;
 public class QTParams implements ProcessParams {
 
     private ConanParameter rampartConfig;
+    private ConanParameter qualityTrimmer;
+    private ConanParameter libs;
     private ConanParameter outputDir;
+    private ConanParameter minLength;
+    private ConanParameter minQuality;
     private ConanParameter createConfigs;
+    private ConanParameter jobPrefix;
+    private ConanParameter runParallel;
 
     public QTParams() {
 
         this.rampartConfig = new PathParameter(
                 "qtConfig",
                 "The rampart configuration file describing the libraries to quality trim",
-                false);
+                true);
+
+        this.qualityTrimmer = new DefaultConanParameter(
+                "qualityTrimmer",
+                "The quality trimming tool to be used",
+                false,
+                true);
+
+        this.libs = new DefaultConanParameter(
+                "libs",
+                "The libraries to be quality trimmed",
+                false,
+                true);
 
         this.outputDir = new PathParameter(
                 "qtOutput",
                 "The directory to place the quality trimmed libraries",
                 false);
 
+        this.minLength = new NumericParameter(
+                "minLength",
+                "The minimum length for trimmed reads.  Any reads shorter than this value after trimming are discarded",
+                true);
+
+        this.minQuality = new NumericParameter(
+                "minQuality",
+                "The minimum quality for trimmed reads.  Any reads with quality scores lower than this value will be trimmed.",
+                true);
+
         this.createConfigs = new FlagParameter(
                 "createConfigs",
                 "Whether or not to create separate RAMPART configuration files for RAW and QT datasets in the output directory");
+
+        this.jobPrefix = new DefaultConanParameter(
+                "jobPrefix",
+                "If using a scheduler this prefix is applied to the job names of all child QT processes",
+                false,
+                true);
+
+        this.runParallel = new FlagParameter(
+                "runParallel",
+                "If set to true, and we want to run QT in a scheduled execution context, then each library provided to this " +
+                        "QT process will be executed in parallel.  A wait job will be executed in the foreground which will " +
+                        "complete after all libraries have been quality trimmed");
     }
 
     public ConanParameter getRampartConfig() {
         return rampartConfig;
+    }
+
+    public ConanParameter getQualityTrimmer() {
+        return qualityTrimmer;
+    }
+
+    public ConanParameter getLibs() {
+        return libs;
+    }
+
+    public ConanParameter getMinLength() {
+        return minLength;
+    }
+
+    public ConanParameter getMinQuality() {
+        return minQuality;
     }
 
     public ConanParameter getOutputDir() {
@@ -66,13 +124,27 @@ public class QTParams implements ProcessParams {
         return createConfigs;
     }
 
+    public ConanParameter getJobPrefix() {
+        return jobPrefix;
+    }
+
+    public ConanParameter getRunParallel() {
+        return runParallel;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
         return new ArrayList<ConanParameter>(Arrays.asList(
                 new ConanParameter[]{
                         this.rampartConfig,
+                        this.qualityTrimmer,
+                        this.libs,
+                        this.minLength,
+                        this.minQuality,
                         this.outputDir,
-                        this.createConfigs
+                        this.createConfigs,
+                        this.jobPrefix,
+                        this.runParallel
                 }));
     }
 }

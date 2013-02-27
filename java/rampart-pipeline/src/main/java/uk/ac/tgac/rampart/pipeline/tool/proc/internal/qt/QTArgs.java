@@ -22,15 +22,15 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
+import uk.ac.tgac.rampart.core.data.SeqFile;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmer;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.qt.QualityTrimmerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * User: maplesod
@@ -44,19 +44,41 @@ public class QTArgs implements ProcessArgs {
     public static final String QT_MIN_QUAL = "minqual";
 
 
-    public static final String DEFAULT_TOOL = "SICKLE";
-
     private QTParams params = new QTParams();
 
+    private File config;
     private File outputDir;
-    private String tool;
+    private String qualityTrimmer;
     private int minLen;
     private int minQual;
     private List<Library> libs;
     private boolean createConfigs;
     private String jobPrefix;
+    private boolean runParallel;
 
-    private File config;
+    public QTArgs() {
+        this.config = null;
+        this.outputDir = new File(".");
+        this.qualityTrimmer = "SICKLE_PE_V1.1";
+        this.minLen = 60;
+        this.minQual = 30;
+        this.libs = null;
+        this.createConfigs = false;
+        this.runParallel = false;
+
+        Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String dateTime = formatter.format(new Date());
+        this.jobPrefix = "qt-" + dateTime;
+    }
+
+
+    public File getConfig() {
+        return config;
+    }
+
+    public void setConfig(File config) {
+        this.config = config;
+    }
 
     public File getOutputDir() {
         return outputDir;
@@ -66,12 +88,12 @@ public class QTArgs implements ProcessArgs {
         this.outputDir = outputDir;
     }
 
-    public String getTool() {
-        return tool;
+    public String getQualityTrimmer() {
+        return qualityTrimmer;
     }
 
-    public void setTool(String tool) {
-        this.tool = tool;
+    public void setQualityTrimmer(String qualityTrimmer) {
+        this.qualityTrimmer = qualityTrimmer;
     }
 
     public int getMinLen() {
@@ -98,24 +120,12 @@ public class QTArgs implements ProcessArgs {
         this.libs = libs;
     }
 
-    public File getConfig() {
-        return config;
-    }
-
-    public void setConfig(File config) {
-        this.config = config;
-    }
-
     public boolean isCreateConfigs() {
         return createConfigs;
     }
 
     public void setCreateConfigs(boolean createConfigs) {
         this.createConfigs = createConfigs;
-    }
-
-    public void parseConfig() throws IOException {
-        parseConfig(this.config);
     }
 
     public String getJobPrefix() {
@@ -126,6 +136,30 @@ public class QTArgs implements ProcessArgs {
         this.jobPrefix = jobPrefix;
     }
 
+    public boolean isRunParallel() {
+        return runParallel;
+    }
+
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
+    }
+
+    public void parse(File configFile) throws IOException {
+        QTArgs qtArgs = parseConfig(configFile);
+        this.libs = qtArgs.getLibs();
+        this.qualityTrimmer = qtArgs.getQualityTrimmer();
+        this.minLen = qtArgs.getMinLen();
+        this.minQual = qtArgs.getMinQual();
+    }
+
+    /**
+     * Parses a RAMPART configuration file for QT specific information.  Note that only libs, qualityTrimmer, minLength and minQual
+     * are set from the configuration file.  It does not make sense to populate: outputDir, jobPrefix and createConfigs
+     * from a configuration file.  These settings will be set directly from the command line or by the host process.
+     * @param config The RAMPART configuration file to parse
+     * @return A QTArgs object populated with information from the configuration file.
+     * @throws IOException Thrown if there were any problems reading the file.
+     */
     public static QTArgs parseConfig(File config) throws IOException {
 
         RampartConfiguration rampartConfig = new RampartConfiguration();
@@ -140,7 +174,7 @@ public class QTArgs implements ProcessArgs {
             for (Map.Entry<String, String> entry : section.entrySet()) {
 
                 if (entry.getKey().equalsIgnoreCase(QT_TOOL)) {
-                    args.setTool(entry.getValue());
+                    args.setQualityTrimmer(entry.getValue());
                 } else if (entry.getKey().equalsIgnoreCase(QT_MIN_LEN)) {
                     args.setMinLen(Integer.parseInt(entry.getValue()));
                 } else if (entry.getKey().equalsIgnoreCase(QT_MIN_QUAL)) {
@@ -153,18 +187,25 @@ public class QTArgs implements ProcessArgs {
     }
 
 
+
+
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.config != null)
-            pvp.put(params.getRampartConfig(), this.config.getAbsolutePath());
-
         if (this.outputDir != null)
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
 
         pvp.put(params.getCreateConfigs(), Boolean.toString(this.createConfigs));
+        pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
+        pvp.put(params.getMinLength(), Integer.toString(this.minLen));
+        pvp.put(params.getMinQuality(), Integer.toString(this.minQual));
+
+
+        if (this.jobPrefix != null) {
+            pvp.put(params.getJobPrefix(), this.jobPrefix);
+        }
 
         return pvp;
     }
@@ -181,37 +222,35 @@ public class QTArgs implements ProcessArgs {
             String param = entry.getKey().getName();
 
             if (param.equals(this.params.getRampartConfig().getName())) {
-                this.config = new File(entry.getValue());
+                try {
+                    File newConfig = new File(entry.getValue());
+
+                    if (newConfig != null && newConfig.exists()) {
+                        this.parse(newConfig);
+                    }
+
+                    this.config = newConfig;
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Config file does not exist of could not be parsed");
+                }
             } else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
             } else if (param.equals(this.params.getCreateConfigs().getName())) {
                 this.createConfigs = Boolean.parseBoolean(entry.getValue());
+            } else if (param.equals(this.params.getJobPrefix().getName())) {
+                this.jobPrefix = entry.getValue();
+            } else if (param.equals(this.params.getRunParallel().getName())) {
+                this.runParallel = Boolean.parseBoolean(entry.getValue());
             } else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }
         }
-
-        try {
-            this.parseConfig();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Config file does not exist of could not be parsed");
-        }
-    }
-
-    public RampartConfiguration createRampartConfiguration() {
-
-        RampartConfiguration config = new RampartConfiguration();
-        config.getQtSettings();
-
-        // TODO set all the relevant vars here.
-
-        return config;
     }
 
 
     // ***** Construction methods *****
 
-    public List<QualityTrimmer> createQualityTrimmers(QTProcess qtProcess) {
+    public List<QualityTrimmer> createQualityTrimmers() {
 
         List<QualityTrimmer> qtList = new ArrayList<QualityTrimmer>();
 
@@ -219,9 +258,7 @@ public class QTArgs implements ProcessArgs {
 
             if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
 
-                QualityTrimmer qt = QualityTrimmerFactory.create(this.getTool(), lib, this.getOutputDir());
-
-                qt.configure(qtProcess.getConanProcessService());
+                QualityTrimmer qt = QualityTrimmerFactory.create(this.getQualityTrimmer(), lib, this.getOutputDir());
 
                 qt.getArgs().setMinLength(this.getMinLen());
                 qt.getArgs().setQualityThreshold(this.getMinQual());
@@ -231,5 +268,27 @@ public class QTArgs implements ProcessArgs {
         }
 
         return qtList;
+    }
+
+    public List<Library> createQtLibs() {
+
+        List<Library> libList = new ArrayList<Library>();
+
+        for (Library lib : this.getLibs()) {
+
+            if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
+
+                QualityTrimmer qt = QualityTrimmerFactory.create(this.getQualityTrimmer(), lib, this.getOutputDir());
+
+                Library qtLib = lib.copy();
+                qtLib.setFilePaired1(new SeqFile(qt.getArgs().getPairedEndOutputFiles().getFile1()));
+                qtLib.setFilePaired2(new SeqFile(qt.getArgs().getPairedEndOutputFiles().getFile2()));
+                qtLib.setSeFile(new SeqFile(qt.getArgs().getSingleEndOutputFile()));
+
+                libList.add(qtLib);
+            }
+        }
+
+        return libList;
     }
 }

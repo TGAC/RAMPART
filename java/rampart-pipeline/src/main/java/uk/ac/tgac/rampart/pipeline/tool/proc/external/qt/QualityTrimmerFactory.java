@@ -108,15 +108,17 @@ public enum QualityTrimmerFactory {
     };
 
     public abstract String getToolName();
-
     public abstract boolean isPairedEnd();
 
     public abstract QualityTrimmer createQT();
-
     public abstract QualityTrimmer createQT(QualityTrimmerArgs args);
-
     public abstract QualityTrimmerArgs createArgs(Library library, File outputDir);
 
+
+
+    public static String defaultQTName() {
+        return SICKLE_PE_V1_1.toString();
+    }
 
     public static QualityTrimmer create(Library lib, File outputDir) {
 

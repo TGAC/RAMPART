@@ -19,8 +19,6 @@ package uk.ac.tgac.rampart.pipeline.tool;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
@@ -28,13 +26,11 @@ import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.cli.RampartOptions;
-import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassArgs;
@@ -42,8 +38,8 @@ import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobProcess;
 
-import javax.print.attribute.standard.DateTimeAtCompleted;
 import java.io.File;
+import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -129,12 +125,17 @@ public class Rampart {
         return jobPrefix;
     }
 
-    protected void startJob() throws InterruptedException, TaskExecutionException {
+    protected void startJob() throws InterruptedException, TaskExecutionException, IOException {
 
         // Configure RAMPART args based on CLI input.
         RampartArgs args = new RampartArgs();
         args.setConfig(this.options.getConfig());
         args.setOutputDir(this.options.getOutput());
+
+        // Ensure the output directory exists
+        if (!args.getOutputDir().exists()) {
+            args.getOutputDir().mkdirs();
+        }
 
         // Create an object that maps expected RAMPART job directory structure based on specified output dir.
         RampartJobFileStructure jobFS = new RampartJobFileStructure(this.options.getOutput());
@@ -143,10 +144,11 @@ public class Rampart {
         String jobPrefix = createJobPrefix();
 
         // Create QT args
-        QTArgs qtArgs = new QTArgs();
-        qtArgs.setConfig(this.options.getConfig());     // Use same config as RAMPART
-        qtArgs.setOutputDir(jobFS.getReadsDir());       // QT output goes to reads directory
+        QTArgs qtArgs = QTArgs.parseConfig(this.options.getConfig());
+        qtArgs.setOutputDir(jobFS.getReadsDir());
         qtArgs.setJobPrefix(jobPrefix + "-qt");
+        qtArgs.setCreateConfigs(true);
+        qtArgs.setRunParallel(true);
 
         // Create MASS args
         MultiMassArgs multiMassArgs = new MultiMassArgs();
@@ -157,11 +159,16 @@ public class Rampart {
                 })));
         multiMassArgs.setOutputDir(jobFS.getMassDir());
         multiMassArgs.setJobPrefix(jobPrefix + "-mass");
+        multiMassArgs.setRunParallel(true);
+
+        // Create AMP args
+        // TODO Amp args
 
         // Configure pipeline
         this.rampartPipeline.setStages(this.options.getStages());
         this.rampartPipeline.getQtProcess().setProcessArgs(qtArgs);
         this.rampartPipeline.getMultiMassProcess().setProcessArgs(multiMassArgs);
+        //this.rampartPipeline.getAmpPipeline().se
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -179,7 +186,7 @@ public class Rampart {
         rampartTask.execute(this.executionContext);
     }
 
-    public void process() throws ProcessExecutionException, InterruptedException, TaskExecutionException {
+    public void process() throws ProcessExecutionException, InterruptedException, TaskExecutionException, IOException {
 
         if (this.options.getClean() != null) {
             cleanJob();

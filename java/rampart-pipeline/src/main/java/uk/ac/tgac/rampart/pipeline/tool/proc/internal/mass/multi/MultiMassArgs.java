@@ -37,7 +37,7 @@ public class MultiMassArgs extends MassArgs {
 
     // Class vars
     private List<File> configs;
-    private boolean parallelMASS;
+    private boolean runParallel;
 
 
     public MultiMassArgs() {
@@ -52,12 +52,12 @@ public class MultiMassArgs extends MassArgs {
         this.configs = configs;
     }
 
-    public boolean isParallelMASS() {
-        return parallelMASS;
+    public boolean isRunParallel() {
+        return runParallel;
     }
 
-    public void setParallelMASS(boolean parallelMASS) {
-        this.parallelMASS = parallelMASS;
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
     }
 
     public void setConfigs(String configList) {
@@ -82,7 +82,7 @@ public class MultiMassArgs extends MassArgs {
         if (this.configs != null && this.configs.size() > 0)
             pvp.put(params.getConfigs(), this.getConfigs().toString());
 
-        pvp.put(params.getParallelMass(), Boolean.toString(this.isParallelMASS()));
+        pvp.put(params.getParallelMass(), Boolean.toString(this.isRunParallel()));
 
         return pvp;
     }
@@ -103,7 +103,7 @@ public class MultiMassArgs extends MassArgs {
             if (param.equals((this.params.getConfigs().getName()))) {
                 this.setConfigs(entry.getValue());
             } else if (param.equalsIgnoreCase(this.params.getParallelMass().getName())) {
-                this.setParallelMASS(Boolean.parseBoolean(entry.getValue()));
+                this.setRunParallel(Boolean.parseBoolean(entry.getValue()));
             }
 
         }
