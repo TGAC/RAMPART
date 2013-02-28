@@ -15,28 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.dedup;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 
 /**
+ * Created with IntelliJ IDEA.
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 07/01/13
+ * Time: 10:56
+ * To change this template use File | Settings | File Templates.
  */
-public class RHelperTest {
+public interface Deduplicator extends SimpleIOProcess {
 
-    @Test
-    public void testStatsPlotter() {
-
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
-
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
-    }
 }

@@ -15,28 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.clip;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.tgac.rampart.conan.process.clip.simple.SimpleClipperProcess;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 01/02/13
+ * Time: 09:54
  */
-public class RHelperTest {
+public enum ClipperFactory {
 
-    @Test
-    public void testStatsPlotter() {
+    RAMPART_CLIPPER {
+        @Override
+        public Clipper create() {
+            return new SimpleClipperProcess();
+        }
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
+        /*@Override
+        public Clipper create(ClipperArgs args) {
+            return new SimpleClipperProcess(args);
+        }   */
+    };
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+
+    public abstract Clipper create();
+    //public abstract Clipper create(ClipperArgs args);
+
+    public static Clipper createClipper() {
+        return RAMPART_CLIPPER.create();
+    }
+
+    public static Clipper createClipper(String name) {
+        return ClipperFactory.valueOf(name).create();
     }
 }

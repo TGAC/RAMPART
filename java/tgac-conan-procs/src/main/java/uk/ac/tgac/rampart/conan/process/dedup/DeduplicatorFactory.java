@@ -15,28 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.dedup;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.tgac.rampart.conan.process.dedup.nizar.NizarDedupProcess;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 12/02/13
+ * Time: 17:34
  */
-public class RHelperTest {
+public enum DeduplicatorFactory {
 
-    @Test
-    public void testStatsPlotter() {
+    NIZAR {
+        @Override
+        public Deduplicator create() {
+            return new NizarDedupProcess();
+        }
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
+    };
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+
+    public abstract Deduplicator create();
+
+    public static Deduplicator createDeduplicator() {
+        return NIZAR.create();
+    }
+
+    public static Deduplicator createDeduplicator(String name) {
+        return DeduplicatorFactory.valueOf(name).create();
     }
 }

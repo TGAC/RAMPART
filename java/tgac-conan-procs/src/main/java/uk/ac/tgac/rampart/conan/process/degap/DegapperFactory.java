@@ -15,28 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.degap;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.tgac.rampart.conan.process.degap.gapcloser.GapCloserV112Process;
 
 /**
  * User: maplesod
  * Date: 31/01/13
- * Time: 12:00
+ * Time: 14:03
  */
-public class RHelperTest {
+public enum DegapperFactory {
 
-    @Test
-    public void testStatsPlotter() {
+    SOAP_GAPCLOSER_V1_12 {
+        @Override
+        public Degapper create() {
+            return new GapCloserV112Process();
+        }
+    };
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+    public abstract Degapper create();
+
+    public static Degapper createDegapper() {
+        return SOAP_GAPCLOSER_V1_12.create();
+    }
+
+    public static Degapper createDegapper(String name) {
+        return DegapperFactory.valueOf(name).create();
     }
 }

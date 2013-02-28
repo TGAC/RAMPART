@@ -15,28 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.asm.abyss;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 
-import java.io.File;
+public class AbyssV134InputLibsParameter extends DefaultConanParameter {
 
-import static org.junit.Assert.assertTrue;
+    private static final long serialVersionUID = 4497529578973609010L;
 
-/**
- * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
- */
-public class RHelperTest {
+    public AbyssV134InputLibsParameter() {
+        super(
+                "lib",
+                "Required.  The input libraries to assemble with abyss.  Can include paired end and single end.  Will run paired end assemblies in parallel.",
+                false, false, false);
+    }
 
-    @Test
-    public void testStatsPlotter() {
+    @Override
+    public boolean validateParameterValue(String value) {
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
-
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+        // Pretty tricky to validate this in String form.  Just let Abyss do the validation for the time being...
+        return true;
     }
 }

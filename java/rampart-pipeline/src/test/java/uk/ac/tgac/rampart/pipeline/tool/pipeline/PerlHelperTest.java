@@ -18,7 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.tool.pipeline;
 
 import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.PerlHelper;
+import uk.ac.tgac.rampart.pipeline.tool.proc.util.PerlHelper;
 
 import java.io.File;
 

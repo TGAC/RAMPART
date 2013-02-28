@@ -159,6 +159,7 @@
 		<module>rampart-core</module>
 		<module>rampart-pipeline</module>
 		<module>rampart-helper</module>
-	</modules>
+        <module>tgac-conan-procs</module>
+    </modules>
 
 </project>

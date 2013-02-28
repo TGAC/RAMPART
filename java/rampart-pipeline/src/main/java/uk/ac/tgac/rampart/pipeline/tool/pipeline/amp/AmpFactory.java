@@ -18,12 +18,11 @@
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.degap.DegapperFactory;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.scaffold.ScaffolderFactory;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip.ClipperFactory;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.clip.internal.RampartClipperProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.dedup.Deduplicator;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.dedup.DeduplicatorFactory;
+import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+import uk.ac.tgac.rampart.conan.process.clip.ClipperFactory;
+import uk.ac.tgac.rampart.conan.process.dedup.DeduplicatorFactory;
+import uk.ac.tgac.rampart.conan.process.degap.DegapperFactory;
+import uk.ac.tgac.rampart.conan.process.scaffold.ScaffolderFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,66 +37,66 @@ public enum AmpFactory {
 
     CLIP {
         @Override
-        public AmpStage create() {
+        public SimpleIOProcess create() {
             return ClipperFactory.createClipper();
         }
 
         @Override
-        public AmpStage create(String ampTaskName) {
+        public SimpleIOProcess create(String ampTaskName) {
             return ClipperFactory.createClipper(ampTaskName);
         }
     },
     DEDUPLICATE {
         @Override
-        public AmpStage create() {
+        public SimpleIOProcess create() {
             return DeduplicatorFactory.createDeduplicator();
         }
 
         @Override
-        public AmpStage create(String ampTaskName) {
+        public SimpleIOProcess create(String ampTaskName) {
             return DeduplicatorFactory.createDeduplicator(ampTaskName);
         }
     },
     DEGAP {
         @Override
-        public AmpStage create() {
+        public SimpleIOProcess create() {
             return DegapperFactory.createDegapper();
         }
 
         @Override
-        public AmpStage create(String ampTaskName) {
+        public SimpleIOProcess create(String ampTaskName) {
             return DegapperFactory.createDegapper(ampTaskName);
         }
     },
     SCAFFOLD {
         @Override
-        public AmpStage create() {
+        public SimpleIOProcess create() {
             return ScaffolderFactory.createScaffolder();
         }
 
         @Override
-        public AmpStage create(String ampTaskName) {
+        public SimpleIOProcess create(String ampTaskName) {
             return ScaffolderFactory.createScaffolder(ampTaskName);
         }
     };
 
-    public abstract AmpStage create();
+    public abstract SimpleIOProcess create();
 
-    public abstract AmpStage create(String ampTaskName);
+    public abstract SimpleIOProcess create(String ampTaskName);
 
 
-    public static AmpStage createAmpTask(String taskType) {
+    public static SimpleIOProcess createAmpTask(String taskType) {
         return AmpFactory.valueOf(taskType.toUpperCase()).create();
     }
 
-    public static AmpStage createAmpTask(String taskType, String taskName) {
+    public static SimpleIOProcess createAmpTask(String taskType, String taskName) {
         return AmpFactory.valueOf(taskType.toUpperCase()).create(taskName);
     }
 
 
-    public static List<AmpStage> createFromList(String[] tasks) {
+    public static List<SimpleIOProcess> createFromList(String[] tasks) {
 
-        List<AmpStage> stages = new ArrayList<AmpStage>();
+        List<SimpleIOProcess> stages = new ArrayList<SimpleIOProcess>();
 
         for (String task : tasks) {
             if (task.contains(" ")) {
@@ -114,9 +113,9 @@ public enum AmpFactory {
         return stages;
     }
 
-    public static List<ConanProcess> createDefaultList() {
-        return new ArrayList<ConanProcess>(Arrays.asList(
-                new ConanProcess[]{
+    public static List<SimpleIOProcess> createDefaultList() {
+        return new ArrayList<SimpleIOProcess>(Arrays.asList(
+                new SimpleIOProcess[]{
                         AmpFactory.SCAFFOLD.create(),
                         AmpFactory.DEGAP.create()
                 }));

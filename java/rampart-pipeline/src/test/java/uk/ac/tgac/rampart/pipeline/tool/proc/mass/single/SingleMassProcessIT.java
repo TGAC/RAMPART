@@ -15,28 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.pipeline.tool.proc.mass.single;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.Rule;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TemporaryFolder;
+import uk.ac.tgac.rampart.pipeline.cli.IntegrationTest;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 11/02/13
+ * Time: 12:12
  */
-public class RHelperTest {
+@Category(IntegrationTest.class)
+public class SingleMassProcessIT {
 
-    @Test
-    public void testStatsPlotter() {
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
-
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+    public void testExecute() {
+        // Create Conan Task, and execute just single MASS
     }
 }

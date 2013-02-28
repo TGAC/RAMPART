@@ -19,9 +19,9 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.report.ReportProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.report.ReportProcess;
 
 import java.util.ArrayList;
 import java.util.List;

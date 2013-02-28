@@ -15,28 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.r;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 16/01/13
+ * Time: 16:13
  */
-public class RHelperTest {
+public class RV2122Process extends AbstractConanProcess {
 
-    @Test
-    public void testStatsPlotter() {
+    public static final String EXE = "Rscript";
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
+    public RV2122Process() {
+        this(new RV2122Args());
+    }
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+    public RV2122Process(RV2122Args args) {
+        super(EXE, args, new RV2122Params());
+    }
+
+
+    @Override
+    public String getCommand() {
+        return this.getCommand(this.getProcessArgs(), false);
+    }
+
+    @Override
+    public String getName() {
+        return "R V2.12.2";
     }
 }

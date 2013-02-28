@@ -15,28 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.scaffold.sspace;
 
 import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
 
 import java.io.File;
 
-import static org.junit.Assert.assertTrue;
-
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 28/02/13
+ * Time: 11:36
  */
-public class RHelperTest {
+public class SSpaceBasicV2ProcessTest {
 
     @Test
-    public void testStatsPlotter() {
+    public void testSSpaceBasicV2() {
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
+        SSpaceBasicV2Args args = new SSpaceBasicV2Args();
+        args.setLibraryConfigFile(new File("testlib.lib"));
+        args.setThreads(8);
+        args.setInput(new File("contigs.fa"));
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+        SSpaceBasicV2Process task = new SSpaceBasicV2Process(args);
+        task.addPreCommand("source SSPACE_Basic_V2.0");
+
+        String command = task.getCommand();
+        String fullCommand = task.getFullCommand();
+
+        //assertTrue(command.equals("SSPACE_Basic_v2.0.pl -T 8 -s contigs.fa -l testlib.lib"));
+        //assertTrue(fullCommand.equals("source SSPACE_Basic_V2.0; SSPACE_Basic_v2.0.pl -T 8 -s contigs.fa -l testlib.lib"));
     }
 }

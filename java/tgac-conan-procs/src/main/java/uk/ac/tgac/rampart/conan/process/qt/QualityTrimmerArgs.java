@@ -15,28 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.qt;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
+import uk.ac.ebi.fgpt.conan.core.param.FilePair;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 import java.io.File;
 
-import static org.junit.Assert.assertTrue;
+public interface QualityTrimmerArgs extends ProcessArgs {
 
-/**
- * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
- */
-public class RHelperTest {
+    boolean isSingleEndArgs();
 
-    @Test
-    public void testStatsPlotter() {
+    FilePair getPairedEndInputFiles();
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
+    void setPairedEndInputFiles(FilePair pairedEndInputFiles);
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
-    }
+    FilePair getPairedEndOutputFiles();
+
+    void setPairedEndOutputFiles(FilePair pairedEndOutputFiles);
+
+    File getSingleEndInputFile();
+
+    void setSingleEndInputFile(File singleEndInputFile);
+
+    File getSingleEndOutputFile();
+
+    void setSingleEndOutputFile(File singleEndOutputFile);
+
+    int getQualityThreshold();
+
+    void setQualityThreshold(int qualityThreshold);
+
+    int getMinLength();
+
+    void setMinLength(int minLength);
 }

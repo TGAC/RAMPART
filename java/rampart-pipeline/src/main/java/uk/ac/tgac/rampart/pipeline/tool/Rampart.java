@@ -33,10 +33,10 @@ import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.cli.RampartOptions;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.clean.CleanJobProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassArgs;
+import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTArgs;
+import uk.ac.tgac.rampart.pipeline.tool.proc.util.clean.CleanJobArgs;
+import uk.ac.tgac.rampart.pipeline.tool.proc.util.clean.CleanJobProcess;
 
 import java.io.File;
 import java.io.IOException;

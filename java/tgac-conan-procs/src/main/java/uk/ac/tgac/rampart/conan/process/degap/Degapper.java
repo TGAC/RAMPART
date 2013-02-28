@@ -15,28 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.degap;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 23/01/13
+ * Time: 13:47
  */
-public class RHelperTest {
+public interface Degapper extends SimpleIOProcess {
 
-    @Test
-    public void testStatsPlotter() {
+    DegapperArgs getArgs();
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
-
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
-    }
+    void setArgs(DegapperArgs degapperArgs);
 }

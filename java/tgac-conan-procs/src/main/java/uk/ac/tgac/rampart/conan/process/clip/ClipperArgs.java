@@ -15,28 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.clip;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 01/02/13
+ * Time: 09:56
  */
-public class RHelperTest {
-
-    @Test
-    public void testStatsPlotter() {
-
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
-
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
-    }
+public interface ClipperArgs extends ProcessArgs {
 }

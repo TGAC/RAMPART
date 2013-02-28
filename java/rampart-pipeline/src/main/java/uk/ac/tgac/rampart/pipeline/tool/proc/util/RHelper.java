@@ -15,28 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.pipeline.tool.proc.util;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import java.net.URL;
 
 /**
  * User: maplesod
- * Date: 31/01/13
- * Time: 12:00
+ * Date: 30/01/13
+ * Time: 17:25
  */
-public class RHelperTest {
+public enum RHelper {
 
-    @Test
-    public void testStatsPlotter() {
+    STATS_PLOTTER {
+        @Override
+        public String getPath() {
+            return "/scripts/r/stats_plotter.R";
+        }
+    };
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
-
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+    public File getScript() {
+        URL scriptUrl = this.getClass().getResource(this.getPath());
+        return FileUtils.toFile(scriptUrl);
     }
+
+    public abstract String getPath();
 }

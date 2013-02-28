@@ -15,28 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.pipeline;
+package uk.ac.tgac.rampart.conan.process.scaffold;
 
-import org.junit.Test;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.RHelper;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Process;
 
 /**
  * User: maplesod
  * Date: 31/01/13
- * Time: 12:00
+ * Time: 14:03
  */
-public class RHelperTest {
+public enum ScaffolderFactory {
 
-    @Test
-    public void testStatsPlotter() {
+    SSPACE_BASIC_V2 {
+        @Override
+        public Scaffolder create() {
+            return new SSpaceBasicV2Process();
+        }
+    };
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
 
-        assertTrue(statsPlotterFile != null);
-        assertTrue(statsPlotterFile.exists());
+    public abstract Scaffolder create();
+
+    public static Scaffolder createScaffolder() {
+        return SSPACE_BASIC_V2.create();
+    }
+
+    public static Scaffolder createScaffolder(String name) {
+        return ScaffolderFactory.valueOf(name.toUpperCase()).create();
     }
 }

@@ -25,10 +25,10 @@ import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpPipeline;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassParams;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass.multi.MultiMassProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTParams;
-import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassParams;
+import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTParams;
+import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTProcess;
 
 import java.util.ArrayList;
 import java.util.List;
