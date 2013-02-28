@@ -19,29 +19,22 @@ package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.core.data.Library;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerArgs;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AbstractAssemblerArgs;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AbyssV134Args implements AssemblerArgs {
+public class AbyssV134Args extends AbstractAssemblerArgs {
 
     private AbyssV134Params params = new AbyssV134Params();
 
     private AbyssV134InputLibsArg libs;
-    private int nbContigPairs;
-    private int kmer;
-    private int threads;
     private String name;
-
 
     public AbyssV134Args() {
 
         this.libs = null;
-        this.nbContigPairs = 10;
-        this.kmer = 65;
-        this.threads = 0;
         this.name = null;
     }
 
@@ -53,34 +46,6 @@ public class AbyssV134Args implements AssemblerArgs {
     @Override
     public void setLibraries(List<Library> libs) {
         this.libs = new AbyssV134InputLibsArg(libs);
-    }
-
-    public int getNbContigPairs() {
-        return nbContigPairs;
-    }
-
-    public void setNbContigPairs(int nbContigPairs) {
-        this.nbContigPairs = nbContigPairs;
-    }
-
-    @Override
-    public int getKmer() {
-        return kmer;
-    }
-
-    @Override
-    public void setKmer(int kmer) {
-        this.kmer = kmer;
-    }
-
-    @Override
-    public int getThreads() {
-        return threads;
-    }
-
-    @Override
-    public void setThreads(int threads) {
-        this.threads = threads;
     }
 
     public String getName() {
@@ -99,13 +64,6 @@ public class AbyssV134Args implements AssemblerArgs {
 
         if (this.libs != null) {
             pvp.put(params.getLibs(), this.libs.toString());
-        }
-
-        pvp.put(params.getNbContigPairs(), params.getNbContigPairs().getName() + "=" + String.valueOf(this.nbContigPairs));
-        pvp.put(params.getKmer(), params.getKmer().getName() + "=" + String.valueOf(this.kmer));
-
-        if (this.threads > 0) {
-            pvp.put(params.getThreads(), params.getThreads().getName() + "=" + String.valueOf(this.threads));
         }
 
         if (this.name != null) {
@@ -129,14 +87,8 @@ public class AbyssV134Args implements AssemblerArgs {
             if (param.equals(this.params.getLibs().getName())) {
                 //TODO this needs proper parsing
                 this.libs = null; //entry.getValue();
-            } else if (param.equals(this.params.getKmer().getName())) {
-                this.kmer = Integer.parseInt(entry.getValue());
             } else if (param.equals(this.params.getName().getName())) {
                 this.name = entry.getValue();
-            } else if (param.equals(this.params.getNbContigPairs().getName())) {
-                this.nbContigPairs = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getThreads().getName())) {
-                this.threads = Integer.parseInt(entry.getValue());
             } else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }
@@ -144,7 +96,7 @@ public class AbyssV134Args implements AssemblerArgs {
     }
 
     @Override
-    public AssemblerArgs copy() {
+    public AbstractAssemblerArgs copy() {
 
         AbyssV134Args copy = new AbyssV134Args();
         copy.setName(this.getName());

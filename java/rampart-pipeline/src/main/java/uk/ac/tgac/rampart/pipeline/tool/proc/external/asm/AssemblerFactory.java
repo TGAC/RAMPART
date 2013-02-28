@@ -17,7 +17,12 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm;
 
+import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss.AbyssV134Args;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss.AbyssV134Process;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -33,29 +38,48 @@ public enum AssemblerFactory {
         }
 
         @Override
-        public Assembler createAsm() {
+        public Assembler create() {
             return new AbyssV134Process();
+        }
+
+        @Override
+        public Assembler create(AbstractAssemblerArgs args) {
+            return new AbyssV134Process(args);
+        }
+
+        @Override
+        public AbstractAssemblerArgs createArgs(int kmer, List<Library> libs, File outputDir) {
+            AbyssV134Args args = new AbyssV134Args();
+            args.setKmer(kmer);
+            args.setOutputDir(outputDir);
+            args.setLibraries(libs);
+
+            return args;
         }
     };
 
     public abstract String getToolName();
-
-    public abstract Assembler createAsm();
+    public abstract Assembler create();
+    public abstract Assembler create(AbstractAssemblerArgs args);
+    public abstract AbstractAssemblerArgs createArgs(int kmer, List<Library> libs, File outputDir);
 
     public static Assembler createAssembler() {
-        return ABYSS_V1_3_4.createAsm();
+        return ABYSS_V1_3_4.create();
     }
 
-    public static Assembler create(String toolType) {
-
-        for (AssemblerFactory inst : AssemblerFactory.values()) {
-
-            if (inst.getToolName().equalsIgnoreCase(toolType)) {
-
-                return inst.createAsm();
-            }
-
-        }
-        return null;
+    public static Assembler createAssembler(String assembler) {
+        return AssemblerFactory.valueOf(assembler).create();
     }
+
+    public static Assembler createAssembler(String assembler, AbstractAssemblerArgs args) {
+        return AssemblerFactory.valueOf(assembler).create(args);
+    }
+
+    public static Assembler createAssembler(String assembler, int k, List<Library> libs, File outputDir) {
+
+        AbstractAssemblerArgs args = AssemblerFactory.valueOf(assembler).createArgs(k, libs, outputDir);
+
+        return AssemblerFactory.createAssembler(assembler, args);
+    }
+
 }

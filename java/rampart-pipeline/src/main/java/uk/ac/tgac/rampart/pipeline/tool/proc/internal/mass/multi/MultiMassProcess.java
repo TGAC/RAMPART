@@ -75,41 +75,64 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             List<File> statsFiles = new ArrayList<File>();
 
-            List<SingleMassArgs> singleMassArgsList = createSingleMassArgsList(args);
+            List<SingleMassArgs> singleMassArgsList = this.createSingleMassArgsList(args);
+
+            List<Thread> singleMassThreads = new ArrayList<Thread>();
 
             for (SingleMassArgs singleMassArgs : singleMassArgsList) {
-
-                // Create output directory for this MASS run
-                if (!singleMassArgs.getOutputDir().mkdirs()) {
-                    throw new IOException("Couldn't create directory for MASS");
-                }
 
                 // Add the predicted stats file to the list for processing later.
                 statsFiles.add(singleMassArgs.getStatsFile());
 
-                // Execute the single MASS run
-                SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
-                singleMassProcess.setConanProcessService(this.getConanProcessService());
-                singleMassProcess.execute(executionContext);
+                this.executeSingleMass(singleMassArgs, executionContext);
             }
 
             // Wait for all assembly jobs to finish if they are running as background tasks.
-            if (executionContext.usingScheduler() && !executionContext.isForegroundJob()) {
-
-                this.conanProcessService.waitFor(
-                        executionContext.getScheduler().createWaitCondition(
-                                ExitStatus.Type.COMPLETED_SUCCESS,
-                                args.getJobPrefix() + "*"),
-                        executionContext);
+            if (args.isRunParallel()) {
+                this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
             // Execute the Mass Selector job
             executeMassSelector(args, statsFiles, executionContext);
+
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
 
         return true;
+    }
+
+    protected void executeSingleMass(SingleMassArgs singleMassArgs, ExecutionContext executionContext)
+            throws IOException, InterruptedException, ProcessExecutionException {
+
+        // Create output directory for this MASS run
+        if (!singleMassArgs.getOutputDir().mkdirs()) {
+            throw new IOException("Couldn't create directory for MASS");
+        }
+
+        // Create the single MASS process
+        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
+        singleMassProcess.setConanProcessService(this.getConanProcessService());
+        singleMassProcess.execute(executionContext);
+    }
+
+    protected void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException {
+
+        // Duplicate the execution context so we don't modify the original accidentally.
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContext.usingScheduler()) {
+
+            String jobName = jobPrefix + "_wait";
+            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
+            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+            executionContextCopy.setForegroundJob(true);
+        }
+
+        this.conanProcessService.waitFor(
+                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
+                executionContextCopy);
     }
 
     protected void executeMassSelector(MultiMassArgs args, List<File> statsFiles, ExecutionContext executionContext)

@@ -108,6 +108,7 @@ public enum QualityTrimmerFactory {
     };
 
     public abstract String getToolName();
+
     public abstract boolean isPairedEnd();
 
     public abstract QualityTrimmer createQT();

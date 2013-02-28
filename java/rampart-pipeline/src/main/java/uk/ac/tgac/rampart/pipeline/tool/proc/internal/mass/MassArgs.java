@@ -48,13 +48,14 @@ public abstract class MassArgs implements ProcessArgs {
     private SingleMassParams params = new SingleMassParams();
 
     // Class vars
-    private Assembler assembler;
+    private String assembler;
     private int kmin;
     private int kmax;
     private StepSize stepSize;
     private List<Library> libs;
     private String jobPrefix;
     private File outputDir;
+    private boolean runParallel;
 
 
     public MassArgs() {
@@ -92,11 +93,11 @@ public abstract class MassArgs implements ProcessArgs {
         this.stepSize = stepSize;
     }
 
-    public Assembler getAssembler() {
+    public String getAssembler() {
         return assembler;
     }
 
-    public void setAssembler(Assembler assembler) {
+    public void setAssembler(String assembler) {
         this.assembler = assembler;
     }
 
@@ -124,6 +125,13 @@ public abstract class MassArgs implements ProcessArgs {
         this.jobPrefix = jobPrefix;
     }
 
+    public boolean isRunParallel() {
+        return runParallel;
+    }
+
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
+    }
 
     @Override
     public Map<ConanParameter, String> getArgMap() {
@@ -131,11 +139,12 @@ public abstract class MassArgs implements ProcessArgs {
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
         if (this.assembler != null)
-            pvp.put(params.getAssembler(), this.assembler.getName());
+            pvp.put(params.getAssembler(), this.assembler);
 
         pvp.put(params.getKmin(), String.valueOf(this.kmin));
         pvp.put(params.getKmax(), String.valueOf(this.kmax));
         pvp.put(params.getStepSize(), this.stepSize.toString());
+        pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
 
         // TODO not sure the toString method is sufficient here.
         if (this.libs != null && this.libs.size() > 0)
@@ -162,7 +171,7 @@ public abstract class MassArgs implements ProcessArgs {
             String param = entry.getKey().getName();
 
             if (param.equals(this.params.getAssembler().getName())) {
-                this.assembler = AssemblerFactory.create(entry.getValue());
+                this.assembler = entry.getValue();
             } else if (param.equals(this.params.getKmin().getName())) {
                 this.kmin = Integer.parseInt(entry.getValue());
             } else if (param.equals(this.params.getKmax().getName())) {

@@ -37,7 +37,6 @@ public class MultiMassArgs extends MassArgs {
 
     // Class vars
     private List<File> configs;
-    private boolean runParallel;
 
 
     public MultiMassArgs() {
@@ -50,14 +49,6 @@ public class MultiMassArgs extends MassArgs {
 
     public void setConfigs(List<File> configs) {
         this.configs = configs;
-    }
-
-    public boolean isRunParallel() {
-        return runParallel;
-    }
-
-    public void setRunParallel(boolean runParallel) {
-        this.runParallel = runParallel;
     }
 
     public void setConfigs(String configList) {

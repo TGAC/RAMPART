@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.internal.mass;
 
 import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
 import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
@@ -41,6 +42,7 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter libs;
     private ConanParameter outputDir;
     private ConanParameter jobPrefix;
+    private ConanParameter runParallel;
 
 
     public MassParams() {
@@ -88,6 +90,11 @@ public abstract class MassParams implements ProcessParams {
                 true,
                 false);
 
+        this.runParallel = new FlagParameter(
+                "runParallel",
+                "If set to true, each sub job will be executed in parallel rather than in sequence.  Ensure you have enough" +
+                        " resource before using this setting");
+
     }
 
     public ConanParameter getAssembler() {
@@ -118,6 +125,10 @@ public abstract class MassParams implements ProcessParams {
         return jobPrefix;
     }
 
+    public ConanParameter getRunParallel() {
+        return runParallel;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -129,7 +140,8 @@ public abstract class MassParams implements ProcessParams {
                         this.stepSize,
                         this.libs,
                         this.outputDir,
-                        this.jobPrefix
+                        this.jobPrefix,
+                        this.runParallel
                 }));
     }
 

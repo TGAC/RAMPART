@@ -18,8 +18,11 @@
 package uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.abyss;
 
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AbstractAssemblerArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
-import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerArgs;
+
+import java.io.File;
+import java.io.FilenameFilter;
 
 /**
  * User: maplesod
@@ -34,7 +37,7 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
         this(new AbyssV134Args());
     }
 
-    public AbyssV134Process(AbyssV134Args args) {
+    public AbyssV134Process(AbstractAssemblerArgs args) {
         super(EXE, args, new AbyssV134Params());
     }
 
@@ -44,8 +47,8 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
     }
 
     @Override
-    public AssemblerArgs getArgs() {
-        return (AssemblerArgs) this.getProcessArgs();
+    public AbstractAssemblerArgs getArgs() {
+        return (AbstractAssemblerArgs) this.getProcessArgs();
     }
 
     @Override
@@ -61,6 +64,42 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
     @Override
     public boolean makesScaffolds() {
         return true;
+    }
+
+    @Override
+    public File getUnitigsFile() {
+        File[] files = this.getArgs().getOutputDir().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith("-unitigs.fa");
+            }
+        });
+
+        return (files != null && files.length == 1) ? files[0] : null;
+    }
+
+    @Override
+    public File getContigsFile() {
+        File[] files = this.getArgs().getOutputDir().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith("-contigs.fa");
+            }
+        });
+
+        return (files != null && files.length == 1) ? files[0] : null;
+    }
+
+    @Override
+    public File getScaffoldsFile() {
+        File[] files = this.getArgs().getOutputDir().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith("-scaffolds.fa");
+            }
+        });
+
+        return (files != null && files.length == 1) ? files[0] : null;
     }
 
     @Override

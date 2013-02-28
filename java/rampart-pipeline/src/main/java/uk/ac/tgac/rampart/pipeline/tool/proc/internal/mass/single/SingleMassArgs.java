@@ -93,7 +93,7 @@ public class SingleMassArgs extends MassArgs {
             for (Map.Entry<String, String> entry : section.entrySet()) {
 
                 if (entry.getKey().equalsIgnoreCase(MASS_TOOL)) {
-                    args.setAssembler(AssemblerFactory.create(entry.getValue()));
+                    args.setAssembler(entry.getValue());
                 } else if (entry.getKey().equalsIgnoreCase(MASS_KMIN)) {
                     args.setKmin(Integer.parseInt(entry.getValue()));
                 } else if (entry.getKey().equalsIgnoreCase(MASS_KMAX)) {

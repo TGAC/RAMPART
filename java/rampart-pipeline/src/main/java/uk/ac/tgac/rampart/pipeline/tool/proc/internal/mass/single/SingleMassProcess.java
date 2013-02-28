@@ -24,11 +24,14 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
+import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AbstractAssemblerArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.Assembler;
+import uk.ac.tgac.rampart.pipeline.tool.proc.external.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.proc.internal.util.PerlHelper;
 
@@ -109,7 +112,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
 
-        Assembler assembler = args.getAssembler();
+        Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
 
         // Create directory for links to assembled contigs
         if (assembler.makesUnitigs()) {
@@ -121,7 +124,7 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
 
         // Create dir for scaffold links if this asm creates them
-        if (args.getAssembler().makesScaffolds()) {
+        if (assembler.makesScaffolds()) {
             args.getScaffoldsDir().mkdir();
         }
 
@@ -142,59 +145,38 @@ public class SingleMassProcess extends AbstractConanProcess {
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+            // Make a shortcut to the args
             SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
-
-            RampartConfiguration config = new RampartConfiguration();
-            config.load(args.getConfig());
 
             // Check the range looks reasonable
             args.validateKmers(args.getKmin(), args.getKmax());
 
-            // Input the assembler's libraries
-            args.getAssembler().getArgs().setLibraries(args.getLibs());
-
-            ExecutionContext asmExeCtx = createAssemblerExecutionContext(executionContext);
-
             // Create any required directories for this job
-            createSupportDirectories();
+            this.createSupportDirectories();
 
             // Dispatch an assembly job for each requested kmer
             for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = nextKmer(k)) {
 
-                File kDir = new File(args.getOutputDir(), String.valueOf(k));
+                Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), new File(args.getOutputDir(), Integer.toString(k)));
 
-                // Make the output directory for this child job (delete the directory if it exists)
-                if (kDir.exists()) {
-                    FileUtils.deleteDirectory(kDir);
-                }
-                kDir.mkdir();
-
-                // Modify the ProcessArgs kmer value
-                args.getAssembler().getArgs().setKmer(k);
-
-                // Modify the scheduler jobname is present
-                if (asmExeCtx.usingScheduler()) {
-                    String jobName = args.getJobPrefix() + "-k" + k;
-                    asmExeCtx.getScheduler().getArgs().setJobName(jobName);
-                    asmExeCtx.getScheduler().getArgs().setMonitorFile(new File(((SingleMassArgs) this.getProcessArgs()).getOutputDir(), jobName + ".log"));
-                }
-
-                // Create proc
-                this.conanProcessService.execute(args.getAssembler(), asmExeCtx);
+                this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, args.isRunParallel(), executionContext);
             }
 
-            // Wait for all assembly jobs to finish if they are running as background tasks.
-            if (asmExeCtx.usingScheduler() && !asmExeCtx.isForegroundJob()) {
+            WaitCondition assemblerWait = null;
 
-                this.conanProcessService.waitFor(
-                        asmExeCtx.getScheduler().createWaitCondition(
-                                ExitStatus.Type.COMPLETED_SUCCESS,
-                                args.getJobPrefix() + "*"),
-                        asmExeCtx);
+            // Create this wait job if we are using a scheduler and running in parallel.
+            if (executionContext.usingScheduler() && args.isRunParallel()) {
+
+                assemblerWait = executionContext.getScheduler().createWaitCondition(
+                        ExitStatus.Type.COMPLETED_SUCCESS,
+                        args.getJobPrefix() + "*");
+
+                this.conanProcessService.waitFor(assemblerWait, executionContext);
             }
 
             // Run stats job using the original execution context
-            this.dispatchStatsJob(executionContext);     // Load the config file
+            this.dispatchStatsJob(assemblerWait, executionContext);
+
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         } catch (CommandExecutionException cee) {
@@ -204,13 +186,26 @@ public class SingleMassProcess extends AbstractConanProcess {
         return true;
     }
 
+    protected void executeAssembler(Assembler assembler, String jobName, boolean runParallel, ExecutionContext executionContext)
+            throws IOException, ProcessExecutionException, InterruptedException {
 
-    protected ExecutionContext createAssemblerExecutionContext(ExecutionContext executionContext) {
+        ExecutionContext executionContextCopy = executionContext.copy();
 
-        ExecutionContext newExecutionContext = executionContext.copy();
+        File outputDir = assembler.getArgs().getOutputDir();
 
-        if (newExecutionContext.usingScheduler()) {
-            SchedulerArgs schArgs = newExecutionContext.getScheduler().getArgs().copy();
+        // Make the output directory for this child job (delete the directory if it exists)
+        if (outputDir.exists()) {
+            FileUtils.deleteDirectory(outputDir);
+        }
+        outputDir.mkdir();
+
+        // Modify the scheduler jobname is present
+        if (executionContextCopy.usingScheduler()) {
+
+            SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
+
+            schArgs.setJobName(jobName);
+            schArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
 
             // Set mem required to 60GB if no memory requested
             if (schArgs.getMemoryMB() == 0) {
@@ -222,12 +217,11 @@ public class SingleMassProcess extends AbstractConanProcess {
                 schArgs.setThreads(8);
             }
 
-            // If we're using a job scheduler then make sure the assembly jobs run in the background
-            executionContext.setForegroundJob(false);
+            executionContextCopy.setForegroundJob(!runParallel);
         }
 
-
-        return newExecutionContext;
+        // Create proc
+        this.conanProcessService.execute(assembler, executionContextCopy);
     }
 
 
@@ -245,36 +239,37 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
 
-    protected void dispatchStatsJob(ExecutionContext env) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+    protected void dispatchStatsJob(WaitCondition waitCondition, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
+        ExecutionContext executionContextCopy = executionContext.copy();
 
-        // Alter the environment for this job if using a scheduler
-        SchedulerArgs schArgsCopy = null;
-        SchedulerArgs schArgsBackup = null;
-        if (env.usingScheduler()) {
-            schArgsBackup = env.getScheduler().getArgs();
-            schArgsCopy = env.getScheduler().getArgs().copy();
-
-            schArgsCopy.setJobName(args.getJobPrefix() + "-stats");
-            schArgsCopy.setThreads(0);
-            schArgsCopy.setMemoryMB(0);
-            schArgsCopy.setBackgroundTask(false);
-            env.getScheduler().setArgs(schArgsCopy);
+        if (executionContextCopy.usingScheduler()) {
+            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
+            schedulerArgs.setJobName(args.getJobPrefix() + "-stats");
+            schedulerArgs.setThreads(0);
+            schedulerArgs.setMemoryMB(0);
+            schedulerArgs.setWaitCondition(waitCondition);
         }
 
+        // Build compound command for running a stat job for each assembly type
+        Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
         StringJoiner statCommands = new StringJoiner("; ");
 
-        statCommands.add(buildStatCmdLine(args.getUnitigsDir()));
-        statCommands.add(buildStatCmdLine(args.getContigsDir()));
-        statCommands.add(buildStatCmdLine(args.getScaffoldsDir()));
+        if (assembler.makesUnitigs()) {
+            statCommands.add(buildStatCmdLine(args.getUnitigsDir()));
+        }
+
+        if (assembler.makesContigs()) {
+            statCommands.add(buildStatCmdLine(args.getContigsDir()));
+        }
+
+        if (assembler.makesScaffolds()) {
+            statCommands.add(buildStatCmdLine(args.getScaffoldsDir()));
+        }
 
         // Create proc
-        this.conanProcessService.execute(statCommands.toString(), env);
-
-        if (env.usingScheduler()) {
-            env.getScheduler().setArgs(schArgsBackup);
-        }
+        this.conanProcessService.execute(statCommands.toString(), executionContextCopy);
     }
 
     @Override
