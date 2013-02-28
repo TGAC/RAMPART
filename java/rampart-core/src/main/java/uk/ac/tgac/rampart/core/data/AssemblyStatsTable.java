@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.io.FileUtils.*;
+import static org.apache.commons.io.FileUtils.readLines;
 
 /**
  * User: maplesod

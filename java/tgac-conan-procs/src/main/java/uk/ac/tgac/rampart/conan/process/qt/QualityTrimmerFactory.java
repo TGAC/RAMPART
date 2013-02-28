@@ -129,15 +129,25 @@ public enum QualityTrimmerFactory {
 
     public static QualityTrimmer create(String qtType, Library lib, File outputDir) {
 
+        QualityTrimmerFactory qualityTrimmerType = QualityTrimmerFactory.valueOf(qtType.toUpperCase());
+
+        if (qualityTrimmerType == null) {
+            qualityTrimmerType = findGeneric(qtType);
+        }
+
+        if (qualityTrimmerType != null && lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
+            return qualityTrimmerType.createQT(qualityTrimmerType.createArgs(lib, outputDir));
+        }
+
+        return null;
+    }
+
+    protected static QualityTrimmerFactory findGeneric(String qtType) {
+
         for (QualityTrimmerFactory inst : QualityTrimmerFactory.values()) {
-
-            if (inst.getToolName().equalsIgnoreCase(qtType) &&
-                    inst.isPairedEnd() == lib.isPairedEnd() &&
-                    lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
-
-                return inst.createQT(inst.createArgs(lib, outputDir));
+            if (inst.getToolName().equalsIgnoreCase(qtType)) {
+                return inst;
             }
-
         }
 
         return null;

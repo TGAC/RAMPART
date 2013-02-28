@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 import uk.ac.tgac.rampart.conan.process.clip.ClipperFactory;
 import uk.ac.tgac.rampart.conan.process.dedup.DeduplicatorFactory;

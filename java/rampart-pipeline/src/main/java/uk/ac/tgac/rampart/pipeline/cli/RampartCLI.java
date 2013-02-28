@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.cli;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
@@ -34,6 +35,7 @@ import uk.ac.ebi.fgpt.conan.model.context.Locality;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.spring.RampartAppContext;
 import uk.ac.tgac.rampart.pipeline.tool.Rampart;
 
@@ -128,18 +130,24 @@ public class RampartCLI {
             // If help was requested output that and finish before starting Spring
             if (rampartOptions.doHelp()) {
                 rampartOptions.printUsage();
-                System.exit(0);
             }
+            // Otherwise if clean option was selected then clean the specified job dir
+            else if (rampartOptions.getClean() != null) {
+                cleanJob(rampartOptions.getClean());
+            }
+            // Otherwise run RAMPART proper
+            else {
 
-            // Create the fully configured RAMPART object
-            Rampart rampart = configureSystem(rampartOptions);
+                // Create the fully configured RAMPART object
+                Rampart rampart = configureSystem(rampartOptions);
 
-            log.info("RAMPART: Started");
+                log.info("RAMPART: Started");
 
-            // Run RAMPART
-            rampart.process();
+                // Run RAMPART
+                rampart.process();
 
-            log.info("RAMPART: Finished");
+                log.info("RAMPART: Finished");
+            }
         }
         catch (ParseException exp) {
             System.err.println(exp.getMessage());
@@ -157,6 +165,17 @@ public class RampartCLI {
             log.error(e.getMessage(), e);
             System.exit(6);
         }
+    }
+
+    private static void cleanJob(File jobDir) throws IOException {
+
+        RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
+
+        FileUtils.deleteDirectory(jobFs.getReadsDir());
+        FileUtils.deleteDirectory(jobFs.getMassDir());
+        FileUtils.deleteDirectory(jobFs.getImproverDir());
+        FileUtils.deleteDirectory(jobFs.getReportDir());
+        FileUtils.deleteDirectory(jobFs.getLogDir());
     }
 
 }

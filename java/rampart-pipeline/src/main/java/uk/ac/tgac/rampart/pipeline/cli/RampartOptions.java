@@ -150,7 +150,7 @@ public class RampartOptions {
                 .withDescription("The RAMPART stages to execute: QT, MASS, AMP, HELPER, ALL.  Default: ALL.").create("s");
 
         Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasArg()
-                .withDescription("The directory to clean.").create("clean");
+                .withDescription("The directory to clean.").create("z");
 
         // create Options object
         Options options = new Options();

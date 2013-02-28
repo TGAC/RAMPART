@@ -17,14 +17,12 @@
  **/
 package uk.ac.tgac.rampart.conan.process.asm;
 
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public abstract class AssemblerArgs implements ProcessArgs {
 

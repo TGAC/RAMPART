@@ -25,10 +25,10 @@ import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpPipeline;
-import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassParams;
-import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassProcess;
-import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTParams;
-import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTParams;
+import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTProcess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -143,9 +143,9 @@ public class RampartPipeline implements ConanPipeline {
             params.addAll(new MultiMassParams().getConanParameters());
         }
 
-        if (this.stages == null || this.stages.contains(RampartStage.AMP)) {
+        /*if (this.stages == null || this.stages.contains(RampartStage.AMP)) {
             params.addAll(new AmpPipeline().getAllRequiredParameters());
-        }
+        } */
 
         return params;
     }

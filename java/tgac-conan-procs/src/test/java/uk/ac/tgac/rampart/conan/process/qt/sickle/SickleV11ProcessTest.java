@@ -19,8 +19,6 @@ package uk.ac.tgac.rampart.conan.process.qt.sickle;
 
 import org.junit.Test;
 import uk.ac.ebi.fgpt.conan.core.param.FilePair;
-import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Args;
-import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Process;
 
 import java.io.File;
 

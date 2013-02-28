@@ -55,7 +55,7 @@ public class AmpProcess extends AbstractConanProcess {
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
 
-        // Create the RAMPART proc
+        // Create the RAMPART process
         ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
 
         ConanTask<AmpPipeline> ampTask = conanTaskFactory.createTask(

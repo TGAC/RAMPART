@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.conan.process.clip.simple;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.conan.process.clip.Clipper;
 
-
 import java.io.*;
 
 /**

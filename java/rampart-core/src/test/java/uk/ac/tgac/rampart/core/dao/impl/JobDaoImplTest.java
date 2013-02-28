@@ -28,9 +28,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.ac.tgac.rampart.core.dao.JobDao;
-import uk.ac.tgac.rampart.core.data.*;
+import uk.ac.tgac.rampart.core.data.AssemblyStats;
+import uk.ac.tgac.rampart.core.data.Job;
+import uk.ac.tgac.rampart.core.data.Library;
 import uk.ac.tgac.rampart.core.data.Library.Dataset;
-import uk.ac.tgac.rampart.core.data.Library.Usage;
+import uk.ac.tgac.rampart.core.data.RampartSettings;
 
 import java.util.ArrayList;
 import java.util.List;

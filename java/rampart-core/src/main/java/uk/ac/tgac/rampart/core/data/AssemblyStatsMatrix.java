@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.core.data;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * User: maplesod

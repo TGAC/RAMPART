@@ -1,0 +1,197 @@
+/**
+ * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+ * Copyright (C) 2013  Daniel Mapleson - TGAC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+package uk.ac.tgac.rampart.pipeline.tool.process.mass.multi;
+
+import org.springframework.stereotype.Component;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.core.data.RampartConfiguration;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.stats.MassSelectorArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.stats.MassSelectorProcess;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * User: maplesod
+ * Date: 01/02/13
+ * Time: 11:10
+ */
+@Component
+public class MultiMassProcess extends AbstractConanProcess {
+
+    public MultiMassProcess() {
+        this(new MultiMassArgs());
+    }
+
+    public MultiMassProcess(MultiMassArgs args) {
+        super("", args, new MultiMassParams());
+    }
+
+    @Override
+    public String getName() {
+        return "MultiMASS";
+    }
+
+    @Override
+    public Collection<ConanParameter> getParameters() {
+        return new MultiMassParams().getConanParameters();
+    }
+
+    @Override
+    public String getCommand() {
+        return this.getFullCommand();
+    }
+
+    @Override
+    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+
+        try {
+            MultiMassArgs args = (MultiMassArgs) this.getProcessArgs();
+
+            List<File> statsFiles = new ArrayList<File>();
+
+            List<SingleMassArgs> singleMassArgsList = this.createSingleMassArgsList(args);
+
+            List<Thread> singleMassThreads = new ArrayList<Thread>();
+
+            for (SingleMassArgs singleMassArgs : singleMassArgsList) {
+
+                // Add the predicted stats file to the list for processing later.
+                statsFiles.add(singleMassArgs.getStatsFile());
+
+                this.executeSingleMass(singleMassArgs, executionContext);
+            }
+
+            // Wait for all assembly jobs to finish if they are running as background tasks.
+            if (args.isRunParallel()) {
+                this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+            }
+
+            // Execute the Mass Selector job
+            executeMassSelector(args, statsFiles, executionContext);
+
+        } catch (IOException ioe) {
+            throw new ProcessExecutionException(-1, ioe);
+        }
+
+        return true;
+    }
+
+    protected void executeSingleMass(SingleMassArgs singleMassArgs, ExecutionContext executionContext)
+            throws IOException, InterruptedException, ProcessExecutionException {
+
+        // Create output directory for this MASS run
+        if (!singleMassArgs.getOutputDir().mkdirs()) {
+            throw new IOException("Couldn't create directory for MASS");
+        }
+
+        // Create the single MASS process
+        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
+        singleMassProcess.setConanProcessService(this.getConanProcessService());
+        singleMassProcess.execute(executionContext);
+    }
+
+    protected void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException {
+
+        // Duplicate the execution context so we don't modify the original accidentally.
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContext.usingScheduler()) {
+
+            String jobName = jobPrefix + "_wait";
+            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
+            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+            executionContextCopy.setForegroundJob(true);
+        }
+
+        this.conanProcessService.waitFor(
+                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
+                executionContextCopy);
+    }
+
+    protected void executeMassSelector(MultiMassArgs args, List<File> statsFiles, ExecutionContext executionContext)
+            throws IOException, ProcessExecutionException, InterruptedException {
+
+        File statsDir = new File(args.getOutputDir(), "stats");
+        if (!statsDir.mkdirs()) {
+            throw new IOException("Couldn't create directory for MASS stats");
+        }
+
+        MassSelectorArgs massSelectorArgs = new MassSelectorArgs();
+        massSelectorArgs.setStatsFiles(statsFiles);
+        massSelectorArgs.setConfigs(args.getConfigs());
+        massSelectorArgs.setOutputDir(statsDir);
+        massSelectorArgs.setApproxGenomeSize(-1);
+        massSelectorArgs.setWeightings(null);
+
+        MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
+
+        this.conanProcessService.execute(massSelectorProcess, executionContext);
+    }
+
+    private List<SingleMassArgs> createSingleMassArgsList(MultiMassArgs args) throws IOException {
+
+        List<SingleMassArgs> singleMassArgsList = new ArrayList<SingleMassArgs>();
+
+        List<RampartConfiguration> configs = RampartConfiguration.createList(args.getConfigs(), true);
+
+        for (RampartConfiguration config : configs) {
+
+            // Assume we're using args gathered from the config file for now
+            SingleMassArgs singleMassArgs = SingleMassArgs.parseConfig(config.getFile());
+
+            // Override args loaded from file if explicitly specified by the MultiMassArgs
+            if (args.getAssembler() != null) {
+                singleMassArgs.setAssembler(args.getAssembler());
+            }
+
+            if (args.getKmin() != MassArgs.DEFAULT_KMER_MIN) {
+                singleMassArgs.setKmin(args.getKmin());
+            }
+
+            if (args.getKmax() != MassArgs.DEFAULT_KMER_MAX) {
+                singleMassArgs.setKmax(args.getKmax());
+            }
+
+            if (args.getStepSize() != MassArgs.DEFAULT_STEP_SIZE) {
+                singleMassArgs.setStepSize(args.getStepSize());
+            }
+
+            // These args are automatically set.
+            singleMassArgs.setOutputDir(new File(args.getOutputDir(), config.getJob().getName()));
+            singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + config.getJob().getName());
+            singleMassArgs.setConfig(config.getFile());
+
+            // Add to list
+            singleMassArgsList.add(singleMassArgs);
+        }
+
+        return singleMassArgsList;
+    }
+}

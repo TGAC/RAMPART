@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.conan.process.dedup.nizar;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.conan.process.dedup.Deduplicator;
 
-
 import java.io.File;
 
 /**
@@ -283,7 +282,7 @@ For full documentation type: "dedup.pl --man"
 
 =head1 DESCRIPTION
 
-This script is designed to execute a fasta deduplication jobs on a grid engine.  The deduplication proc involves separating the input scaffold file into 2 groups, those scaffolds that are under 1k and those that are over 1k in length.  The smaller scaffolds are exonerated against the larger scaffolds and the output is filtered and sorted to indentify those smaller scaffolds for which there is strong evidence of redundancy.  Two files are produced, one which has the redundant scaffolds removed, and another that contains the redundant scaffolds.
+This script is designed to execute a fasta deduplication jobs on a grid engine.  The deduplication process involves separating the input scaffold file into 2 groups, those scaffolds that are under 1k and those that are over 1k in length.  The smaller scaffolds are exonerated against the larger scaffolds and the output is filtered and sorted to indentify those smaller scaffolds for which there is strong evidence of redundancy.  Two files are produced, one which has the redundant scaffolds removed, and another that contains the redundant scaffolds.
 
 
 =head1 OPTIONS

@@ -39,7 +39,8 @@ public class AmpPipeline implements ConanPipeline {
     private List<ConanProcess> processes;
 
     public AmpPipeline() {
-        this(null, AmpFactory.createDefaultList());
+        //this(null, AmpFactory.createDefaultList());
+        this(null, null);
     }
 
     public AmpPipeline(List<ConanParameter> params, List<ConanProcess> processes) {

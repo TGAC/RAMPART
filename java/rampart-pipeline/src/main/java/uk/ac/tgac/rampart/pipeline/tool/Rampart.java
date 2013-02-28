@@ -33,10 +33,8 @@ import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.cli.RampartOptions;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
-import uk.ac.tgac.rampart.pipeline.tool.proc.mass.multi.MultiMassArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.qt.QTArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.clean.CleanJobArgs;
-import uk.ac.tgac.rampart.pipeline.tool.proc.util.clean.CleanJobProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTArgs;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,22 +99,6 @@ public class Rampart {
     }
 
 
-    /**
-     * TBH this probably shouldn't be something that we want Conan to control.  Probably should extract this for quick
-     * execution
-     * @throws ProcessExecutionException
-     * @throws InterruptedException
-     */
-    protected void cleanJob() throws ProcessExecutionException, InterruptedException {
-
-        CleanJobArgs cleanJobArgs = new CleanJobArgs();
-        cleanJobArgs.setJobDir(this.options.getClean());
-
-        CleanJobProcess cleanJobProcess = new CleanJobProcess(cleanJobArgs);
-
-        this.conanProcessService.execute(cleanJobProcess, this.executionContext);
-    }
-
     protected String createJobPrefix() {
         Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
         String dateTime = formatter.format(new Date());
@@ -125,7 +107,7 @@ public class Rampart {
         return jobPrefix;
     }
 
-    protected void startJob() throws InterruptedException, TaskExecutionException, IOException {
+    public void process() throws ProcessExecutionException, InterruptedException, TaskExecutionException, IOException {
 
         // Configure RAMPART args based on CLI input.
         RampartArgs args = new RampartArgs();
@@ -173,7 +155,7 @@ public class Rampart {
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
 
-        // Create the RAMPART proc
+        // Create the RAMPART process
         ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
         ConanTask<RampartPipeline> rampartTask = conanTaskFactory.createTask(
                 this.rampartPipeline,
@@ -184,16 +166,6 @@ public class Rampart {
         rampartTask.setId("");
         rampartTask.submit();
         rampartTask.execute(this.executionContext);
-    }
-
-    public void process() throws ProcessExecutionException, InterruptedException, TaskExecutionException, IOException {
-
-        if (this.options.getClean() != null) {
-            cleanJob();
-        }
-        else {
-            startJob();
-        }
     }
 
 

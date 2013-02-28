@@ -44,6 +44,24 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.13</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.13</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <includes>
+                        <include>**/*.class</include>
+                    </includes>
+                    <excludedGroups>uk.ac.tgac.rampart.pipeline.cli.IntegrationTest</excludedGroups>
+                </configuration>
+            </plugin>
 
         </plugins>
     </build>
@@ -60,6 +78,13 @@
         <dependency>
             <groupId>uk.ac.tgac.rampart</groupId>
             <artifactId>rampart-core</artifactId>
+            <version>0.4</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.ac.tgac.rampart</groupId>
+            <artifactId>tgac-conan-procs</artifactId>
             <version>0.4</version>
             <type>jar</type>
         </dependency>
