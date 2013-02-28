@@ -15,34 +15,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.scaffold.sspace;
+package uk.ac.tgac.rampart.conan.process.r;
 
 import org.junit.Test;
+import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Args;
+import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Process;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * User: maplesod
  * Date: 28/02/13
- * Time: 11:36
+ * Time: 17:27
  */
-public class SSpaceBasicV2ProcessTest {
+public class RV2122ProcessTest {
 
     @Test
-    public void testSSpaceBasicV2() {
+    public void testRV2122() {
 
-        SSpaceBasicV2Args args = new SSpaceBasicV2Args();
-        args.setLibraryConfigFile(new File("testlib.lib"));
-        args.setThreads(8);
-        args.setInput(new File("contigs.fa"));
-        args.setBaseName("Output");
+        List<String> rArgs = new ArrayList<String>();
+        rArgs.add("arg1");
+        rArgs.add("arg2");
 
-        SSpaceBasicV2Process task = new SSpaceBasicV2Process(args);
+        RV2122Args args = new RV2122Args();
+        args.setArgs(rArgs);
+        args.setOutput(new File("output.txt"));
+        args.setScript(new File("script.R"));
+
+        RV2122Process task = new RV2122Process(args);
 
         String command = task.getCommand();
-        String correct = "SSPACE_Basic_v2.0.pl -l testlib.lib -s contigs.fa -x 0 -T 8 -b Output";
+        String correct = "Rscript  script.R  arg1 arg2  > output.txt";
 
         assertTrue(command != null && !command.isEmpty());
         assertTrue(correct != null && !correct.isEmpty());

@@ -25,24 +25,24 @@ import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GapCloserV112Args extends DegapperArgs {
 
     private GapCloserV112Params params = new GapCloserV112Params();
 
+    public static int DEFAULT_OVERLAP = 25;
+    public static int DEFAULT_READ_LENGTH = 100;
+
     // GapCloser vars
     private File libraryFile;
-    private Integer maxReadLength;
-    private Integer overlap;
+    private int overlap = DEFAULT_OVERLAP;
+    private int maxReadLength = DEFAULT_READ_LENGTH;
 
     public GapCloserV112Args() {
         this.libraryFile = null;
-        this.maxReadLength = null;
-        this.overlap = null;
+        this.overlap = DEFAULT_OVERLAP;
+        this.maxReadLength = DEFAULT_READ_LENGTH;
     }
 
     public File getLibraryFile() {
@@ -53,14 +53,6 @@ public class GapCloserV112Args extends DegapperArgs {
         this.libraryFile = libraryFile;
     }
 
-    public Integer getMaxReadLength() {
-        return maxReadLength;
-    }
-
-    public void setMaxReadLength(Integer maxReadLength) {
-        this.maxReadLength = maxReadLength;
-    }
-
     public Integer getOverlap() {
         return overlap;
     }
@@ -69,6 +61,13 @@ public class GapCloserV112Args extends DegapperArgs {
         this.overlap = overlap;
     }
 
+    public int getMaxReadLength() {
+        return maxReadLength;
+    }
+
+    public void setMaxReadLength(int maxReadLength) {
+        this.maxReadLength = maxReadLength;
+    }
 
     public static void createLibraryFile(List<Library> libs, File outputLibFile) throws IOException {
 
@@ -99,13 +98,25 @@ public class GapCloserV112Args extends DegapperArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
-        if (this.maxReadLength != null)
-            pvp.put(params.getMaxReadLength(), this.maxReadLength.toString());
+        if (this.getInput() != null)
+            pvp.put(params.getInputScaffoldFile(), this.getInput().getAbsolutePath());
 
-        if (this.overlap != null)
-            pvp.put(params.getOverlap(), this.overlap.toString());
+        if (this.libraryFile != null)
+            pvp.put(params.getLibraryFile(), this.libraryFile.getAbsolutePath());
+
+        if (this.getOutput() != null)
+            pvp.put(params.getOutputFile(), this.getOutput().getAbsolutePath());
+
+        if (this.overlap != DEFAULT_OVERLAP)
+            pvp.put(params.getOverlap(), Integer.toString(this.overlap));
+
+        if (this.maxReadLength != DEFAULT_READ_LENGTH)
+            pvp.put(params.getMaxReadLength(), Integer.toString(this.maxReadLength));
+
+        if (this.getThreads() > 1)
+            pvp.put(params.getThreads(), Integer.toString(this.getThreads()));
 
         return pvp;
     }
@@ -122,11 +133,23 @@ public class GapCloserV112Args extends DegapperArgs {
 
             if (param.equals(this.params.getLibraryFile().getName())) {
                 this.libraryFile = new File(entry.getValue());
-            } else if (param.equals(this.params.getMaxReadLength().getName())) {
-                this.maxReadLength = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getOverlap().getName())) {
+            }
+            else if (param.equals(this.params.getOverlap().getName())) {
                 this.overlap = Integer.parseInt(entry.getValue());
-            } else {
+            }
+            else if (param.equals(this.params.getMaxReadLength().getName())) {
+                this.maxReadLength = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getThreads().getName())) {
+                this.setThreads(Integer.parseInt(entry.getValue()));
+            }
+            else if (param.equals(this.params.getInputScaffoldFile().getName())) {
+                this.setInput(new File(entry.getValue()));
+            }
+            else if (param.equals(this.params.getOutputFile().getName())) {
+                this.setOutput(new File(entry.getValue()));
+            }
+            else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }
         }

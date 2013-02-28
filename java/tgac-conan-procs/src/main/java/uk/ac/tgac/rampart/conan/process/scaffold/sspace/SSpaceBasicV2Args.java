@@ -25,10 +25,7 @@ import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SSpaceBasicV2Args extends ScaffolderArgs {
 
@@ -221,7 +218,7 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
         // **** Main args ****
 

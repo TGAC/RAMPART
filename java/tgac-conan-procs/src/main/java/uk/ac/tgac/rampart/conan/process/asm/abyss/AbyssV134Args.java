@@ -21,6 +21,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerArgs;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AbyssV134Args extends AssemblerArgs {
@@ -55,7 +56,7 @@ public class AbyssV134Args extends AssemblerArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
         if (this.name != null)
             pvp.put(params.getName(), params.getName().getName() + "=" + this.name);

@@ -22,10 +22,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RV2122Args implements ProcessArgs {
 
@@ -63,18 +60,18 @@ public class RV2122Args implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
-
-        if (this.args != null) {
-            pvp.put(params.getArgs(), StringUtils.join(this.args, " "));
-        }
+        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
         if (this.script != null) {
             pvp.put(params.getScript(), this.script.getPath());
         }
 
+        if (this.args != null) {
+            pvp.put(params.getArgs(), StringUtils.join(this.args, " "));
+        }
+
         if (this.output != null) {
-            pvp.put(params.getOutput(), this.script.getPath());
+            pvp.put(params.getOutput(), "> " + this.output.getPath());
         }
 
         return pvp;

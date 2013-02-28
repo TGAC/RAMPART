@@ -86,8 +86,12 @@ public class AbyssV134ProcessTest {
 
         String command = abyss.getCommand();
 
-        String correct = "abyss-pe  lib='peLib1' peLib1='" + pwd + "tools/mass/LIB1896_R1.r95.fastq " + pwd + "tools/mass/LIB1896_R2.r95.fastq'  np=16  name=OUTPUT_FILE  k=61";
+        String correct = "abyss-pe  name=OUTPUT_FILE  k=61  np=16  lib='peLib1' " +
+                "peLib1='" + pwd + "tools/mass/LIB1896_R1.r95.fastq " + pwd + "tools/mass/LIB1896_R2.r95.fastq'";
 
-        //assertTrue(command.equals(correct));
+        assertTrue(command != null && !command.isEmpty());
+        assertTrue(correct != null && !correct.isEmpty());
+        assertTrue(command.length() == correct.length());
+        assertTrue(command.equals(correct));
     }
 }
