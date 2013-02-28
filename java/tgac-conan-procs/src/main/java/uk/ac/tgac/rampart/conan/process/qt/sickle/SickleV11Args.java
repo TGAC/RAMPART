@@ -62,11 +62,11 @@ public abstract class SickleV11Args implements QualityTrimmerArgs {
         this.lengthThreshold = minLength;
     }
 
-    public Boolean isDiscardN() {
+    public boolean isDiscardN() {
         return discardN;
     }
 
-    public void setDiscardN(Boolean discardN) {
+    public void setDiscardN(boolean discardN) {
         this.discardN = discardN;
     }
 

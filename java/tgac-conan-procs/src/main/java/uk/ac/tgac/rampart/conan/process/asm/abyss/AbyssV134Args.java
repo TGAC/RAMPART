@@ -27,11 +27,21 @@ public class AbyssV134Args extends AssemblerArgs {
 
     private AbyssV134Params params = new AbyssV134Params();
 
+    private int nbContigPairs;
     private String name;
 
     public AbyssV134Args() {
         super();
+        this.nbContigPairs = 10;
         this.name = null;
+    }
+
+    public int getNbContigPairs() {
+        return nbContigPairs;
+    }
+
+    public void setNbContigPairs(int nbContigPairs) {
+        this.nbContigPairs = nbContigPairs;
     }
 
     public String getName() {
@@ -47,9 +57,19 @@ public class AbyssV134Args extends AssemblerArgs {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.name != null) {
+        if (this.name != null)
             pvp.put(params.getName(), params.getName().getName() + "=" + this.name);
-        }
+
+        if (this.nbContigPairs != 10)
+            pvp.put(params.getNbContigPairs(), params.getNbContigPairs().getName() + "=" + Integer.toString(this.nbContigPairs));
+
+        pvp.put(params.getKmer(), params.getKmer().getName() + "=" + Integer.toString(this.getKmer()));
+
+        if (this.getThreads() > 1)
+            pvp.put(params.getThreads(), params.getThreads().getName() + "=" + Integer.toString(this.getThreads()));
+
+        if (this.getLibraries() != null && !this.getLibraries().isEmpty())
+            pvp.put(params.getLibs(), new AbyssV134InputLibsArg(this.getLibraries()).toString());
 
         return pvp;
     }
@@ -63,10 +83,24 @@ public class AbyssV134Args extends AssemblerArgs {
             }
 
             String param = entry.getKey().getName();
+            String val = entry.getValue();
 
             if (param.equals(this.params.getName().getName())) {
-                this.name = entry.getValue();
-            } else {
+                this.name = val;
+            }
+            else if (param.equals(this.params.getKmer().getName())) {
+                this.setKmer(Integer.parseInt(val));
+            }
+            else if (param.equals(this.params.getNbContigPairs().getName())) {
+                this.nbContigPairs = Integer.parseInt(val);
+            }
+            else if (param.equals(this.params.getThreads().getName())) {
+                this.setThreads(Integer.parseInt(val));
+            }
+            else if (param.equals(this.params.getLibs().getName())) {
+                this.setLibraries(null); // TODO should implement parse method
+            }
+            else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }
         }

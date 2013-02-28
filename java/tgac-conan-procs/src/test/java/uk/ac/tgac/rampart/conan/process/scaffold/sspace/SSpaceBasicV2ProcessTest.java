@@ -21,6 +21,8 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * User: maplesod
  * Date: 28/02/13
@@ -35,14 +37,13 @@ public class SSpaceBasicV2ProcessTest {
         args.setLibraryConfigFile(new File("testlib.lib"));
         args.setThreads(8);
         args.setInput(new File("contigs.fa"));
+        args.setBaseName("Output");
 
         SSpaceBasicV2Process task = new SSpaceBasicV2Process(args);
         task.addPreCommand("source SSPACE_Basic_V2.0");
 
         String command = task.getCommand();
-        String fullCommand = task.getFullCommand();
 
-        //assertTrue(command.equals("SSPACE_Basic_v2.0.pl -T 8 -s contigs.fa -l testlib.lib"));
-        //assertTrue(fullCommand.equals("source SSPACE_Basic_V2.0; SSPACE_Basic_v2.0.pl -T 8 -s contigs.fa -l testlib.lib"));
+        assertTrue(command.equals("SSPACE_Basic_v2.0.pl -T 8 -b Output -s contigs.fa -l testlib.lib -x 0"));
     }
 }

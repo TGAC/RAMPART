@@ -17,23 +17,23 @@
  **/
 package uk.ac.tgac.rampart.conan.process.asm;
 
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AssemblerArgs implements ProcessArgs {
 
-    private int nbContigPairs;
     private int kmer;
     private int threads;
     private File outputDir;
     private List<Library> libraries;
 
     protected AssemblerArgs() {
-        this.nbContigPairs = 10;
         this.kmer = 65;
         this.threads = 0;
         this.outputDir = new File(".");
@@ -42,13 +42,7 @@ public abstract class AssemblerArgs implements ProcessArgs {
 
     public abstract AssemblerArgs copy();
 
-    public int getNbContigPairs() {
-        return nbContigPairs;
-    }
 
-    public void setNbContigPairs(int nbContigPairs) {
-        this.nbContigPairs = nbContigPairs;
-    }
 
     public int getKmer() {
         return kmer;

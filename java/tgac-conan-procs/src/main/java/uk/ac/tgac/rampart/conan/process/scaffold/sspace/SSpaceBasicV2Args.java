@@ -34,15 +34,50 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
 
     private SSpaceBasicV2Params params = new SSpaceBasicV2Params();
 
+    // **** Main args ****
     private File libraryConfigFile;
-    private Integer extend;
+    private int extend;
+
+    // **** Extension args ****
+    private int minOverlap;
+    private int nbReads;
+    private int trim;
+    private int minBaseRatio;
+
+    // **** Scaffolding args ****
+    private int minLinks;
+    private int maxLinks;
+    private int minContigOverlap;
+    private int minContigLength;
+
+    // **** Bowtie args ****
+    private int maxGaps;
+
+    // **** Additional args ****
+    private boolean plot;
     private String baseName;
+    private boolean verbose;
 
 
     public SSpaceBasicV2Args() {
+
+        super();
+
+        // **** Main args ****
         this.libraryConfigFile = null;
-        this.extend = null;
+        this.extend = 0;
+
+        // **** Extension args ****
+
+        // **** Scaffolding args ****
+
+        // **** Bowtie args ****
+        this.maxGaps = 0;
+
+        // **** Additional args ****
+        this.plot = false;
         this.baseName = null;
+        this.verbose = false;
     }
 
     public File getLibraryConfigFile() {
@@ -67,6 +102,94 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
 
     public void setBaseName(String baseName) {
         this.baseName = baseName;
+    }
+
+    public int getMinOverlap() {
+        return minOverlap;
+    }
+
+    public void setMinOverlap(int minOverlap) {
+        this.minOverlap = minOverlap;
+    }
+
+    public int getNbReads() {
+        return nbReads;
+    }
+
+    public void setNbReads(int nbReads) {
+        this.nbReads = nbReads;
+    }
+
+    public int getTrim() {
+        return trim;
+    }
+
+    public void setTrim(int trim) {
+        this.trim = trim;
+    }
+
+    public int getMinBaseRatio() {
+        return minBaseRatio;
+    }
+
+    public void setMinBaseRatio(int minBaseRatio) {
+        this.minBaseRatio = minBaseRatio;
+    }
+
+    public int getMinLinks() {
+        return minLinks;
+    }
+
+    public void setMinLinks(int minLinks) {
+        this.minLinks = minLinks;
+    }
+
+    public int getMaxLinks() {
+        return maxLinks;
+    }
+
+    public void setMaxLinks(int maxLinks) {
+        this.maxLinks = maxLinks;
+    }
+
+    public int getMinContigOverlap() {
+        return minContigOverlap;
+    }
+
+    public void setMinContigOverlap(int minContigOverlap) {
+        this.minContigOverlap = minContigOverlap;
+    }
+
+    public int getMinContigLength() {
+        return minContigLength;
+    }
+
+    public void setMinContigLength(int minContigLength) {
+        this.minContigLength = minContigLength;
+    }
+
+    public int getMaxGaps() {
+        return maxGaps;
+    }
+
+    public void setMaxGaps(int maxGaps) {
+        this.maxGaps = maxGaps;
+    }
+
+    public boolean isPlot() {
+        return plot;
+    }
+
+    public void setPlot(boolean plot) {
+        this.plot = plot;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 
     public void createLibraryConfigFile(List<Library> libs, File libraryConfigFile) throws IOException {
@@ -100,17 +223,44 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
+        // **** Main args ****
+
         if (this.libraryConfigFile != null)
             pvp.put(params.getLibraryFile(), this.libraryConfigFile.getPath());
-        else {
-            throw new IllegalArgumentException("Must have a library file specified.  If working from a Set<Library> you can call setLibraryFile(Set<Library> libs, File outputLibFile) to automatically generate a SSPACE library file and set the class variable.");
-        }
 
-        if (this.extend != null)
-            pvp.put(params.getExtend(), this.extend.toString());
+        if (this.getInput() != null)
+            pvp.put(params.getContigsFile(), this.getInput().getPath());
+
+        pvp.put(params.getExtend(), Integer.toString(this.extend));
+
+
+        // **** Extension args ****
+
+
+
+        // **** Scaffolding args ****
+
+
+
+        // **** Bowtie args ****
+
+        if (this.maxGaps > 0)
+            pvp.put(params.getBowtieGaps(), Integer.toString(this.maxGaps));
+
+        if (this.getThreads() > 1)
+            pvp.put(params.getBowtieThreads(), Integer.toString(this.getThreads()));
+
+
+        // **** Additional args ****
+
+        if (this.plot)
+            pvp.put(params.getPlot(), Boolean.toString(this.plot));
 
         if (this.baseName != null)
             pvp.put(params.getBaseName(), this.baseName);
+
+        if (this.verbose)
+            pvp.put(params.getVerbose(), Boolean.toString(this.verbose));
 
         return pvp;
     }
@@ -125,13 +275,51 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
 
             String param = entry.getKey().getName();
 
-            if (param.equals(this.params.getExtend().getName())) {
-                this.extend = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getBaseName().getName())) {
-                this.baseName = entry.getValue();
-            } else if (param.equals(this.params.getLibraryFile().getName())) {
+            // **** Main args ****
+
+            if (param.equals(this.params.getLibraryFile().getName())) {
                 this.libraryConfigFile = new File(entry.getValue());
-            } else {
+            }
+            else if (param.equals(this.params.getContigsFile().getName())) {
+                this.setInput(new File(entry.getValue()));
+            }
+            else if (param.equals(this.params.getExtend().getName())) {
+                this.extend = Integer.parseInt(entry.getValue());
+            }
+
+            // **** Extension args ****
+
+
+
+            // **** Scaffolding args ****
+
+
+
+            // **** Bowtie args ****
+
+            else if (param.equals(this.params.getBowtieGaps().getName())) {
+                this.maxGaps = Integer.parseInt(entry.getValue());
+            }
+            else if (param.equals(this.params.getBowtieThreads().getName())) {
+                this.setThreads(Integer.parseInt(entry.getValue()));
+            }
+
+
+            // **** Additional args ****
+
+            else if (param.equals(this.params.getPlot().getName())) {
+                this.plot = Boolean.parseBoolean(entry.getValue());
+            }
+            else if (param.equals(this.params.getBaseName().getName())) {
+                this.baseName = entry.getValue();
+            }
+            else if (param.equals(this.params.getVerbose().getName())) {
+                this.verbose = Boolean.parseBoolean(entry.getValue());
+            }
+
+
+
+            else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }
         }

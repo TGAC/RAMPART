@@ -127,4 +127,9 @@ public class AbyssV134InputLibsArg {
         return sb.toString().trim();
     }
 
+    public static AbyssV134InputLibsArg parse(String libs) {
+
+        return new AbyssV134InputLibsArg();
+    }
+
 }

@@ -88,11 +88,11 @@ public class SickleSeV11Args extends SickleV11Args {
         Map<ConanParameter, String> pvp = super.getArgMap();
 
         if (this.inputFile != null) {
-            pvp.put(params.getSeFile(), this.inputFile.getPath());
+            pvp.put(params.getSeFile(), "--" + params.getSeFile().getName() + "=" + this.inputFile.getPath());
         }
 
         if (this.outputFile != null) {
-            pvp.put(params.getOutputFile(), this.outputFile.getPath());
+            pvp.put(params.getOutputFile(), "--" + params.getOutputFile().getName() + "=" + this.outputFile.getPath());
         }
 
         return pvp;

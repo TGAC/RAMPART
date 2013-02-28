@@ -20,8 +20,14 @@ package uk.ac.tgac.rampart.conan.process.asm.abyss;
 import org.junit.Test;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.core.data.SeqFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * User: maplesod
@@ -30,25 +36,45 @@ import java.io.IOException;
  */
 public class AbyssV134ProcessTest {
 
+    private List<Library> createLocalPETestLibrary() {
+        SeqFile peFile1 = new SeqFile();
+        peFile1.setFileType(SeqFile.FileType.FASTQ);
+        peFile1.setFilePath("tools/mass/LIB1896_R1.r95.fastq");
+
+        SeqFile peFile2 = new SeqFile();
+        peFile2.setFileType(SeqFile.FileType.FASTQ);
+        peFile2.setFilePath("tools/mass/LIB1896_R2.r95.fastq");
+
+        Library peLib = new Library();
+        peLib.setDataset(Library.Dataset.RAW);
+        peLib.setName("peLib1");
+        peLib.setIndex(1);
+        peLib.setUsage("ASM");
+        peLib.setType(Library.Type.PE);
+        peLib.setFilePaired1(peFile1);
+        peLib.setFilePaired2(peFile2);
+
+        List<Library> libs = new ArrayList<Library>();
+        libs.add(peLib);
+
+        return libs;
+    }
+
     @Test
     public void testAbyssV134() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
-        //List<Library> libs = new PETestLibrary().createLocalPETestLibrary();
+        List<Library> libs = this.createLocalPETestLibrary();
 
         AbyssV134Args args = new AbyssV134Args();
-        //args.setLibraries(libs);
+        args.setLibraries(libs);
         args.setKmer(61);
         args.setName("OUTPUT_FILE");
         args.setThreads(16);
 
         AbyssV134Process abyss = new AbyssV134Process(args);
-        abyss.addPreCommand("source abyss_cb-1.3.4");
 
         String command = abyss.getCommand();
-        String fullCommand = abyss.getFullCommand();
 
-        //assertTrue(command.equals("abyss-pe  lib='peLib1' peLib1='tools/mass/LIB1896_R1.r95.fastq tools/mass/LIB1896_R2.r95.fastq'  np=16  name=OUTPUT_FILE  n=10  k=61"));
-        //System.out.println(fullCommand);
-        //assertTrue(fullCommand.equals("source abyss_cb-1.3.4; abyss-pe  lib='peLib1' peLib1='tools/mass/LIB1896_R1.r95.fastq tools/mass/LIB1896_R2.r95.fastq'  np=16  name=OUTPUT_FILE  n=10  k=61"));
+        assertTrue(command.equals("abyss-pe  lib='peLib1' peLib1='tools/mass/LIB1896_R1.r95.fastq tools/mass/LIB1896_R2.r95.fastq'  np=16  name=OUTPUT_FILE  k=61"));
     }
 }
