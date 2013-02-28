@@ -43,15 +43,11 @@ public class RampartOptions {
 
         help = cmdLine.hasOption(OPT_HELP);
 
-        if (cmdLine.hasOption(OPT_CLEAN)) {
-
-            String cleanFilePath = cmdLine.getOptionValue(OPT_CLEAN);
-
-            clean = cleanFilePath != null ? new File(cmdLine.getOptionValue(OPT_CLEAN)) : new File(".");
-        }
-        else {
-            clean = null;
-        }
+        clean = cmdLine.hasOption(OPT_CLEAN) ?
+            cmdLine.getOptionValue(OPT_CLEAN) != null ?
+                    new File(cmdLine.getOptionValue(OPT_CLEAN)) :
+                    new File(".") :
+            null;
 
         if (!help && clean == null) {
             if (cmdLine.hasOption(OPT_CONFIG)) {
@@ -61,20 +57,8 @@ public class RampartOptions {
                 throw new ParseException(OPT_CONFIG + " argument not specified.");
             }
 
-            if (cmdLine.hasOption(OPT_OUTPUT)) {
-                output = new File(cmdLine.getOptionValue(OPT_OUTPUT));
-            }
-            else {
-                output = new File(".");
-            }
-
-            if (cmdLine.hasOption(OPT_STAGES)) {
-                stages = cmdLine.getOptionValue(OPT_STAGES);
-            }
-            else {
-                stages = "ALL";
-            }
-
+            output = cmdLine.hasOption(OPT_OUTPUT) ? new File(cmdLine.getOptionValue(OPT_OUTPUT)) : new File(".");
+            stages = cmdLine.hasOption(OPT_STAGES) ? cmdLine.getOptionValue(OPT_STAGES) : "ALL";
             verbose = cmdLine.hasOption(OPT_VERBOSE);
         }
     }
