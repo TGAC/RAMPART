@@ -17,6 +17,8 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.process.mass.multi;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
@@ -43,6 +45,9 @@ import java.util.List;
  */
 @Component
 public class MultiMassProcess extends AbstractConanProcess {
+
+    private static Logger log = LoggerFactory.getLogger(MultiMassProcess.class);
+
 
     public MultiMassProcess() {
         this(new MultiMassArgs());
@@ -71,6 +76,8 @@ public class MultiMassProcess extends AbstractConanProcess {
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+            log.info("Starting MultiMass run");
+
             MultiMassArgs args = (MultiMassArgs) this.getProcessArgs();
 
             List<File> statsFiles = new ArrayList<File>();
@@ -89,11 +96,17 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             // Wait for all assembly jobs to finish if they are running as background tasks.
             if (args.isRunParallel()) {
+                log.debug("Single MASS jobs executed in parallel, waiting for completion");
                 this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
+            log.info("Assemblies complete");
+
             // Execute the Mass Selector job
+            log.info("Analysing and comparing assemblies");
             executeMassSelector(args, statsFiles, executionContext);
+
+            log.info("Multi MASS run complete");
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
@@ -187,6 +200,7 @@ public class MultiMassProcess extends AbstractConanProcess {
             singleMassArgs.setOutputDir(new File(args.getOutputDir(), config.getJob().getName()));
             singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + config.getJob().getName());
             singleMassArgs.setConfig(config.getFile());
+            singleMassArgs.setRunParallel(args.isRunParallel());
 
             // Add to list
             singleMassArgsList.add(singleMassArgs);

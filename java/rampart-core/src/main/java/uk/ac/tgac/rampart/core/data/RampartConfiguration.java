@@ -54,6 +54,24 @@ public class RampartConfiguration implements Serializable {
         this.file = null;
     }
 
+    protected String createToolSection(String sectionHeader, Section tool) {
+
+        if (tool == null)
+            return "";
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("[").append(sectionHeader).append("]\n");
+        for(Map.Entry<String, String> entry : tool.entrySet()) {
+            sb.append(entry.getKey());
+            sb.append("=");
+            sb.append(entry.getValue());
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
     /**
      * Loads a rampart configuration file from disk and stores the contents in this object.
      * @param configFile The rampart configuration file to load
@@ -93,6 +111,10 @@ public class RampartConfiguration implements Serializable {
 		for(Library ld : this.libs) {
 			sb.append(ld.toString());
 		}
+
+        sb.append(this.createToolSection(SECTION_QT, this.qtSettings));
+        sb.append(this.createToolSection(SECTION_MASS, this.massSettings));
+        sb.append(this.createToolSection(SECTION_AMP, this.ampSettings));
 
 		FileUtils.writeStringToFile(configFile, sb.toString());
 	}

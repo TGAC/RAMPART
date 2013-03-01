@@ -150,6 +150,7 @@ public class QTArgs implements ProcessArgs {
         this.qualityTrimmer = qtArgs.getQualityTrimmer();
         this.minLen = qtArgs.getMinLen();
         this.minQual = qtArgs.getMinQual();
+        this.config = configFile;
     }
 
     /**
@@ -182,6 +183,8 @@ public class QTArgs implements ProcessArgs {
                 }
             }
         }
+
+        args.config = config;
 
         return args;
     }
@@ -284,8 +287,15 @@ public class QTArgs implements ProcessArgs {
                 qtLib.setFilePaired1(new SeqFile(qt.getArgs().getPairedEndOutputFiles().getFile1()));
                 qtLib.setFilePaired2(new SeqFile(qt.getArgs().getPairedEndOutputFiles().getFile2()));
                 qtLib.setSeFile(new SeqFile(qt.getArgs().getSingleEndOutputFile()));
+                qtLib.setDataset(Library.Dataset.QT);
 
                 libList.add(qtLib);
+            }
+            else {
+
+                Library rawLib = lib.copy();
+                rawLib.setDataset(Library.Dataset.RAW);
+                libList.add(rawLib);
             }
         }
 

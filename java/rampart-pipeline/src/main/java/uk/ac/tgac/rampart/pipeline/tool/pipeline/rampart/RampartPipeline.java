@@ -124,9 +124,9 @@ public class RampartPipeline implements ConanPipeline {
             list.add(this.multiMassProcess);
         }
 
-        if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.AMP)) {
+        /*if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.AMP)) {
             list.addAll(this.ampPipeline.getProcesses());
-        }
+        } */
 
         return list;
     }

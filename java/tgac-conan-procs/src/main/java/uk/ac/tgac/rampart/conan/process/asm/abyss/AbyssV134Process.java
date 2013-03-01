@@ -17,7 +17,12 @@
  **/
 package uk.ac.tgac.rampart.conan.process.asm.abyss;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerArgs;
 
@@ -31,6 +36,8 @@ import java.io.FilenameFilter;
  */
 public class AbyssV134Process extends AbstractConanProcess implements Assembler {
 
+    private static Logger log = LoggerFactory.getLogger(AbyssV134Process.class);
+
     public static final String EXE = "abyss-pe";
 
     public AbyssV134Process() {
@@ -39,6 +46,12 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
 
     public AbyssV134Process(AssemblerArgs args) {
         super(EXE, args, new AbyssV134Params());
+
+        String pwdFull = new File(".").getAbsolutePath();
+        String pwd = pwdFull.substring(0, pwdFull.length() - 1);
+
+        this.addPreCommand("cd " + args.getOutputDir().getAbsolutePath());
+        this.addPostCommand("cd " + pwd);
     }
 
     @Override
@@ -111,4 +124,5 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
     public String getName() {
         return "Abyss_V1.3.4";
     }
+
 }

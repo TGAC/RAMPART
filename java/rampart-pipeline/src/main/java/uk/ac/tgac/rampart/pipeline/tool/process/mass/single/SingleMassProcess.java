@@ -18,6 +18,8 @@
 package uk.ac.tgac.rampart.pipeline.tool.process.mass.single;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
@@ -36,6 +38,8 @@ import java.io.IOException;
 
 @Component
 public class SingleMassProcess extends AbstractConanProcess {
+
+    private static Logger log = LoggerFactory.getLogger(SingleMassProcess.class);
 
     public SingleMassProcess() {
         this(new SingleMassArgs());
@@ -110,11 +114,12 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
 
-        // Create directory for links to assembled contigs
+        // Create directory for links to assembled unitigs
         if (assembler.makesUnitigs()) {
             args.getUnitigsDir().mkdir();
         }
 
+        // Create directory for links to assembled contigs
         if (assembler.makesContigs()) {
             args.getContigsDir().mkdir();
         }
@@ -141,19 +146,28 @@ public class SingleMassProcess extends AbstractConanProcess {
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            log.info("Starting Single MASS run");
+
             // Make a shortcut to the args
             SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
 
             // Check the range looks reasonable
+            log.debug("Validating kmer range");
             args.validateKmers(args.getKmin(), args.getKmax());
 
             // Create any required directories for this job
+            log.debug("Creating directories");
             this.createSupportDirectories();
 
             // Dispatch an assembly job for each requested kmer
             for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = nextKmer(k)) {
 
-                Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), new File(args.getOutputDir(), Integer.toString(k)));
+                File outputDir = new File(args.getOutputDir(), Integer.toString(k));
+
+                log.debug("Starting " + args.getAssembler() + " in " + outputDir.getAbsolutePath());
+
+                Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), outputDir);
 
                 this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, args.isRunParallel(), executionContext);
             }
@@ -163,15 +177,15 @@ public class SingleMassProcess extends AbstractConanProcess {
             // Create this wait job if we are using a scheduler and running in parallel.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
 
-                assemblerWait = executionContext.getScheduler().createWaitCondition(
-                        ExitStatus.Type.COMPLETED_SUCCESS,
-                        args.getJobPrefix() + "*");
-
-                this.conanProcessService.waitFor(assemblerWait, executionContext);
+                log.debug("Running assemblies in parallel, waiting for completion");
+                this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
             // Run stats job using the original execution context
+            log.debug("Analysing and comparing assemblies");
             this.dispatchStatsJob(assemblerWait, executionContext);
+
+            log.info("Finished MASS run");
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
@@ -220,6 +234,25 @@ public class SingleMassProcess extends AbstractConanProcess {
         this.conanProcessService.execute(assembler, executionContextCopy);
     }
 
+    protected void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException {
+
+        // Duplicate the execution context so we don't modify the original accidentally.
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContext.usingScheduler()) {
+
+            String jobName = jobPrefix + "_wait";
+            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
+            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+            executionContextCopy.setForegroundJob(true);
+        }
+
+        this.conanProcessService.waitFor(
+                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
+                executionContextCopy);
+    }
+
 
     protected String buildStatCmdLine(File statDir) {
 
@@ -242,8 +275,12 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         if (executionContextCopy.usingScheduler()) {
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-            schedulerArgs.setJobName(args.getJobPrefix() + "-stats");
-            schedulerArgs.setThreads(0);
+
+            String jobName = args.getJobPrefix() + "-stats";
+
+            schedulerArgs.setJobName(jobName);
+            schedulerArgs.setMonitorFile(new File(args.getOutputDir(), jobName + ".log"));
+            schedulerArgs.setThreads(1);
             schedulerArgs.setMemoryMB(0);
             schedulerArgs.setWaitCondition(waitCondition);
         }

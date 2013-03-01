@@ -72,7 +72,7 @@ public class AbyssV134ProcessTest {
     }
 
     @Test
-    public void testAbyssV134() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+    public void testAbyssV134Command() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         List<Library> libs = this.createLocalPETestLibrary();
 
@@ -93,5 +93,31 @@ public class AbyssV134ProcessTest {
         assertTrue(correct != null && !correct.isEmpty());
         assertTrue(command.length() == correct.length());
         assertTrue(command.equals(correct));
+    }
+
+    @Test
+    public void testAbyssV134FullCommand() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+
+        List<Library> libs = this.createLocalPETestLibrary();
+
+        AbyssV134Args args = new AbyssV134Args();
+        args.setLibraries(libs);
+        args.setKmer(61);
+        args.setName("OUTPUT_FILE");
+        args.setThreads(16);
+        args.setOutputDir(new File("testOut"));
+
+        AbyssV134Process abyss = new AbyssV134Process(args);
+
+        String fullCommand = abyss.getFullCommand();
+
+        String correct = "cd " + pwd + "testOut; abyss-pe  name=OUTPUT_FILE  k=61  np=16  " +
+                "lib='peLib1' peLib1='" + pwd + "tools/mass/LIB1896_R1.r95.fastq " + pwd + "tools/mass/LIB1896_R2.r95.fastq'; " +
+                "cd " + pwd;
+
+        assertTrue(fullCommand != null && !fullCommand.isEmpty());
+        assertTrue(correct != null && !correct.isEmpty());
+        assertTrue(fullCommand.length() == correct.length());
+        assertTrue(fullCommand.equals(correct));
     }
 }

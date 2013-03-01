@@ -341,18 +341,26 @@ public class Library implements Serializable {
 		
 		sb.append("[" + SECTION_PREFIX + this.getIndex().toString() + "]\n")
 		.append(KEY_NAME + "=" + this.getName() + "\n")
-		.append(KEY_DATASET + "=" + this.getDataset().toString() + "\n")
 		.append(KEY_AVG_INSERT_SIZE + "=" + this.getAverageInsertSize().toString() + "\n")
 		.append(KEY_INSERT_ERROR_TOLERANCE + "=" + this.getInsertErrorTolerance().toString() + "\n")
 		.append(KEY_READ_LENGTH + "=" + this.getReadLength() + "\n")
 		.append(KEY_SEQ_ORIENTATION + "=" + this.getSeqOrientation().toString() + "\n")
 		.append(KEY_USAGE + "=" + this.getUsage().toString() + "\n")
-        .append(KEY_TYPE + "=" + this.getType().toString() + "\n")
-        .append(KEY_FILE_1 + "=" + this.getFilePaired1().getFilePath() + "\n")
-		.append(KEY_FILE_2 + "=" + this.getFilePaired2().getFilePath() + "\n")
-		.append(KEY_FILE_SE + "=" + this.getSeFile().getFilePath() + "\n");
-		
-		return sb.toString();
+        .append(KEY_TYPE + "=" + this.getType().toString() + "\n");
+
+        if (this.getDataset() != null)
+            sb.append(KEY_DATASET + "=" + this.getDataset().toString() + "\n");
+
+        if (this.getFilePaired1() != null && this.getFilePaired2() != null &&
+                (this.getType() == Type.PE || this.getType() == Type.MP)) {
+            sb.append(KEY_FILE_1 + "=" + this.getFilePaired1().getFile().getAbsolutePath() + "\n");
+            sb.append(KEY_FILE_2 + "=" + this.getFilePaired2().getFile().getAbsolutePath() + "\n");
+        }
+
+        if (this.getSeFile() != null && (this.getType() == Type.SE || this.getDataset() == Dataset.QT))
+            sb.append(KEY_FILE_SE + "=" + this.getSeFile().getFile().getAbsolutePath() + "\n");
+
+        return sb.toString();
 	}
 	
 	public static Library parseIniSection(Section iniSection, int index) {
@@ -360,6 +368,7 @@ public class Library implements Serializable {
 		Library ld = new Library();
 		
 		// Required properties
+        ld.setIndex(index);
 		ld.setName(iniSection.get(KEY_NAME));
 		ld.setAverageInsertSize(Integer.parseInt(iniSection.get(KEY_AVG_INSERT_SIZE)));
 		ld.setInsertErrorTolerance(Double.parseDouble(iniSection.get(KEY_INSERT_ERROR_TOLERANCE)));
