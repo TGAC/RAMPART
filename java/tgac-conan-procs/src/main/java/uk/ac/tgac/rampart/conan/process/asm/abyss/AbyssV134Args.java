@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.conan.process.asm.abyss;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerArgs;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

@@ -18,8 +18,6 @@
 package uk.ac.tgac.rampart.conan.process.r;
 
 import org.junit.Test;
-import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Args;
-import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Process;
 
 import java.io.File;
 import java.util.ArrayList;
