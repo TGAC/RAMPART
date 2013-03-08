@@ -74,24 +74,25 @@ public class QTProcess extends AbstractConanProcess {
             }
 
             // Execute quality trimmers for each library
+            if (!args.isNoQT()) {
+                log.debug("Executing " + qtList.size() + " quality trimming processes");
 
-            log.debug("Executing " + qtList.size() + " quality trimming processes");
+                if (qtList.size() > 1) {
+                    int i = 1;
+                    for (QualityTrimmer qt : qtList) {
+                         this.executeQualityTrimmer(qt, args.getJobPrefix(), args.isRunParallel(), args.getOutputDir(), i++, executionContext);
+                    }
 
-            if (qtList.size() > 1) {
-                int i = 1;
-                for (QualityTrimmer qt : qtList) {
-                     this.executeQualityTrimmer(qt, args.getJobPrefix(), args.isRunParallel(), args.getOutputDir(), i++, executionContext);
+                    // If we're using a scheduler and we have been asked to run the quality trimming processes for each library
+                    // in parallel, then we should wait for all those to complete before continueing.
+                    if (executionContext.usingScheduler() && args.isRunParallel()) {
+                        log.debug("Running Quality trimming step in parallel, waiting for completion");
+                        this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                    }
                 }
-
-                // If we're using a scheduler and we have been asked to run the quality trimming processes for each library
-                // in parallel, then we should wait for all those to complete before continueing.
-                if (executionContext.usingScheduler() && args.isRunParallel()) {
-                    log.debug("Running Quality trimming step in parallel, waiting for completion");
-                    this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                else {
+                    this.executeQualityTrimmer(qtList.get(0), args.getJobPrefix(), false, args.getOutputDir(), 1, executionContext);
                 }
-            }
-            else {
-                this.executeQualityTrimmer(qtList.get(0), args.getJobPrefix(), false, args.getOutputDir(), 1, executionContext);
             }
 
             // If requested create modified configuration files which can be used to drive other RAMPART processes after
@@ -173,7 +174,7 @@ public class QTProcess extends AbstractConanProcess {
         }
 
         for(Library lib : qtConfig.getLibs()) {
-            lib.setDataset(Library.Dataset.RAW);
+            lib.setDataset(Library.Dataset.QT);
         }
 
         // Modify the QT libs
@@ -184,7 +185,11 @@ public class QTProcess extends AbstractConanProcess {
         File qtConfigFile = new File(args.getOutputDir(), "qt.cfg");
 
         rawConfig.save(rawConfigFile);
-        qtConfig.save(qtConfigFile);
+
+        // Only bother saving QT args if user requested it
+        if (!args.isNoQT()) {
+            qtConfig.save(qtConfigFile);
+        }
     }
 
 

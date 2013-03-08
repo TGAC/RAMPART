@@ -31,6 +31,7 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.util.PerlHelper;
 
 import java.io.File;
@@ -181,7 +182,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                 this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
-            // Run stats job using the original execution context
+            // Run analyser job using the original execution context
             log.debug("Analysing and comparing assemblies");
             this.dispatchStatsJob(assemblerWait, executionContext);
 
@@ -276,7 +277,7 @@ public class SingleMassProcess extends AbstractConanProcess {
         if (executionContextCopy.usingScheduler()) {
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
-            String jobName = args.getJobPrefix() + "-stats";
+            String jobName = args.getJobPrefix() + "-analyser";
 
             schedulerArgs.setJobName(jobName);
             schedulerArgs.setMonitorFile(new File(args.getOutputDir(), jobName + ".log"));
@@ -290,6 +291,9 @@ public class SingleMassProcess extends AbstractConanProcess {
         StringJoiner statCommands = new StringJoiner("; ");
 
         if (assembler.makesUnitigs()) {
+            LengthAnalysisProcess
+
+            this.conanProcessService.execute()
             statCommands.add(buildStatCmdLine(args.getUnitigsDir()));
         }
 

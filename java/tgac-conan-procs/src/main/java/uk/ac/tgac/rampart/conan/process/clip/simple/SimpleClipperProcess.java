@@ -85,7 +85,7 @@ public class SimpleClipperProcess extends AbstractConanProcess implements Clippe
 
                 char firstChar = line.charAt(0);
 
-                // If we have found a header line then increment stats for this seq (unless this is the first time here)
+                // If we have found a header line then increment analyser for this seq (unless this is the first time here)
                 if (firstChar == '>') {
 
                     if (firstLine) {

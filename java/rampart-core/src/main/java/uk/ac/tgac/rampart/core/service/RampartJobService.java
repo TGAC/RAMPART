@@ -37,7 +37,7 @@ public interface RampartJobService {
 	
 	void calcReadStats(List<Library> libs) throws IOException;
 	
-	VelocityContext buildContext(File jobDir, File rampartDir) throws IOException;
+	VelocityContext buildContext(RampartJobFileStructure jobFS) throws IOException;
 	
 	RampartSettings determineSettings(RampartJobFileStructure job) throws IOException;
 	

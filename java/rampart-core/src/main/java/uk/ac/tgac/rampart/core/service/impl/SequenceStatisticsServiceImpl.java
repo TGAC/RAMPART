@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.data.SeqFile;
 import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
-import uk.ac.tgac.rampart.core.stats.AssemblyAnalyser;
+import uk.ac.tgac.rampart.core.stats.AssemblyLengthAnalyser;
 import uk.ac.tgac.rampart.core.stats.ReadAnalyser;
 
 import java.io.File;
@@ -48,7 +48,7 @@ public class SequenceStatisticsServiceImpl implements SequenceStatisticsService 
 
     @Override
     public AssemblyStats analyseAssembly(File in) throws IOException {
-        return new AssemblyAnalyser().analyse(in);
+        return new AssemblyLengthAnalyser().analyse(in);
     }
 
 

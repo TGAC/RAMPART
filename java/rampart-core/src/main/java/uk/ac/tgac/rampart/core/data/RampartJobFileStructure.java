@@ -17,6 +17,8 @@
  **/
 package uk.ac.tgac.rampart.core.data;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -77,8 +79,8 @@ public class RampartJobFileStructure {
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
 		this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
 		this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
-		this.improverPlotsFile = new File(this.improverAssembliesDir.getPath() + "/stats.pdf");
-		this.improverStatsFile = new File(this.improverAssembliesDir.getPath() + "/stats.txt");
+		this.improverPlotsFile = new File(this.improverAssembliesDir.getPath() + "/analyser.pdf");
+		this.improverStatsFile = new File(this.improverAssembliesDir.getPath() + "/analyser.txt");
 		this.improverLogFile = new File(this.improverDir.getPath() + "/amp.log");
 		this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
 		this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");
@@ -96,18 +98,15 @@ public class RampartJobFileStructure {
 			throw new IOException("RAMPART report directory structure is not valid.");
 		}
 		
-		if (includeFiles && (!this.massPlotsFile.exists() || !this.improverPlotsFile.exists())) {
+		/*if (includeFiles && (!this.massPlotsFile.exists() || !this.improverPlotsFile.exists())) {
 			throw new IOException("Not all RAMPART files are present");
-		}
+		} */
 	}
 	
 	public void makeReportDirs() throws IOException {
 		
 		// Clean the report dir first...
-		File[] contents = this.reportDir.listFiles();
-		for(File file : contents) {
-			file.delete();
-		}
+        FileUtils.deleteDirectory(this.reportDir);
 		
 		// ... then rebuild
 		this.reportDir.mkdir();

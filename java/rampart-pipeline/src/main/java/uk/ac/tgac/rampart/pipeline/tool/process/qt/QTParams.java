@@ -44,6 +44,7 @@ public class QTParams implements ProcessParams {
     private ConanParameter createConfigs;
     private ConanParameter jobPrefix;
     private ConanParameter runParallel;
+    private ConanParameter noQT;
 
     public QTParams() {
 
@@ -94,6 +95,11 @@ public class QTParams implements ProcessParams {
                 "If set to true, and we want to run QT in a scheduled execution context, then each library provided to this " +
                         "QT process will be executed in parallel.  A wait job will be executed in the foreground which will " +
                         "complete after all libraries have been quality trimmed");
+
+        this.noQT = new FlagParameter(
+                "noQT",
+                "If set to true then we don't actually do any Quality trimming.  We still do everything else though, which " +
+                        "includes creating the output directory and the RAW configuration file and symbolic links");
     }
 
     public ConanParameter getRampartConfig() {

@@ -106,11 +106,8 @@ public class RampartJobServiceImpl implements RampartJobService {
 	}
 	
 	@Override
-	public VelocityContext buildContext(File jobDir, File rampartDir) throws IOException {
+	public VelocityContext buildContext(RampartJobFileStructure jobFS) throws IOException {
 
-		RampartJobFileStructure jobFS = new RampartJobFileStructure(jobDir);
-		RampartProjectFileStructure rampartFS = new RampartProjectFileStructure(rampartDir);
-		
 		// Get Configuration info from config files
 		Job job = this.loadConfiguration(jobFS.getConfigFile()).getJob();
 		List<Library> libsRaw = this.loadConfiguration(jobFS.getConfigRawFile()).getLibs();
@@ -131,13 +128,13 @@ public class RampartJobServiceImpl implements RampartJobService {
 		// Get Info from Assemblies (MASS)
 		List<AssemblyStats> massStats = this.getAssemblyStats(jobFS.getMassStatsFile());
 		List<AssemblyStats> improverStats = this.getAssemblyStats(jobFS.getImproverStatsFile());
-		AssemblyStats weights = this.getWeightings(rampartFS.getWeightingsFile());
+		//AssemblyStats weights = this.getWeightings(null);
 		
 		// Get Info from Best Assembly statistics
 		AssemblyStats best = Collections.max(massStats);
 		//best.setBest(true);
 		
-		// Link stats to job object and vice versa
+		// Link analyser to job object and vice versa
 		job.setMassStats(massStats);
 		job.setImproverStats(improverStats);
 
@@ -151,7 +148,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		vc.put("job", job);
 		vc.put("settings", rampartSettings);
 		vc.put("contigScores", massStats);
-		vc.put("weightings", weights);
+		//vc.put("weightings", weights);
 		vc.put("locations", jobFS);
 		vc.put("best_mass_asm", best);
 		vc.put("final_asm", finalAssembly);

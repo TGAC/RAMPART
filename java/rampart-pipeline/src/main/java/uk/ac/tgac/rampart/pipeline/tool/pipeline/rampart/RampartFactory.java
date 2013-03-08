@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.report.ReportProcess;
@@ -38,30 +39,35 @@ public enum RampartFactory {
         public ConanProcess create() {
             return new QTProcess();
         }
+
     },
     MASS {
         @Override
         public ConanProcess create() {
             return new MultiMassProcess();
         }
+
     },
     AMP {
         @Override
         public ConanProcess create() {
             return new AmpProcess();
         }
+
     },
-    ANALYSIS {
+    ANALYSE {
         @Override
         public ConanProcess create() {
-            return null;
+            return new LengthAnalysisProcess();
         }
+
     },
     REPORT {
         @Override
         public ConanProcess create() {
             return new ReportProcess();
         }
+
     };
 
     public abstract ConanProcess create();

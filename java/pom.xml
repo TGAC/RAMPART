@@ -141,8 +141,7 @@
 	<modules>
 		<module>rampart-core</module>
 		<module>rampart-pipeline</module>
-		<module>rampart-helper</module>
-        <module>tgac-conan-procs</module>
+		<module>tgac-conan-procs</module>
     </modules>
 
 </project>

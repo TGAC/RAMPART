@@ -29,8 +29,8 @@ import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassProcess;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.stats.MassSelectorArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.stats.MassSelectorProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +88,7 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             for (SingleMassArgs singleMassArgs : singleMassArgsList) {
 
-                // Add the predicted stats file to the list for processing later.
+                // Add the predicted analyser file to the list for processing later.
                 statsFiles.add(singleMassArgs.getStatsFile());
 
                 this.executeSingleMass(singleMassArgs, executionContext);
@@ -151,9 +151,9 @@ public class MultiMassProcess extends AbstractConanProcess {
     protected void executeMassSelector(MultiMassArgs args, List<File> statsFiles, ExecutionContext executionContext)
             throws IOException, ProcessExecutionException, InterruptedException {
 
-        File statsDir = new File(args.getOutputDir(), "stats");
+        File statsDir = new File(args.getOutputDir(), "analyser");
         if (!statsDir.mkdirs()) {
-            throw new IOException("Couldn't create directory for MASS stats");
+            throw new IOException("Couldn't create directory for MASS analyser");
         }
 
         MassSelectorArgs massSelectorArgs = new MassSelectorArgs();
@@ -164,8 +164,8 @@ public class MultiMassProcess extends AbstractConanProcess {
         massSelectorArgs.setWeightings(null);
 
         MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
-
-        this.conanProcessService.execute(massSelectorProcess, executionContext);
+        massSelectorProcess.setConanProcessService(this.getConanProcessService());
+        massSelectorProcess.execute(executionContext);
     }
 
     private List<SingleMassArgs> createSingleMassArgsList(MultiMassArgs args) throws IOException {

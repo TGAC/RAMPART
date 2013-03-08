@@ -75,7 +75,7 @@ public class SingleMassArgs extends MassArgs {
     }
 
     public File getStatsFile() {
-        return new File(this.getContigsDir(), "stats.txt");
+        return new File(this.getContigsDir(), "analyser.txt");
     }
 
     public static SingleMassArgs parseConfig(File config) throws IOException {

@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.process.mass.multi;
+package uk.ac.tgac.rampart.pipeline.tool.process.report;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -29,21 +28,21 @@ import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.core.service.RampartJobService;
+import uk.ac.tgac.rampart.core.service.VelocityMergerService;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 /**
  * User: maplesod
- * Date: 12/02/13
- * Time: 10:20
+ * Date: 08/03/13
+ * Time: 11:41
  */
 @RunWith(MockitoJUnitRunner.class)
-public class MultiMassProcessTest {
+public class ReportProcessTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -54,40 +53,55 @@ public class MultiMassProcessTest {
     @Mock
     ConanProcessService conanProcessService;
 
+    @Mock
+    RampartJobService rampartJobService;
+
+    @Mock
+    VelocityMergerService velocityMergerService;
+
+
     @Test
-    public void testExecute() throws InterruptedException, ProcessExecutionException {
+    public void testReportExecute() throws InterruptedException, ProcessExecutionException {
 
-        File outputDir = temp.newFolder("testMultiMass");
+        File testDir = temp.newFolder("testReport");
+        File jobDir = new File(testDir, "job");
 
-        File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
-        File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));
+        jobDir.mkdir();
 
-        List<File> configs = new ArrayList<File>();
-        configs.add(cfgFile1);
-        configs.add(cfgFile2);
+        createRampartDirStructure(jobDir);
 
-        MultiMassArgs args = new MultiMassArgs();
-        args.setConfigs(configs);
-        args.setKmin(31);
-        args.setJobPrefix("testMultiMass");
-        args.setOutputDir(outputDir);
+        ReportArgs args = new ReportArgs();
+        args.setJobDir(jobDir);
 
-        assertTrue(args.getKmin() == 31);
-        assertTrue(args.getKmax() == MultiMassArgs.DEFAULT_KMER_MAX);
+        ReportProcess process = new ReportProcess(args);
 
-        MultiMassProcess multiMass = new MultiMassProcess(args);
-
-        when(conanProcessService.execute(multiMass, ec)).thenReturn(0);
+        when(conanProcessService.execute(process, ec)).thenReturn(0);
         when(ec.getLocality()).thenReturn(new Local());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 
-        ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(process, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(process, "rampartJobService", rampartJobService);
+        ReflectionTestUtils.setField(process, "velocityMergerService", velocityMergerService);
 
-        multiMass.execute(ec);
+        process.execute(ec);
 
-        assertTrue(new File(outputDir, "analyser").exists());
-        assertTrue(new File(outputDir, "RAW").exists());
-        assertTrue(new File(outputDir, "QT").exists());
+        assertTrue(new File(jobDir, "report/template.tex").exists());
+        assertTrue(new File(jobDir, "report/images").exists());
+        assertTrue(new File(jobDir, "report/images").isDirectory());
     }
+
+
+    private void createRampartDirStructure(File jobDir) {
+        File readsDir = new File(jobDir, "reads");
+        File massDir = new File(jobDir, "mass");
+        File massStatsDir = new File(massDir, "analyser");
+        File ampDir = new File(jobDir, "amp");
+
+        readsDir.mkdir();
+        massDir.mkdir();
+        massStatsDir.mkdir();
+        ampDir.mkdir();
+    }
+
 }

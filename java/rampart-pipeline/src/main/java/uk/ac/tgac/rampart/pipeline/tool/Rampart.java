@@ -43,6 +43,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -133,12 +134,14 @@ public class Rampart {
         qtArgs.setRunParallel(true);
 
         // Create MASS args
+        List<File> massConfigFiles = new ArrayList<File>();
+        massConfigFiles.add(jobFS.getConfigRawFile());
+        if (!qtArgs.isNoQT()) {
+            massConfigFiles.add(jobFS.getConfigQtFile());
+        }
+
         MultiMassArgs multiMassArgs = new MultiMassArgs();
-        multiMassArgs.setConfigs(new ArrayList<File>(Arrays.asList(
-                new File[]{
-                        jobFS.getConfigRawFile(),
-                        jobFS.getConfigQtFile()
-                })));
+        multiMassArgs.setConfigs(massConfigFiles);
         multiMassArgs.setOutputDir(jobFS.getMassDir());
         multiMassArgs.setJobPrefix(jobPrefix + "-mass");
         multiMassArgs.setRunParallel(true);

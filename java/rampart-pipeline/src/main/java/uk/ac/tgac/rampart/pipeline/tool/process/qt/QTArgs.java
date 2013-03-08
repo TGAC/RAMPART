@@ -42,6 +42,8 @@ public class QTArgs implements ProcessArgs {
     public static final String QT_TOOL = "tool";
     public static final String QT_MIN_LEN = "minlen";
     public static final String QT_MIN_QUAL = "minqual";
+    public static final String QT_NO_QT = "no_qt";
+
 
 
     private QTParams params = new QTParams();
@@ -55,6 +57,7 @@ public class QTArgs implements ProcessArgs {
     private boolean createConfigs;
     private String jobPrefix;
     private boolean runParallel;
+    private boolean noQT;
 
     public QTArgs() {
         this.config = null;
@@ -65,6 +68,7 @@ public class QTArgs implements ProcessArgs {
         this.libs = null;
         this.createConfigs = false;
         this.runParallel = false;
+        this.noQT = false;
 
         Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
         String dateTime = formatter.format(new Date());
@@ -144,6 +148,14 @@ public class QTArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
+    public boolean isNoQT() {
+        return noQT;
+    }
+
+    public void setNoQT(boolean noQT) {
+        this.noQT = noQT;
+    }
+
     public void parse(File configFile) throws IOException {
         QTArgs qtArgs = parseConfig(configFile);
         this.libs = qtArgs.getLibs();
@@ -151,6 +163,7 @@ public class QTArgs implements ProcessArgs {
         this.minLen = qtArgs.getMinLen();
         this.minQual = qtArgs.getMinQual();
         this.config = configFile;
+        this.noQT = qtArgs.isNoQT();
     }
 
     /**
@@ -180,6 +193,8 @@ public class QTArgs implements ProcessArgs {
                     args.setMinLen(Integer.parseInt(entry.getValue()));
                 } else if (entry.getKey().equalsIgnoreCase(QT_MIN_QUAL)) {
                     args.setMinQual(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(QT_NO_QT)) {
+                    args.setNoQT(Boolean.parseBoolean(entry.getValue()));
                 }
             }
         }
