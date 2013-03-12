@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.conan.process.degap.gapcloser;
 
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
 import uk.ac.tgac.rampart.conan.process.degap.Degapper;
 import uk.ac.tgac.rampart.conan.process.degap.DegapperArgs;
 
@@ -28,7 +29,7 @@ import java.io.File;
  * Date: 23/01/13
  * Time: 13:44
  */
-public class GapCloserV112Process extends AbstractConanProcess implements Degapper {
+public class GapCloserV112Process extends AbstractIOProcess implements Degapper {
 
     public static final String EXE = "GapCloser";
 

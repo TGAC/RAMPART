@@ -19,7 +19,7 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.report.ReportProcess;

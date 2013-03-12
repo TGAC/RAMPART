@@ -21,11 +21,15 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+
+import java.util.List;
 
 /**
  * This class wraps a Pipeline to manage each AMP stage
@@ -49,8 +53,13 @@ public class AmpProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
 
+        AmpArgs args = (AmpArgs)this.getProcessArgs();
+
+        // This may have been done already but lets make sure that all the processes link together properly
+        args.linkProcesses();
+
         // Create AMP Pipeline
-        AmpPipeline ampPipeline = new AmpPipeline();
+        AmpPipeline ampPipeline = new AmpPipeline(args);
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -64,6 +73,7 @@ public class AmpProcess extends AbstractConanProcess {
                 null,
                 ConanTask.Priority.HIGHEST,
                 rampartUser);
+
         ampTask.setId("");
         ampTask.submit();
 

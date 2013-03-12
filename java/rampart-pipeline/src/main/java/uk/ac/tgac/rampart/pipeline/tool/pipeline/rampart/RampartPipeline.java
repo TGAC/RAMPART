@@ -25,7 +25,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpPipeline;
-import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTParams;

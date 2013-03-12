@@ -29,6 +29,8 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 
 import java.io.File;
 import java.net.URISyntaxException;

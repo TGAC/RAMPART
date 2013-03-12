@@ -32,9 +32,8 @@ import uk.ac.tgac.rampart.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisProcess;
-import uk.ac.tgac.rampart.pipeline.util.PerlHelper;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 
 import java.io.File;
 import java.io.IOException;

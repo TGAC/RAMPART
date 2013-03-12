@@ -17,9 +17,15 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,8 +35,72 @@ import java.util.List;
  */
 public class AmpParams implements ProcessParams {
 
+    private ConanParameter inputAssembly;
+    private ConanParameter outputDir;
+    private ConanParameter config;
+    private ConanParameter processes;
+    private ConanParameter jobPrefix;
+
+    public AmpParams() {
+
+        this.inputAssembly = new PathParameter(
+                "input",
+                "The input assembly containing the assembly to enhance",
+                true);
+
+        this.outputDir = new PathParameter(
+                "output",
+                "The output directory which should contain the enhancement steps",
+                true);
+
+        this.config = new PathParameter(
+                "config",
+                "The RAMPART configuration file that contains details describing how to enhance the assembly",
+                true);
+
+        this.processes = new DefaultConanParameter(
+                "processes",
+                "The processes to execute to enhance the assembly",
+                false,
+                true,
+                false);
+
+        this.jobPrefix = new DefaultConanParameter(
+                "jobPrefix",
+                "Describes the jobs that will be executed as part of this pipeline",
+                false,
+                true,
+                false);
+    }
+
+    public ConanParameter getInputAssembly() {
+        return inputAssembly;
+    }
+
+    public ConanParameter getOutputDir() {
+        return outputDir;
+    }
+
+    public ConanParameter getConfig() {
+        return config;
+    }
+
+    public ConanParameter getProcesses() {
+        return processes;
+    }
+
+    public ConanParameter getJobPrefix() {
+        return jobPrefix;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
-        return null;
+        return new ArrayList<ConanParameter>(Arrays.asList(
+                new ConanParameter[]{
+                        this.inputAssembly,
+                        this.outputDir,
+                        this.config,
+                        this.processes,
+                        this.jobPrefix}));
     }
 }

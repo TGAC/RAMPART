@@ -17,16 +17,27 @@
  **/
 package uk.ac.tgac.rampart.conan.process.scaffold;
 
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
 
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:48
  */
-public interface Scaffolder extends SimpleIOProcess {
+public abstract class Scaffolder extends AbstractIOProcess {
 
-    ScaffolderArgs getArgs();
+    public Scaffolder(String exe, ProcessArgs processArgs, ProcessParams processParams) {
+        super(exe, processArgs, processParams);
+    }
 
-    void setArgs(ScaffolderArgs scaffolderArgs);
+    public ScaffolderArgs getScaffolderArgs() {
+        return (ScaffolderArgs)this.getProcessArgs();
+    }
+
+    public void setScaffolderArgs(ScaffolderArgs scaffolderArgs) {
+        this.setProcessArgs(scaffolderArgs);
+    }
 }

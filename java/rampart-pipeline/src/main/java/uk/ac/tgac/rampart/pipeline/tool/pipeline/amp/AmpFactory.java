@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
 import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 import uk.ac.tgac.rampart.conan.process.clip.ClipperFactory;
 import uk.ac.tgac.rampart.conan.process.dedup.DeduplicatorFactory;
@@ -36,85 +37,96 @@ public enum AmpFactory {
 
     CLIP {
         @Override
-        public SimpleIOProcess create() {
+        public AbstractIOProcess create() {
             return ClipperFactory.createClipper();
         }
 
         @Override
-        public SimpleIOProcess create(String ampTaskName) {
+        public AbstractIOProcess create(String ampTaskName) {
             return ClipperFactory.createClipper(ampTaskName);
         }
     },
     DEDUPLICATE {
         @Override
-        public SimpleIOProcess create() {
+        public AbstractIOProcess create() {
             return DeduplicatorFactory.createDeduplicator();
         }
 
         @Override
-        public SimpleIOProcess create(String ampTaskName) {
+        public AbstractIOProcess create(String ampTaskName) {
             return DeduplicatorFactory.createDeduplicator(ampTaskName);
         }
     },
     DEGAP {
         @Override
-        public SimpleIOProcess create() {
+        public AbstractIOProcess create() {
             return DegapperFactory.createDegapper();
         }
 
         @Override
-        public SimpleIOProcess create(String ampTaskName) {
+        public AbstractIOProcess create(String ampTaskName) {
             return DegapperFactory.createDegapper(ampTaskName);
         }
     },
     SCAFFOLD {
         @Override
-        public SimpleIOProcess create() {
+        public AbstractIOProcess create() {
             return ScaffolderFactory.createScaffolder();
         }
 
         @Override
-        public SimpleIOProcess create(String ampTaskName) {
+        public AbstractIOProcess create(String ampTaskName) {
             return ScaffolderFactory.createScaffolder(ampTaskName);
         }
     };
 
-    public abstract SimpleIOProcess create();
+    public abstract AbstractIOProcess create();
 
-    public abstract SimpleIOProcess create(String ampTaskName);
+    public abstract AbstractIOProcess create(String ampTaskName);
 
 
-    public static SimpleIOProcess createAmpTask(String taskType) {
+    public static AbstractIOProcess createAmpTask(String taskType) {
         return AmpFactory.valueOf(taskType.toUpperCase()).create();
     }
 
-    public static SimpleIOProcess createAmpTask(String taskType, String taskName) {
+    public static AbstractIOProcess createAmpTask(String taskType, String taskName) {
         return AmpFactory.valueOf(taskType.toUpperCase()).create(taskName);
     }
 
+    public static AbstractIOProcess createFromString(String taskString) {
 
-    public static List<SimpleIOProcess> createFromList(String[] tasks) {
+        if (taskString.contains(" ")) {
+            String[] parts = taskString.split(" ");
+            String taskType = parts[0];
+            String taskName = parts[1];
 
-        List<SimpleIOProcess> stages = new ArrayList<SimpleIOProcess>();
+            return AmpFactory.createAmpTask(taskType, taskName);
+        } else {
+            return AmpFactory.createAmpTask(taskString);
+        }
+    }
+
+    public static List<AbstractIOProcess> createFromList(String taskString) {
+
+        String[] tasks = taskString.split("\n");
+
+        return createFromList(tasks);
+    }
+
+    public static List<AbstractIOProcess> createFromList(String[] tasks) {
+
+        List<AbstractIOProcess> stages = new ArrayList<AbstractIOProcess>();
 
         for (String task : tasks) {
-            if (task.contains(" ")) {
-                String[] parts = task.split(" ");
-                String taskType = parts[0];
-                String taskName = parts[1];
-
-                stages.add(AmpFactory.createAmpTask(taskType, taskName));
-            } else {
-                stages.add(AmpFactory.createAmpTask(task));
-            }
+            stages.add(createFromString(task));
         }
 
         return stages;
     }
 
-    public static List<SimpleIOProcess> createDefaultList() {
-        return new ArrayList<SimpleIOProcess>(Arrays.asList(
-                new SimpleIOProcess[]{
+    public static List<AbstractIOProcess> createDefaultList() {
+        return new ArrayList<AbstractIOProcess>(Arrays.asList(
+                new AbstractIOProcess[]{
                         AmpFactory.SCAFFOLD.create(),
                         AmpFactory.DEGAP.create()
                 }));

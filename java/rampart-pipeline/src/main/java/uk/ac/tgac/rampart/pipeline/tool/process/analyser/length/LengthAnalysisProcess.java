@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.pipeline.tool.process.analyser;
+package uk.ac.tgac.rampart.pipeline.tool.process.analyser.length;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;

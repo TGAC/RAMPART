@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.conan.process.scaffold.sspace;
 
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
 import uk.ac.tgac.rampart.conan.process.scaffold.Scaffolder;
 import uk.ac.tgac.rampart.conan.process.scaffold.ScaffolderArgs;
 
@@ -30,7 +31,7 @@ import java.util.Collection;
  * Date: 23/01/13
  * Time: 16:00
  */
-public class SSpaceBasicV2Process extends AbstractConanProcess implements Scaffolder {
+public class SSpaceBasicV2Process extends Scaffolder {
 
     public static final String EXE = "SSPACE_Basic_v2.0.pl";
 
@@ -58,22 +59,13 @@ public class SSpaceBasicV2Process extends AbstractConanProcess implements Scaffo
     }
 
     @Override
-    public ScaffolderArgs getArgs() {
-        return (ScaffolderArgs)this.getProcessArgs();
-    }
-
-    @Override
-    public void setArgs(ScaffolderArgs scaffolderArgs) {
-        this.setProcessArgs(scaffolderArgs);
-    }
-
-    @Override
     public void setInputFile(File inputFile) {
-        this.getArgs().setInput(inputFile);
+        this.getScaffolderArgs().setInput(inputFile);
+        super.setInputFile(inputFile);
     }
 
     @Override
     public File getOutputFile() {
-        return this.getArgs().getOutput();
+        return this.getScaffolderArgs().getOutput();
     }
 }

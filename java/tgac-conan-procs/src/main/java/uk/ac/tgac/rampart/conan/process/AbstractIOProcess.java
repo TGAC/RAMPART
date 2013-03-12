@@ -17,6 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.process;
 
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+
 import java.io.File;
 
 /**
@@ -24,9 +29,30 @@ import java.io.File;
  * Date: 28/02/13
  * Time: 11:55
  */
-public interface SimpleIOProcess {
+public abstract class AbstractIOProcess extends AbstractConanProcess {
 
-    void setInputFile(File inputFile);
+    private File inputFile;
+    private File outputDir;
 
-    File getOutputFile();
+    public AbstractIOProcess(String exe, ProcessArgs processArgs, ProcessParams processParams) {
+        super(exe, processArgs, processParams);
+    }
+
+    public File getInputFile() {
+        return inputFile;
+    }
+
+    public void setInputFile(File inputFile) {
+        this.inputFile = inputFile;
+    }
+
+    public File getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(File outputDir) {
+        this.outputDir = outputDir;
+    }
+
+    public abstract File getOutputFile();
 }
