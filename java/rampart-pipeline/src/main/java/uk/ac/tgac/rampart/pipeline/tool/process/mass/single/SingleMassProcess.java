@@ -31,6 +31,8 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.analyser.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.util.PerlHelper;
 
@@ -255,20 +257,6 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
 
-    protected String buildStatCmdLine(File statDir) {
-
-        StringJoiner mgpArgs = new StringJoiner(" ");
-
-        mgpArgs.add(PerlHelper.MASS_GP.getPath());
-        mgpArgs.add("--grid_engine NONE");
-        mgpArgs.add("--input " + statDir.getPath());
-        mgpArgs.add("--output " + statDir.getPath());
-        //mgpArgs.add(this.isVerbose(), "", "--verbose");
-
-        return mgpArgs.toString();
-    }
-
-
     protected void dispatchStatsJob(WaitCondition waitCondition, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
@@ -291,22 +279,39 @@ public class SingleMassProcess extends AbstractConanProcess {
         StringJoiner statCommands = new StringJoiner("; ");
 
         if (assembler.makesUnitigs()) {
-            LengthAnalysisProcess
 
-            this.conanProcessService.execute()
-            statCommands.add(buildStatCmdLine(args.getUnitigsDir()));
+            LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
+            laArgs.setInputDir(args.getUnitigsDir());
+            laArgs.setOutputDir(args.getUnitigsDir());
+            laArgs.setRampartStage(RampartStage.MASS);
+
+            LengthAnalysisProcess laProcess = new LengthAnalysisProcess(laArgs);
+
+            this.conanProcessService.execute(laProcess, executionContextCopy);
         }
 
         if (assembler.makesContigs()) {
-            statCommands.add(buildStatCmdLine(args.getContigsDir()));
+
+            LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
+            laArgs.setInputDir(args.getContigsDir());
+            laArgs.setOutputDir(args.getContigsDir());
+            laArgs.setRampartStage(RampartStage.MASS);
+
+            LengthAnalysisProcess laProcess = new LengthAnalysisProcess(laArgs);
+
+            this.conanProcessService.execute(laProcess, executionContextCopy);
         }
 
         if (assembler.makesScaffolds()) {
-            statCommands.add(buildStatCmdLine(args.getScaffoldsDir()));
-        }
+            LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
+            laArgs.setInputDir(args.getScaffoldsDir());
+            laArgs.setOutputDir(args.getScaffoldsDir());
+            laArgs.setRampartStage(RampartStage.MASS);
 
-        // Create process
-        this.conanProcessService.execute(statCommands.toString(), executionContextCopy);
+            LengthAnalysisProcess laProcess = new LengthAnalysisProcess(laArgs);
+
+            this.conanProcessService.execute(laProcess, executionContextCopy);
+        }
     }
 
     @Override
