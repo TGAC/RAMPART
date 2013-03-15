@@ -19,10 +19,7 @@ package uk.ac.tgac.rampart.conan.process.asm.abyss;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerArgs;
 

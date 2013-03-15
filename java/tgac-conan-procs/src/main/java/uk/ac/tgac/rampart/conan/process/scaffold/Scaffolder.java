@@ -17,10 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.process.scaffold;
 
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
+
+import java.io.File;
 
 /**
  * User: maplesod
@@ -39,5 +40,16 @@ public abstract class Scaffolder extends AbstractIOProcess {
 
     public void setScaffolderArgs(ScaffolderArgs scaffolderArgs) {
         this.setProcessArgs(scaffolderArgs);
+    }
+
+    @Override
+    public void setInputFile(File inputFile) {
+        this.getScaffolderArgs().setInput(inputFile);
+        super.setInputFile(inputFile);
+    }
+
+    @Override
+    public File getOutputFile() {
+        return this.getScaffolderArgs().getOutput();
     }
 }

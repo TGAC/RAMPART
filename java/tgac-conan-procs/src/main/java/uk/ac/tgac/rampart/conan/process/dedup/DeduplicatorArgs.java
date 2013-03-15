@@ -15,27 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.clip;
+package uk.ac.tgac.rampart.conan.process.dedup;
 
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 
 import java.io.File;
 
-/**
- * User: maplesod
- * Date: 01/02/13
- * Time: 09:56
- */
-public abstract class ClipperArgs implements ProcessArgs {
+public abstract class DeduplicatorArgs implements ProcessArgs {
 
     private File input;
     private File output;
-    private int minLen;
 
-    public ClipperArgs() {
+    protected DeduplicatorArgs() {
         this.input = null;
         this.output = null;
-        this.minLen = 1000;
     }
 
     public File getInput() {
@@ -53,13 +46,4 @@ public abstract class ClipperArgs implements ProcessArgs {
     public void setOutput(File output) {
         this.output = output;
     }
-
-    public int getMinLen() {
-        return minLen;
-    }
-
-    public void setMinLen(int minLen) {
-        this.minLen = minLen;
-    }
-
 }

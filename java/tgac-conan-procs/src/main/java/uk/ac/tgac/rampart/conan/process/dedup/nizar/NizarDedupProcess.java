@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.conan.process.dedup.nizar;
 
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.conan.process.dedup.Deduplicator;
 
 import java.io.File;
@@ -27,7 +26,15 @@ import java.io.File;
  * Date: 12/02/13
  * Time: 17:24
  */
-public class NizarDedupProcess extends AbstractConanProcess implements Deduplicator {
+public class NizarDedupProcess extends Deduplicator {
+
+    public NizarDedupProcess() {
+        this(new NizarDedupArgs());
+    }
+
+    public NizarDedupProcess(NizarDedupArgs args) {
+        super("", args, new NizarDedupParams());
+    }
 
     @Override
     public void setInputFile(File inputFile) {

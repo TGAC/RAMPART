@@ -15,51 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.clip;
+package uk.ac.tgac.rampart.conan.process.dedup.nizar;
 
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.tgac.rampart.conan.process.dedup.DeduplicatorArgs;
 
-import java.io.File;
+import java.util.Map;
 
 /**
  * User: maplesod
- * Date: 01/02/13
- * Time: 09:56
+ * Date: 15/03/13
+ * Time: 11:46
  */
-public abstract class ClipperArgs implements ProcessArgs {
+public class NizarDedupArgs extends DeduplicatorArgs {
 
-    private File input;
-    private File output;
-    private int minLen;
-
-    public ClipperArgs() {
-        this.input = null;
-        this.output = null;
-        this.minLen = 1000;
+    public NizarDedupArgs() {
+        super();
     }
 
-    public File getInput() {
-        return input;
+    @Override
+    public Map<ConanParameter, String> getArgMap() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    public void setInput(File input) {
-        this.input = input;
+    @Override
+    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
-
-    public File getOutput() {
-        return output;
-    }
-
-    public void setOutput(File output) {
-        this.output = output;
-    }
-
-    public int getMinLen() {
-        return minLen;
-    }
-
-    public void setMinLen(int minLen) {
-        this.minLen = minLen;
-    }
-
 }

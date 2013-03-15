@@ -57,19 +57,29 @@ public class AbyssV134Args extends AssemblerArgs {
 
         Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
-        if (this.name != null)
+        if (this.name != null) {
             pvp.put(params.getName(), params.getName().getName() + "=" + this.name);
+        }
 
-        if (this.nbContigPairs != 10)
+        if (this.nbContigPairs != 10) {
             pvp.put(params.getNbContigPairs(), params.getNbContigPairs().getName() + "=" + Integer.toString(this.nbContigPairs));
+        }
 
-        pvp.put(params.getKmer(), params.getKmer().getName() + "=" + Integer.toString(this.getKmer()));
+        if (this.getKmer() > 0) {
+            pvp.put(params.getKmer(), params.getKmer().getName() + "=" + Integer.toString(this.getKmer()));
+        }
 
-        if (this.getThreads() > 1)
+        if (this.getCoverageCutoff() > 0) {
+            pvp.put(params.getCoverageCutoff(), params.getCoverageCutoff().getName() + "=" + Integer.toString(this.getCoverageCutoff()));
+        }
+
+        if (this.getThreads() > 1) {
             pvp.put(params.getThreads(), params.getThreads().getName() + "=" + Integer.toString(this.getThreads()));
+        }
 
-        if (this.getLibraries() != null && !this.getLibraries().isEmpty())
+        if (this.getLibraries() != null && !this.getLibraries().isEmpty()) {
             pvp.put(params.getLibs(), new AbyssV134InputLibsArg(this.getLibraries()).toString());
+        }
 
         return pvp;
     }
@@ -91,6 +101,9 @@ public class AbyssV134Args extends AssemblerArgs {
             else if (param.equals(this.params.getKmer().getName())) {
                 this.setKmer(Integer.parseInt(val));
             }
+            else if (param.equals(this.params.getCoverageCutoff().getName())) {
+                this.setCoverageCutoff(Integer.parseInt(val));
+            }
             else if (param.equals(this.params.getNbContigPairs().getName())) {
                 this.nbContigPairs = Integer.parseInt(val);
             }
@@ -98,7 +111,7 @@ public class AbyssV134Args extends AssemblerArgs {
                 this.setThreads(Integer.parseInt(val));
             }
             else if (param.equals(this.params.getLibs().getName())) {
-                this.setLibraries(null); // TODO should implement parse method
+                this.setLibraries(AbyssV134InputLibsArg.parse(val).getLibs());
             }
             else {
                 throw new IllegalArgumentException("Unknown param found: " + param);

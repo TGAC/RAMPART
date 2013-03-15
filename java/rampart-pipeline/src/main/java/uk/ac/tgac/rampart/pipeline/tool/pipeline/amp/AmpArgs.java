@@ -22,10 +22,7 @@ import org.ini4j.Profile;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.StepSize;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassParams;
 
 import java.io.File;
 import java.io.IOException;

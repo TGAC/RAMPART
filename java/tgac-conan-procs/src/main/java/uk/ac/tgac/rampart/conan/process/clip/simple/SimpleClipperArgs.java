@@ -29,56 +29,26 @@ import java.util.Map;
  * Date: 01/02/13
  * Time: 09:58
  */
-public class SimpleClipperArgs implements ClipperArgs {
+public class SimpleClipperArgs extends ClipperArgs {
 
     private SimpleClipperParams params = new SimpleClipperParams();
 
-    private File in;
-    private File out;
-    private int minLen;
-
     public SimpleClipperArgs() {
-        this.in = null;
-        this.out = null;
-        this.minLen = 1000;
-    }
-
-    public File getIn() {
-        return in;
-    }
-
-    public void setIn(File in) {
-        this.in = in;
-    }
-
-    public File getOut() {
-        return out;
-    }
-
-    public void setOut(File out) {
-        this.out = out;
-    }
-
-    public int getMinLen() {
-        return minLen;
-    }
-
-    public void setMinLen(int minLen) {
-        this.minLen = minLen;
+        super();
     }
 
     @Override
     public Map<ConanParameter, String> getArgMap() {
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.in != null)
-            pvp.put(params.getInputFile(), this.in.getPath());
+        if (this.getInput() != null)
+            pvp.put(params.getInputFile(), this.getInput().getPath());
 
-        if (this.out != null)
-            pvp.put(params.getOutputFile(), this.out.getPath());
+        if (this.getOutput() != null)
+            pvp.put(params.getOutputFile(), this.getOutput().getPath());
 
-        if (this.minLen > 1)
-            pvp.put(params.getMinLen(), String.valueOf(this.minLen));
+        if (this.getMinLen() > 1)
+            pvp.put(params.getMinLen(), String.valueOf(this.getMinLen()));
 
         return pvp;
     }
@@ -95,11 +65,11 @@ public class SimpleClipperArgs implements ClipperArgs {
             String param = entry.getKey().getName();
 
             if (param.equals(this.params.getInputFile().getName())) {
-                this.in = new File(entry.getValue());
+                this.setInput(new File(entry.getValue()));
             } else if (param.equals(this.params.getOutputFile().getName())) {
-                this.out = new File(entry.getValue());
+                this.setOutput(new File(entry.getValue()));
             } else if (param.equals(this.params.getMinLen().getName())) {
-                this.minLen = Integer.parseInt(entry.getValue());
+                this.setMinLen(Integer.parseInt(entry.getValue()));
             } else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }

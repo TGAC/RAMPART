@@ -27,10 +27,10 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.MassArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassProcess;
 
 import java.io.File;
 import java.io.IOException;

@@ -29,7 +29,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.process.latex.PdfLatex2012Args;
 import uk.ac.tgac.rampart.conan.process.latex.PdfLatex2012Process;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
-import uk.ac.tgac.rampart.core.data.RampartProjectFileStructure;
 import uk.ac.tgac.rampart.core.service.RampartJobService;
 import uk.ac.tgac.rampart.core.service.VelocityMergerService;
 

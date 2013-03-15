@@ -31,6 +31,7 @@ public class AbyssV134Params implements ProcessParams {
     private ConanParameter libs;
     private ConanParameter nbContigPairs;
     private ConanParameter kmer;
+    private ConanParameter coverageCutoff;
     private ConanParameter threads;
     private ConanParameter name;
 
@@ -46,6 +47,11 @@ public class AbyssV134Params implements ProcessParams {
         this.kmer = new NumericParameter(
                 "k",
                 "k-mer size",
+                false);
+
+        this.coverageCutoff = new NumericParameter(
+                "c",
+                "remove contigs with mean k-mer coverage less than this threshold",
                 false);
 
         this.threads = new NumericParameter(
@@ -71,6 +77,10 @@ public class AbyssV134Params implements ProcessParams {
         return kmer;
     }
 
+    public ConanParameter getCoverageCutoff() {
+        return coverageCutoff;
+    }
+
     public ConanParameter getThreads() {
         return threads;
     }
@@ -87,6 +97,7 @@ public class AbyssV134Params implements ProcessParams {
                         this.libs,
                         this.nbContigPairs,
                         this.kmer,
+                        this.coverageCutoff,
                         this.threads,
                         this.name
                 }

@@ -17,7 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.process.dedup;
 
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
+
+import java.io.File;
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,6 +30,28 @@ import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
  * Time: 10:56
  * To change this template use File | Settings | File Templates.
  */
-public interface Deduplicator extends SimpleIOProcess {
+public abstract class Deduplicator extends AbstractIOProcess {
 
+    public Deduplicator(String exe, ProcessArgs processArgs, ProcessParams processParams) {
+        super(exe, processArgs, processParams);
+    }
+
+    public DeduplicatorArgs getDeduplicatorArgs() {
+        return (DeduplicatorArgs)this.getProcessArgs();
+    }
+
+    public void setDeduplicatorArgs(DeduplicatorArgs clipperArgs) {
+        this.setProcessArgs(clipperArgs);
+    }
+
+    @Override
+    public void setInputFile(File inputFile) {
+        this.getDeduplicatorArgs().setInput(inputFile);
+        super.setInputFile(inputFile);
+    }
+
+    @Override
+    public File getOutputFile() {
+        return this.getDeduplicatorArgs().getOutput();
+    }
 }

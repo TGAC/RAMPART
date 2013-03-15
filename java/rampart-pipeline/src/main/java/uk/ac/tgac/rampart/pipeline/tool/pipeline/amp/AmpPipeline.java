@@ -22,7 +22,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,8 +73,8 @@ public class AmpPipeline implements ConanPipeline {
 
         List<ConanProcess> cProcs= new ArrayList<ConanProcess>();
 
-        for(SimpleIOProcess simpleIOProcess : this.args.getProcesses()) {
-            cProcs.add(simpleIOProcess);
+        for(AbstractIOProcess abstractIOProcess : this.args.getProcesses()) {
+            cProcs.add(abstractIOProcess);
         }
 
         return cProcs;

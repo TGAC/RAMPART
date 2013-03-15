@@ -19,12 +19,8 @@ package uk.ac.tgac.rampart.pipeline.tool.process.report;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
-import uk.ac.tgac.rampart.core.data.Library;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.StepSize;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassParams;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

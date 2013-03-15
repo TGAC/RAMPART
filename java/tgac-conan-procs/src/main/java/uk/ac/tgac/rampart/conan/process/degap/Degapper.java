@@ -17,16 +17,40 @@
  **/
 package uk.ac.tgac.rampart.conan.process.degap;
 
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
+import uk.ac.tgac.rampart.conan.process.scaffold.ScaffolderArgs;
+
+import java.io.File;
 
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:47
  */
-public interface Degapper extends SimpleIOProcess {
+public abstract class Degapper extends AbstractIOProcess {
 
-    DegapperArgs getArgs();
+    public Degapper(String exe, ProcessArgs processArgs, ProcessParams processParams) {
+        super(exe, processArgs, processParams);
+    }
 
-    void setArgs(DegapperArgs degapperArgs);
+    public DegapperArgs getDegapperArgs() {
+        return (DegapperArgs)this.getProcessArgs();
+    }
+
+    public void setDegapperArgs(ScaffolderArgs scaffolderArgs) {
+        this.setProcessArgs(scaffolderArgs);
+    }
+
+    @Override
+    public void setInputFile(File inputFile) {
+        this.getDegapperArgs().setInput(inputFile);
+        super.setInputFile(inputFile);
+    }
+
+    @Override
+    public File getOutputFile() {
+        return this.getDegapperArgs().getOutput();
+    }
 }

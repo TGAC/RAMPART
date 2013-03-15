@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.conan.process.clip.simple;
 
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.tgac.rampart.conan.process.clip.Clipper;
 
 import java.io.*;
@@ -29,16 +28,14 @@ import java.io.*;
  * Time: 10:56
  * To change this template use File | Settings | File Templates.
  */
-public class SimpleClipperProcess extends AbstractConanProcess implements Clipper {
-
-    private SimpleClipperArgs args;
+public class SimpleClipperProcess extends Clipper {
 
     public SimpleClipperProcess() {
         this(new SimpleClipperArgs());
     }
 
     public SimpleClipperProcess(SimpleClipperArgs args) {
-        this.args = args;
+        super(null, args, new SimpleClipperParams());
     }
 
 
@@ -52,24 +49,17 @@ public class SimpleClipperProcess extends AbstractConanProcess implements Clippe
         return null;
     }
 
-    @Override
-    public void setInputFile(File inputFile) {
-        this.args.setIn(inputFile);
-    }
-
-    @Override
-    public File getOutputFile() {
-        return this.args.getOut();
-    }
 
     private void clip() throws IOException {
 
-        if (this.args.getIn() == null || !this.args.getIn().exists()) {
+        SimpleClipperArgs args = (SimpleClipperArgs)this.getClipperArgs();
+
+        if (args.getInput() == null || !args.getInput().exists()) {
             throw new IOException("Input file does not exist");
         }
 
-        BufferedReader reader = new BufferedReader(new FileReader(this.args.getIn()));
-        PrintWriter writer = new PrintWriter(new FileWriter(this.args.getOut()));
+        BufferedReader reader = new BufferedReader(new FileReader(args.getInput()));
+        PrintWriter writer = new PrintWriter(new FileWriter(args.getOutput()));
 
         // Ignore everything but the sequences
         // While loop handles multi-line sequences
@@ -97,7 +87,7 @@ public class SimpleClipperProcess extends AbstractConanProcess implements Clippe
                     } else {
 
                         // Print out the last sequence if it was big enough
-                        if (nbSeqBases > this.args.getMinLen()) {
+                        if (nbSeqBases > args.getMinLen()) {
                             writer.println(lastHeader);
                             writer.println(lastSeq.toString());
                         }

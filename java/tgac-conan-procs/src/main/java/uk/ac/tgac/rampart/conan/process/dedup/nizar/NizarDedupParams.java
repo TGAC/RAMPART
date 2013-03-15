@@ -15,43 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process;
+package uk.ac.tgac.rampart.conan.process.dedup.nizar;
 
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 
-import java.io.File;
+import java.util.List;
 
 /**
  * User: maplesod
- * Date: 28/02/13
- * Time: 11:55
+ * Date: 15/03/13
+ * Time: 11:46
  */
-public abstract class AbstractIOProcess extends AbstractConanProcess {
+public class NizarDedupParams implements ProcessParams {
 
-    private File inputFile;
-    private File outputDir;
-
-    public AbstractIOProcess(String exe, ProcessArgs processArgs, ProcessParams processParams) {
-        super(exe, processArgs, processParams);
+    @Override
+    public List<ConanParameter> getConanParameters() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
-
-    public File getInputFile() {
-        return inputFile;
-    }
-
-    public void setInputFile(File inputFile) {
-        this.inputFile = inputFile;
-    }
-
-    public File getOutputDir() {
-        return outputDir;
-    }
-
-    public void setOutputDir(File outputDir) {
-        this.outputDir = outputDir;
-    }
-
-    public abstract File getOutputFile();
 }

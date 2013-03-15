@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.conan.process.asm.abyss;
 import org.apache.commons.lang3.StringUtils;
 import uk.ac.ebi.fgpt.conan.core.param.FilePair;
 import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.core.data.SeqFile;
 
 import java.io.File;
 import java.util.*;
@@ -129,7 +130,114 @@ public class AbyssV134InputLibsArg {
 
     public static AbyssV134InputLibsArg parse(String libs) {
 
-        return new AbyssV134InputLibsArg();
+        AbyssV134InputLibsArg libsArg = new AbyssV134InputLibsArg();
+
+        // Get PE libs
+        List<String> peLibs = getAbyssArgs(libs, "lib");
+
+        // Get MP libs
+        List<String> mpLibs = getAbyssArgs(libs, "mp");
+
+        // Get SE libs
+        List<String> seLibs = getAbyssArgs(libs, "se");
+
+        // Convert all string to actual library objects and add to libsArg.
+        List<Library> allLibs = new ArrayList<Library>();
+
+        for(String peLib : peLibs) {
+            List<String> peLibPaths = getAbyssArgs(libs, peLib);
+
+            if (peLibPaths.size() == 2) {
+                allLibs.add(createNewPELibrary(peLibPaths.get(0), peLibPaths.get(1), Library.Type.PE));
+            }
+            else {
+                throw new IllegalArgumentException("Paired end library does not contain two file paths");
+            }
+        }
+
+        for(String mpLib : mpLibs) {
+            List<String> mpLibPaths = getAbyssArgs(libs, mpLib);
+
+            if (mpLibPaths.size() == 2) {
+                allLibs.add(createNewPELibrary(mpLibPaths.get(0), mpLibPaths.get(1), Library.Type.MP));
+            }
+            else {
+                throw new IllegalArgumentException("Paired end library does not contain two file paths");
+            }
+        }
+
+        for(String seLib : seLibs) {
+
+            allLibs.add(createNewSELibrary(seLib));
+        }
+
+        libsArg.setLibs(allLibs);
+
+        return libsArg;
+    }
+
+    protected static Library createNewPELibrary(String libPath1, String libPath2, Library.Type type) {
+
+        Library lib = new Library();
+
+        lib.setType(type);
+        lib.setFilePaired1(new SeqFile(libPath1));
+        lib.setFilePaired2(new SeqFile(libPath2));
+        lib.setSeqOrientation(type == Library.Type.PE ? Library.SeqOrientation.FR : Library.SeqOrientation.RF);
+
+        return lib;
+    }
+
+    protected static Library createNewSELibrary(String libPath) {
+
+        Library lib = new Library();
+
+        lib.setType(Library.Type.SE);
+        lib.setSeFile(new SeqFile(libPath));
+
+        return lib;
+    }
+
+    protected static List<String> getAbyssArgs(String string, String header) {
+
+        int indexStart = string.indexOf("header");
+
+        if (indexStart < 0) {
+            return null;
+        }
+
+        String subStr = string.substring(indexStart);
+
+        int indexStartArgs = subStr.indexOf("\"");
+
+        if (indexStartArgs < 0) {
+            return null;
+        }
+
+        String subStrArgs = string.substring(indexStartArgs);
+
+        int indexEndArgs = subStrArgs.indexOf("\"");
+
+        if (indexEndArgs < 0) {
+            return null;
+        }
+
+        String args = subStrArgs.substring(0, indexEndArgs).trim();
+
+        String[] argArray = args.split(" ");
+
+        List<String> argList = new ArrayList<String>();
+
+        for(String arg : argArray) {
+
+            String argTrimmed = arg.trim();
+
+            if (arg != null && !arg.isEmpty()) {
+                argList.add(argTrimmed);
+            }
+        }
+
+        return argList;
     }
 
 }

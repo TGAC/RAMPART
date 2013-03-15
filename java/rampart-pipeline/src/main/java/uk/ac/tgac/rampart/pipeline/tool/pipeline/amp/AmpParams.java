@@ -21,9 +21,7 @@ import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

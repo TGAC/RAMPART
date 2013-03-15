@@ -27,12 +27,14 @@ import java.util.List;
 public abstract class AssemblerArgs implements ProcessArgs {
 
     private int kmer;
+    private int coverageCutoff;
     private int threads;
     private File outputDir;
     private List<Library> libraries;
 
     protected AssemblerArgs() {
         this.kmer = 65;
+        this.coverageCutoff = 0;
         this.threads = 0;
         this.outputDir = new File(".");
         this.libraries = new ArrayList<Library>();
@@ -48,6 +50,14 @@ public abstract class AssemblerArgs implements ProcessArgs {
 
     public void setKmer(int kmer) {
         this.kmer = kmer;
+    }
+
+    public int getCoverageCutoff() {
+        return coverageCutoff;
+    }
+
+    public void setCoverageCutoff(int coverageCutoff) {
+        this.coverageCutoff = coverageCutoff;
     }
 
     public int getThreads() {
@@ -73,4 +83,5 @@ public abstract class AssemblerArgs implements ProcessArgs {
     public void setLibraries(List<Library> libraries) {
         this.libraries = libraries;
     }
+
 }

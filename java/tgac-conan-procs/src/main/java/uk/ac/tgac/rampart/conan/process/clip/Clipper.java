@@ -17,12 +17,39 @@
  **/
 package uk.ac.tgac.rampart.conan.process.clip;
 
-import uk.ac.tgac.rampart.conan.process.SimpleIOProcess;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
+
+import java.io.File;
 
 /**
  * User: maplesod
  * Date: 01/02/13
  * Time: 09:53
  */
-public interface Clipper extends SimpleIOProcess {
+public abstract class Clipper extends AbstractIOProcess {
+
+    public Clipper(String exe, ProcessArgs processArgs, ProcessParams processParams) {
+        super(exe, processArgs, processParams);
+    }
+
+    public ClipperArgs getClipperArgs() {
+        return (ClipperArgs)this.getProcessArgs();
+    }
+
+    public void setClipperArgs(ClipperArgs clipperArgs) {
+        this.setProcessArgs(clipperArgs);
+    }
+
+    @Override
+    public void setInputFile(File inputFile) {
+        this.getClipperArgs().setInput(inputFile);
+        super.setInputFile(inputFile);
+    }
+
+    @Override
+    public File getOutputFile() {
+        return this.getClipperArgs().getOutput();
+    }
 }
