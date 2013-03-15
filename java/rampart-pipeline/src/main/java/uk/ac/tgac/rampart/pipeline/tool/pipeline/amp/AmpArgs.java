@@ -23,6 +23,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.StepSize;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,8 @@ import java.util.Map;
  * Time: 16:55
  */
 public class AmpArgs implements ProcessArgs {
+
+    private static final String INPUT_ASSEMBLY = "input";
 
     // Need access to these
     private AmpParams params = new AmpParams();
@@ -145,7 +148,9 @@ public class AmpArgs implements ProcessArgs {
                 } catch(NumberFormatException e) {
 
                     // Not a process index so assume it's another AMP arg
-
+                    if (entry.getKey().equalsIgnoreCase(INPUT_ASSEMBLY)) {
+                        args.setInputAssembly(new File(entry.getValue()));
+                    }
                 }
             }
         }

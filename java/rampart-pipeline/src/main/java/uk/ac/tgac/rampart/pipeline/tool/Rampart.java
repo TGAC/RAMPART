@@ -31,6 +31,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.cli.RampartOptions;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassArgs;
@@ -146,13 +147,17 @@ public class Rampart {
         multiMassArgs.setRunParallel(true);
 
         // Create AMP args
-        // TODO Amp args
+        AmpArgs ampArgs = new AmpArgs();
+        ampArgs.setConfig(args.getConfig());
+        ampArgs.setInputAssembly(jobFS.getMassOutFile());
+        ampArgs.setJobPrefix(jobPrefix + "-amp");
+        ampArgs.setOutputDir(jobFS.getImproverDir());
 
         // Configure pipeline
         this.rampartPipeline.setStages(this.options.getStages());
         this.rampartPipeline.getQtProcess().setProcessArgs(qtArgs);
         this.rampartPipeline.getMultiMassProcess().setProcessArgs(multiMassArgs);
-        //this.rampartPipeline.getAmpPipeline().se
+        this.rampartPipeline.getAmpProcess().setProcessArgs(ampArgs);
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");

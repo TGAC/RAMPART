@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.pipeline.tool.process.mass.selector;
 
 import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
@@ -33,9 +34,12 @@ import java.util.List;
  */
 public class MassSelectorParams implements ProcessParams {
 
+    private MassSelectorParams params = new MassSelectorParams();
+
     private ConanParameter statsFiles;
     private ConanParameter configFiles;
     private ConanParameter outputDir;
+    private ConanParameter approxGenomeSize;
     private ConanParameter weightings;
 
     public MassSelectorParams() {
@@ -59,9 +63,14 @@ public class MassSelectorParams implements ProcessParams {
                 "The output directory",
                 true);
 
+        this.approxGenomeSize = new NumericParameter(
+                "approxGenomeSize",
+                "The approximate genome size for the organism being assembled.  Used for assessing assembly quality.  Default: 0 (i.e. off)",
+                true);
+
         this.weightings = new DefaultConanParameter(
                 "weightings",
-                "The weightings used to balance each Assembly metric according to its usefullness",
+                "The weightings used to balance each Assembly metric according to its usefulness",
                 false,
                 true,
                 false);
@@ -77,6 +86,10 @@ public class MassSelectorParams implements ProcessParams {
 
     public ConanParameter getOutputDir() {
         return outputDir;
+    }
+
+    public ConanParameter getApproxGenomeSize() {
+        return approxGenomeSize;
     }
 
     public ConanParameter getWeightings() {

@@ -24,7 +24,9 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpParams;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpPipeline;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
@@ -52,7 +54,7 @@ public class RampartPipeline implements ConanPipeline {
     private MultiMassProcess multiMassProcess;
 
     @Autowired
-    private AmpPipeline ampPipeline;
+    private AmpProcess ampProcess;
 
     @Autowired
     private LengthAnalysisProcess lengthAnalysisProcess;
@@ -66,7 +68,7 @@ public class RampartPipeline implements ConanPipeline {
 
     @Override
     public String getName() {
-        return "RAMPART";  //To change body of implemented methods use File | Settings | File Templates.
+        return "RAMPART";
     }
 
     @Override
@@ -91,8 +93,8 @@ public class RampartPipeline implements ConanPipeline {
         return qtProcess;
     }
 
-    public AmpPipeline getAmpPipeline() {
-        return ampPipeline;
+    public AmpProcess getAmpProcess() {
+        return ampProcess;
     }
 
     public MultiMassProcess getMultiMassProcess() {
@@ -141,13 +143,13 @@ public class RampartPipeline implements ConanPipeline {
             list.add(this.qtProcess);
         }
 
-        if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.MASS)) {
+        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(RampartStage.MASS)) {
             list.add(this.multiMassProcess);
         }
 
-        /*if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.AMP)) {
-            list.addAll(this.ampPipeline.getProcesses());
-        } */
+        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(RampartStage.AMP)) {
+            list.add(this.ampProcess);
+        }
 
         /*if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.ANALYSE)) {
             list.add(this.analyserProcess);
@@ -173,9 +175,9 @@ public class RampartPipeline implements ConanPipeline {
             params.addAll(new MultiMassParams().getConanParameters());
         }
 
-        /*if (this.stages == null || this.stages.contains(RampartStage.AMP)) {
-            params.addAll(new AmpPipeline().getAllRequiredParameters());
-        } */
+        if (this.stages == null || this.stages.contains(RampartStage.AMP)) {
+            params.addAll(new AmpParams().getConanParameters());
+        }
 
         /*if (this.stages == null || this.stages.contains(RampartStage.ANALYSE)) {
             params.addAll(new LengthAnalysisParams().getConanParameters());

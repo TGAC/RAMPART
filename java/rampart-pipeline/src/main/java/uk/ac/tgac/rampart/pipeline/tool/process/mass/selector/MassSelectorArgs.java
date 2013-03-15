@@ -20,8 +20,13 @@ package uk.ac.tgac.rampart.pipeline.tool.process.mass.selector;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.AssemblyStatsMatrixRow;
+import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.StepSize;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +37,9 @@ import java.util.Map;
  */
 public class MassSelectorArgs implements ProcessArgs {
 
+    // Need access to these
+    private MassSelectorParams params = new MassSelectorParams();
+
     private List<File> statsFiles;
     private List<File> configs;
     private File outputDir;
@@ -39,6 +47,11 @@ public class MassSelectorArgs implements ProcessArgs {
     private AssemblyStatsMatrixRow weightings;
 
     public MassSelectorArgs() {
+        this.statsFiles = new ArrayList<File>();
+        this.configs = new ArrayList<File>();
+        this.outputDir = new File(".");
+        this.approxGenomeSize = 0;
+        this.weightings = new AssemblyStatsMatrixRow();
     }
 
     public List<File> getStatsFiles() {
@@ -84,11 +97,64 @@ public class MassSelectorArgs implements ProcessArgs {
 
     @Override
     public Map<ConanParameter, String> getArgMap() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+
+        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
+
+        if (this.statsFiles != null && this.statsFiles.size() > 0) {
+            pvp.put(params.getStatsFiles(), this.getStatsFiles().toString());
+        }
+
+        if (this.configs != null && this.configs.size() > 0) {
+            pvp.put(params.getConfigFiles(), this.getConfigs().toString());
+        }
+
+        if (this.outputDir != null) {
+            pvp.put(params.getOutputDir(), this.getOutputDir().getAbsolutePath());
+        }
+
+        if (this.approxGenomeSize > 0) {
+            pvp.put(params.getApproxGenomeSize(), Long.toString(this.approxGenomeSize));
+        }
+
+        return pvp;
     }
 
     @Override
     public void setFromArgMap(Map<ConanParameter, String> pvp) {
-        //To change body of implemented methods use File | Settings | File Templates.
+
+        for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            }
+
+            String param = entry.getKey().getName();
+
+            if (param.equals(this.params.getStatsFiles().getName())) {
+                this.statsFiles = createFileList(entry.getValue());
+            } else if (param.equals(this.params.getConfigFiles().getName())) {
+                this.configs = createFileList(entry.getValue());
+            } else if (param.equals(this.params.getOutputDir().getName())) {
+                this.outputDir = new File(entry.getValue());
+            } else if (param.equals(this.params.getApproxGenomeSize().getName())) {
+                this.approxGenomeSize = Long.parseLong(entry.getValue());
+            } else if (param.equals(this.params.getWeightings().getName())) {
+                //TODO This still needs parsing!
+                this.weightings = null;
+            }
+        }
+    }
+
+    private List<File> createFileList(String value) {
+
+        List<File> fileList = new ArrayList<File>();
+
+        String[] files = value.split(",");
+
+        for(String filePath : files) {
+            fileList.add(new File(filePath.trim()));
+        }
+
+        return fileList;
     }
 }

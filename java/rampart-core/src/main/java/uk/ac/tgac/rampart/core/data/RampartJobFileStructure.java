@@ -45,6 +45,7 @@ public class RampartJobFileStructure {
 	private File massPlotsFile;
 	private File massStatsFile;
 	private File massLogFile;
+    private File massOutFile;
 	private File improverPlotsFile;
 	private File improverStatsFile;
 	private File improverLogFile;
@@ -79,6 +80,7 @@ public class RampartJobFileStructure {
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
 		this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
 		this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
+        this.massOutFile = new File(this.massStatsDir.getPath() + "/best.fa");
 		this.improverPlotsFile = new File(this.improverAssembliesDir.getPath() + "/analyser.pdf");
 		this.improverStatsFile = new File(this.improverAssembliesDir.getPath() + "/analyser.txt");
 		this.improverLogFile = new File(this.improverDir.getPath() + "/amp.log");
@@ -192,8 +194,12 @@ public class RampartJobFileStructure {
 	public File getMassLogFile() {
 		return massLogFile;
 	}
-	
-	public File getReportTemplateFile() {
+
+    public File getMassOutFile() {
+        return massOutFile;
+    }
+
+    public File getReportTemplateFile() {
 		return reportTemplateFile;
 	}
 	

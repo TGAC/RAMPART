@@ -48,6 +48,14 @@ public class AmpPipeline implements ConanPipeline {
         this.args = ampArgs;
     }
 
+    public AmpArgs getArgs() {
+        return args;
+    }
+
+    public void setArgs(AmpArgs args) {
+        this.args = args;
+    }
+
     @Override
     public String getName() {
         return "Assembly iMProver (AMP)";
@@ -71,7 +79,7 @@ public class AmpPipeline implements ConanPipeline {
     @Override
     public List<ConanProcess> getProcesses() {
 
-        List<ConanProcess> cProcs= new ArrayList<ConanProcess>();
+        List<ConanProcess> cProcs = new ArrayList<ConanProcess>();
 
         for(AbstractIOProcess abstractIOProcess : this.args.getProcesses()) {
             cProcs.add(abstractIOProcess);

@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 
+import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
@@ -34,6 +35,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
  * Date: 12/02/13
  * Time: 16:30
  */
+@Component
 public class AmpProcess extends AbstractConanProcess {
 
     @Override
