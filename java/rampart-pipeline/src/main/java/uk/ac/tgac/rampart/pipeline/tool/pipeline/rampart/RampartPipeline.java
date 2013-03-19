@@ -23,9 +23,9 @@ import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpParams;
-import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpPipeline;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
@@ -132,60 +132,45 @@ public class RampartPipeline implements ConanPipeline {
         this.stages = stages;
     }
 
+    protected void addStageIfRequested(List<ConanProcess> stageList, RampartStage stage) {
+
+        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(stage)) {
+            stageList.add(this.qtProcess);
+        }
+    }
 
 
     @Override
     public List<ConanProcess> getProcesses() {
 
-        List<ConanProcess> list = new ArrayList<ConanProcess>();
+        List<ConanProcess> stageList = new ArrayList<ConanProcess>();
 
-        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(RampartStage.QT)) {
-            list.add(this.qtProcess);
+        addStageIfRequested(stageList, RampartStage.QT);
+        addStageIfRequested(stageList, RampartStage.MASS);
+        addStageIfRequested(stageList, RampartStage.AMP);
+        //addStageIfRequested(stageList, RampartStage.ANALYSE);
+        //addStageIfRequested(stageList, RampartStage.REPORT);
+
+        return stageList;
+    }
+
+    protected void addParamsIfRequested(List<ConanParameter> params, RampartStage stage, ProcessParams processParams) {
+
+        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(stage)) {
+            params.addAll(processParams.getConanParameters());
         }
-
-        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(RampartStage.MASS)) {
-            list.add(this.multiMassProcess);
-        }
-
-        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(RampartStage.AMP)) {
-            list.add(this.ampProcess);
-        }
-
-        /*if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.ANALYSE)) {
-            list.add(this.analyserProcess);
-        } */
-
-        /*if (this.stages == null || this.stages.isEmpty()|| this.stages.contains(RampartStage.REPORT)) {
-            list.add(this.reportProcess);
-        } */
-
-
-        return list;
     }
 
     @Override
     public List<ConanParameter> getAllRequiredParameters() {
+
         List<ConanParameter> params = new ArrayList<ConanParameter>();
 
-        if (this.stages == null || this.stages.contains(RampartStage.QT)) {
-            params.addAll(new QTParams().getConanParameters());
-        }
-
-        if (this.stages == null || this.stages.contains(RampartStage.MASS)) {
-            params.addAll(new MultiMassParams().getConanParameters());
-        }
-
-        if (this.stages == null || this.stages.contains(RampartStage.AMP)) {
-            params.addAll(new AmpParams().getConanParameters());
-        }
-
-        /*if (this.stages == null || this.stages.contains(RampartStage.ANALYSE)) {
-            params.addAll(new LengthAnalysisParams().getConanParameters());
-        }
-
-        if (this.stages == null || this.stages.contains(RampartStage.REPORT)) {
-            params.addAll(new ReportParams().getConanParameters());
-        } */
+        addParamsIfRequested(params, RampartStage.QT, new QTParams());
+        addParamsIfRequested(params, RampartStage.MASS, new MultiMassParams());
+        addParamsIfRequested(params, RampartStage.AMP, new AmpParams());
+        //addParamsIfRequested(params, RampartStage.ANALYSE, new AnalyseParams());
+        //addParamsIfRequested(params, RampartStage.REPORT, new ReportParams());
 
         return params;
     }

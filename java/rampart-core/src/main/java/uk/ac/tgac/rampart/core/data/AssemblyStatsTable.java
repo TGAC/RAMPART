@@ -64,7 +64,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         List<String> lines = readLines(statsFile);
 
         for(String line : lines.subList(1, lines.size() -1)) {
-            String[] parts = line.split("|");
+            String[] parts = line.split("\\|");
 
             AssemblyStats stats = new AssemblyStats(parts);
 

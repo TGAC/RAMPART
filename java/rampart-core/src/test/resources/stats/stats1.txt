@@ -1,0 +1,5 @@
+kmer|dataset|file|nbcontigs|a.pc|c.pc|g.pc|t.pc|n.pc|total|minlen|maxlen|avglen|n80|n50|n20|l50|score
+81|RAW|/data/workarea/maplesod/CCC/CCC-15/mass/raw/81/Abyss-mpi-k81-scaffolds.fa|369177|34.39|15.41|15.39|34.39|0.41|444872696|81|692110|1205|10000|25884|40000|100000|94.5
+85|RAW|/data/workarea/maplesod/CCC/CCC-15/mass/raw/85/Abyss-mpi-k85-scaffolds.fa|338632|34.33|15.34|15.32|34.31|0.71|429668001|85|643913|1268|9000|23327|35000|99000|87.2
+91|RAW|/data/workarea/maplesod/CCC/CCC-15/mass/raw/91/Abyss-mpi-k91-scaffolds.fa|316465|33.82|14.97|14.96|33.80|2.45|367915081|91|344797|1162|2000|6208|10000|97000|65.1
+

@@ -149,7 +149,13 @@ public class Rampart {
         // Create AMP args
         AmpArgs ampArgs = new AmpArgs();
         ampArgs.setConfig(args.getConfig());
-        ampArgs.setInputAssembly(jobFS.getMassOutFile());
+
+        // If we ran MASS, then use the output from that as the input to AMP, otherwise assume that the user
+        // specified the input file in the configuration file
+        if (this.options.getStages().contains("MASS") && this.options.getStages().contains("AMP")) {
+            ampArgs.setInputAssembly(jobFS.getMassOutFile());
+        }
+
         ampArgs.setJobPrefix(jobPrefix + "-amp");
         ampArgs.setOutputDir(jobFS.getImproverDir());
 

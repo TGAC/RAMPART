@@ -53,6 +53,7 @@ public class AssemblyStatsMatrixRow {
     }
 
     public AssemblyStatsMatrixRow(AssemblyStats assemblyStats) {
+        this.stats = new double[14];
         this.stats[IDX_NB_CONTIGS] = assemblyStats.getNbContigs();
         this.stats[IDX_NB_BASES] = assemblyStats.getNbBases();
         this.stats[IDX_A_PERC] = assemblyStats.getaPerc();
