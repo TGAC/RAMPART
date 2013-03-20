@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorExecutor;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -53,6 +54,9 @@ public class MultiMassProcessTest {
 
     @Mock
     ConanProcessService conanProcessService;
+
+    @Mock
+    MassSelectorExecutor massSelectorExecutor;
 
     @Test
     public void testExecute() throws InterruptedException, ProcessExecutionException {
@@ -83,6 +87,7 @@ public class MultiMassProcessTest {
         when(ec.copy()).thenReturn(ec);
 
         ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(multiMass, "massSelectorExecutor", massSelectorExecutor);
 
         multiMass.execute(ec);
 

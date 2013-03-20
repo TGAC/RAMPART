@@ -17,9 +17,11 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +36,7 @@ public class RampartParams implements ProcessParams {
 
     private ConanParameter config;
     private ConanParameter outputDir;
+    private ConanParameter stageList;
 
     public RampartParams() {
 
@@ -47,6 +50,12 @@ public class RampartParams implements ProcessParams {
                 "The path to the folder where all RAMPART output should be stored",
                 true);
 
+        this.stageList = new DefaultConanParameter(
+                "stages",
+                "The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.",
+                false,
+                true,
+                false);
     }
 
     public ConanParameter getConfig() {
@@ -57,12 +66,17 @@ public class RampartParams implements ProcessParams {
         return outputDir;
     }
 
+    public ConanParameter getStageList() {
+        return stageList;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
         return new ArrayList<ConanParameter>(Arrays.asList(
                 new ConanParameter[]{
                         this.config,
-                        this.outputDir}));
+                        this.outputDir,
+                        this.stageList}));
     }
 }

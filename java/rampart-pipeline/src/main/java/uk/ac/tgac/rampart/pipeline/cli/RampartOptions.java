@@ -18,6 +18,8 @@
 package uk.ac.tgac.rampart.pipeline.cli;
 
 import org.apache.commons.cli.*;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
 
 import java.io.File;
 
@@ -38,28 +40,43 @@ public class RampartOptions {
     private boolean help = false;
 
 
-
+    /**
+     * Process command line args.  Checks for help first, then clean, then args for normal operation.
+     * @param cmdLine The command line used to execute the program
+     * @throws ParseException
+     */
     public RampartOptions(CommandLine cmdLine) throws ParseException {
 
-        help = cmdLine.hasOption(OPT_HELP);
+        if (cmdLine.getOptions().length == 0) {
 
-        clean = cmdLine.hasOption(OPT_CLEAN) ?
-            cmdLine.getOptionValue(OPT_CLEAN) != null ?
-                    new File(cmdLine.getOptionValue(OPT_CLEAN)) :
-                    new File(".") :
-            null;
+            help = true;
+        }
+        else {
 
-        if (!help && clean == null) {
-            if (cmdLine.hasOption(OPT_CONFIG)) {
-                config = new File(cmdLine.getOptionValue(OPT_CONFIG));
+            help = cmdLine.hasOption(OPT_HELP);
+
+            if (!help) {
+
+                clean = cmdLine.hasOption(OPT_CLEAN) ?
+                    cmdLine.getOptionValue(OPT_CLEAN) != null ?
+                            new File(cmdLine.getOptionValue(OPT_CLEAN)) :
+                            new File(".") :
+                    null;
+
+                if (clean == null) {
+
+                    if (cmdLine.hasOption(OPT_CONFIG)) {
+                        config = new File(cmdLine.getOptionValue(OPT_CONFIG));
+                    }
+                    else {
+                        throw new ParseException(OPT_CONFIG + " argument not specified.");
+                    }
+
+                    output = cmdLine.hasOption(OPT_OUTPUT) ? new File(cmdLine.getOptionValue(OPT_OUTPUT)) : new File(".");
+                    stages = cmdLine.hasOption(OPT_STAGES) ? cmdLine.getOptionValue(OPT_STAGES) : "ALL";
+                    verbose = cmdLine.hasOption(OPT_VERBOSE);
+                }
             }
-            else {
-                throw new ParseException(OPT_CONFIG + " argument not specified.");
-            }
-
-            output = cmdLine.hasOption(OPT_OUTPUT) ? new File(cmdLine.getOptionValue(OPT_OUTPUT)) : new File(".");
-            stages = cmdLine.hasOption(OPT_STAGES) ? cmdLine.getOptionValue(OPT_STAGES) : "ALL";
-            verbose = cmdLine.hasOption(OPT_VERBOSE);
         }
     }
 
@@ -131,7 +148,7 @@ public class RampartOptions {
                 .withDescription("The directory to put output from this job.").create("o");
 
         Option opt_stages = OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
-                .withDescription("The RAMPART stages to execute: QT, MASS, AMP, HELPER, ALL.  Default: ALL.").create("s");
+                .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s");
 
         Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasArg()
                 .withDescription("The directory to clean.").create("z");
@@ -151,4 +168,14 @@ public class RampartOptions {
     }
 
 
+
+    public RampartArgs convert() {
+
+        RampartArgs args = new RampartArgs();
+        args.setConfig(this.config);
+        args.setOutputDir(this.output);
+        args.setStages(RampartStage.parse(this.stages));
+
+        return args;
+    }
 }

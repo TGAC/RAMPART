@@ -19,9 +19,12 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,8 +38,12 @@ public class RampartArgs implements ProcessArgs {
 
     private File config;
     private File outputDir;
+    private List<RampartStage> stages;
 
     public RampartArgs() {
+        this.config = null;
+        this.outputDir = new File("");
+        this.stages = new ArrayList<RampartStage>();
     }
 
     public File getConfig() {
@@ -55,16 +62,30 @@ public class RampartArgs implements ProcessArgs {
         this.outputDir = outputDir;
     }
 
+    public List<RampartStage> getStages() {
+        return stages;
+    }
+
+    public void setStages(List<RampartStage> stages) {
+        this.stages = stages;
+    }
+
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.config != null)
+        if (this.config != null) {
             pvp.put(params.getConfig(), this.config.getAbsolutePath());
+        }
 
-        if (this.outputDir != null)
+        if (this.outputDir != null) {
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
+        }
+
+        if (this.stages != null && this.stages.size() > 0) {
+            pvp.put(params.getStageList(), RampartStage.toString(this.stages));
+        }
 
         return pvp;
     }
@@ -81,8 +102,12 @@ public class RampartArgs implements ProcessArgs {
 
             if (param.equals(this.params.getConfig().getName())) {
                 this.config = new File(entry.getValue());
-            } else if (param.equals(this.params.getOutputDir().getName())) {
+            }
+            else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
+            }
+            else if (params.equals(this.params.getStageList().getName())) {
+                this.stages = RampartStage.parse(entry.getValue());
             }
 
         }

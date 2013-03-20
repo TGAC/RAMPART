@@ -34,8 +34,6 @@ import java.util.List;
  */
 public class MassSelectorParams implements ProcessParams {
 
-    private MassSelectorParams params = new MassSelectorParams();
-
     private ConanParameter statsFiles;
     private ConanParameter configFiles;
     private ConanParameter outputDir;

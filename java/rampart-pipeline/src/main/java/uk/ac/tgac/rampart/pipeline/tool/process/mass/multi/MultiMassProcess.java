@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.pipeline.tool.process.mass.multi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
@@ -28,6 +29,8 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorArgs;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorExecutor;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorExecutorImpl;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassProcess;
@@ -48,6 +51,7 @@ public class MultiMassProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MultiMassProcess.class);
 
+    MassSelectorExecutor massSelectorExecutor = new MassSelectorExecutorImpl();
 
     public MultiMassProcess() {
         this(new MultiMassArgs());
@@ -163,9 +167,7 @@ public class MultiMassProcess extends AbstractConanProcess {
         massSelectorArgs.setApproxGenomeSize(-1);
         massSelectorArgs.setWeightings(null);
 
-        MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
-        massSelectorProcess.setConanProcessService(this.getConanProcessService());
-        massSelectorProcess.execute(executionContext);
+        this.massSelectorExecutor.executeMassSelector(massSelectorArgs, this.getConanProcessService(), executionContext);
     }
 
     private List<SingleMassArgs> createSingleMassArgsList(MultiMassArgs args) throws IOException {

@@ -19,22 +19,39 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
+import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
+import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpParams;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTArgs;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTParams;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.report.ReportProcess;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,24 +64,28 @@ import java.util.List;
 @Component
 public class RampartPipeline implements ConanPipeline {
 
-    @Autowired
-    private QTProcess qtProcess;
+    private List<AbstractConanProcess> processList;
+    private RampartArgs args;
 
     @Autowired
-    private MultiMassProcess multiMassProcess;
+    private ConanProcessService conanProcessService;
 
-    @Autowired
-    private AmpProcess ampProcess;
+    public RampartPipeline() {
+        this(new RampartArgs());
+    }
 
-    @Autowired
-    private LengthAnalysisProcess lengthAnalysisProcess;
+    public RampartPipeline(RampartArgs args) {
+        this.args = args;
+        this.processList = new ArrayList<AbstractConanProcess>();
+    }
 
-    @Autowired
-    private ReportProcess reportProcess;
+    public RampartArgs getArgs() {
+        return args;
+    }
 
-    private List<RampartStage> stages;
-
-
+    public void setArgs(RampartArgs args) {
+        this.args = args;
+    }
 
     @Override
     public String getName() {
@@ -87,78 +108,16 @@ public class RampartPipeline implements ConanPipeline {
     }
 
 
-    // ***** Getters *****
-
-    public QTProcess getQtProcess() {
-        return qtProcess;
-    }
-
-    public AmpProcess getAmpProcess() {
-        return ampProcess;
-    }
-
-    public MultiMassProcess getMultiMassProcess() {
-        return multiMassProcess;
-    }
-
-    public LengthAnalysisProcess getLengthAnalysisProcess() {
-        return lengthAnalysisProcess;
-    }
-
-    public ReportProcess getReportProcess() {
-        return reportProcess;
-    }
-
-    public void setStages(String stages) {
-
-        if (stages.trim().equalsIgnoreCase("ALL")) {
-            stages = "QT,MASS,AMP,ANALYSE,REPORT";
-        }
-
-        String[] stageArray = stages.split(",");
-
-        List<RampartStage> stageList = new ArrayList<RampartStage>();
-
-        if (stageArray != null && stageArray.length != 0) {
-            for(String stage : stageArray) {
-                stageList.add(RampartStage.valueOf(stage.trim().toUpperCase()));
-            }
-        }
-
-        this.stages = stageList;
-    }
-
-    public void setStages(List<RampartStage> stages) {
-        this.stages = stages;
-    }
-
-    protected void addStageIfRequested(List<ConanProcess> stageList, RampartStage stage) {
-
-        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(stage)) {
-            stageList.add(this.qtProcess);
-        }
-    }
-
-
     @Override
     public List<ConanProcess> getProcesses() {
 
-        List<ConanProcess> stageList = new ArrayList<ConanProcess>();
+        List<ConanProcess> conanProcessList = new ArrayList<ConanProcess>();
 
-        addStageIfRequested(stageList, RampartStage.QT);
-        addStageIfRequested(stageList, RampartStage.MASS);
-        addStageIfRequested(stageList, RampartStage.AMP);
-        //addStageIfRequested(stageList, RampartStage.ANALYSE);
-        //addStageIfRequested(stageList, RampartStage.REPORT);
-
-        return stageList;
-    }
-
-    protected void addParamsIfRequested(List<ConanParameter> params, RampartStage stage, ProcessParams processParams) {
-
-        if (this.stages == null || this.stages.isEmpty() || this.stages.contains(stage)) {
-            params.addAll(processParams.getConanParameters());
+        for(AbstractConanProcess process : this.processList) {
+            conanProcessList.add(process);
         }
+
+        return conanProcessList;
     }
 
     @Override
@@ -166,12 +125,90 @@ public class RampartPipeline implements ConanPipeline {
 
         List<ConanParameter> params = new ArrayList<ConanParameter>();
 
-        addParamsIfRequested(params, RampartStage.QT, new QTParams());
-        addParamsIfRequested(params, RampartStage.MASS, new MultiMassParams());
-        addParamsIfRequested(params, RampartStage.AMP, new AmpParams());
-        //addParamsIfRequested(params, RampartStage.ANALYSE, new AnalyseParams());
-        //addParamsIfRequested(params, RampartStage.REPORT, new ReportParams());
+        for(AbstractConanProcess process : this.processList) {
+            params.addAll(process.getParameters());
+        }
 
         return params;
     }
+
+
+    protected String createJobPrefix() {
+        Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String dateTime = formatter.format(new Date());
+        String jobPrefix = "rampart-" + dateTime;
+
+        return jobPrefix;
+    }
+
+    public void configureProcesses() throws IOException {
+
+        this.configureProcesses(this.args);
+    }
+
+    public void configureProcesses(RampartArgs args) throws IOException {
+
+        this.args = args;
+
+        // Create an object that maps expected RAMPART job directory structure based on specified output dir.
+        RampartJobFileStructure jobFS = new RampartJobFileStructure(this.args.getOutputDir());
+
+        // Create job prefix
+        String jobPrefix = createJobPrefix();
+
+        // Create QT args
+        QTArgs qtArgs = QTArgs.parseConfig(this.args.getConfig());
+        qtArgs.setOutputDir(jobFS.getReadsDir());
+        qtArgs.setJobPrefix(jobPrefix + "-qt");
+        qtArgs.setCreateConfigs(true);
+        qtArgs.setRunParallel(true);
+
+        // Create MASS args
+        List<File> massConfigFiles = new ArrayList<File>();
+        massConfigFiles.add(jobFS.getConfigRawFile());
+        if (!qtArgs.isNoQT()) {
+            massConfigFiles.add(jobFS.getConfigQtFile());
+        }
+
+        MultiMassArgs multiMassArgs = new MultiMassArgs();
+        multiMassArgs.setConfigs(massConfigFiles);
+        multiMassArgs.setOutputDir(jobFS.getMassDir());
+        multiMassArgs.setJobPrefix(jobPrefix + "-mass");
+        multiMassArgs.setRunParallel(true);
+
+        // Create AMP args
+        AmpArgs ampArgs = new AmpArgs();
+        ampArgs.setConfig(args.getConfig());
+
+        // Shortcut to stages
+        List<RampartStage> stages = this.args.getStages();
+
+        // If we ran MASS, then use the output from that as the input to AMP, otherwise assume that the user
+        // specified the input file in the configuration file
+        if (stages.contains(RampartStage.MASS) && stages.contains(RampartStage.AMP)) {
+            ampArgs.setInputAssembly(jobFS.getMassOutFile());
+        }
+
+        ampArgs.setJobPrefix(jobPrefix + "-amp");
+        ampArgs.setOutputDir(jobFS.getImproverDir());
+
+        // Configure pipeline
+        if (stages.contains(RampartStage.QT)) {
+            this.processList.add(new QTProcess(qtArgs));
+        }
+
+        if (stages.contains(RampartStage.MASS)) {
+            this.processList.add(new MultiMassProcess(multiMassArgs));
+        }
+
+        // this.rampartPipeline.getAmpProcess().setProcessArgs(ampArgs);
+
+
+
+        // Spring autowiring might fail here to explicitly set conanProcessService for all processes
+        for(AbstractConanProcess process : this.processList) {
+            process.setConanProcessService(this.conanProcessService);
+        }
+    }
+
 }

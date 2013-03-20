@@ -29,15 +29,21 @@ import uk.ac.ebi.fgpt.conan.core.context.DefaultExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.context.locality.LocalityFactory;
 import uk.ac.ebi.fgpt.conan.core.context.scheduler.SchedulerFactory;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
+import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
+import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
+import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
 import uk.ac.ebi.fgpt.conan.model.context.Locality;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.spring.RampartAppContext;
-import uk.ac.tgac.rampart.pipeline.tool.Rampart;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartArgs;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart.RampartPipeline;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +70,7 @@ public class RampartCLI {
         return rampartOptions;
     }
 
-    private static Rampart configureSystem(RampartOptions rampartOptions) throws IOException {
+    private static void configureSystem(RampartOptions rampartOptions) throws IOException {
 
         // Environment specific configuration options are set in the user's home directory
         final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
@@ -88,6 +94,9 @@ public class RampartCLI {
         if (conanPropsFile.exists()) {
             ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
         }
+    }
+
+    private static ExecutionContext buildExecutionContext() throws IOException {
 
         // Get external process pre-commands
         ExternalProcessConfiguration externalProcessConfiguration = new DefaultExternalProcessConfiguration();
@@ -107,13 +116,46 @@ public class RampartCLI {
 
         ExecutionContext executionContext = new DefaultExecutionContext(locality, scheduler, externalProcessConfiguration, true);
 
+        return executionContext;
+    }
 
-        // Get RAMPART bean from Spring and configure with user defined properties
-        Rampart rampart = (Rampart)RampartAppContext.INSTANCE.getApplicationContext().getBean("rampart");
-        rampart.setOptions(rampartOptions);
-        rampart.setExecutionContext(executionContext);
+    private static void cleanJob(File jobDir) throws IOException {
 
-        return rampart;
+        RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
+
+        FileUtils.deleteDirectory(jobFs.getReadsDir());
+        FileUtils.deleteDirectory(jobFs.getMassDir());
+        FileUtils.deleteDirectory(jobFs.getImproverDir());
+        FileUtils.deleteDirectory(jobFs.getReportDir());
+        FileUtils.deleteDirectory(jobFs.getLogDir());
+    }
+
+    private static void runRampart(RampartArgs rampartArgs, ExecutionContext executionContext)
+            throws InterruptedException, TaskExecutionException, IOException {
+
+        // Create Rampart Pipeline (use Spring for autowiring)
+        RampartPipeline rampartPipeline = (RampartPipeline)RampartAppContext.INSTANCE.getApplicationContext().getBean("rampartPipeline");
+        rampartPipeline.configureProcesses(rampartArgs);
+
+        // Ensure the output directory exists before we start
+        if (!rampartArgs.getOutputDir().exists()) {
+            rampartArgs.getOutputDir().mkdirs();
+        }
+
+        // Create a guest user
+        ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
+
+        // Create the RAMPART process
+        ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
+        ConanTask<RampartPipeline> rampartTask = conanTaskFactory.createTask(
+                rampartPipeline,
+                0,
+                rampartPipeline.getArgs().getArgMap(),
+                ConanTask.Priority.HIGHEST,
+                rampartUser);
+        rampartTask.setId("rampart");
+        rampartTask.submit();
+        rampartTask.execute(executionContext);
     }
 
 
@@ -138,23 +180,30 @@ public class RampartCLI {
             // Otherwise run RAMPART proper
             else {
 
-                // Create the fully configured RAMPART object
-                Rampart rampart = configureSystem(rampartOptions);
+                // Configure RAMPART system
+                configureSystem(rampartOptions);
+                log.info("RAMPART: System configured");
 
-                log.info("RAMPART: Started");
+                // Build execution context
+                ExecutionContext executionContext = buildExecutionContext();
+                log.info("RAMPART: Built execution context");
+
+                // Build Rampart args from the apache command line handler
+                RampartArgs rampartArgs = rampartOptions.convert();
 
                 // Run RAMPART
-                rampart.process();
-
+                log.info("RAMPART: Started");
+                runRampart(rampartArgs, executionContext);
                 log.info("RAMPART: Finished");
             }
+        }
+        catch (IOException ioe) {
+            log.error(ioe.getMessage(), ioe);
+            System.exit(2);
         }
         catch (ParseException exp) {
             System.err.println(exp.getMessage());
             System.err.println(StringUtils.join(exp.getStackTrace(), "\n"));
-            System.exit(1);
-        }
-        catch (ProcessExecutionException pee) {
             System.exit(3);
         }
         catch (InterruptedException ie) {
@@ -167,15 +216,6 @@ public class RampartCLI {
         }
     }
 
-    private static void cleanJob(File jobDir) throws IOException {
 
-        RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
-
-        FileUtils.deleteDirectory(jobFs.getReadsDir());
-        FileUtils.deleteDirectory(jobFs.getMassDir());
-        FileUtils.deleteDirectory(jobFs.getImproverDir());
-        FileUtils.deleteDirectory(jobFs.getReportDir());
-        FileUtils.deleteDirectory(jobFs.getLogDir());
-    }
 
 }
