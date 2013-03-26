@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.process.degap.gapcloser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.degap.DegapperArgs;
+import uk.ac.tgac.rampart.conan.process.degap.AbstractDegapperArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GapCloserV112Args extends DegapperArgs {
+public class GapCloserV112Args extends AbstractDegapperArgs {
 
     private GapCloserV112Params params = new GapCloserV112Params();
 
@@ -39,13 +39,24 @@ public class GapCloserV112Args extends DegapperArgs {
 
     // GapCloser vars
     private File libraryFile;
+    private File outputFile;
     private int overlap = DEFAULT_OVERLAP;
     private int maxReadLength = DEFAULT_READ_LENGTH;
 
     public GapCloserV112Args() {
         this.libraryFile = null;
+        this.outputFile = null;
         this.overlap = DEFAULT_OVERLAP;
         this.maxReadLength = DEFAULT_READ_LENGTH;
+    }
+
+    @Override
+    public File getOutputFile() {
+        return this.outputFile;
+    }
+
+    public void setOutputFile(File outputFile) {
+        this.outputFile = outputFile;
     }
 
     public File getLibraryFile() {
@@ -103,14 +114,14 @@ public class GapCloserV112Args extends DegapperArgs {
 
         Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
 
-        if (this.getInput() != null)
-            pvp.put(params.getInputScaffoldFile(), this.getInput().getAbsolutePath());
+        if (this.getInputFile() != null)
+            pvp.put(params.getInputScaffoldFile(), this.getInputFile().getAbsolutePath());
 
         if (this.libraryFile != null)
             pvp.put(params.getLibraryFile(), this.libraryFile.getAbsolutePath());
 
-        if (this.getOutput() != null)
-            pvp.put(params.getOutputFile(), this.getOutput().getAbsolutePath());
+        if (this.getOutputFile() != null)
+            pvp.put(params.getOutputFile(), this.getOutputFile().getAbsolutePath());
 
         if (this.overlap != DEFAULT_OVERLAP)
             pvp.put(params.getOverlap(), Integer.toString(this.overlap));
@@ -147,10 +158,10 @@ public class GapCloserV112Args extends DegapperArgs {
                 this.setThreads(Integer.parseInt(entry.getValue()));
             }
             else if (param.equals(this.params.getInputScaffoldFile().getName())) {
-                this.setInput(new File(entry.getValue()));
+                this.setInputFile(new File(entry.getValue()));
             }
             else if (param.equals(this.params.getOutputFile().getName())) {
-                this.setOutput(new File(entry.getValue()));
+                this.setOutputFile(new File(entry.getValue()));
             }
             else {
                 throw new IllegalArgumentException("Unknown param found: " + param);

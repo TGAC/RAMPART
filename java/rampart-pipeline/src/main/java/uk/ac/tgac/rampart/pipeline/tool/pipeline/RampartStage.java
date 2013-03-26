@@ -62,7 +62,7 @@ public enum RampartStage {
         @Override
         public String translateFilenameToKey(String filename) {
 
-            Pattern pattern = Pattern.compile("^.*k(\\d+)-.+$");
+            Pattern pattern = Pattern.compile("^.*k(\\d+).*$");
             Matcher matcher = pattern.matcher(filename);
 
             if (matcher.matches()) {

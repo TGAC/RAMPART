@@ -15,27 +15,48 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.degap;
+package uk.ac.tgac.rampart.conan.process;
 
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DegapperArgs implements ProcessArgs {
+/**
+ * User: maplesod
+ * Date: 28/02/13
+ * Time: 11:55
+ */
+public abstract class AbstractAmpArgs implements ProcessArgs {
 
+    private File inputFile;
+    private File outputDir;
     private List<Library> libraries;
-    private File input;
-    private File output;
     private int threads;
 
-    protected DegapperArgs() {
-        this.libraries = new ArrayList<Library>();
-        this.input = null;
-        this.output = null;
+    protected AbstractAmpArgs() {
+
+        this.inputFile = null;
+        this.outputDir = null;
+        this.libraries = null;
         this.threads = 1;
+    }
+
+    public File getInputFile() {
+        return inputFile;
+    }
+
+    public void setInputFile(File inputFile) {
+        this.inputFile = inputFile;
+    }
+
+    public File getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(File outputDir) {
+        this.outputDir = outputDir;
     }
 
     public List<Library> getLibraries() {
@@ -46,22 +67,6 @@ public abstract class DegapperArgs implements ProcessArgs {
         this.libraries = libraries;
     }
 
-    public File getInput() {
-        return input;
-    }
-
-    public void setInput(File input) {
-        this.input = input;
-    }
-
-    public File getOutput() {
-        return output;
-    }
-
-    public void setOutput(File output) {
-        this.output = output;
-    }
-
     public int getThreads() {
         return threads;
     }
@@ -69,4 +74,6 @@ public abstract class DegapperArgs implements ProcessArgs {
     public void setThreads(int threads) {
         this.threads = threads;
     }
+
+    public abstract File getOutputFile();
 }

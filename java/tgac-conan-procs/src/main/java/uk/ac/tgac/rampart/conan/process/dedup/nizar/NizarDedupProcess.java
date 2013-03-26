@@ -17,16 +17,14 @@
  **/
 package uk.ac.tgac.rampart.conan.process.dedup.nizar;
 
-import uk.ac.tgac.rampart.conan.process.dedup.Deduplicator;
-
-import java.io.File;
+import uk.ac.tgac.rampart.conan.process.dedup.AbstractDeduplicatorProcess;
 
 /**
  * User: maplesod
  * Date: 12/02/13
  * Time: 17:24
  */
-public class NizarDedupProcess extends Deduplicator {
+public class NizarDedupProcess extends AbstractDeduplicatorProcess {
 
     public NizarDedupProcess() {
         this(new NizarDedupArgs());
@@ -37,18 +35,8 @@ public class NizarDedupProcess extends Deduplicator {
     }
 
     @Override
-    public void setInputFile(File inputFile) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public File getOutputFile() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public String getName() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return "Nizar dedup";  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

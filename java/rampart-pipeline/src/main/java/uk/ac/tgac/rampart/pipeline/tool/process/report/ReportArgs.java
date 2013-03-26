@@ -38,7 +38,7 @@ public class ReportArgs implements ProcessArgs {
     private File jobDir;
 
     public ReportArgs() {
-        this.jobDir = new File(".");
+        this.jobDir = new File("");
     }
 
     public File getJobDir() {

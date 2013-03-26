@@ -26,6 +26,8 @@ import java.util.List;
 
 public abstract class AssemblerArgs implements ProcessArgs {
 
+    public static final int DEFAULT_KMER = 65;
+
     private int kmer;
     private int coverageCutoff;
     private int threads;
@@ -33,7 +35,7 @@ public abstract class AssemblerArgs implements ProcessArgs {
     private List<Library> libraries;
 
     protected AssemblerArgs() {
-        this.kmer = 65;
+        this.kmer = DEFAULT_KMER;
         this.coverageCutoff = 0;
         this.threads = 0;
         this.outputDir = new File(".");

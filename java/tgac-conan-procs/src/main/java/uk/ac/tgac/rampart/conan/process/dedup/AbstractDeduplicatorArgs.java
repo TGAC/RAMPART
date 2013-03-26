@@ -17,33 +17,11 @@
  **/
 package uk.ac.tgac.rampart.conan.process.dedup;
 
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.conan.process.AbstractAmpArgs;
 
-import java.io.File;
+public abstract class AbstractDeduplicatorArgs extends AbstractAmpArgs {
 
-public abstract class DeduplicatorArgs implements ProcessArgs {
-
-    private File input;
-    private File output;
-
-    protected DeduplicatorArgs() {
-        this.input = null;
-        this.output = null;
-    }
-
-    public File getInput() {
-        return input;
-    }
-
-    public void setInput(File input) {
-        this.input = input;
-    }
-
-    public File getOutput() {
-        return output;
-    }
-
-    public void setOutput(File output) {
-        this.output = output;
+    protected AbstractDeduplicatorArgs() {
+        super();
     }
 }

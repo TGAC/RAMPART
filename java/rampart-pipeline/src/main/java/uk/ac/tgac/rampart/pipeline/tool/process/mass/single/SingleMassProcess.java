@@ -20,7 +20,9 @@ package uk.ac.tgac.rampart.pipeline.tool.process.mass.single;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
@@ -33,7 +35,8 @@ import uk.ac.tgac.rampart.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.core.utils.StringJoiner;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisExecutor;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisExecutorImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +45,9 @@ import java.io.IOException;
 public class SingleMassProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(SingleMassProcess.class);
+
+    @Autowired
+    private LengthAnalysisExecutor lengthAnalysisExecutor = new LengthAnalysisExecutorImpl();
 
     public SingleMassProcess() {
         this(new SingleMassArgs());
@@ -170,8 +176,11 @@ public class SingleMassProcess extends AbstractConanProcess {
                 log.debug("Starting " + args.getAssembler() + " in " + outputDir.getAbsolutePath());
 
                 Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), outputDir);
+                assembler.getArgs().setThreads(args.getThreads());
 
-                this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, args.isRunParallel(), executionContext);
+                this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, executionContext);
+
+                this.createLinks(assembler, k, executionContext);
             }
 
             WaitCondition assemblerWait = null;
@@ -198,10 +207,32 @@ public class SingleMassProcess extends AbstractConanProcess {
         return true;
     }
 
-    protected void executeAssembler(Assembler assembler, String jobName, boolean runParallel, ExecutionContext executionContext)
+    protected String makeLinkCmdLine(File sourceFile, File outputDir, int k) {
+        return "ln -s -f " + sourceFile.getAbsolutePath() + " " + new File(outputDir, "MASS-k" + Integer.toString(k) + ".fa").getAbsolutePath();
+    }
+
+    protected void createLinks(Assembler assembler, int k, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+
+        StringJoiner compoundLinkCmdLine = new StringJoiner(";");
+
+        // Make a shortcut to the args
+        SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
+
+        compoundLinkCmdLine.add(assembler.makesUnitigs(), "", makeLinkCmdLine(assembler.getUnitigsFile(), args.getUnitigsDir(), k));
+        compoundLinkCmdLine.add(assembler.makesContigs(), "", makeLinkCmdLine(assembler.getContigsFile(), args.getContigsDir(), k));
+        compoundLinkCmdLine.add(assembler.makesScaffolds(), "", makeLinkCmdLine(assembler.getScaffoldsFile(), args.getScaffoldsDir(), k));
+
+        this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
+    }
+
+    protected void executeAssembler(Assembler assembler, String jobName, ExecutionContext executionContext)
             throws IOException, ProcessExecutionException, InterruptedException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
+
+        SingleMassArgs args = (SingleMassArgs)this.getProcessArgs();
 
         File outputDir = assembler.getArgs().getOutputDir();
 
@@ -218,18 +249,14 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             schArgs.setJobName(jobName);
             schArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
+            schArgs.setThreads(args.getThreads());
+            schArgs.setMemoryMB(args.getMemory());
 
-            // Set mem required to 60GB if no memory requested
-            if (schArgs.getMemoryMB() == 0) {
-                schArgs.setMemoryMB(60000);
+            if (assembler.usesOpenMpi() && args.getThreads() > 1) {
+                schArgs.setOpenmpi(true);
             }
 
-            // Set num threads to 8 if none specified
-            if (schArgs.getThreads() == 0) {
-                schArgs.setThreads(8);
-            }
-
-            executionContextCopy.setForegroundJob(!runParallel);
+            executionContextCopy.setForegroundJob(!args.isRunParallel());
         }
 
         // Create process
@@ -284,9 +311,13 @@ public class SingleMassProcess extends AbstractConanProcess {
             laArgs.setOutputDir(args.getUnitigsDir());
             laArgs.setRampartStage(RampartStage.MASS);
 
-            LengthAnalysisProcess laProcess = new LengthAnalysisProcess(laArgs);
-
-            this.conanProcessService.execute(laProcess, executionContextCopy);
+            try {
+                this.lengthAnalysisExecutor.executeLengthAnalysis(laArgs, this.conanProcessService, executionContextCopy);
+            }
+            catch(ProcessExecutionException pee) {
+                // If an error occurs here it isn't critical so just log the error and continue
+                log.error(pee.getMessage(), pee);
+            }
         }
 
         if (assembler.makesContigs()) {
@@ -296,9 +327,13 @@ public class SingleMassProcess extends AbstractConanProcess {
             laArgs.setOutputDir(args.getContigsDir());
             laArgs.setRampartStage(RampartStage.MASS);
 
-            LengthAnalysisProcess laProcess = new LengthAnalysisProcess(laArgs);
-
-            this.conanProcessService.execute(laProcess, executionContextCopy);
+            try {
+                this.lengthAnalysisExecutor.executeLengthAnalysis(laArgs, this.conanProcessService, executionContextCopy);
+            }
+            catch(ProcessExecutionException pee) {
+                // If an error occurs here it isn't critical so just log the error and continue
+                log.error(pee.getMessage(), pee);
+            }
         }
 
         if (assembler.makesScaffolds()) {
@@ -307,9 +342,13 @@ public class SingleMassProcess extends AbstractConanProcess {
             laArgs.setOutputDir(args.getScaffoldsDir());
             laArgs.setRampartStage(RampartStage.MASS);
 
-            LengthAnalysisProcess laProcess = new LengthAnalysisProcess(laArgs);
-
-            this.conanProcessService.execute(laProcess, executionContextCopy);
+            try {
+                this.lengthAnalysisExecutor.executeLengthAnalysis(laArgs, this.conanProcessService, executionContextCopy);
+            }
+            catch(ProcessExecutionException pee) {
+                // If an error occurs here it isn't critical so just log the error and continue
+                log.error(pee.getMessage(), pee);
+            }
         }
     }
 

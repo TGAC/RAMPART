@@ -30,6 +30,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.selector.MassSelectorExecutor;
+import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassExecutor;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,13 +51,16 @@ public class MultiMassProcessTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Mock
-    ExecutionContext ec;
+    private ExecutionContext ec;
 
     @Mock
-    ConanProcessService conanProcessService;
+    private ConanProcessService conanProcessService;
 
     @Mock
-    MassSelectorExecutor massSelectorExecutor;
+    private MassSelectorExecutor massSelectorExecutor;
+
+    @Mock
+    private SingleMassExecutor singleMassExecutor;
 
     @Test
     public void testExecute() throws InterruptedException, ProcessExecutionException {
@@ -65,6 +69,7 @@ public class MultiMassProcessTest {
 
         File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
         File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));
+        File weightingsFile = FileUtils.toFile(this.getClass().getResource("/data/weightings.tab"));
 
         List<File> configs = new ArrayList<File>();
         configs.add(cfgFile1);
@@ -75,6 +80,7 @@ public class MultiMassProcessTest {
         args.setKmin(31);
         args.setJobPrefix("testMultiMass");
         args.setOutputDir(outputDir);
+        args.setWeightingsFile(weightingsFile);
 
         assertTrue(args.getKmin() == 31);
         assertTrue(args.getKmax() == MultiMassArgs.DEFAULT_KMER_MAX);
@@ -88,6 +94,7 @@ public class MultiMassProcessTest {
 
         ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
         ReflectionTestUtils.setField(multiMass, "massSelectorExecutor", massSelectorExecutor);
+        ReflectionTestUtils.setField(multiMass, "singleMassExecutor", singleMassExecutor);
 
         multiMass.execute(ec);
 

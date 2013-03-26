@@ -62,7 +62,30 @@
                     <excludedGroups>uk.ac.tgac.rampart.pipeline.cli.IntegrationTest</excludedGroups>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${basedir}/target/scripts">
+                                    <fileset dir="${basedir}/src/main/resources/scripts" includes="**/*" />
+                                </copy>
+                                <copy todir="${basedir}/target/report">
+                                    <fileset dir="${basedir}/src/main/resources/report" includes="**/*" />
+                                </copy>
+                                <copy todir="${basedir}/target/data">
+                                    <fileset dir="${basedir}/src/main/resources/data" includes="**/*" />
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

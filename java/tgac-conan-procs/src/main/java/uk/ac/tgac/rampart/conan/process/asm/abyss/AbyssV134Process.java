@@ -62,11 +62,6 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
     }
 
     @Override
-    public void setArgs(AssemblerArgs args) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public boolean makesUnitigs() {
         return true;
     }
@@ -81,8 +76,7 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
         return true;
     }
 
-    @Override
-    public File getUnitigsFile() {
+    public File findUnitigsFile() {
         File[] files = this.getArgs().getOutputDir().listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -93,8 +87,7 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
         return (files != null && files.length == 1) ? files[0] : null;
     }
 
-    @Override
-    public File getContigsFile() {
+    public File findContigsFile() {
         File[] files = this.getArgs().getOutputDir().listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -105,8 +98,7 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
         return (files != null && files.length == 1) ? files[0] : null;
     }
 
-    @Override
-    public File getScaffoldsFile() {
+    public File findScaffoldsFile() {
         File[] files = this.getArgs().getOutputDir().listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -118,8 +110,36 @@ public class AbyssV134Process extends AbstractConanProcess implements Assembler 
     }
 
     @Override
+    public File getUnitigsFile() {
+
+        AbyssV134Args abyssV134Args = (AbyssV134Args)this.getArgs();
+        File unitigsFile = new File(abyssV134Args.getOutputDir(), abyssV134Args.getName() + "-unitigs.fa");
+        return unitigsFile;
+    }
+
+    @Override
+    public File getContigsFile() {
+
+        AbyssV134Args abyssV134Args = (AbyssV134Args)this.getArgs();
+        File unitigsFile = new File(abyssV134Args.getOutputDir(), abyssV134Args.getName() + "-contigs.fa");
+        return unitigsFile;
+    }
+
+    @Override
+    public File getScaffoldsFile() {
+
+        AbyssV134Args abyssV134Args = (AbyssV134Args)this.getArgs();
+        File unitigsFile = new File(abyssV134Args.getOutputDir(), abyssV134Args.getName() + "-scaffolds.fa");
+        return unitigsFile;
+    }
+
+    @Override
+    public boolean usesOpenMpi() {
+        return true;
+    }
+
+    @Override
     public String getName() {
         return "Abyss_V1.3.4";
     }
-
 }

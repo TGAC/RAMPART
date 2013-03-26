@@ -44,6 +44,6 @@ public class RV2122Process extends AbstractConanProcess {
 
     @Override
     public String getName() {
-        return "R V2.12.2";
+        return "R_V2.12.2";
     }
 }

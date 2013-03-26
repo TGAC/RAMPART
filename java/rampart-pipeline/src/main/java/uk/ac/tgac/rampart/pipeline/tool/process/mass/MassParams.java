@@ -43,6 +43,8 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter outputDir;
     private ConanParameter jobPrefix;
     private ConanParameter runParallel;
+    private ConanParameter threads;
+    private ConanParameter memory;
 
 
     public MassParams() {
@@ -95,6 +97,15 @@ public abstract class MassParams implements ProcessParams {
                 "If set to true, each sub job will be executed in parallel rather than in sequence.  Ensure you have enough" +
                         " resource before using this setting");
 
+        this.threads = new NumericParameter(
+                "threads",
+                "The number of threads to use for each assembly process (Default: 8)",
+                true);
+
+        this.memory = new NumericParameter(
+                "memory",
+                "The amount of memory to request for each assembly process (Default: 50000)",
+                true);
     }
 
     public ConanParameter getAssembler() {
@@ -129,6 +140,14 @@ public abstract class MassParams implements ProcessParams {
         return runParallel;
     }
 
+    public ConanParameter getThreads() {
+        return threads;
+    }
+
+    public ConanParameter getMemory() {
+        return memory;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -141,7 +160,9 @@ public abstract class MassParams implements ProcessParams {
                         this.libs,
                         this.outputDir,
                         this.jobPrefix,
-                        this.runParallel
+                        this.runParallel,
+                        this.threads,
+                        this.memory
                 }));
     }
 

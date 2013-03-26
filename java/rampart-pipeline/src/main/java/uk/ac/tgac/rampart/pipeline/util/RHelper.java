@@ -36,9 +36,15 @@ public enum RHelper {
         }
     };
 
-    public File getScript() {
+    public File getInternalScript() {
         URL scriptUrl = this.getClass().getResource(this.getPath());
         return FileUtils.toFile(scriptUrl);
+    }
+
+    public File getExternalScript() {
+        return new File(
+                new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(),
+                this.getPath());
     }
 
     public abstract String getPath();

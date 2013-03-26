@@ -17,39 +17,21 @@
  **/
 package uk.ac.tgac.rampart.conan.process.scaffold;
 
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
-import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
-
-import java.io.File;
+import uk.ac.tgac.rampart.conan.process.AbstractAmpProcess;
 
 /**
  * User: maplesod
  * Date: 23/01/13
  * Time: 13:48
  */
-public abstract class Scaffolder extends AbstractIOProcess {
+public abstract class AbstractScaffolderProcess extends AbstractAmpProcess {
 
-    public Scaffolder(String exe, ProcessArgs processArgs, ProcessParams processParams) {
-        super(exe, processArgs, processParams);
+    protected AbstractScaffolderProcess(String executable, AbstractScaffolderArgs args, ProcessParams params) {
+        super(executable, args, params);
     }
 
-    public ScaffolderArgs getScaffolderArgs() {
-        return (ScaffolderArgs)this.getProcessArgs();
-    }
-
-    public void setScaffolderArgs(ScaffolderArgs scaffolderArgs) {
-        this.setProcessArgs(scaffolderArgs);
-    }
-
-    @Override
-    public void setInputFile(File inputFile) {
-        this.getScaffolderArgs().setInput(inputFile);
-        super.setInputFile(inputFile);
-    }
-
-    @Override
-    public File getOutputFile() {
-        return this.getScaffolderArgs().getOutput();
+    public AbstractScaffolderArgs getScaffolderArgs() {
+        return (AbstractScaffolderArgs)this.getProcessArgs();
     }
 }

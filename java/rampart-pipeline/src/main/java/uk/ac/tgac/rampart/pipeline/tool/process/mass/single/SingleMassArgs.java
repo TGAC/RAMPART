@@ -38,6 +38,8 @@ public class SingleMassArgs extends MassArgs {
     public static final String MASS_KMIN = "kmin";
     public static final String MASS_KMAX = "kmax";
     public static final String MASS_STEP = "step";
+    public static final String MASS_THREADS = "threads";
+    public static final String MASS_MEMORY = "memory";
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -99,6 +101,10 @@ public class SingleMassArgs extends MassArgs {
                     args.setKmax(Integer.parseInt(entry.getValue()));
                 } else if (entry.getKey().equalsIgnoreCase(MASS_STEP)) {
                     args.setStepSize(StepSize.valueOf(entry.getValue().toUpperCase()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_THREADS)) {
+                    args.setThreads(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_MEMORY)) {
+                    args.setMemory(Integer.parseInt(entry.getValue()));
                 }
             }
         }

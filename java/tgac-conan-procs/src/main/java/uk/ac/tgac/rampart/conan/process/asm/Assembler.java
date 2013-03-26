@@ -8,8 +8,6 @@ public interface Assembler extends ConanProcess {
 
     AssemblerArgs getArgs();
 
-    void setArgs(AssemblerArgs args);
-
     boolean makesUnitigs();
 
     boolean makesContigs();
@@ -21,4 +19,6 @@ public interface Assembler extends ConanProcess {
     File getContigsFile();
 
     File getScaffoldsFile();
+
+    boolean usesOpenMpi();
 }

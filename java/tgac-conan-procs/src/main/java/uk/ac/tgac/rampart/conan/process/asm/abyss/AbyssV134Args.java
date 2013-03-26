@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.conan.process.asm.abyss;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.conan.process.asm.AssemblerArgs;
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,8 +33,15 @@ public class AbyssV134Args extends AssemblerArgs {
 
     public AbyssV134Args() {
         super();
+
         this.nbContigPairs = 10;
-        this.name = null;
+
+        StringJoiner nameJoiner = new StringJoiner("-");
+        nameJoiner.add("abyss_1.3.4");
+        nameJoiner.add(this.getKmer() != 0 && this.getKmer() != DEFAULT_KMER, "", "k" + Integer.toString(this.getKmer()));
+        nameJoiner.add(this.getCoverageCutoff() != 0, "", "cc" + Integer.toString(this.getCoverageCutoff()));
+
+        this.name = nameJoiner.toString();
     }
 
     public int getNbContigPairs() {

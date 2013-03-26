@@ -17,7 +17,10 @@
  **/
 package uk.ac.tgac.rampart.conan.process.scaffold.sspace;
 
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 
@@ -30,23 +33,64 @@ import static org.junit.Assert.assertTrue;
  */
 public class SSpaceBasicV2ProcessTest {
 
-    @Test
-    public void testSSpaceBasicV2() {
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
+
+    private String pwd;
+
+    private File outputDir = temp.newFolder("sspaceTest");
+    private static String correctCommand;
+    private static String correctFullCommand;
+
+    @Before
+    public void setup() {
+
+        String pwdFull = new File(".").getAbsolutePath();
+        this.pwd = pwdFull.substring(0, pwdFull.length() - 1);
+
+        correctCommand = "SSPACE_Basic_v2.0.pl -l " + pwd + "testlib.lib -s " + pwd + "contigs.fa -x 0 -T 8 -b Output";
+
+        correctFullCommand = "cd " + pwd + "sspaceTest; " + correctCommand + " 2>&1; cd " + pwd;
+    }
+
+    private SSpaceBasicV2Process createSspaceProc() {
+
+        File libFile = new File("testlib.lib");
+        File contigsFile = new File("contigs.fa");
 
         SSpaceBasicV2Args args = new SSpaceBasicV2Args();
-        args.setLibraryConfigFile(new File("testlib.lib"));
+        args.setLibraryConfigFile(libFile);
         args.setThreads(8);
-        args.setInput(new File("contigs.fa"));
+        args.setInputFile(contigsFile);
+        args.setOutputDir(outputDir);
         args.setBaseName("Output");
 
-        SSpaceBasicV2Process task = new SSpaceBasicV2Process(args);
+        return new SSpaceBasicV2Process(args);
+    }
+
+    @Test
+    public void testSSpaceBasicV2Command() {
+
+        SSpaceBasicV2Process task = createSspaceProc();
 
         String command = task.getCommand();
-        String correct = "SSPACE_Basic_v2.0.pl -l testlib.lib -s contigs.fa -x 0 -T 8 -b Output";
 
         assertTrue(command != null && !command.isEmpty());
-        assertTrue(correct != null && !correct.isEmpty());
-        assertTrue(command.length() == correct.length());
-        assertTrue(command.equals(correct));
+        assertTrue(correctCommand != null && !correctCommand.isEmpty());
+        assertTrue(command.length() == correctCommand.length());
+        assertTrue(command.equals(correctCommand));
+    }
+
+    @Test
+    public void testSSpaceBasicV2FullCommand() {
+
+        SSpaceBasicV2Process task = createSspaceProc();
+
+        String command = task.getFullCommand();
+
+        assertTrue(command != null && !command.isEmpty());
+        assertTrue(correctFullCommand != null && !correctFullCommand.isEmpty());
+        assertTrue(command.length() == correctFullCommand.length());
+        assertTrue(command.equals(correctFullCommand));
     }
 }

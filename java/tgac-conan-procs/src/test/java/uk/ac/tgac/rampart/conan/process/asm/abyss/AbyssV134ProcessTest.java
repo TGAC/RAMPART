@@ -19,6 +19,11 @@ package uk.ac.tgac.rampart.conan.process.asm.abyss;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.core.data.Library;
@@ -36,16 +41,36 @@ import static org.junit.Assert.assertTrue;
  * Date: 28/02/13
  * Time: 11:17
  */
+@RunWith(MockitoJUnitRunner.class)
 public class AbyssV134ProcessTest {
 
     private String pwd;
+
+    @Mock
+    private ExecutionContext ec;
+
+    @Mock
+    private ConanProcessService conanProcessService;
+
+    private static String correctCommand;
+    private static String correctFullCommand;
+    private static String correctLsfScheduledCommand;
 
     @Before
     public void setup() {
 
         String pwdFull = new File(".").getAbsolutePath();
         this.pwd = pwdFull.substring(0, pwdFull.length() - 1);
+
+        correctCommand = "abyss-pe  name=OUTPUT_FILE  k=61  np=16  lib='peLib1' " +
+                "peLib1='" + pwd + "tools/mass/LIB1896_R1.r95.fastq " + pwd + "tools/mass/LIB1896_R2.r95.fastq'";
+
+        correctFullCommand = "cd " + pwd + ".; " + correctCommand + " 2>&1; cd " + pwd;
+
+        correctLsfScheduledCommand = "bsub -aopenmpi \"" + correctFullCommand + "\"";
     }
+
+
 
     private List<Library> createLocalPETestLibrary() {
         SeqFile peFile1 = new SeqFile();
@@ -71,9 +96,7 @@ public class AbyssV134ProcessTest {
         return libs;
     }
 
-    @Test
-    public void testAbyssV134Command() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
-
+    private AbyssV134Process createProcess() {
         List<Library> libs = this.createLocalPETestLibrary();
 
         AbyssV134Args args = new AbyssV134Args();
@@ -82,42 +105,32 @@ public class AbyssV134ProcessTest {
         args.setName("OUTPUT_FILE");
         args.setThreads(16);
 
-        AbyssV134Process abyss = new AbyssV134Process(args);
+        return new AbyssV134Process(args);
+    }
+
+    @Test
+    public void testAbyssV134Command() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+
+        AbyssV134Process abyss = createProcess();
 
         String command = abyss.getCommand();
 
-        String correct = "abyss-pe  name=OUTPUT_FILE  k=61  np=16  lib='peLib1' " +
-                "peLib1='" + pwd + "tools/mass/LIB1896_R1.r95.fastq " + pwd + "tools/mass/LIB1896_R2.r95.fastq'";
-
         assertTrue(command != null && !command.isEmpty());
-        assertTrue(correct != null && !correct.isEmpty());
-        assertTrue(command.length() == correct.length());
-        assertTrue(command.equals(correct));
+        assertTrue(correctCommand != null && !correctCommand.isEmpty());
+        assertTrue(command.length() == correctCommand.length());
+        assertTrue(command.equals(correctCommand));
     }
 
     @Test
     public void testAbyssV134FullCommand() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
-        List<Library> libs = this.createLocalPETestLibrary();
-
-        AbyssV134Args args = new AbyssV134Args();
-        args.setLibraries(libs);
-        args.setKmer(61);
-        args.setName("OUTPUT_FILE");
-        args.setThreads(16);
-        args.setOutputDir(new File("testOut"));
-
-        AbyssV134Process abyss = new AbyssV134Process(args);
+        AbyssV134Process abyss = createProcess();
 
         String fullCommand = abyss.getFullCommand();
 
-        String correct = "cd " + pwd + "testOut; abyss-pe  name=OUTPUT_FILE  k=61  np=16  " +
-                "lib='peLib1' peLib1='" + pwd + "tools/mass/LIB1896_R1.r95.fastq " + pwd + "tools/mass/LIB1896_R2.r95.fastq'; " +
-                "cd " + pwd;
-
         assertTrue(fullCommand != null && !fullCommand.isEmpty());
-        assertTrue(correct != null && !correct.isEmpty());
-        assertTrue(fullCommand.length() == correct.length());
-        assertTrue(fullCommand.equals(correct));
+        assertTrue(correctFullCommand != null && !correctFullCommand.isEmpty());
+        assertTrue(fullCommand.length() == correctFullCommand.length());
+        assertTrue(fullCommand.equals(correctFullCommand));
     }
 }

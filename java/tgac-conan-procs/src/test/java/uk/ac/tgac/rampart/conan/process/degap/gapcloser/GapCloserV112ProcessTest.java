@@ -47,8 +47,8 @@ public class GapCloserV112ProcessTest {
     public void testGapCloserV112() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         GapCloserV112Args args = new GapCloserV112Args();
-        args.setOutput(new File("output.fa"));
-        args.setInput(new File("input.fa"));
+        args.setOutputFile(new File("output.fa"));
+        args.setInputFile(new File("input.fa"));
         args.setThreads(8);
         args.setOverlap(29);
         args.setLibraryFile(new File("libFile.cfg"));

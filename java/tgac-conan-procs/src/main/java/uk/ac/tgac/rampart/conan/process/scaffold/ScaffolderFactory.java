@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.process.scaffold;
 
+import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Args;
 import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Process;
 
 /**
@@ -27,20 +28,17 @@ import uk.ac.tgac.rampart.conan.process.scaffold.sspace.SSpaceBasicV2Process;
 public enum ScaffolderFactory {
 
     SSPACE_BASIC_V2 {
+
         @Override
-        public Scaffolder create() {
-            return new SSpaceBasicV2Process();
+        public AbstractScaffolderProcess create(AbstractScaffolderArgs abstractScaffolderArgs) {
+            return new SSpaceBasicV2Process((SSpaceBasicV2Args)abstractScaffolderArgs);
         }
     };
 
 
-    public abstract Scaffolder create();
+    public abstract AbstractScaffolderProcess create(AbstractScaffolderArgs abstractScaffolderArgs);
 
-    public static Scaffolder createScaffolder() {
-        return SSPACE_BASIC_V2.create();
-    }
-
-    public static Scaffolder createScaffolder(String name) {
-        return ScaffolderFactory.valueOf(name.toUpperCase()).create();
+    public static ScaffolderFactory getDefaultScaffolder() {
+        return SSPACE_BASIC_V2;
     }
 }

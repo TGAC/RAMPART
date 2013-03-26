@@ -15,43 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process;
+package uk.ac.tgac.rampart.conan.process.kmer;
 
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
-
-import java.io.File;
 
 /**
  * User: maplesod
- * Date: 28/02/13
- * Time: 11:55
+ * Date: 26/03/13
+ * Time: 17:57
  */
-public abstract class AbstractIOProcess extends AbstractConanProcess {
+public abstract class KmerArgs implements ProcessArgs {
 
-    private File inputFile;
-    private File outputDir;
+    private int kmer;
 
-    public AbstractIOProcess(String exe, ProcessArgs processArgs, ProcessParams processParams) {
-        super(exe, processArgs, processParams);
+    protected KmerArgs() {
+        this.kmer = 31;
     }
 
-    public File getInputFile() {
-        return inputFile;
+    public int getKmer() {
+        return kmer;
     }
 
-    public void setInputFile(File inputFile) {
-        this.inputFile = inputFile;
+    public void setKmer(int kmer) {
+        this.kmer = kmer;
     }
-
-    public File getOutputDir() {
-        return outputDir;
-    }
-
-    public void setOutputDir(File outputDir) {
-        this.outputDir = outputDir;
-    }
-
-    public abstract File getOutputFile();
 }

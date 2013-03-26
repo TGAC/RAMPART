@@ -88,24 +88,25 @@ public class AssemblyStats implements Serializable, Comparable<AssemblyStats> {
 	
 	public AssemblyStats() {}
 	public AssemblyStats(String[] stats) {
-		this.desc = stats[0];
-        this.dataset = stats[1];
-        this.filePath = stats[2];
-		this.nbContigs = Long.parseLong(stats[3]);
-		this.aPerc = Double.parseDouble(stats[4]);
-		this.cPerc = Double.parseDouble(stats[5]);
-		this.gPerc = Double.parseDouble(stats[6]);
-		this.tPerc = Double.parseDouble(stats[7]);
-		this.nPerc = Double.parseDouble(stats[8]);
-		this.nbBases = Long.parseLong(stats[9]);
-		this.minLen = Long.parseLong(stats[10]);
-		this.maxLen = Long.parseLong(stats[11]);
+		this.id = Long.parseLong(stats[0]);
+        this.desc = stats[1];
+        this.dataset = stats[2];
+        this.filePath = stats[3];
+		this.nbContigs = Long.parseLong(stats[4]);
+		this.aPerc = Double.parseDouble(stats[5]);
+		this.cPerc = Double.parseDouble(stats[6]);
+		this.gPerc = Double.parseDouble(stats[7]);
+		this.tPerc = Double.parseDouble(stats[8]);
+		this.nPerc = Double.parseDouble(stats[9]);
+		this.nbBases = Long.parseLong(stats[10]);
+		this.minLen = Long.parseLong(stats[11]);
 		this.avgLen = Double.parseDouble(stats[12]);
-		this.n80 = Long.parseLong(stats[13]);
-        this.n50 = Long.parseLong(stats[14]);
-        this.n20 = Long.parseLong(stats[15]);
-        this.l50 = Long.parseLong(stats[16]);
-        this.score = Double.parseDouble(stats[17]);
+        this.maxLen = Long.parseLong(stats[13]);
+        this.n80 = Long.parseLong(stats[14]);
+        this.n50 = Long.parseLong(stats[15]);
+        this.n20 = Long.parseLong(stats[16]);
+        this.l50 = Long.parseLong(stats[17]);
+        this.score = Double.parseDouble(stats[18]);
 	}
 	
 	public Long getId() {
@@ -235,7 +236,7 @@ public class AssemblyStats implements Serializable, Comparable<AssemblyStats> {
     }
 
     public double getScore() {
-        return score;
+        return this.score == null ? 0.0 : this.score;
     }
 
     public void setScore(double score) {
@@ -256,9 +257,9 @@ public class AssemblyStats implements Serializable, Comparable<AssemblyStats> {
 
         StringJoiner sj = new StringJoiner("|");
 
-        sj.add(this.getDesc());
-        sj.add(this.getDataset());
-        sj.add(this.getFilePath());
+        sj.add(this.getDesc() == null || this.getDesc().isEmpty() ? "NULL" : this.getDesc());
+        sj.add(this.getDataset() == null || this.getDataset().isEmpty() ? "NULL" : this.getDataset());
+        sj.add(this.getFilePath() == null || this.getFilePath().isEmpty() ? "NULL" : this.getFilePath());
         sj.add(statsMatrixRow == null ? this.toStatsString() : statsMatrixRow.toString());
         sj.add(this.getScore());
 

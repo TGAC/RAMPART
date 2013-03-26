@@ -40,17 +40,20 @@
 
     </build>
     <dependencies>
+
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.1</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.6.1</version>
         </dependency>
+
         <dependency>
             <groupId>uk.ac.tgac.rampart</groupId>
             <artifactId>rampart-core</artifactId>
             <version>0.4</version>
             <type>jar</type>
         </dependency>
+
         <dependency>
             <groupId>uk.ac.ebi.fgpt</groupId>
             <artifactId>conan-core-services</artifactId>
@@ -68,11 +71,20 @@
             <artifactId>conan-service</artifactId>
             <version>${conan-version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.4</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

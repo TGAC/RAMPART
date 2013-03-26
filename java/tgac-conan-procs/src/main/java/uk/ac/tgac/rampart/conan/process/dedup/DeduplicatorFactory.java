@@ -28,20 +28,20 @@ public enum DeduplicatorFactory {
 
     NIZAR {
         @Override
-        public Deduplicator create() {
+        public AbstractDeduplicatorProcess create() {
             return new NizarDedupProcess();
         }
 
     };
 
 
-    public abstract Deduplicator create();
+    public abstract AbstractDeduplicatorProcess create();
 
-    public static Deduplicator createDeduplicator() {
+    public static AbstractDeduplicatorProcess createDeduplicator() {
         return NIZAR.create();
     }
 
-    public static Deduplicator createDeduplicator(String name) {
+    public static AbstractDeduplicatorProcess createDeduplicator(String name) {
         return DeduplicatorFactory.valueOf(name).create();
     }
 }

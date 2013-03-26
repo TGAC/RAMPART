@@ -15,34 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.degap.gapcloser;
-
-import uk.ac.tgac.rampart.conan.process.degap.AbstractDegapperProcess;
+package uk.ac.tgac.rampart.conan.process.kmer;
 
 /**
  * User: maplesod
- * Date: 23/01/13
- * Time: 13:44
+ * Date: 26/03/13
+ * Time: 17:56
  */
-public class GapCloserV112Process extends AbstractDegapperProcess {
-
-    public static final String EXE = "GapCloser";
-
-    public GapCloserV112Process() {
-        this(new GapCloserV112Args());
-    }
-
-    public GapCloserV112Process(GapCloserV112Args args) {
-        super(EXE, args, new GapCloserV112Params());
-    }
-
-    @Override
-    public String getCommand() {
-        return this.getCommand(this.getProcessArgs(), true, "-", " ");
-    }
-
-    @Override
-    public String getName() {
-        return "SOAP_GapCloser_v1.12";
-    }
+public interface KmerProcess {
 }

@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.process.mass.selector;
 
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -82,7 +83,9 @@ public class MassSelectorProcess extends AbstractConanProcess {
             AssemblyStats best = merged.getBest();
             File outputAssembly = new File(args.getOutputDir(), "best.fa");
 
-            this.conanProcessService.execute("ln -s " + best.getFilePath() + " " + outputAssembly.getAbsolutePath(), executionContext);
+            ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+
+            this.conanProcessService.execute("ln -s -f " + best.getFilePath() + " " + outputAssembly.getAbsolutePath(), linkingExecutionContext);
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);

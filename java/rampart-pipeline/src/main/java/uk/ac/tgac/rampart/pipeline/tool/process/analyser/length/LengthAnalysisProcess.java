@@ -30,6 +30,7 @@ import uk.ac.tgac.rampart.conan.process.r.RV2122Args;
 import uk.ac.tgac.rampart.conan.process.r.RV2122Process;
 import uk.ac.tgac.rampart.core.data.AssemblyStats;
 import uk.ac.tgac.rampart.core.service.SequenceStatisticsService;
+import uk.ac.tgac.rampart.core.service.impl.SequenceStatisticsServiceImpl;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.util.RHelper;
 
@@ -45,19 +46,17 @@ import java.util.*;
 public class LengthAnalysisProcess extends AbstractConanProcess {
 
     @Autowired
-    private SequenceStatisticsService sequenceStatisticsService;
+    private SequenceStatisticsService sequenceStatisticsService = new SequenceStatisticsServiceImpl();
 
     private static Logger log = LoggerFactory.getLogger(LengthAnalysisProcess.class);
 
-
-    private LengthAnalysisArgs args;
 
     public LengthAnalysisProcess() {
         this(new LengthAnalysisArgs());
     }
 
     public LengthAnalysisProcess(LengthAnalysisArgs args) {
-        this.args = args;
+        super("", args, new LengthAnalysisParams());
     }
 
     @Override
@@ -78,11 +77,13 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext env) throws ProcessExecutionException, InterruptedException {
 
+        LengthAnalysisArgs args = (LengthAnalysisArgs)this.getProcessArgs();
+
         // Assume we want to process all the FastA files in the directory specified by the user.
-        File[] assemblyFiles = this.args.getInputDir().listFiles(new FilenameFilter() {
+        File[] assemblyFiles = args.getInputDir().listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return name.endsWith(".fa");
+                return name.endsWith(".fa") || name.endsWith(".fasta");
             }
         });
 
@@ -96,20 +97,21 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
             Map<String, AssemblyStats> statsMap = new LinkedHashMap<String, AssemblyStats>();
             for (File assemblyFile : assemblyFiles) {
 
-                String key = this.args.getRampartStage().translateFilenameToKey(assemblyFile.getName());
+                String key = args.getRampartStage().translateFilenameToKey(assemblyFile.getName());
                 AssemblyStats stats = this.sequenceStatisticsService.analyseAssembly(assemblyFile);
                 statsMap.put(key, stats);
             }
 
-            File statsFile = new File(this.args.getOutputDir(), "analyser.txt");
+            File statsFile = new File(args.getOutputDir(), "analyser.txt");
 
             // Store the analyser in a file, so we can load them in R
-            writeStatistics(statsFile, statsMap, this.args.getRampartStage());
+            writeStatistics(statsFile, statsMap, args.getRampartStage());
 
             // Plot the analyser using our R script
-            plot(this.args.getOutputDir(), statsFile, env);
+            plot(args.getOutputDir(), statsFile, env);
+
         } catch (IOException ioe) {
-            // Just convert the exception and carry on
+            // Just log the exception and carry on
             throw new ProcessExecutionException(-1, ioe);
         }
 
@@ -133,18 +135,25 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
         // Build the mass plotter R scripts arg list
         List<String> rScriptArgs = new ArrayList<String>();
         rScriptArgs.add(statsFile.getAbsolutePath());
-        rScriptArgs.add(new File(this.args.getOutputDir(), "analyser.pdf").getAbsolutePath());
+        rScriptArgs.add(new File(outputDir, "analyser.pdf").getAbsolutePath());
 
         // Set the args for R
         RV2122Args rArgs = new RV2122Args();
-        rArgs.setScript(new File(RHelper.STATS_PLOTTER.getPath()));
-        rArgs.setOutput(new File(this.args.getOutputDir(), "stats_plotter.log"));
+        rArgs.setScript(RHelper.STATS_PLOTTER.getExternalScript());
+        rArgs.setOutput(new File(outputDir, "stats_plotter.log"));
         rArgs.setArgs(rScriptArgs);
 
         // Create the Mass Plotter R process
         RV2122Process statsPlotterProcess = new RV2122Process(rArgs);
 
+
+        ExecutionContext envCopy = env.copy();
+
+        if (envCopy.usingScheduler()) {
+            envCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, "analyser.log"));
+        }
+
         // Execute the Mass Plotter R script.
-        this.conanProcessService.execute(statsPlotterProcess, env);
+        this.conanProcessService.execute(statsPlotterProcess, envCopy);
     }
 }

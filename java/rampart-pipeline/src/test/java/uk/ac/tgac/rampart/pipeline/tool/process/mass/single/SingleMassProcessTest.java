@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisExecutor;
 
 import java.io.File;
 
@@ -47,10 +48,13 @@ public class SingleMassProcessTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Mock
-    ExecutionContext ec;
+    private ExecutionContext ec;
 
     @Mock
-    ConanProcessService conanProcessService;
+    private ConanProcessService conanProcessService;
+
+    @Mock
+    private LengthAnalysisExecutor lengthAnalysisExecutor;
 
     @Test
     public void testExecute() throws ProcessExecutionException, InterruptedException {
@@ -76,6 +80,7 @@ public class SingleMassProcessTest {
         when(ec.copy()).thenReturn(ec);
 
         ReflectionTestUtils.setField(smParent, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(smParent, "lengthAnalysisExecutor", lengthAnalysisExecutor);
 
         singleMassProcess.execute(ec);
 

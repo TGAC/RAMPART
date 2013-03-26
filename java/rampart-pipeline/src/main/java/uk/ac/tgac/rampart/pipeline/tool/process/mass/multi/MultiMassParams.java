@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.pipeline.tool.process.mass.multi;
 
 import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.MassParams;
 
@@ -33,6 +34,7 @@ import java.util.List;
 public class MultiMassParams extends MassParams {
 
     private ConanParameter configs;
+    private ConanParameter weightingsFile;
     private ConanParameter parallelMass;
 
     public MultiMassParams() {
@@ -44,6 +46,10 @@ public class MultiMassParams extends MassParams {
                 true,
                 false);
 
+        this.weightingsFile = new PathParameter(
+                "weightings",
+                "The file containing the weightings to apply to each assembly statistic",
+                false);
 
         this.parallelMass = new FlagParameter(
                 "parallel",
@@ -52,6 +58,10 @@ public class MultiMassParams extends MassParams {
 
     public ConanParameter getConfigs() {
         return configs;
+    }
+
+    public ConanParameter getWeightingsFile() {
+        return weightingsFile;
     }
 
     public ConanParameter getParallelMass() {
@@ -65,6 +75,7 @@ public class MultiMassParams extends MassParams {
 
         params.addAll(Arrays.asList(
                 this.configs,
+                this.weightingsFile,
                 this.parallelMass));
 
         return params;

@@ -20,31 +20,19 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.rampart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
-import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
-import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.core.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpArgs;
-import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpParams;
 import uk.ac.tgac.rampart.pipeline.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassProcess;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTArgs;
-import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTParams;
 import uk.ac.tgac.rampart.pipeline.tool.process.qt.QTProcess;
-import uk.ac.tgac.rampart.pipeline.tool.process.report.ReportProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -177,20 +165,14 @@ public class RampartPipeline implements ConanPipeline {
         multiMassArgs.setRunParallel(true);
 
         // Create AMP args
-        AmpArgs ampArgs = new AmpArgs();
-        ampArgs.setConfig(args.getConfig());
+        AmpArgs ampArgs = AmpArgs.parseConfig(args.getConfig());
+        ampArgs.setInputAssembly(jobFS.getMassOutFile());
+        ampArgs.setJobPrefix(jobPrefix + "-amp");
+        ampArgs.setOutputDir(jobFS.getImproverDir());
+
 
         // Shortcut to stages
         List<RampartStage> stages = this.args.getStages();
-
-        // If we ran MASS, then use the output from that as the input to AMP, otherwise assume that the user
-        // specified the input file in the configuration file
-        if (stages.contains(RampartStage.MASS) && stages.contains(RampartStage.AMP)) {
-            ampArgs.setInputAssembly(jobFS.getMassOutFile());
-        }
-
-        ampArgs.setJobPrefix(jobPrefix + "-amp");
-        ampArgs.setOutputDir(jobFS.getImproverDir());
 
         // Configure pipeline
         if (stages.contains(RampartStage.QT)) {
@@ -200,6 +182,11 @@ public class RampartPipeline implements ConanPipeline {
         if (stages.contains(RampartStage.MASS)) {
             this.processList.add(new MultiMassProcess(multiMassArgs));
         }
+
+        if (stages.contains(RampartStage.AMP)) {
+            this.processList.add(new AmpProcess(ampArgs));
+        }
+
 
         // this.rampartPipeline.getAmpProcess().setProcessArgs(ampArgs);
 

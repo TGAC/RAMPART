@@ -15,26 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.degap.gapcloser;
+package uk.ac.tgac.rampart.conan.process.kmer.jellyfish;
 
-import uk.ac.tgac.rampart.conan.process.degap.AbstractDegapperProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.tgac.rampart.conan.process.kmer.KmerProcess;
 
 /**
  * User: maplesod
- * Date: 23/01/13
- * Time: 13:44
+ * Date: 26/03/13
+ * Time: 17:58
  */
-public class GapCloserV112Process extends AbstractDegapperProcess {
-
-    public static final String EXE = "GapCloser";
-
-    public GapCloserV112Process() {
-        this(new GapCloserV112Args());
-    }
-
-    public GapCloserV112Process(GapCloserV112Args args) {
-        super(EXE, args, new GapCloserV112Params());
-    }
+public class JellyfishProcess extends AbstractConanProcess implements KmerProcess {
 
     @Override
     public String getCommand() {
@@ -43,6 +34,6 @@ public class GapCloserV112Process extends AbstractDegapperProcess {
 
     @Override
     public String getName() {
-        return "SOAP_GapCloser_v1.12";
+        return "Jellyfish";
     }
 }

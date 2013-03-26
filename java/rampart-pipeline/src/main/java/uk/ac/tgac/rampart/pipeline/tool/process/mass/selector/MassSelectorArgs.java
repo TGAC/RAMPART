@@ -20,9 +20,6 @@ package uk.ac.tgac.rampart.pipeline.tool.process.mass.selector;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.AssemblyStatsMatrixRow;
-import uk.ac.tgac.rampart.core.data.Library;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.StepSize;
-import uk.ac.tgac.rampart.pipeline.tool.process.mass.multi.MultiMassParams;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,7 +46,7 @@ public class MassSelectorArgs implements ProcessArgs {
     public MassSelectorArgs() {
         this.statsFiles = new ArrayList<File>();
         this.configs = new ArrayList<File>();
-        this.outputDir = new File(".");
+        this.outputDir = new File("");
         this.approxGenomeSize = 0;
         this.weightings = new AssemblyStatsMatrixRow();
     }

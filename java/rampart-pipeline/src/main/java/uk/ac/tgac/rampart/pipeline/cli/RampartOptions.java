@@ -150,7 +150,7 @@ public class RampartOptions {
         Option opt_stages = OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
                 .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s");
 
-        Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasArg()
+        Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasOptionalArg()
                 .withDescription("The directory to clean.").create("z");
 
         // create Options object

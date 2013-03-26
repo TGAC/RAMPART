@@ -54,20 +54,20 @@ public class AssemblyStatsMatrixRow {
 
     public AssemblyStatsMatrixRow(AssemblyStats assemblyStats) {
         this.stats = new double[14];
-        this.stats[IDX_NB_CONTIGS] = assemblyStats.getNbContigs();
-        this.stats[IDX_NB_BASES] = assemblyStats.getNbBases();
-        this.stats[IDX_A_PERC] = assemblyStats.getaPerc();
-        this.stats[IDX_C_PERC] = assemblyStats.getcPerc();
-        this.stats[IDX_G_PERC] = assemblyStats.getgPerc();
-        this.stats[IDX_T_PERC] = assemblyStats.gettPerc();
-        this.stats[IDX_N_PERC] = assemblyStats.getnPerc();
-        this.stats[IDX_MIN_LEN] = assemblyStats.getMinLen();
-        this.stats[IDX_AVG_LEN] = assemblyStats.getAvgLen();
-        this.stats[IDX_MAX_LEN] = assemblyStats.getMaxLen();
-        this.stats[IDX_N_80] = assemblyStats.getN80();
-        this.stats[IDX_N_50] = assemblyStats.getN50();
-        this.stats[IDX_N_20] = assemblyStats.getN20();
-        this.stats[IDX_L_50] = assemblyStats.getL50();
+        this.stats[IDX_NB_CONTIGS] = new Double(assemblyStats.getNbContigs()).doubleValue();
+        this.stats[IDX_NB_BASES] = new Double(assemblyStats.getNbBases()).doubleValue();
+        this.stats[IDX_A_PERC] = new Double(assemblyStats.getaPerc()).doubleValue();
+        this.stats[IDX_C_PERC] = new Double(assemblyStats.getcPerc()).doubleValue();
+        this.stats[IDX_G_PERC] = new Double(assemblyStats.getgPerc()).doubleValue();
+        this.stats[IDX_T_PERC] = new Double(assemblyStats.gettPerc()).doubleValue();
+        this.stats[IDX_N_PERC] = new Double(assemblyStats.getnPerc()).doubleValue();
+        this.stats[IDX_MIN_LEN] = new Double(assemblyStats.getMinLen()).doubleValue();
+        this.stats[IDX_AVG_LEN] = new Double(assemblyStats.getAvgLen()).doubleValue();
+        this.stats[IDX_MAX_LEN] = new Double(assemblyStats.getMaxLen()).doubleValue();
+        this.stats[IDX_N_80] = new Double(assemblyStats.getN80()).doubleValue();
+        this.stats[IDX_N_50] = new Double(assemblyStats.getN50()).doubleValue();
+        this.stats[IDX_N_20] = new Double(assemblyStats.getN20()).doubleValue();
+        this.stats[IDX_L_50] = new Double(assemblyStats.getL50()).doubleValue();
     }
 
 

@@ -32,11 +32,22 @@ import static org.junit.Assert.assertTrue;
 public class RHelperTest {
 
     @Test
-    public void testStatsPlotter() {
+    public void testStatsPlotterInternal() {
 
-        File statsPlotterFile = RHelper.STATS_PLOTTER.getScript();
+        File statsPlotterFile = RHelper.STATS_PLOTTER.getInternalScript();
 
         assertTrue(statsPlotterFile != null);
         assertTrue(statsPlotterFile.exists());
     }
+
+    /*@Test
+    public void testStatsPlotterExternal() {
+
+        File statsPlotterFile = RHelper.STATS_PLOTTER.getExternalScript();
+
+        String correctPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath() + RHelper.STATS_PLOTTER.getPath();
+
+        assertTrue(statsPlotterFile != null);
+        assertTrue(statsPlotterFile.getAbsolutePath().equals(correctPath));
+    } */
 }

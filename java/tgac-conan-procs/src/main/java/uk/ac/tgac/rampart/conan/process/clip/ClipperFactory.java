@@ -28,25 +28,25 @@ public enum ClipperFactory {
 
     RAMPART_CLIPPER {
         @Override
-        public Clipper create() {
+        public AbstractClipperProcess create() {
             return new SimpleClipperProcess();
         }
 
         /*@Override
-        public Clipper create(ClipperArgs args) {
+        public AbstractClipperProcess create(AbstractClipperArgs args) {
             return new SimpleClipperProcess(args);
         }   */
     };
 
 
-    public abstract Clipper create();
-    //public abstract Clipper create(ClipperArgs args);
+    public abstract AbstractClipperProcess create();
+    //public abstract AbstractClipperProcess create(AbstractClipperArgs args);
 
-    public static Clipper createClipper() {
+    public static AbstractClipperProcess createClipper() {
         return RAMPART_CLIPPER.create();
     }
 
-    public static Clipper createClipper(String name) {
+    public static AbstractClipperProcess createClipper(String name) {
         return ClipperFactory.valueOf(name).create();
     }
 }

@@ -35,6 +35,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
  * User: maplesod
@@ -72,6 +73,9 @@ public class LengthAnalysisProcessTest {
         // Inject mocks
         ReflectionTestUtils.setField(lengthAnalysisProcess, "sequenceStatisticsService", sequenceStatisticsService);
         ReflectionTestUtils.setField(lengthAnalysisProcess, "conanProcessService", conanProcessService);
+
+        when(ec.copy()).thenReturn(ec);
+        when(ec.usingScheduler()).thenReturn(false);
 
         lengthAnalysisProcess.execute(ec);
 

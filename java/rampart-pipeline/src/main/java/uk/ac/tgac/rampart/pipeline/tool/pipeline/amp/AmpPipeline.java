@@ -22,7 +22,8 @@ import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.AbstractIOProcess;
+import uk.ac.tgac.rampart.conan.process.AbstractAmpArgs;
+import uk.ac.tgac.rampart.conan.process.AbstractAmpProcess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.List;
 @Component
 public class AmpPipeline implements ConanPipeline {
 
+    private List<ConanProcess> processList;
     private AmpParams params = new AmpParams();
     private AmpArgs args;
 
@@ -46,6 +48,7 @@ public class AmpPipeline implements ConanPipeline {
 
     public AmpPipeline(AmpArgs ampArgs) {
         this.args = ampArgs;
+        this.processList = new ArrayList<ConanProcess>();
     }
 
     public AmpArgs getArgs() {
@@ -81,8 +84,8 @@ public class AmpPipeline implements ConanPipeline {
 
         List<ConanProcess> cProcs = new ArrayList<ConanProcess>();
 
-        for(AbstractIOProcess abstractIOProcess : this.args.getProcesses()) {
-            cProcs.add(abstractIOProcess);
+        for(ConanProcess ampProcess : this.processList) {
+            cProcs.add(ampProcess);
         }
 
         return cProcs;
@@ -91,5 +94,20 @@ public class AmpPipeline implements ConanPipeline {
     @Override
     public List<ConanParameter> getAllRequiredParameters() {
         return this.params.getConanParameters();
+    }
+
+    public void configureProcesses() {
+        this.configureProcesses(this.args);
+    }
+
+    public void configureProcesses(AmpArgs args) {
+
+        args.linkProcesses();
+
+        for(AbstractAmpProcess proc : args.getProcesses()) {
+
+            this.processList.add(proc);
+        }
+
     }
 }

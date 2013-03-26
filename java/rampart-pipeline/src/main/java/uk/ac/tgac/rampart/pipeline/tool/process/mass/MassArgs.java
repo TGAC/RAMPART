@@ -41,6 +41,8 @@ public abstract class MassArgs implements ProcessArgs {
     public static final int DEFAULT_KMER_MIN = 51;
     public static final int DEFAULT_KMER_MAX = 85;
     public static final StepSize DEFAULT_STEP_SIZE = StepSize.MEDIUM;
+    public static final int DEFAULT_THREADS = 8;
+    public static final int DEFAULT_MEM = 50000;
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -54,6 +56,8 @@ public abstract class MassArgs implements ProcessArgs {
     private String jobPrefix;
     private File outputDir;
     private boolean runParallel;
+    private int threads;
+    private int memory;
 
 
     public MassArgs() {
@@ -64,6 +68,8 @@ public abstract class MassArgs implements ProcessArgs {
         this.libs = new ArrayList<Library>();
         this.jobPrefix = "";
         this.outputDir = null;
+        this.threads = DEFAULT_THREADS;
+        this.memory = DEFAULT_MEM;
     }
 
 
@@ -131,6 +137,22 @@ public abstract class MassArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
+    public int getThreads() {
+        return threads;
+    }
+
+    public void setThreads(int threads) {
+        this.threads = threads;
+    }
+
+    public int getMemory() {
+        return memory;
+    }
+
+    public void setMemory(int mem) {
+        this.memory = mem;
+    }
+
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
@@ -141,6 +163,8 @@ public abstract class MassArgs implements ProcessArgs {
 
         pvp.put(params.getKmin(), String.valueOf(this.kmin));
         pvp.put(params.getKmax(), String.valueOf(this.kmax));
+        pvp.put(params.getThreads(), String.valueOf(this.threads));
+        pvp.put(params.getMemory(), String.valueOf(this.memory));
         pvp.put(params.getStepSize(), this.stepSize.toString());
         pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
 
@@ -174,6 +198,10 @@ public abstract class MassArgs implements ProcessArgs {
                 this.kmin = Integer.parseInt(entry.getValue());
             } else if (param.equals(this.params.getKmax().getName())) {
                 this.kmax = Integer.parseInt(entry.getValue());
+            } else if (param.equals(this.params.getThreads().getName())) {
+                this.threads = Integer.parseInt(entry.getValue());
+            } else if (param.equals(this.params.getMemory().getName())) {
+                this.memory = Integer.parseInt(entry.getValue());
             } else if (param.equals(this.params.getStepSize().getName())) {
                 this.stepSize = StepSize.valueOf(entry.getValue());
             } else if (param.equals(this.params.getLibs().getName())) {

@@ -28,19 +28,19 @@ public enum DegapperFactory {
 
     SOAP_GAPCLOSER_V1_12 {
         @Override
-        public Degapper create() {
+        public AbstractDegapperProcess create() {
             return new GapCloserV112Process();
         }
     };
 
 
-    public abstract Degapper create();
+    public abstract AbstractDegapperProcess create();
 
-    public static Degapper createDegapper() {
+    public static AbstractDegapperProcess createDegapper() {
         return SOAP_GAPCLOSER_V1_12.create();
     }
 
-    public static Degapper createDegapper(String name) {
+    public static AbstractDegapperProcess createDegapper(String name) {
         return DegapperFactory.valueOf(name).create();
     }
 }

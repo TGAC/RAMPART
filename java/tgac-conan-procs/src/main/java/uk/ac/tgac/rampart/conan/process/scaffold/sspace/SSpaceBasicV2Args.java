@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.conan.process.scaffold.sspace;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.scaffold.ScaffolderArgs;
+import uk.ac.tgac.rampart.conan.process.scaffold.AbstractScaffolderArgs;
 import uk.ac.tgac.rampart.core.data.Library;
 
 import java.io.File;
@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SSpaceBasicV2Args extends ScaffolderArgs {
+public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
 
     private SSpaceBasicV2Params params = new SSpaceBasicV2Params();
 
@@ -78,6 +78,11 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
         this.plot = false;
         this.baseName = null;
         this.verbose = false;
+    }
+
+    @Override
+    public File getOutputFile() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public File getLibraryConfigFile() {
@@ -226,10 +231,10 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
         // **** Main args ****
 
         if (this.libraryConfigFile != null)
-            pvp.put(params.getLibraryFile(), this.libraryConfigFile.getPath());
+            pvp.put(params.getLibraryFile(), this.libraryConfigFile.getAbsolutePath());
 
-        if (this.getInput() != null)
-            pvp.put(params.getContigsFile(), this.getInput().getPath());
+        if (this.getInputFile() != null)
+            pvp.put(params.getContigsFile(), this.getInputFile().getAbsolutePath());
 
         pvp.put(params.getExtend(), Integer.toString(this.extend));
 
@@ -281,7 +286,7 @@ public class SSpaceBasicV2Args extends ScaffolderArgs {
                 this.libraryConfigFile = new File(entry.getValue());
             }
             else if (param.equals(this.params.getContigsFile().getName())) {
-                this.setInput(new File(entry.getValue()));
+                this.setInputFile(new File(entry.getValue()));
             }
             else if (param.equals(this.params.getExtend().getName())) {
                 this.extend = Integer.parseInt(entry.getValue());

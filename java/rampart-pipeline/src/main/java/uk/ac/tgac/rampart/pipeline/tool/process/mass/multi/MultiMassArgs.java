@@ -37,10 +37,14 @@ public class MultiMassArgs extends MassArgs {
 
     // Class vars
     private List<File> configs;
+    private File weightingsFile;
 
 
     public MultiMassArgs() {
         this.configs = null;
+        this.weightingsFile = new File(
+                new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(),
+                "/data/weightings.tab");
     }
 
     public List<File> getConfigs() {
@@ -64,6 +68,13 @@ public class MultiMassArgs extends MassArgs {
         this.configs = cfgs;
     }
 
+    public File getWeightingsFile() {
+        return weightingsFile;
+    }
+
+    public void setWeightingsFile(File weightingsFile) {
+        this.weightingsFile = weightingsFile;
+    }
 
     @Override
     public Map<ConanParameter, String> getArgMap() {
@@ -72,6 +83,9 @@ public class MultiMassArgs extends MassArgs {
 
         if (this.configs != null && this.configs.size() > 0)
             pvp.put(params.getConfigs(), this.getConfigs().toString());
+
+        if (this.weightingsFile != null)
+            pvp.put(params.getWeightingsFile(), this.weightingsFile.getAbsolutePath());
 
         pvp.put(params.getParallelMass(), Boolean.toString(this.isRunParallel()));
 
@@ -95,6 +109,8 @@ public class MultiMassArgs extends MassArgs {
                 this.setConfigs(entry.getValue());
             } else if (param.equalsIgnoreCase(this.params.getParallelMass().getName())) {
                 this.setRunParallel(Boolean.parseBoolean(entry.getValue()));
+            } else if (param.equalsIgnoreCase(this.params.getWeightingsFile().getName())) {
+                this.setWeightingsFile(new File(entry.getValue()));
             }
 
         }

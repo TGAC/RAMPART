@@ -30,7 +30,6 @@ import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.context.locality.LocalityFactory;
 import uk.ac.ebi.fgpt.conan.core.context.scheduler.SchedulerFactory;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
-import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
@@ -114,12 +113,26 @@ public class RampartCLI {
                 SchedulerFactory.createScheduler(ConanProperties.getProperty("executionContext.scheduler")) :
                 null;
 
+        if (scheduler != null && ConanProperties.containsKey("executionContext.scheduler.queue")) {
+            scheduler.getArgs().setQueueName(ConanProperties.getProperty("executionContext.scheduler.queue"));
+        }
+
+        if (scheduler != null && ConanProperties.containsKey("executionContext.scheduler.extraArgs")) {
+            scheduler.getArgs().setExtraArgs(ConanProperties.getProperty("executionContext.scheduler.extraArgs"));
+        }
+
+
         ExecutionContext executionContext = new DefaultExecutionContext(locality, scheduler, externalProcessConfiguration, true);
 
         return executionContext;
     }
 
     private static void cleanJob(File jobDir) throws IOException {
+
+        // If no job directory is specified assume we want to clean the current directory
+        if (jobDir == null) {
+            jobDir = new File(".");
+        }
 
         RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
 
@@ -145,9 +158,8 @@ public class RampartCLI {
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
 
-        // Create the RAMPART process
-        ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
-        ConanTask<RampartPipeline> rampartTask = conanTaskFactory.createTask(
+        // Create the RAMPART task
+        ConanTask<RampartPipeline> rampartTask = new DefaultTaskFactory().createTask(
                 rampartPipeline,
                 0,
                 rampartPipeline.getArgs().getArgMap(),

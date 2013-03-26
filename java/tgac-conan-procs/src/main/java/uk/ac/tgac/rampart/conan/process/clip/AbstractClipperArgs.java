@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.process.clip;
 
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.conan.process.AbstractAmpArgs;
 
 import java.io.File;
 
@@ -26,32 +26,15 @@ import java.io.File;
  * Date: 01/02/13
  * Time: 09:56
  */
-public abstract class ClipperArgs implements ProcessArgs {
+public abstract class AbstractClipperArgs extends AbstractAmpArgs {
 
-    private File input;
-    private File output;
+    private File outputFile;
     private int minLen;
 
-    public ClipperArgs() {
-        this.input = null;
-        this.output = null;
+    protected AbstractClipperArgs() {
+        super();
+        this.outputFile = null;
         this.minLen = 1000;
-    }
-
-    public File getInput() {
-        return input;
-    }
-
-    public void setInput(File input) {
-        this.input = input;
-    }
-
-    public File getOutput() {
-        return output;
-    }
-
-    public void setOutput(File output) {
-        this.output = output;
     }
 
     public int getMinLen() {
@@ -62,4 +45,12 @@ public abstract class ClipperArgs implements ProcessArgs {
         this.minLen = minLen;
     }
 
+    @Override
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public void setOutputFile(File outputFile) {
+        this.outputFile = outputFile;
+    }
 }

@@ -18,7 +18,7 @@
 package uk.ac.tgac.rampart.conan.process.clip.simple;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.clip.ClipperArgs;
+import uk.ac.tgac.rampart.conan.process.clip.AbstractClipperArgs;
 
 import java.io.File;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ import java.util.Map;
  * Date: 01/02/13
  * Time: 09:58
  */
-public class SimpleClipperArgs extends ClipperArgs {
+public class SimpleClipperArgs extends AbstractClipperArgs {
 
     private SimpleClipperParams params = new SimpleClipperParams();
 
@@ -37,15 +37,17 @@ public class SimpleClipperArgs extends ClipperArgs {
         super();
     }
 
+
+
     @Override
     public Map<ConanParameter, String> getArgMap() {
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.getInput() != null)
-            pvp.put(params.getInputFile(), this.getInput().getPath());
+        if (this.getInputFile() != null)
+            pvp.put(params.getInputFile(), this.getInputFile().getAbsolutePath());
 
-        if (this.getOutput() != null)
-            pvp.put(params.getOutputFile(), this.getOutput().getPath());
+        if (this.getOutputFile() != null)
+            pvp.put(params.getOutputFile(), this.getOutputFile().getAbsolutePath());
 
         if (this.getMinLen() > 1)
             pvp.put(params.getMinLen(), String.valueOf(this.getMinLen()));
@@ -65,9 +67,9 @@ public class SimpleClipperArgs extends ClipperArgs {
             String param = entry.getKey().getName();
 
             if (param.equals(this.params.getInputFile().getName())) {
-                this.setInput(new File(entry.getValue()));
+                this.setInputFile(new File(entry.getValue()));
             } else if (param.equals(this.params.getOutputFile().getName())) {
-                this.setOutput(new File(entry.getValue()));
+                this.setOutputFile(new File(entry.getValue()));
             } else if (param.equals(this.params.getMinLen().getName())) {
                 this.setMinLen(Integer.parseInt(entry.getValue()));
             } else {

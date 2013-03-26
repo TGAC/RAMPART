@@ -18,8 +18,9 @@
 package uk.ac.tgac.rampart.conan.process.dedup.nizar;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.conan.process.dedup.DeduplicatorArgs;
+import uk.ac.tgac.rampart.conan.process.dedup.AbstractDeduplicatorArgs;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -27,10 +28,15 @@ import java.util.Map;
  * Date: 15/03/13
  * Time: 11:46
  */
-public class NizarDedupArgs extends DeduplicatorArgs {
+public class NizarDedupArgs extends AbstractDeduplicatorArgs {
 
     public NizarDedupArgs() {
         super();
+    }
+
+    @Override
+    public File getOutputFile() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

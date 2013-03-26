@@ -15,34 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.conan.process.degap.gapcloser;
+package uk.ac.tgac.rampart.pipeline.tool.process.mass.single;
 
-import uk.ac.tgac.rampart.conan.process.degap.AbstractDegapperProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 /**
  * User: maplesod
- * Date: 23/01/13
- * Time: 13:44
+ * Date: 25/03/13
+ * Time: 11:10
  */
-public class GapCloserV112Process extends AbstractDegapperProcess {
+public interface SingleMassExecutor {
 
-    public static final String EXE = "GapCloser";
-
-    public GapCloserV112Process() {
-        this(new GapCloserV112Args());
-    }
-
-    public GapCloserV112Process(GapCloserV112Args args) {
-        super(EXE, args, new GapCloserV112Params());
-    }
-
-    @Override
-    public String getCommand() {
-        return this.getCommand(this.getProcessArgs(), true, "-", " ");
-    }
-
-    @Override
-    public String getName() {
-        return "SOAP_GapCloser_v1.12";
-    }
+    void executeSingleMass(SingleMassArgs singleMassArgs, ConanProcessService conanProcessService, ExecutionContext executionContext)
+            throws InterruptedException, ProcessExecutionException;
 }

@@ -51,4 +51,12 @@ public class RampartStageTest {
         assertTrue(stageList.size() == 1);
         assertTrue(stageList.get(0) == RampartStage.MASS);
     }
+
+    @Test
+    public void testMassTranslateFilename() {
+
+        String key = RampartStage.MASS.translateFilenameToKey("MASS-k51.fa");
+
+        assertTrue(key.equals("51"));
+    }
 }

@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.process.clip.simple;
 
-import uk.ac.tgac.rampart.conan.process.clip.Clipper;
+import uk.ac.tgac.rampart.conan.process.clip.AbstractClipperProcess;
 
 import java.io.*;
 
@@ -28,7 +28,7 @@ import java.io.*;
  * Time: 10:56
  * To change this template use File | Settings | File Templates.
  */
-public class SimpleClipperProcess extends Clipper {
+public class SimpleClipperProcess extends AbstractClipperProcess {
 
     public SimpleClipperProcess() {
         this(new SimpleClipperArgs());
@@ -41,7 +41,7 @@ public class SimpleClipperProcess extends Clipper {
 
     @Override
     public String getName() {
-        return "RAMPART Clipper";
+        return "RAMPART AbstractClipperProcess";
     }
 
     @Override
@@ -52,14 +52,14 @@ public class SimpleClipperProcess extends Clipper {
 
     private void clip() throws IOException {
 
-        SimpleClipperArgs args = (SimpleClipperArgs)this.getClipperArgs();
+        SimpleClipperArgs args = (SimpleClipperArgs)this.getProcessArgs();
 
-        if (args.getInput() == null || !args.getInput().exists()) {
+        if (args.getInputFile() == null || !args.getInputFile().exists()) {
             throw new IOException("Input file does not exist");
         }
 
-        BufferedReader reader = new BufferedReader(new FileReader(args.getInput()));
-        PrintWriter writer = new PrintWriter(new FileWriter(args.getOutput()));
+        BufferedReader reader = new BufferedReader(new FileReader(args.getInputFile()));
+        PrintWriter writer = new PrintWriter(new FileWriter(args.getOutputFile()));
 
         // Ignore everything but the sequences
         // While loop handles multi-line sequences

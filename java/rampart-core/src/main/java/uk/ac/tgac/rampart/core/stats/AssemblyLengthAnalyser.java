@@ -38,7 +38,7 @@ public class AssemblyLengthAnalyser {
     public AssemblyStats analyse(File in) throws IOException {
 
         if (in == null || !in.exists()) {
-             throw new IOException("Input file does not exist");
+             throw new IOException("Input file does not exist: " + in.getAbsolutePath());
         }
 
 

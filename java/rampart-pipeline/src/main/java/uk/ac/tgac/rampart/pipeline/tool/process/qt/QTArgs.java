@@ -61,7 +61,7 @@ public class QTArgs implements ProcessArgs {
 
     public QTArgs() {
         this.config = null;
-        this.outputDir = new File(".");
+        this.outputDir = new File("");
         this.qualityTrimmer = "SICKLE_PE_V1_1";
         this.minLen = 60;
         this.minQual = 30;

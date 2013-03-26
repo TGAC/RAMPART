@@ -59,11 +59,11 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
     protected final void load(File statsFile) throws IOException {
 
         if (statsFile == null || !statsFile.exists())
-            throw new IOException("Stats File doesn't exit");
+            throw new IOException("Stats File doesn't exist");
 
         List<String> lines = readLines(statsFile);
 
-        for(String line : lines.subList(1, lines.size() -1)) {
+        for(String line : lines.subList(1, lines.size())) {
             String[] parts = line.split("\\|");
 
             AssemblyStats stats = new AssemblyStats(parts);

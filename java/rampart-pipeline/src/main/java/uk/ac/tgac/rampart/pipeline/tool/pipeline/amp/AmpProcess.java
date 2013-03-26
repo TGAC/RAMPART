@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.pipeline.tool.pipeline.amp;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
-import uk.ac.ebi.fgpt.conan.factory.ConanTaskFactory;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
@@ -38,6 +37,15 @@ import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 @Component
 public class AmpProcess extends AbstractConanProcess {
 
+    public AmpProcess() {
+        this(new AmpArgs());
+    }
+
+    public AmpProcess(AmpArgs args) {
+        super("", args, new AmpParams());
+    }
+
+
     @Override
     public String getName() {
         return "AMP (Assembly iMProver)";
@@ -51,32 +59,26 @@ public class AmpProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
 
-        AmpArgs args = (AmpArgs)this.getProcessArgs();
-
-        // This may have been done already but lets make sure that all the processes link together properly
-        args.linkProcesses();
-
         // Create AMP Pipeline
-        AmpPipeline ampPipeline = new AmpPipeline(args);
+        AmpPipeline ampPipeline = new AmpPipeline((AmpArgs)this.getProcessArgs());
+        ampPipeline.configureProcesses();
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
 
-        // Create the RAMPART process
-        ConanTaskFactory conanTaskFactory = new DefaultTaskFactory();
-
-        ConanTask<AmpPipeline> ampTask = conanTaskFactory.createTask(
+        // Create the AMP task
+        ConanTask<AmpPipeline> ampTask = new DefaultTaskFactory().createTask(
                 ampPipeline,
                 0,
-                null,
+                ampPipeline.getArgs().getArgMap(),
                 ConanTask.Priority.HIGHEST,
                 rampartUser);
 
-        ampTask.setId("");
+        ampTask.setId("AMP");
         ampTask.submit();
 
         try {
-            ampTask.execute();
+            ampTask.execute(executionContext);
         } catch (TaskExecutionException e) {
             throw new ProcessExecutionException(-1, e);
         }

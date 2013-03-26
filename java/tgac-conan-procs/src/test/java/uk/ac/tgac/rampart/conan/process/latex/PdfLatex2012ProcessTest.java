@@ -67,7 +67,7 @@ public class PdfLatex2012ProcessTest {
         PdfLatex2012Process process = new PdfLatex2012Process(args);
 
         String command = process.getFullCommand();
-        String correct = "mkdir -p " + pwd + "pdfLatexOut; cd " + pwd + "pdfLatexOut; pdflatex -interaction=nonstopmode " + pwd + "texFile.tex; cd " + pwd;
+        String correct = "mkdir -p " + pwd + "pdfLatexOut; cd " + pwd + "pdfLatexOut; pdflatex -interaction=nonstopmode " + pwd + "texFile.tex 2>&1; cd " + pwd;
 
         assertTrue(command != null);
         assertTrue(command.length() == correct.length());
