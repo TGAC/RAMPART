@@ -83,6 +83,11 @@ public class SickleSeV11Args extends SickleV11Args {
 
 
     @Override
+    public void parse(String args) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public Map<ConanParameter, String> getArgMap() {
 
         Map<ConanParameter, String> pvp = super.getArgMap();

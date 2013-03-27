@@ -26,6 +26,8 @@ import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.rampart.pipeline.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.pipeline.tool.process.analyser.length.LengthAnalysisArgs;
 
 /**
  * This class wraps a Pipeline to manage each AMP stage
@@ -61,7 +63,9 @@ public class AmpProcess extends AbstractConanProcess {
 
         // Create AMP Pipeline
         AmpPipeline ampPipeline = new AmpPipeline((AmpArgs)this.getProcessArgs());
+        ampPipeline.setConanProcessService(this.getConanProcessService());
         ampPipeline.configureProcesses();
+        ampPipeline.createLinks(executionContext);
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -85,4 +89,5 @@ public class AmpProcess extends AbstractConanProcess {
 
         return true;
     }
+
 }

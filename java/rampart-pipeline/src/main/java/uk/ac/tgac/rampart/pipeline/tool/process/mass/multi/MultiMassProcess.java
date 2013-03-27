@@ -153,7 +153,7 @@ public class MultiMassProcess extends AbstractConanProcess {
     protected void executeMassSelector(MultiMassArgs args, List<File> statsFiles, ExecutionContext executionContext)
             throws IOException, ProcessExecutionException, InterruptedException {
 
-        File statsDir = new File(args.getOutputDir(), "analyser");
+        File statsDir = new File(args.getOutputDir(), "stats");
         if (!statsDir.mkdirs()) {
             throw new IOException("Couldn't create directory for MASS analyser");
         }

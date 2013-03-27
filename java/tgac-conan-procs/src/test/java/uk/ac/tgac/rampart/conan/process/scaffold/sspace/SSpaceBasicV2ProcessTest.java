@@ -85,6 +85,7 @@ public class SSpaceBasicV2ProcessTest {
     public void testSSpaceBasicV2FullCommand() {
 
         SSpaceBasicV2Process task = createSspaceProc();
+        task.initialise();
 
         String command = task.getFullCommand();
 

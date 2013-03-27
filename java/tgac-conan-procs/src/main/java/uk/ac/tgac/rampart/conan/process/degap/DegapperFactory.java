@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.conan.process.degap;
 
+import uk.ac.tgac.rampart.conan.process.degap.gapcloser.GapCloserV112Args;
 import uk.ac.tgac.rampart.conan.process.degap.gapcloser.GapCloserV112Process;
 
 /**
@@ -27,20 +28,32 @@ import uk.ac.tgac.rampart.conan.process.degap.gapcloser.GapCloserV112Process;
 public enum DegapperFactory {
 
     SOAP_GAPCLOSER_V1_12 {
+
         @Override
         public AbstractDegapperProcess create() {
             return new GapCloserV112Process();
+        }
+
+        @Override
+        public AbstractDegapperProcess create(AbstractDegapperArgs abstractDegapperArgs) {
+            return new GapCloserV112Process((GapCloserV112Args)abstractDegapperArgs);
+        }
+
+        @Override
+        public AbstractDegapperProcess create(String degapperArgs) {
+            GapCloserV112Args gcArgs = new GapCloserV112Args();
+            gcArgs.parse(degapperArgs);
+            return new GapCloserV112Process(gcArgs);
         }
     };
 
 
     public abstract AbstractDegapperProcess create();
+    public abstract AbstractDegapperProcess create(AbstractDegapperArgs abstractDegapperArgs);
+    public abstract AbstractDegapperProcess create(String degapperArgs);
 
-    public static AbstractDegapperProcess createDegapper() {
-        return SOAP_GAPCLOSER_V1_12.create();
+    public static DegapperFactory getDefaultDegapper() {
+        return SOAP_GAPCLOSER_V1_12;
     }
 
-    public static AbstractDegapperProcess createDegapper(String name) {
-        return DegapperFactory.valueOf(name).create();
-    }
 }

@@ -54,6 +54,12 @@ public class Library implements Serializable {
 				return "Scaffolding";
 			}
 		},
+        GC {
+            @Override
+            public String toString() {
+                return "Gap Closing";
+            }
+        },
 		QT {
 			@Override
 			public String toString() {
@@ -65,6 +71,7 @@ public class Library implements Serializable {
 
         public static final Usage ASSEMBLING = ASM;
         public static final Usage SCAFFOLDING = SCF;
+        public static final Usage GAP_CLOSING = GC;
         public static final Usage QUALITY_TRIMMING = QT;
 	}
 	

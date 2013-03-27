@@ -27,6 +27,7 @@ import uk.ac.tgac.rampart.conan.process.degap.AbstractDegapperArgs;
 import uk.ac.tgac.rampart.conan.process.degap.DegapperFactory;
 import uk.ac.tgac.rampart.conan.process.scaffold.AbstractScaffolderArgs;
 import uk.ac.tgac.rampart.conan.process.scaffold.ScaffolderFactory;
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,60 +42,88 @@ public enum AmpFactory {
 
     CLIP {
         @Override
-        public AbstractAmpProcess create(AbstractAmpArgs abstractAmpArgs) {
-            return ClipperFactory.createClipper((AbstractClipperArgs)abstractAmpArgs);
+        public AbstractAmpProcess create() {
+            return ClipperFactory.createClipper();
         }
 
         @Override
         public AbstractAmpProcess create(String ampTaskName) {
-            return ClipperFactory.createClipper(ampTaskName);
+            return ClipperFactory.valueOf(ampTaskName).create();
+        }
+
+        @Override
+        public AbstractAmpProcess create(String ampTaskName, String args) {
+            return ClipperFactory.valueOf(ampTaskName).create(); //, args);
         }
     },
     DEDUPLICATE {
         @Override
-        public AbstractAmpProcess create(AbstractAmpArgs abstractAmpArgs) {
-            return DeduplicatorFactory.createDeduplicator((AbstractDeduplicatorArgs)abstractAmpArgs);
+        public AbstractAmpProcess create() {
+            return DeduplicatorFactory.createDeduplicator();
         }
 
         @Override
         public AbstractAmpProcess create(String ampTaskName) {
-            return DeduplicatorFactory.createDeduplicator(ampTaskName);
+            return DeduplicatorFactory.valueOf(ampTaskName).create();
+        }
+
+        @Override
+        public AbstractAmpProcess create(String ampTaskName, String args) {
+            return DeduplicatorFactory.valueOf(ampTaskName).create(); //(args);
         }
     },
     DEGAP {
         @Override
-        public AbstractAmpProcess create(AbstractAmpArgs abstractAmpArgs) {
-            return DegapperFactory.createDegapper((AbstractDegapperArgs)abstractAmpArgs);
+        public AbstractAmpProcess create() {
+            return DegapperFactory.getDefaultDegapper().create();
         }
 
         @Override
         public AbstractAmpProcess create(String ampTaskName) {
-            return DegapperFactory.createDegapper(ampTaskName);
+            return DegapperFactory.valueOf(ampTaskName).create();
+        }
+
+        @Override
+        public AbstractAmpProcess create(String ampTaskName, String args) {
+            return DegapperFactory.valueOf(ampTaskName).create(args);
         }
     },
     SCAFFOLD {
         @Override
-        public AbstractAmpProcess create(AbstractAmpArgs abstractAmpArgs) {
-            return ScaffolderFactory.createScaffolder((AbstractScaffolderArgs)abstractAmpArgs);
+        public AbstractAmpProcess create() {
+            return ScaffolderFactory.getDefaultScaffolder().create();
         }
 
         @Override
         public AbstractAmpProcess create(String ampTaskName) {
-            return ScaffolderFactory.createScaffolder(ampTaskName);
+            return ScaffolderFactory.valueOf(ampTaskName).create();
+        }
+
+        @Override
+        public AbstractAmpProcess create(String ampTaskName, String args) {
+            return ScaffolderFactory.valueOf(ampTaskName).create(args);
         }
     };
 
-    public abstract AbstractAmpProcess create(AbstractAmpArgs abstractAmpArgs);
-
+    public abstract AbstractAmpProcess create();
     public abstract AbstractAmpProcess create(String ampTaskName);
+    public abstract AbstractAmpProcess create(String ampTaskName, String args);
 
 
     public static AbstractAmpProcess createAmpTask(String taskType) {
-        return AmpFactory.valueOf(taskType.toUpperCase())..create();
+        return getAmpTaskType(taskType).create();
     }
 
     public static AbstractAmpProcess createAmpTask(String taskType, String taskName) {
-        return AmpFactory.valueOf(taskType.toUpperCase()).create(taskName);
+        return getAmpTaskType(taskType).create(taskName.toUpperCase().trim());
+    }
+
+    public static AbstractAmpProcess createAmpTask(String taskType, String taskName, String args) {
+        return getAmpTaskType(taskType).create(taskName.toUpperCase().trim(), args);
+    }
+
+    public static AmpFactory getAmpTaskType(String taskType) {
+        return AmpFactory.valueOf(taskType.toUpperCase().trim());
     }
 
     public static AbstractAmpProcess createFromString(String taskString) {
@@ -104,7 +133,21 @@ public enum AmpFactory {
             String taskType = parts[0];
             String taskName = parts[1];
 
-            return AmpFactory.createAmpTask(taskType, taskName);
+            if (parts.length > 2) {
+
+                StringJoiner sj = new StringJoiner(" ");
+
+                for(int i = 2; i < parts.length; i++) {
+                    sj.add(parts[i]);
+                }
+
+                String taskArgs = sj.toString();
+
+                return AmpFactory.createAmpTask(taskType, taskName, taskArgs);
+            }
+            else {
+                return AmpFactory.createAmpTask(taskType, taskName);
+            }
         } else {
             return AmpFactory.createAmpTask(taskString);
         }

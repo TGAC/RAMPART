@@ -86,11 +86,15 @@ public enum RampartStage {
 
         @Override
         public String translateFilenameToKey(String filename) {
-            Pattern pattern = Pattern.compile("\\d+");
-            Matcher matcher = pattern.matcher(filename);
-            String key = matcher.group(1);
 
-            return key;
+            Pattern pattern = Pattern.compile("^.*-(\\d+).*$");
+            Matcher matcher = pattern.matcher(filename);
+
+            if (matcher.matches()) {
+                return matcher.group(1);
+            } else {
+                return null;
+            }
         }
 
         @Override

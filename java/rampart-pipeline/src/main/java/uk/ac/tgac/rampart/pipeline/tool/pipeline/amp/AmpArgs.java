@@ -124,8 +124,11 @@ public class AmpArgs implements ProcessArgs {
             AbstractAmpProcess ampProcess = this.processes.get(i);
             AbstractAmpArgs ampArgs = ampProcess.getAmpArgs();
 
+            String job = "AMP-" + Integer.toString(i);
+
             ampArgs.setInputFile(inputFile);
-            ampArgs.setOutputDir(new File(this.getOutputDir(), Integer.toString(i)));
+            ampArgs.setOutputDir(new File(this.getOutputDir(), job));
+            ampArgs.setOutputPrefix(job);
             ampArgs.setLibraries(this.getLibs());
 
             inputFile = ampArgs.getOutputFile();
@@ -208,6 +211,11 @@ public class AmpArgs implements ProcessArgs {
         }
 
         return args;
+    }
+
+    @Override
+    public void parse(String args) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

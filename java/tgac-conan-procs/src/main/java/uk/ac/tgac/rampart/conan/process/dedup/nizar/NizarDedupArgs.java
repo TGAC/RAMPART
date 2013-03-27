@@ -40,6 +40,11 @@ public class NizarDedupArgs extends AbstractDeduplicatorArgs {
     }
 
     @Override
+    public void parse(String args) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public Map<ConanParameter, String> getArgMap() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }

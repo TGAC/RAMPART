@@ -32,6 +32,7 @@ public abstract class AbstractAmpArgs implements ProcessArgs {
 
     private File inputFile;
     private File outputDir;
+    private String outputPrefix;
     private List<Library> libraries;
     private int threads;
 
@@ -39,6 +40,7 @@ public abstract class AbstractAmpArgs implements ProcessArgs {
 
         this.inputFile = null;
         this.outputDir = null;
+        this.outputPrefix = "AMP";
         this.libraries = null;
         this.threads = 1;
     }
@@ -57,6 +59,14 @@ public abstract class AbstractAmpArgs implements ProcessArgs {
 
     public void setOutputDir(File outputDir) {
         this.outputDir = outputDir;
+    }
+
+    public String getOutputPrefix() {
+        return outputPrefix;
+    }
+
+    public void setOutputPrefix(String outputPrefix) {
+        this.outputPrefix = outputPrefix;
     }
 
     public List<Library> getLibraries() {

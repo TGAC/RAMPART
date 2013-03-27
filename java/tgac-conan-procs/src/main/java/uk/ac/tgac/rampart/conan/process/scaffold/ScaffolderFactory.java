@@ -30,13 +30,27 @@ public enum ScaffolderFactory {
     SSPACE_BASIC_V2 {
 
         @Override
+        public AbstractScaffolderProcess create() {
+            return new SSpaceBasicV2Process();
+        }
+
+        @Override
         public AbstractScaffolderProcess create(AbstractScaffolderArgs abstractScaffolderArgs) {
             return new SSpaceBasicV2Process((SSpaceBasicV2Args)abstractScaffolderArgs);
+        }
+
+        @Override
+        public AbstractScaffolderProcess create(String args) {
+            SSpaceBasicV2Args sspaceArgs = new SSpaceBasicV2Args();
+            sspaceArgs.parse(args);
+            return new SSpaceBasicV2Process(sspaceArgs);
         }
     };
 
 
+    public abstract AbstractScaffolderProcess create();
     public abstract AbstractScaffolderProcess create(AbstractScaffolderArgs abstractScaffolderArgs);
+    public abstract AbstractScaffolderProcess create(String args);
 
     public static ScaffolderFactory getDefaultScaffolder() {
         return SSPACE_BASIC_V2;

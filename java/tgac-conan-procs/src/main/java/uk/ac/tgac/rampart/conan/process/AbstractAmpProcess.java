@@ -34,4 +34,7 @@ public abstract class AbstractAmpProcess extends AbstractConanProcess {
     public AbstractAmpArgs getAmpArgs() {
         return (AbstractAmpArgs)this.getProcessArgs();
     }
+
+    public void initialise() {
+    }
 }

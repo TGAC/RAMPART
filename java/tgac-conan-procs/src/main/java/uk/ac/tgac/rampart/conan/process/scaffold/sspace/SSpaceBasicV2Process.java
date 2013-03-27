@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.conan.process.scaffold.sspace;
 
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.conan.process.scaffold.AbstractScaffolderProcess;
 
@@ -41,11 +42,15 @@ public class SSpaceBasicV2Process extends AbstractScaffolderProcess {
 
     public SSpaceBasicV2Process(SSpaceBasicV2Args args) {
         super(EXE, args, new SSpaceBasicV2Params());
+    }
+
+    @Override
+    public void initialise() {
 
         String pwdFull = new File(".").getAbsolutePath();
         String pwd = pwdFull.substring(0, pwdFull.length() - 1);
 
-        this.addPreCommand("cd " + args.getOutputDir().getAbsolutePath());
+        this.addPreCommand("cd " + ((SSpaceBasicV2Args)this.getProcessArgs()).getOutputDir().getAbsolutePath());
         this.addPostCommand("cd " + pwd);
     }
 
@@ -82,7 +87,13 @@ public class SSpaceBasicV2Process extends AbstractScaffolderProcess {
             throw new ProcessExecutionException(-1, ioe);
         }
 
-        return super.execute(executionContext);
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContextCopy.usingScheduler()) {
+            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(args.getOutputDir(), args.getOutputFile().getName() + ".scheduler.log"));
+        }
+
+        return super.execute(executionContextCopy);
     }
 
 }

@@ -59,4 +59,12 @@ public class RampartStageTest {
 
         assertTrue(key.equals("51"));
     }
+
+    @Test
+    public void testAmpTranslateFilename() {
+
+        String key = RampartStage.AMP.translateFilenameToKey("AMP-1.fa");
+
+        assertTrue(key.equals("1"));
+    }
 }

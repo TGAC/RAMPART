@@ -55,7 +55,6 @@ public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
 
     // **** Additional args ****
     private boolean plot;
-    private String baseName;
     private boolean verbose;
 
 
@@ -76,13 +75,12 @@ public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
 
         // **** Additional args ****
         this.plot = false;
-        this.baseName = null;
         this.verbose = false;
     }
 
     @Override
     public File getOutputFile() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new File(this.getOutputDir(), this.getBaseName() + ".final.scaffolds.fasta");
     }
 
     public File getLibraryConfigFile() {
@@ -102,11 +100,11 @@ public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
     }
 
     public String getBaseName() {
-        return baseName;
+        return this.getOutputPrefix();
     }
 
     public void setBaseName(String baseName) {
-        this.baseName = baseName;
+        this.setOutputPrefix(baseName);
     }
 
     public int getMinOverlap() {
@@ -224,6 +222,11 @@ public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
 
 
     @Override
+    public void parse(String args) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public Map<ConanParameter, String> getArgMap() {
 
         Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
@@ -261,8 +264,8 @@ public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
         if (this.plot)
             pvp.put(params.getPlot(), Boolean.toString(this.plot));
 
-        if (this.baseName != null)
-            pvp.put(params.getBaseName(), this.baseName);
+        if (this.getOutputPrefix() != null)
+            pvp.put(params.getBaseName(), this.getOutputPrefix());
 
         if (this.verbose)
             pvp.put(params.getVerbose(), Boolean.toString(this.verbose));
@@ -316,7 +319,7 @@ public class SSpaceBasicV2Args extends AbstractScaffolderArgs {
                 this.plot = Boolean.parseBoolean(entry.getValue());
             }
             else if (param.equals(this.params.getBaseName().getName())) {
-                this.baseName = entry.getValue();
+                this.setOutputPrefix(entry.getValue());
             }
             else if (param.equals(this.params.getVerbose().getName())) {
                 this.verbose = Boolean.parseBoolean(entry.getValue());

@@ -22,6 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.conan.process.degap.AbstractDegapperArgs;
 import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.core.data.SeqFile;
+import uk.ac.tgac.rampart.core.utils.StringJoiner;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +55,19 @@ public class GapCloserV112Args extends AbstractDegapperArgs {
     @Override
     public File getOutputFile() {
         return this.outputFile;
+    }
+
+    @Override
+    public void setOutputPrefix(String outputPrefix) {
+
+        if (this.getOutputDir() != null) {
+            this.setOutputFile(new File(this.getOutputDir(), outputPrefix + ".fa"));
+        }
+        else {
+            this.setOutputFile(new File(outputPrefix + ".fa"));
+        }
+
+        super.setOutputPrefix(outputPrefix);
     }
 
     public void setOutputFile(File outputFile) {
@@ -89,18 +104,24 @@ public class GapCloserV112Args extends AbstractDegapperArgs {
 
         for (Library lib : libs) {
 
-            if (lib.testUsage(Library.Usage.SCAFFOLDING)) {
+            if (lib.testUsage(Library.Usage.GAP_CLOSING)) {
 
-                String[] parts = new String[]{
-                        lib.getName(),
-                        lib.getFilePaired1().getFilePath(),
-                        lib.getFilePaired2().getFilePath(),
-                        lib.getAverageInsertSize().toString(),
-                        lib.getInsertErrorTolerance().toString(),
-                        lib.getSeqOrientation().toString()
-                };
+                StringJoiner sj = new StringJoiner("\n");
 
-                lines.add(StringUtils.join(parts, " "));
+                sj.add("[LIB]");
+                sj.add(lib.getReadLength() != null, "max_rd_len=", Integer.toString(lib.getReadLength()));
+                sj.add(lib.getAverageInsertSize() != null, "avg_ins=", Integer.toString(lib.getAverageInsertSize()));
+                sj.add(lib.getSeqOrientation() != null, "reverse_seq=", lib.getSeqOrientation() == Library.SeqOrientation.FORWARD_REVERSE ? "0" : "1");
+                sj.add("asm_flags=3");
+                sj.add(lib.getIndex() != null, "rank=", Integer.toString(lib.getIndex()));
+                sj.add(lib.getFilePaired1() != null && lib.getFilePaired1().getFileType() == SeqFile.FileType.FASTQ, "q1=", lib.getFilePaired1().getFilePath());
+                sj.add(lib.getFilePaired2() != null && lib.getFilePaired2().getFileType() == SeqFile.FileType.FASTQ, "q2=", lib.getFilePaired2().getFilePath());
+                //sj.add(lib.getSeFile() != null && lib.getSeFile().getFileType() == SeqFile.FileType.FASTQ, "q=", lib.getSeFile().getFilePath());
+                sj.add(lib.getFilePaired1() != null && lib.getFilePaired1().getFileType() == SeqFile.FileType.FASTA, "f1=", lib.getFilePaired1().getFilePath());
+                sj.add(lib.getFilePaired2() != null && lib.getFilePaired2().getFileType() == SeqFile.FileType.FASTA, "f2=", lib.getFilePaired2().getFilePath());
+                //sj.add(lib.getSeFile() != null && lib.getSeFile().getFileType() == SeqFile.FileType.FASTA, "f=", lib.getSeFile().getFilePath());
+
+                lines.add(sj.toString() + "\n");
             }
 
         }
@@ -108,6 +129,11 @@ public class GapCloserV112Args extends AbstractDegapperArgs {
         FileUtils.writeLines(outputLibFile, lines);
     }
 
+
+    @Override
+    public void parse(String args) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 
     @Override
     public Map<ConanParameter, String> getArgMap() {
