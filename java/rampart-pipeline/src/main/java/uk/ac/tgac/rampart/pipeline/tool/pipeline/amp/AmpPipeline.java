@@ -161,7 +161,7 @@ public class AmpPipeline implements ConanPipeline {
 
         File scaffoldsDir = new File(args.getOutputDir(), "assemblies");
 
-        scaffoldsDir.mkdir();
+        scaffoldsDir.mkdirs();
 
         for(int i = 0; i < args.getProcesses().size(); i++) {
 
