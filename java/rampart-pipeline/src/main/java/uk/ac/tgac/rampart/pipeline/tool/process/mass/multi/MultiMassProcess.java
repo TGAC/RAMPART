@@ -111,7 +111,7 @@ public class MultiMassProcess extends AbstractConanProcess {
             }
 
             // Wait for all assembly jobs to finish if they are running as background tasks.
-            if (args.isRunParallel()) {
+            if (args.getParallelismLevel().doParallelMass()) {
                 log.debug("Single MASS jobs executed in parallel, waiting for completion");
                 this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
@@ -154,7 +154,9 @@ public class MultiMassProcess extends AbstractConanProcess {
             throws IOException, ProcessExecutionException, InterruptedException {
 
         File statsDir = new File(args.getOutputDir(), "stats");
-        if (!statsDir.mkdirs()) {
+        statsDir.mkdirs();
+
+        if (!statsDir.exists()) {
             throw new IOException("Couldn't create directory for MASS analyser");
         }
 
@@ -180,7 +182,8 @@ public class MultiMassProcess extends AbstractConanProcess {
         for (RampartConfiguration config : configs) {
 
             // Assume we're using args gathered from the config file for now
-            SingleMassArgs singleMassArgs = SingleMassArgs.parseConfig(config.getFile());
+            SingleMassArgs singleMassArgs = new SingleMassArgs();
+            singleMassArgs.parseConfig(config.getFile());
 
             // Override args loaded from file if explicitly specified by the MultiMassArgs
             if (args.getAssembler() != null) {
@@ -199,11 +202,15 @@ public class MultiMassProcess extends AbstractConanProcess {
                 singleMassArgs.setStepSize(args.getStepSize());
             }
 
+            if (args.getParallelismLevel() != MassArgs.DEFAULT_PARALLELISM_LEVEL) {
+                singleMassArgs.setParallelismLevel(args.getParallelismLevel());
+            }
+
+
             // These args are automatically set.
             singleMassArgs.setOutputDir(new File(args.getOutputDir(), config.getJob().getName()));
             singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + config.getJob().getName());
             singleMassArgs.setConfig(config.getFile());
-            singleMassArgs.setRunParallel(args.isRunParallel());
 
             // Add to list
             singleMassArgsList.add(singleMassArgs);

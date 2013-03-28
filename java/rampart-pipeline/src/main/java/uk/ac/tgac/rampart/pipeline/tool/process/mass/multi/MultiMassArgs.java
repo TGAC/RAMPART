@@ -76,6 +76,7 @@ public class MultiMassArgs extends MassArgs {
         this.weightingsFile = weightingsFile;
     }
 
+
     @Override
     public void parse(String args) {
         //To change body of implemented methods use File | Settings | File Templates.
@@ -91,8 +92,6 @@ public class MultiMassArgs extends MassArgs {
 
         if (this.weightingsFile != null)
             pvp.put(params.getWeightingsFile(), this.weightingsFile.getAbsolutePath());
-
-        pvp.put(params.getParallelMass(), Boolean.toString(this.isRunParallel()));
 
         return pvp;
     }
@@ -112,8 +111,6 @@ public class MultiMassArgs extends MassArgs {
 
             if (param.equals((this.params.getConfigs().getName()))) {
                 this.setConfigs(entry.getValue());
-            } else if (param.equalsIgnoreCase(this.params.getParallelMass().getName())) {
-                this.setRunParallel(Boolean.parseBoolean(entry.getValue()));
             } else if (param.equalsIgnoreCase(this.params.getWeightingsFile().getName())) {
                 this.setWeightingsFile(new File(entry.getValue()));
             }

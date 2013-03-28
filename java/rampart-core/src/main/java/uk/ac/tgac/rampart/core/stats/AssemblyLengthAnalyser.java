@@ -127,6 +127,7 @@ public class AssemblyLengthAnalyser {
         }
 
         AssemblyStats stats = new AssemblyStats();
+        stats.setFilePath(in.getAbsolutePath());
         stats.setNbContigs((long) lengths.size());
         stats.setNbBases(totalNbBases);
         stats.setMinLen(lengths.get(lengths.size()-1));

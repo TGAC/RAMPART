@@ -17,12 +17,15 @@
  **/
 package uk.ac.tgac.rampart.pipeline.tool.process.mass;
 
+import org.ini4j.Profile;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.core.data.Library;
+import uk.ac.tgac.rampart.core.data.RampartConfiguration;
 import uk.ac.tgac.rampart.pipeline.tool.process.mass.single.SingleMassParams;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +38,15 @@ import java.util.Map;
  */
 public abstract class MassArgs implements ProcessArgs {
 
+    // Keys for config file
+    public static final String MASS_TOOL = "tool";
+    public static final String MASS_KMIN = "kmin";
+    public static final String MASS_KMAX = "kmax";
+    public static final String MASS_STEP = "step";
+    public static final String MASS_THREADS = "threads";
+    public static final String MASS_MEMORY = "memory";
+    public static final String MASS_PARALLEL = "parallel";
+
     // Constants
     public static final int KMER_MIN = 11;
     public static final int KMER_MAX = 125;
@@ -43,6 +55,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final StepSize DEFAULT_STEP_SIZE = StepSize.MEDIUM;
     public static final int DEFAULT_THREADS = 8;
     public static final int DEFAULT_MEM = 50000;
+    public static final ParallelismLevel DEFAULT_PARALLELISM_LEVEL = ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY;
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -55,9 +68,30 @@ public abstract class MassArgs implements ProcessArgs {
     private List<Library> libs;
     private String jobPrefix;
     private File outputDir;
-    private boolean runParallel;
     private int threads;
     private int memory;
+    private ParallelismLevel parallelismLevel;
+
+    public enum ParallelismLevel {
+
+        LINEAR,
+        PARALLEL_ASSEMBLIES_ONLY,
+        PARALLEL_MASS_ONLY,
+        FULL;
+
+        public static ParallelismLevel P0 = LINEAR;
+        public static ParallelismLevel P1 = PARALLEL_ASSEMBLIES_ONLY;
+        public static ParallelismLevel P2 = PARALLEL_MASS_ONLY;
+        public static ParallelismLevel P3 = FULL;
+
+        public boolean doParallelAssemblies() {
+            return this == PARALLEL_ASSEMBLIES_ONLY || this == FULL;
+        }
+
+        public boolean doParallelMass() {
+            return this == PARALLEL_MASS_ONLY || this == FULL;
+        }
+    }
 
 
     public MassArgs() {
@@ -70,6 +104,7 @@ public abstract class MassArgs implements ProcessArgs {
         this.outputDir = null;
         this.threads = DEFAULT_THREADS;
         this.memory = DEFAULT_MEM;
+        this.parallelismLevel = DEFAULT_PARALLELISM_LEVEL;
     }
 
 
@@ -129,14 +164,6 @@ public abstract class MassArgs implements ProcessArgs {
         this.jobPrefix = jobPrefix;
     }
 
-    public boolean isRunParallel() {
-        return runParallel;
-    }
-
-    public void setRunParallel(boolean runParallel) {
-        this.runParallel = runParallel;
-    }
-
     public int getThreads() {
         return threads;
     }
@@ -153,6 +180,44 @@ public abstract class MassArgs implements ProcessArgs {
         this.memory = mem;
     }
 
+    public ParallelismLevel getParallelismLevel() {
+        return parallelismLevel;
+    }
+
+    public void setParallelismLevel(ParallelismLevel parallelismLevel) {
+        this.parallelismLevel = parallelismLevel;
+    }
+
+    public void parseConfig(File config) throws IOException {
+
+        RampartConfiguration rampartConfig = new RampartConfiguration();
+
+        rampartConfig.load(config);
+        this.setLibs(rampartConfig.getLibs());
+        Profile.Section section = rampartConfig.getMassSettings();
+
+        if (section != null) {
+            for (Map.Entry<String, String> entry : section.entrySet()) {
+
+                if (entry.getKey().equalsIgnoreCase(MASS_TOOL)) {
+                    this.setAssembler(entry.getValue());
+                } else if (entry.getKey().equalsIgnoreCase(MASS_KMIN)) {
+                    this.setKmin(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_KMAX)) {
+                    this.setKmax(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_STEP)) {
+                    this.setStepSize(StepSize.valueOf(entry.getValue().toUpperCase()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_THREADS)) {
+                    this.setThreads(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_MEMORY)) {
+                    this.setMemory(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_PARALLEL)) {
+                    this.setParallelismLevel(ParallelismLevel.valueOf(entry.getValue().trim().toUpperCase()));
+                }
+            }
+        }
+    }
+
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
@@ -165,8 +230,12 @@ public abstract class MassArgs implements ProcessArgs {
         pvp.put(params.getKmax(), String.valueOf(this.kmax));
         pvp.put(params.getThreads(), String.valueOf(this.threads));
         pvp.put(params.getMemory(), String.valueOf(this.memory));
-        pvp.put(params.getStepSize(), this.stepSize.toString());
-        pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
+
+        if (this.stepSize != null)
+            pvp.put(params.getStepSize(), this.stepSize.toString());
+
+        if (this.parallelismLevel != null)
+            pvp.put(params.getParallelismLevel(), this.parallelismLevel.toString());
 
         // TODO not sure the toString method is sufficient here.
         if (this.libs != null && this.libs.size() > 0)
@@ -211,6 +280,8 @@ public abstract class MassArgs implements ProcessArgs {
                 this.jobPrefix = entry.getValue();
             } else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
+            } else if (param.equalsIgnoreCase(this.params.getParallelismLevel().getName())) {
+                this.parallelismLevel = ParallelismLevel.valueOf(entry.getValue());
             }
         }
     }

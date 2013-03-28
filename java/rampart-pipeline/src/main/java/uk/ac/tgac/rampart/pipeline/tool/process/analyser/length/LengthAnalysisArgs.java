@@ -37,11 +37,13 @@ public class LengthAnalysisArgs implements ProcessArgs {
     private File inputDir;
     private File outputDir;
     private RampartStage rampartStage;
+    private String dataset;
 
     public LengthAnalysisArgs() {
         this.inputDir = null;
         this.outputDir = null;
         this.rampartStage = RampartStage.MASS;
+        this.dataset = null;
     }
 
     public File getInputDir() {
@@ -68,6 +70,14 @@ public class LengthAnalysisArgs implements ProcessArgs {
         this.rampartStage = rampartStage;
     }
 
+    public String getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(String dataset) {
+        this.dataset = dataset;
+    }
+
     @Override
     public void parse(String args) {
         //To change body of implemented methods use File | Settings | File Templates.
@@ -78,13 +88,21 @@ public class LengthAnalysisArgs implements ProcessArgs {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.inputDir != null)
+        if (this.inputDir != null) {
             pvp.put(params.getInputDir(), this.inputDir.getAbsolutePath());
+        }
 
-        if (this.outputDir != null)
+        if (this.outputDir != null) {
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
+        }
 
-        pvp.put(params.getStage(), this.rampartStage.toString());
+        if (this.rampartStage != null) {
+            pvp.put(params.getStage(), this.rampartStage.toString());
+        }
+
+        if (this.dataset != null && !this.dataset.isEmpty()) {
+            pvp.put(params.getDataset(), this.rampartStage.toString());
+        }
 
         return pvp;
     }
@@ -106,6 +124,8 @@ public class LengthAnalysisArgs implements ProcessArgs {
                 this.outputDir = new File(entry.getValue());
             } else if (param.equals(this.params.getStage().getName())) {
                 this.rampartStage = RampartStage.valueOf(entry.getValue());
+            } else if (param.equals(this.params.getDataset().getName())) {
+                this.dataset = entry.getValue();
             } else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
             }

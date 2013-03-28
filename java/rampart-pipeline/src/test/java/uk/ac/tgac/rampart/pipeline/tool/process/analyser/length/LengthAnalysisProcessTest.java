@@ -83,9 +83,9 @@ public class LengthAnalysisProcessTest {
         boolean foundStats = false;
         boolean foundPlots = false;
         for (File file : files) {
-            if (file.getName().equals("analyser.txt")) {
+            if (file.getName().equals("stats.txt")) {
                 foundStats = true;
-            } else if (file.getName().equals("analyser.pdf")) {
+            } else if (file.getName().equals("stats.pdf")) {
                 foundPlots = true;
             }
         }

@@ -36,6 +36,7 @@ public class LengthAnalysisParams implements ProcessParams {
     private ConanParameter inputDir;
     private ConanParameter outputDir;
     private ConanParameter stage;
+    private ConanParameter dataset;
 
     public LengthAnalysisParams() {
 
@@ -55,6 +56,13 @@ public class LengthAnalysisParams implements ProcessParams {
                 false,
                 true,
                 false);
+
+        this.dataset = new DefaultConanParameter(
+                "dataset",
+                "The dataset we are currently processing (only used for tagging output file)",
+                false,
+                true,
+                false);
     }
 
     public ConanParameter getInputDir() {
@@ -69,12 +77,17 @@ public class LengthAnalysisParams implements ProcessParams {
         return stage;
     }
 
+    public ConanParameter getDataset() {
+        return dataset;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
         return new ArrayList<ConanParameter>(Arrays.asList(
                 new ConanParameter[]{
                         this.inputDir,
                         this.outputDir,
-                        this.stage}));
+                        this.stage,
+                        this.dataset}));
     }
 }

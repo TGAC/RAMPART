@@ -99,10 +99,21 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
 
                 String key = args.getRampartStage().translateFilenameToKey(assemblyFile.getName());
                 AssemblyStats stats = this.sequenceStatisticsService.analyseAssembly(assemblyFile);
+
+                // Add extra info to the stats object if the statistics service returned something useful
+                if (stats != null) {
+                    if (args.getRampartStage() != null) {
+                        stats.setDesc(args.getRampartStage().toString());
+                    }
+
+                    stats.setDataset(args.getDataset());
+                    stats.setFilePath(assemblyFile.getAbsolutePath());
+                }
+
                 statsMap.put(key, stats);
             }
 
-            File statsFile = new File(args.getOutputDir(), "analyser.txt");
+            File statsFile = new File(args.getOutputDir(), "stats.txt");
 
             // Store the analyser in a file, so we can load them in R
             writeStatistics(statsFile, statsMap, args.getRampartStage());
@@ -135,7 +146,7 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
         // Build the mass plotter R scripts arg list
         List<String> rScriptArgs = new ArrayList<String>();
         rScriptArgs.add(statsFile.getAbsolutePath());
-        rScriptArgs.add(new File(outputDir, "analyser.pdf").getAbsolutePath());
+        rScriptArgs.add(new File(outputDir, "stats.pdf").getAbsolutePath());
 
         // Set the args for R
         RV2122Args rArgs = new RV2122Args();
@@ -150,7 +161,7 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
         ExecutionContext envCopy = env.copy();
 
         if (envCopy.usingScheduler()) {
-            envCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, "analyser.log"));
+            envCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, "stats.log"));
         }
 
         // Execute the Mass Plotter R script.

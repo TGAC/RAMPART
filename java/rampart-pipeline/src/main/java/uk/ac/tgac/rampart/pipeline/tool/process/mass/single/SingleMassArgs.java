@@ -34,19 +34,13 @@ import java.util.Map;
  */
 public class SingleMassArgs extends MassArgs {
 
-    public static final String MASS_TOOL = "tool";
-    public static final String MASS_KMIN = "kmin";
-    public static final String MASS_KMAX = "kmax";
-    public static final String MASS_STEP = "step";
-    public static final String MASS_THREADS = "threads";
-    public static final String MASS_MEMORY = "memory";
+
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
 
     // Class vars
     private File config;
-
 
     public SingleMassArgs() {
         this.config = null;
@@ -77,40 +71,9 @@ public class SingleMassArgs extends MassArgs {
     }
 
     public File getStatsFile() {
-        return new File(this.getContigsDir(), "analyser.txt");
+        return new File(this.getContigsDir(), "stats.txt");
     }
 
-    public static SingleMassArgs parseConfig(File config) throws IOException {
-
-        RampartConfiguration rampartConfig = new RampartConfiguration();
-
-        SingleMassArgs args = new SingleMassArgs();
-
-        rampartConfig.load(config);
-        args.setLibs(rampartConfig.getLibs());
-        Profile.Section section = rampartConfig.getMassSettings();
-
-        if (section != null) {
-            for (Map.Entry<String, String> entry : section.entrySet()) {
-
-                if (entry.getKey().equalsIgnoreCase(MASS_TOOL)) {
-                    args.setAssembler(entry.getValue());
-                } else if (entry.getKey().equalsIgnoreCase(MASS_KMIN)) {
-                    args.setKmin(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_KMAX)) {
-                    args.setKmax(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_STEP)) {
-                    args.setStepSize(StepSize.valueOf(entry.getValue().toUpperCase()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_THREADS)) {
-                    args.setThreads(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_MEMORY)) {
-                    args.setMemory(Integer.parseInt(entry.getValue()));
-                }
-            }
-        }
-
-        return args;
-    }
 
     @Override
     public void parse(String args) {

@@ -42,9 +42,9 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter libs;
     private ConanParameter outputDir;
     private ConanParameter jobPrefix;
-    private ConanParameter runParallel;
     private ConanParameter threads;
     private ConanParameter memory;
+    private ConanParameter parallelismLevel;
 
 
     public MassParams() {
@@ -92,11 +92,6 @@ public abstract class MassParams implements ProcessParams {
                 true,
                 false);
 
-        this.runParallel = new FlagParameter(
-                "runParallel",
-                "If set to true, each sub job will be executed in parallel rather than in sequence.  Ensure you have enough" +
-                        " resource before using this setting");
-
         this.threads = new NumericParameter(
                 "threads",
                 "The number of threads to use for each assembly process (Default: 8)",
@@ -106,6 +101,13 @@ public abstract class MassParams implements ProcessParams {
                 "memory",
                 "The amount of memory to request for each assembly process (Default: 50000)",
                 true);
+
+        this.parallelismLevel = new DefaultConanParameter(
+                "parallelismLevel",
+                "The level of parallelism to use when running MASS: LINEAR, PARALLEL_ASSEMBLIES_ONLY, PARALLEL_MASS_ONLY, PARALLEL.  Default: LINEAR",
+                false,
+                true,
+                false);
     }
 
     public ConanParameter getAssembler() {
@@ -136,16 +138,16 @@ public abstract class MassParams implements ProcessParams {
         return jobPrefix;
     }
 
-    public ConanParameter getRunParallel() {
-        return runParallel;
-    }
-
     public ConanParameter getThreads() {
         return threads;
     }
 
     public ConanParameter getMemory() {
         return memory;
+    }
+
+    public ConanParameter getParallelismLevel() {
+        return parallelismLevel;
     }
 
     @Override
@@ -160,9 +162,9 @@ public abstract class MassParams implements ProcessParams {
                         this.libs,
                         this.outputDir,
                         this.jobPrefix,
-                        this.runParallel,
                         this.threads,
-                        this.memory
+                        this.memory,
+                        this.parallelismLevel
                 }));
     }
 

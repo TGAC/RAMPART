@@ -35,7 +35,6 @@ public class MultiMassParams extends MassParams {
 
     private ConanParameter configs;
     private ConanParameter weightingsFile;
-    private ConanParameter parallelMass;
 
     public MultiMassParams() {
 
@@ -50,10 +49,6 @@ public class MultiMassParams extends MassParams {
                 "weightings",
                 "The file containing the weightings to apply to each assembly statistic",
                 false);
-
-        this.parallelMass = new FlagParameter(
-                "parallel",
-                "Whether or not to execute the RAW and QT MASS processes in parallel, assuming that we are executing the job using a scheduling system.  Default: TRUE");
     }
 
     public ConanParameter getConfigs() {
@@ -64,10 +59,6 @@ public class MultiMassParams extends MassParams {
         return weightingsFile;
     }
 
-    public ConanParameter getParallelMass() {
-        return parallelMass;
-    }
-
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -75,8 +66,8 @@ public class MultiMassParams extends MassParams {
 
         params.addAll(Arrays.asList(
                 this.configs,
-                this.weightingsFile,
-                this.parallelMass));
+                this.weightingsFile
+        ));
 
         return params;
     }

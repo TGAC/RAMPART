@@ -159,10 +159,11 @@ public class RampartPipeline implements ConanPipeline {
         }
 
         MultiMassArgs multiMassArgs = new MultiMassArgs();
+        multiMassArgs.parseConfig(this.args.getConfig());
+
         multiMassArgs.setConfigs(massConfigFiles);
         multiMassArgs.setOutputDir(jobFS.getMassDir());
         multiMassArgs.setJobPrefix(jobPrefix + "-mass");
-        multiMassArgs.setRunParallel(true);
 
         // Create AMP args
         AmpArgs ampArgs = AmpArgs.parseConfig(args.getConfig());
