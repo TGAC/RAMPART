@@ -1,8 +1,0 @@
-#!/bin/sh
-
-query=$1
-target=$2
-output=$3
-
-
-exonerate-2.2.0 exonerate --query $query --target $target --showvulgar no --showalignment no --ryo "ryo\t%qi:%qab-%qae:%qS:%qal-%ql\t%ti:%tab-%tae:%tS:%tal-%tl\t%pi\t%em\n" > $output
