@@ -71,7 +71,7 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
 
     @Override
     public String getCommand() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     @Override
@@ -134,8 +134,23 @@ public class LengthAnalysisProcess extends AbstractConanProcess {
         PrintWriter writer = new PrintWriter(new FileWriter(outputFile));
 
         writer.println(rampartStage.getStatsID() + "|" + AssemblyStats.getStatsFileHeader());
-        for (Map.Entry<String, AssemblyStats> entry : statsMap.entrySet()) {
-            writer.println(entry.getKey() + "|" + (entry.getValue() != null ? entry.getValue().toStatsFileString() : ""));
+
+        // Get keyset and sort
+        Set<String> keys = statsMap.keySet();
+
+        List<Integer> sortedKeys = new ArrayList<Integer>();
+        for(String key : keys) {
+            sortedKeys.add(Integer.parseInt(key));
+        }
+
+        Collections.sort(sortedKeys);
+
+        for (Integer keyIndex : sortedKeys) {
+
+            String key = keyIndex.toString();
+            AssemblyStats value = statsMap.get(key);
+
+            writer.println(key + "|" + (value != null ? value.toStatsFileString() : ""));
         }
 
         writer.close();

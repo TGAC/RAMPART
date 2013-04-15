@@ -32,8 +32,11 @@ import uk.ac.tgac.conan.core.service.SequenceStatisticsService;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +61,7 @@ public class LengthAnalysisProcessTest {
     SequenceStatisticsService sequenceStatisticsService;
 
     @Test
-    public void localQTTest() throws InterruptedException, ProcessExecutionException, URISyntaxException {
+    public void processTest() throws InterruptedException, ProcessExecutionException, URISyntaxException, IOException {
 
         File outputDir = temp.newFolder("statsTest");
         File statsAssemblyDir = FileUtils.toFile(this.getClass().getResource("/tools/stats/MASS-k75-scaffolds.fa")).getParentFile();
@@ -79,17 +82,14 @@ public class LengthAnalysisProcessTest {
 
         lengthAnalysisProcess.execute(ec);
 
-        File[] files = outputDir.listFiles();
-        boolean foundStats = false;
-        boolean foundPlots = false;
-        for (File file : files) {
-            if (file.getName().equals("stats.txt")) {
-                foundStats = true;
-            } else if (file.getName().equals("stats.pdf")) {
-                foundPlots = true;
-            }
-        }
+        File statsFile = new File(outputDir, "stats.txt");
 
-        assertTrue(foundStats);
+        // Ensure stats file exists
+        assertTrue(statsFile.exists());
+
+        List<String> statsLines = FileUtils.readLines(statsFile);
+
+        assertFalse(statsLines.get(1).startsWith("101"));
     }
+
 }
