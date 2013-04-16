@@ -12,44 +12,58 @@ RAMPART automates an first pass assembly pipeline.  The pipeline can be divided 
 2 - Perform a kmer optimisation procedure where multiple contig assemblies are execute with a range of kmer values.  
 The best assembly is selected for the next stage.
 3 - Enhance the best contig assembly using scaffolding, gap closing and other post-processing features.
-4 - Reporting and persisting job information.  
+4 - Reporting job information.
 
+
+
+Compilation:
+
+RAMPART is a java maven project that depends on two other java maven projects: TgacConanProcs and ConanX.  Both of these
+projects are available from github: https://github.com/TGAC/TgacConanProcs.git and https://github.com/TGAC/Conan2.git (use
+conanx branch).  Both of these projects should be installed to your local maven repo first.  TgacConanProcs depends on
+conanx, so install conanx first.  Afterwards, RAMPART can be installed via maven which should produce the shaded jar located
+in <project_dir>/target.  The projects require JDK 1.6 or above to compile.
 
 
 Installation:
 
-Copy and extract the RAMPART deliverable to a directory of your choice.  Add this directory to your PATH environment variable.
+Copy the RAMPART jar to a directory of your choice.  The jar is a "shaded" jar which means that it contains all required
+dependencies, except for the java JRE.  JRE 1.6 or above is required to run RAMPART.
+
+Optionally, add this directory containing the jar to your PATH environment variable for convienience.
 
 
 
 Quick start:
 
-1. Ensure the RAMPART root directory is on the path.  
-2. Create a job configuration file (details below) in a clean directory.  
-3. Then make this directory the working directory and type: "rampart.pl --config <name of config file>"
+1. Create a job configuration file (details below) in a clean directory.
+2. Then make this directory the working directory and type: "java -jar rampart-0.4.jar --config <name of config file>"
 
 This will run RAMPART with its default settings on the data you've provided in the config file.
 
-More information on RAMPART usage can be obtained by typing "rampart.pl --man".
+More information on RAMPART usage can be obtained by typing "java -jar rampart-0.4.jar --help".
 
 
 
 Config file:
 
-An example configuration file can be found in "<rampart dir>/example.cfg".  The configuration file takes a standard "ini" format and
-is divided into the following sections: 
+An example configuration file can be found in "<rampart dir>/example.cfg".  The configuration file takes a standard "ini"
+format and is divided into the following sections:
 
 - [JOB] - which contains all general information regarding the job to be run.  Information in
 this section is used for building an automatic report at the end of the assembly process.  
 
-- [LIB<x>] - which represents a library that should be processed by RAMPART.  The <x> represents the order in which this library should
-be processed.  Generally, we start with [LIB1] and increment this value as necessary.
+- [LIB<x>] - which represents a library that should be processed by RAMPART.  The <x> represents the order in which this
+library should be processed.  Generally, we start with [LIB1] and increment this value as necessary.
+
+- [QT] - which contains properties for the Quality Trimming stage.
 
 - [MASS] - which contains properties for the Multiple Assembly stage.  Typically use this to set kmer range.
 
-- [IMPROVER] - which contains properties for the Improver stage.  Typically use this to set the tool order.
+- [AMP] - which contains properties for the Improver stage.  Typically use this to set the tool order.
 
-Each section can contain properties, which take the following format: "<key>=<value>".  Each property should be separated by a new line.  
+Each section can contain properties, which take the following format: "<key>=<value>".  Each property should be separated
+by a new line.
 
 The JOB section can contain the following properties:
 
@@ -65,41 +79,53 @@ Each LIB section can contain the following properties:
 - "name"                 - The library name, for use in the report.
 - "read_length"          - The maximum read length for reads in this library
 - "avg_insert_size"      - The average insert size for paired end or mate pair reads
-- "insert_err_tolerance" - Used in the scaffolding step to determine how tolerant the scaffolder should be when mapping reads that deviate 
+- "insert_err_tolerance" - Used in the scaffolding step to determine how tolerant the scaffolder should be when mapping
+reads that deviate
 from the expected insert_size
-- "usage"                - One of the following values: "ASSEMBLY_ONLY", "SCAFFOLDING_ONLY", "ASSEMBLY_AND_SCAFFOLDING".
-- "seq_orientation"      - One of the following values: "FR", "RF", "FF", "RR". 
+- "usage"                - One or more of the following values separated by commas: "QT", "ASM", "SCF, "GC", or all.
+e.g. "usage=QT,ASM,SCF"
+- "seq_orientation"      - One of the following values: "FR", "RF", "FF", "RR" (generally FR for paired end and RF for
+mate pair).
+- "type"                 - Library type: "SE", "PE", or "MP"
 - "file_paired_1"        - If this is a paired end or mate pair library, this represents the first file of the pair.
 - "file_paired_2"        - If this is a paired end of mate pair library, this represents the second file of the pair.
 - "se_file"              - For use if this is a single end read library.
 
 The MASS section can contain the following properties:
 
-- "kmin"		- The minimum kmer value to process (don't pick even numbers, preferably pick a number which has a unit digit of 1, i.e. 41)
-- "kmax"		- The maximum kmer value to process (don't pick even numbers, preferably pick a number which has a unit digit of 1 or 5, i.e. 91 or 95)
+- "tool"        - The tool and version to use for assembling
+- "threads"     - The number of threads to use for assembling
+- "memory"      - The approximate amount of memory required to assemble the job (used for job scheduling)
+- "parallel"    - The level of parallelism to use: PARALLEL_ASSEMBLIES_ONLY
+- "kmin"		- The minimum kmer value to process (don't pick even numbers, preferably pick a number which has a unit
+digit of 1, i.e. 41)
+- "kmax"		- The maximum kmer value to process (don't pick even numbers, preferably pick a number which has a unit
+digit of 1 or 5, i.e. 91 or 95)
 
-The IMPROVER section can contain the following properties:
+The AMP section can contain the following properties:
 
-- <INDEX NUM>	- This key should be a number describing the position in the queue in an assembly enhancement tool should be run.  Available assembly enhancement tools include: SCAFFOLD, DEGAP, DEDUP, CLIP
+- <INDEX NUM>	- This key should be a number describing the position in the queue in an assembly enhancement tool should
+be run.  Available assembly enhancement tools include: SCAFFOLD, DEGAP, DEDUP, CLIP
 
 
 Output:
 
 A typical RAMPART run will produce the following directory structure:
 
-- /reads    - A directory containing quality trimmed versions of the input libraries and custom configuration files representing both the raw and 
-quality trimmed datasets.
+- /reads    - A directory containing quality trimmed versions of the input libraries and custom configuration files
+representing both the raw and quality trimmed datasets.
 - /mass     - A directory containing the results of assembling the raw and qt trimmed input libraries.  
-- /improver - A directory containing the results of the assembly enhancement process applied to the best contig assembly from MASS.
+- /amp - A directory containing the results of the assembly enhancement process applied to the best contig assembly
+from MASS.
 - /report   - A directory containing an automatically generated report detailing the results of this RAMPART job.  
 
 
 
 
-Managing dependencies:
+Managing tool dependencies:
 
-RAMPART uses a number of 3rd party tools during processing.  The current list is described below.  For full functionality, all these
-tools should be available in your environment:
+RAMPART uses a number of 3rd party tools during processing.  The current list is described below.  For full functionality,
+all these tools should be available in your environment:
 
 Quality Trimming: sickle 1.1, ...
 Assembly: abyss 1.3.4, ...
@@ -108,11 +134,17 @@ Degapping: SOAP Gap Closer 1.12, ...
 Java: JRE 1.6
 LaTeX: texlive 2012, ...
 
-Often it's not possible to keep all these tools with the specified versions on the PATH.  There is a file in the rampart root directory called: 
-"grid_engine_app_startup.cfg", which enables the user to execute any commands that would bring the specified tools onto the PATH.  The current
-version of the file is intended for use on the TGAC cluster.
 
+RAMPART properties:
 
+It is expected that a file called "conan.properties" exists in "~/.rampart/"   In this file it is possible to describe the
+execution context within which to run the RAMPART pipeline.  For example, you can specify the scheduling system to use and
+if so, what queue to run on.
+
+Often it's not possible to keep all these tools with the specified versions on the PATH.  It is possible to specify
+another file in the "conan.properties" file using the "externalProcessConfigFile" property.  This file can contain any
+commands that should be executed before running each process.  This enables the user to execute any commands that would
+bring the specified tools onto the PATH for the given environment.
 
 Contact:
 Daniel Mapleson (TGAC)
