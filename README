@@ -146,6 +146,13 @@ another file in the "conan.properties" file using the "externalProcessConfigFile
 commands that should be executed before running each process.  This enables the user to execute any commands that would
 bring the specified tools onto the PATH for the given environment.
 
+
+Logging:
+
+For debugging or auditing purposes it is possible to log the progress of each RAMPART run.  To do this simply place a log4j
+ properties file in "~/.rampart".  RAMPART will automatically detect the file and log progress during the run.  For more
+ information on log4j properties files see:  http://logging.apache.org/log4j/1.2/manual.html
+
 Contact:
 Daniel Mapleson (TGAC)
 http://tgac.ac.uk/
