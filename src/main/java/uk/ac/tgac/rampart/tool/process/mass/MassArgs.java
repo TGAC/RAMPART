@@ -46,6 +46,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final String MASS_THREADS = "threads";
     public static final String MASS_MEMORY = "memory";
     public static final String MASS_PARALLEL = "parallel";
+    public static final String MASS_CVG_CUTOFF = "cutoff";
 
     // Constants
     public static final int KMER_MIN = 11;
@@ -56,6 +57,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final int DEFAULT_THREADS = 8;
     public static final int DEFAULT_MEM = 50000;
     public static final ParallelismLevel DEFAULT_PARALLELISM_LEVEL = ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY;
+    public static final int DEFAULT_CVG_CUTOFF = -1;
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -71,6 +73,7 @@ public abstract class MassArgs implements ProcessArgs {
     private int threads;
     private int memory;
     private ParallelismLevel parallelismLevel;
+    private int coverageCutoff;
 
     public enum ParallelismLevel {
 
@@ -105,6 +108,7 @@ public abstract class MassArgs implements ProcessArgs {
         this.threads = DEFAULT_THREADS;
         this.memory = DEFAULT_MEM;
         this.parallelismLevel = DEFAULT_PARALLELISM_LEVEL;
+        this.coverageCutoff = DEFAULT_CVG_CUTOFF;
     }
 
 
@@ -188,6 +192,14 @@ public abstract class MassArgs implements ProcessArgs {
         this.parallelismLevel = parallelismLevel;
     }
 
+    public int getCoverageCutoff() {
+        return coverageCutoff;
+    }
+
+    public void setCoverageCutoff(int coverageCutoff) {
+        this.coverageCutoff = coverageCutoff;
+    }
+
     public void parseConfig(File config) throws IOException {
 
         RampartConfiguration rampartConfig = new RampartConfiguration();
@@ -213,6 +225,8 @@ public abstract class MassArgs implements ProcessArgs {
                     this.setMemory(Integer.parseInt(entry.getValue()));
                 } else if (entry.getKey().equalsIgnoreCase(MASS_PARALLEL)) {
                     this.setParallelismLevel(ParallelismLevel.valueOf(entry.getValue().trim().toUpperCase()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_CVG_CUTOFF)) {
+                    this.setCoverageCutoff(Integer.parseInt(entry.getValue()));
                 }
             }
         }
@@ -231,11 +245,17 @@ public abstract class MassArgs implements ProcessArgs {
         pvp.put(params.getThreads(), String.valueOf(this.threads));
         pvp.put(params.getMemory(), String.valueOf(this.memory));
 
-        if (this.stepSize != null)
+        if (this.stepSize != null) {
             pvp.put(params.getStepSize(), this.stepSize.toString());
+        }
 
-        if (this.parallelismLevel != null)
+        if (this.parallelismLevel != null) {
             pvp.put(params.getParallelismLevel(), this.parallelismLevel.toString());
+        }
+
+        if (this.coverageCutoff > -1) {
+            pvp.put(params.getCoverageCutoff(), Integer.toString(this.coverageCutoff));
+        }
 
         // TODO not sure the toString method is sufficient here.
         if (this.libs != null && this.libs.size() > 0)
@@ -282,6 +302,8 @@ public abstract class MassArgs implements ProcessArgs {
                 this.outputDir = new File(entry.getValue());
             } else if (param.equalsIgnoreCase(this.params.getParallelismLevel().getName())) {
                 this.parallelismLevel = ParallelismLevel.valueOf(entry.getValue());
+            } else if (param.equalsIgnoreCase(this.params.getCoverageCutoff().getName())) {
+                this.coverageCutoff = Integer.parseInt(entry.getValue());
             }
         }
     }

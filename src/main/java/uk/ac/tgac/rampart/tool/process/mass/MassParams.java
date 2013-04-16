@@ -44,6 +44,7 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter threads;
     private ConanParameter memory;
     private ConanParameter parallelismLevel;
+    private ConanParameter coverageCutoff;
 
 
     public MassParams() {
@@ -107,6 +108,11 @@ public abstract class MassParams implements ProcessParams {
                 false,
                 true,
                 false);
+
+        this.coverageCutoff = new NumericParameter(
+                "coverageCutoff",
+                "The kmer coverage level below which kmers are discarded (Default: -1 i.e. OFF)",
+                true);
     }
 
     public ConanParameter getAssembler() {
@@ -149,6 +155,10 @@ public abstract class MassParams implements ProcessParams {
         return parallelismLevel;
     }
 
+    public ConanParameter getCoverageCutoff() {
+        return coverageCutoff;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -163,7 +173,8 @@ public abstract class MassParams implements ProcessParams {
                         this.jobPrefix,
                         this.threads,
                         this.memory,
-                        this.parallelismLevel
+                        this.parallelismLevel,
+                        this.coverageCutoff
                 }));
     }
 

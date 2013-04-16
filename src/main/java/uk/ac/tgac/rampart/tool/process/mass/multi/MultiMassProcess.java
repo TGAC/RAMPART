@@ -206,6 +206,10 @@ public class MultiMassProcess extends AbstractConanProcess {
                 singleMassArgs.setParallelismLevel(args.getParallelismLevel());
             }
 
+            if (args.getCoverageCutoff() != MassArgs.DEFAULT_CVG_CUTOFF) {
+                singleMassArgs.setCoverageCutoff(args.getCoverageCutoff());
+            }
+
 
             // These args are automatically set.
             singleMassArgs.setOutputDir(new File(args.getOutputDir(), config.getJob().getName()));

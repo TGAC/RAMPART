@@ -178,6 +178,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
                 Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), outputDir);
                 assembler.getArgs().setThreads(args.getThreads());
+                assembler.getArgs().setCoverageCutoff(args.getCoverageCutoff());
 
                 this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, executionContext);
 
