@@ -47,6 +47,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final String MASS_MEMORY = "memory";
     public static final String MASS_PARALLEL = "parallel";
     public static final String MASS_CVG_CUTOFF = "cutoff";
+    public static final String MASS_OUTPUT_LEVEL = "output_level";
 
     // Constants
     public static final int KMER_MIN = 11;
@@ -58,6 +59,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final int DEFAULT_MEM = 50000;
     public static final ParallelismLevel DEFAULT_PARALLELISM_LEVEL = ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY;
     public static final int DEFAULT_CVG_CUTOFF = -1;
+    public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -74,6 +76,7 @@ public abstract class MassArgs implements ProcessArgs {
     private int memory;
     private ParallelismLevel parallelismLevel;
     private int coverageCutoff;
+    private OutputLevel outputLevel;
 
     public enum ParallelismLevel {
 
@@ -96,6 +99,13 @@ public abstract class MassArgs implements ProcessArgs {
         }
     }
 
+    public enum OutputLevel {
+
+        UNITIGS,
+        CONTIGS,
+        SCAFFOLDS
+    }
+
 
     public MassArgs() {
         this.assembler = null;
@@ -109,6 +119,7 @@ public abstract class MassArgs implements ProcessArgs {
         this.memory = DEFAULT_MEM;
         this.parallelismLevel = DEFAULT_PARALLELISM_LEVEL;
         this.coverageCutoff = DEFAULT_CVG_CUTOFF;
+        this.outputLevel = DEFAULT_OUTPUT_LEVEL;
     }
 
 
@@ -200,6 +211,14 @@ public abstract class MassArgs implements ProcessArgs {
         this.coverageCutoff = coverageCutoff;
     }
 
+    public OutputLevel getOutputLevel() {
+        return outputLevel;
+    }
+
+    public void setOutputLevel(OutputLevel outputLevel) {
+        this.outputLevel = outputLevel;
+    }
+
     public void parseConfig(File config) throws IOException {
 
         RampartConfiguration rampartConfig = new RampartConfiguration();
@@ -227,6 +246,8 @@ public abstract class MassArgs implements ProcessArgs {
                     this.setParallelismLevel(ParallelismLevel.valueOf(entry.getValue().trim().toUpperCase()));
                 } else if (entry.getKey().equalsIgnoreCase(MASS_CVG_CUTOFF)) {
                     this.setCoverageCutoff(Integer.parseInt(entry.getValue()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_OUTPUT_LEVEL)) {
+                    this.setOutputLevel(OutputLevel.valueOf(entry.getValue().trim().toUpperCase()));
                 }
             }
         }
@@ -251,6 +272,10 @@ public abstract class MassArgs implements ProcessArgs {
 
         if (this.parallelismLevel != null) {
             pvp.put(params.getParallelismLevel(), this.parallelismLevel.toString());
+        }
+
+        if (this.outputLevel != null) {
+            pvp.put(params.getOutputLevel(), this.outputLevel.toString());
         }
 
         if (this.coverageCutoff > -1) {
@@ -304,6 +329,8 @@ public abstract class MassArgs implements ProcessArgs {
                 this.parallelismLevel = ParallelismLevel.valueOf(entry.getValue());
             } else if (param.equalsIgnoreCase(this.params.getCoverageCutoff().getName())) {
                 this.coverageCutoff = Integer.parseInt(entry.getValue());
+            } else if (param.equalsIgnoreCase(this.params.getOutputLevel().getName())) {
+                this.outputLevel = OutputLevel.valueOf(entry.getValue());
             }
         }
     }

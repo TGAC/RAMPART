@@ -45,6 +45,7 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter memory;
     private ConanParameter parallelismLevel;
     private ConanParameter coverageCutoff;
+    private ConanParameter outputLevel;
 
 
     public MassParams() {
@@ -58,17 +59,17 @@ public abstract class MassParams implements ProcessParams {
 
         this.kmin = new NumericParameter(
                 "kmin",
-                "The minimum k-mer value to assemble",
+                "The minimum k-mer value to assemble. (Default: 51)",
                 true);
 
         this.kmax = new NumericParameter(
                 "kmax",
-                "The maximum k-mer value to assemble",
+                "The maximum k-mer value to assemble. (Default: 85)",
                 true);
 
         this.stepSize = new DefaultConanParameter(
                 "step",
-                "The kmer step size between each assembly: FINE, MEDIUM, COARSE",
+                "The kmer step size between each assembly: [FINE, MEDIUM, COARSE].  (Default: MEDIUM)",
                 false,
                 true,
                 false);
@@ -104,7 +105,7 @@ public abstract class MassParams implements ProcessParams {
 
         this.parallelismLevel = new DefaultConanParameter(
                 "parallelismLevel",
-                "The level of parallelism to use when running MASS: LINEAR, PARALLEL_ASSEMBLIES_ONLY, PARALLEL_MASS_ONLY, PARALLEL.  Default: LINEAR",
+                "The level of parallelism to use when running MASS: [LINEAR, PARALLEL_ASSEMBLIES_ONLY, PARALLEL_MASS_ONLY, PARALLEL].  (Default: LINEAR)",
                 false,
                 true,
                 false);
@@ -113,6 +114,13 @@ public abstract class MassParams implements ProcessParams {
                 "coverageCutoff",
                 "The kmer coverage level below which kmers are discarded (Default: -1 i.e. OFF)",
                 true);
+
+        this.outputLevel = new DefaultConanParameter(
+                "outputLevel",
+                "The output level for the assembler used by MASS: [UNITIGS, CONTIGS, SCAFFOLDS].  (Default: CONTIGS)",
+                false,
+                true,
+                false);
     }
 
     public ConanParameter getAssembler() {
@@ -159,6 +167,10 @@ public abstract class MassParams implements ProcessParams {
         return coverageCutoff;
     }
 
+    public ConanParameter getOutputLevel() {
+        return outputLevel;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -174,7 +186,8 @@ public abstract class MassParams implements ProcessParams {
                         this.threads,
                         this.memory,
                         this.parallelismLevel,
-                        this.coverageCutoff
+                        this.coverageCutoff,
+                        this.outputLevel
                 }));
     }
 
