@@ -34,6 +34,7 @@ import java.util.List;
 public class SingleMassParams extends MassParams {
 
     private ConanParameter config;
+    private ConanParameter jobName;
     private ConanParameter outputDir;
     private ConanParameter jobPrefix;
 
@@ -43,6 +44,13 @@ public class SingleMassParams extends MassParams {
                 "config",
                 "The rampart configuration file containing the libraries to assemble",
                 true);
+
+        this.jobName = new DefaultConanParameter(
+                "job_name",
+                "The job name that distinguishes this MASS run from other mass runs that might be running in parallel.",
+                false,
+                true,
+                false);
 
         this.outputDir = new PathParameter(
                 "output",
@@ -61,6 +69,10 @@ public class SingleMassParams extends MassParams {
         return config;
     }
 
+    public ConanParameter getJobName() {
+        return jobName;
+    }
+
     public ConanParameter getOutputDir() {
         return outputDir;
     }
@@ -75,6 +87,7 @@ public class SingleMassParams extends MassParams {
         return new ArrayList<ConanParameter>(Arrays.asList(
                 new ConanParameter[]{
                         this.config,
+                        this.jobName,
                         this.outputDir,
                         this.jobPrefix}));
     }

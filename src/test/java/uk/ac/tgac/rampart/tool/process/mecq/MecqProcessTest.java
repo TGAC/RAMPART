@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.qt;
+package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
@@ -29,7 +29,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.tgac.conan.process.qt.sickle.SickleV11Process;
+import uk.ac.tgac.conan.process.ec.sickle.SickleV11Process;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
  * Time: 11:53
  */
 @RunWith(MockitoJUnitRunner.class)
-public class QTProcessTest {
+public class MecqProcessTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -64,16 +64,16 @@ public class QTProcessTest {
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
-        QTArgs qtArgs = QTArgs.parseConfig(cfgFile);
-        qtArgs.setOutputDir(outputDir);
+        MecqArgs mecqArgs = MecqArgs.parseConfig(cfgFile);
+        mecqArgs.setOutputDir(outputDir);
 
-        QTProcess qtProcess = new QTProcess(qtArgs);
+        MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 
         when(conanProcessService.execute(sickle, ec)).thenReturn(0);
 
-        ReflectionTestUtils.setField(qtProcess, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(mecqProcess, "conanProcessService", conanProcessService);
 
-        boolean success = qtProcess.execute(ec);
+        boolean success = mecqProcess.execute(ec);
 
         assertTrue(success);
     }

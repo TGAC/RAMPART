@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.qt;
+package uk.ac.tgac.rampart.tool.process.mecq;
 
 import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
 import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
@@ -33,7 +33,7 @@ import java.util.List;
  * Date: 16/01/13
  * Time: 13:37
  */
-public class QTParams implements ProcessParams {
+public class MecqParams implements ProcessParams {
 
     private ConanParameter rampartConfig;
     private ConanParameter qualityTrimmer;
@@ -41,12 +41,15 @@ public class QTParams implements ProcessParams {
     private ConanParameter outputDir;
     private ConanParameter minLength;
     private ConanParameter minQuality;
+    private ConanParameter kmer;
+    private ConanParameter threads;
+    private ConanParameter memoryGb;
     private ConanParameter createConfigs;
     private ConanParameter jobPrefix;
     private ConanParameter runParallel;
     private ConanParameter noQT;
 
-    public QTParams() {
+    public MecqParams() {
 
         this.rampartConfig = new PathParameter(
                 "qtConfig",
@@ -78,6 +81,21 @@ public class QTParams implements ProcessParams {
         this.minQuality = new NumericParameter(
                 "minQuality",
                 "The minimum quality for trimmed reads.  Any reads with quality scores lower than this value will be trimmed.",
+                true);
+
+        this.kmer = new NumericParameter(
+                "kmer",
+                "The kmer value to use for Kmer Frequency Spectrum based correction.  This is often a different value to that used in genome assembly.  See individual correction tool for details.  Default: 17",
+                true);
+
+        this.threads = new NumericParameter(
+                "threads",
+                "The number of threads to use to process data.  Default: 8",
+                true);
+
+        this.memoryGb = new NumericParameter(
+                "memory_gb",
+                "A figure used as a guide to run process in an efficient manner.  Normally it is sensible to slightly overestimate requirements if resources allow it.  Default: 20GB",
                 true);
 
         this.createConfigs = new FlagParameter(
@@ -122,6 +140,22 @@ public class QTParams implements ProcessParams {
         return minQuality;
     }
 
+    public ConanParameter getKmer() {
+        return kmer;
+    }
+
+    public ConanParameter getThreads() {
+        return threads;
+    }
+
+    public ConanParameter getMemoryGb() {
+        return memoryGb;
+    }
+
+    public ConanParameter getNoQT() {
+        return noQT;
+    }
+
     public ConanParameter getOutputDir() {
         return outputDir;
     }
@@ -147,6 +181,10 @@ public class QTParams implements ProcessParams {
                         this.libs,
                         this.minLength,
                         this.minQuality,
+                        this.kmer,
+                        this.threads,
+                        this.memoryGb,
+                        this.noQT,
                         this.outputDir,
                         this.createConfigs,
                         this.jobPrefix,

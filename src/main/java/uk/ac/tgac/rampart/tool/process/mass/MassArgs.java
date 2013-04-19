@@ -48,6 +48,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final String MASS_PARALLEL = "parallel";
     public static final String MASS_CVG_CUTOFF = "cutoff";
     public static final String MASS_OUTPUT_LEVEL = "output_level";
+    public static final String MASS_INPUT_SOURCE = "input_source";
 
     // Constants
     public static final int KMER_MIN = 11;
@@ -60,6 +61,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final ParallelismLevel DEFAULT_PARALLELISM_LEVEL = ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY;
     public static final int DEFAULT_CVG_CUTOFF = -1;
     public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
+    public static final String DEFAULT_INPUT_SOURCE = InputSource.ALL.toString();
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -77,6 +79,7 @@ public abstract class MassArgs implements ProcessArgs {
     private ParallelismLevel parallelismLevel;
     private int coverageCutoff;
     private OutputLevel outputLevel;
+    private String inputSource;
 
     public enum ParallelismLevel {
 
@@ -106,6 +109,13 @@ public abstract class MassArgs implements ProcessArgs {
         SCAFFOLDS
     }
 
+    public enum InputSource {
+
+        RAW,
+        BEST,
+        ALL
+    }
+
 
     public MassArgs() {
         this.assembler = null;
@@ -120,6 +130,7 @@ public abstract class MassArgs implements ProcessArgs {
         this.parallelismLevel = DEFAULT_PARALLELISM_LEVEL;
         this.coverageCutoff = DEFAULT_CVG_CUTOFF;
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
+        this.inputSource = DEFAULT_INPUT_SOURCE;
     }
 
 
@@ -219,6 +230,14 @@ public abstract class MassArgs implements ProcessArgs {
         this.outputLevel = outputLevel;
     }
 
+    public String getInputSource() {
+        return inputSource;
+    }
+
+    public void setInputSource(String inputSource) {
+        this.inputSource = inputSource;
+    }
+
     public void parseConfig(File config) throws IOException {
 
         RampartConfiguration rampartConfig = new RampartConfiguration();
@@ -248,6 +267,21 @@ public abstract class MassArgs implements ProcessArgs {
                     this.setCoverageCutoff(Integer.parseInt(entry.getValue()));
                 } else if (entry.getKey().equalsIgnoreCase(MASS_OUTPUT_LEVEL)) {
                     this.setOutputLevel(OutputLevel.valueOf(entry.getValue().trim().toUpperCase()));
+                } else if (entry.getKey().equalsIgnoreCase(MASS_INPUT_SOURCE)) {
+
+                    String source = InputSource.ALL.toString();
+                    String val = entry.getValue().trim().toUpperCase();
+                    try {
+                        source = InputSource.valueOf(val).toString();
+                    }
+                    catch (IllegalArgumentException ex) {
+
+                        // Checks if this is an integer (otherwise fails)
+                        Integer.parseInt(val);
+                        source = val;
+                    }
+
+                    this.setInputSource(source);
                 }
             }
         }
@@ -276,6 +310,10 @@ public abstract class MassArgs implements ProcessArgs {
 
         if (this.outputLevel != null) {
             pvp.put(params.getOutputLevel(), this.outputLevel.toString());
+        }
+
+        if (this.inputSource != null && !this.inputSource.isEmpty()) {
+            pvp.put(params.getInputSource(), this.inputSource.toString());
         }
 
         if (this.coverageCutoff > -1) {

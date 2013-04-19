@@ -46,6 +46,7 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter parallelismLevel;
     private ConanParameter coverageCutoff;
     private ConanParameter outputLevel;
+    private ConanParameter inputSource;
 
 
     public MassParams() {
@@ -121,6 +122,13 @@ public abstract class MassParams implements ProcessParams {
                 false,
                 true,
                 false);
+
+        this.inputSource = new DefaultConanParameter(
+                "inputSource",
+                "The input source to use for MASS: [RAW, BEST, ALL, <NUM>].  (Default: ALL)",
+                false,
+                true,
+                false);
     }
 
     public ConanParameter getAssembler() {
@@ -171,6 +179,10 @@ public abstract class MassParams implements ProcessParams {
         return outputLevel;
     }
 
+    public ConanParameter getInputSource() {
+        return inputSource;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -187,7 +199,8 @@ public abstract class MassParams implements ProcessParams {
                         this.memory,
                         this.parallelismLevel,
                         this.coverageCutoff,
-                        this.outputLevel
+                        this.outputLevel,
+                        this.inputSource
                 }));
     }
 

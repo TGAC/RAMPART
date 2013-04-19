@@ -17,10 +17,14 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
+import org.ini4j.Profile;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.StepSize;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -30,16 +34,18 @@ import java.util.Map;
  */
 public class SingleMassArgs extends MassArgs {
 
-
+    private static final String MASS_JOB_NAME = "job";
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
 
     // Class vars
     private File config;
+    private String jobName;
 
     public SingleMassArgs() {
         this.config = null;
+        this.jobName = "raw";
     }
 
     public File getConfig() {
@@ -48,6 +54,14 @@ public class SingleMassArgs extends MassArgs {
 
     public void setConfig(File config) {
         this.config = config;
+    }
+
+    public String getJobName() {
+        return jobName;
+    }
+
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
     }
 
     public File getUnitigsDir() {
@@ -67,7 +81,44 @@ public class SingleMassArgs extends MassArgs {
     }
 
     public File getStatsFile() {
-        return new File(this.getContigsDir(), "stats.txt");
+
+        File outputLevelStatsDir = null;
+
+        if (this.getOutputLevel() == OutputLevel.UNITIGS) {
+            outputLevelStatsDir = this.getUnitigsDir();
+        }
+        else if (this.getOutputLevel() == OutputLevel.CONTIGS) {
+            outputLevelStatsDir = this.getContigsDir();
+        }
+        else if (this.getOutputLevel() == OutputLevel.SCAFFOLDS) {
+            outputLevelStatsDir = this.getContigsDir();
+        }
+        else {
+            throw new IllegalArgumentException("Output Level not specified");
+        }
+
+        return new File(outputLevelStatsDir, "stats.txt");
+    }
+
+    @Override
+    public void parseConfig(File config) throws IOException {
+
+        super.parseConfig(config);
+
+        RampartConfiguration rampartConfig = new RampartConfiguration();
+
+        rampartConfig.load(config);
+        this.setLibs(rampartConfig.getLibs());
+        Profile.Section section = rampartConfig.getMassSettings();
+
+        if (section != null) {
+            for (Map.Entry<String, String> entry : section.entrySet()) {
+
+                if (entry.getKey().equalsIgnoreCase(MASS_JOB_NAME)) {
+                    this.jobName = entry.getValue().trim();
+                }
+            }
+        }
     }
 
 
@@ -83,6 +134,9 @@ public class SingleMassArgs extends MassArgs {
 
         if (this.config != null)
             pvp.put(params.getConfig(), this.config.getAbsolutePath());
+
+        if (this.jobName != null && !this.jobName.isEmpty())
+            pvp.put(params.getJobName(), this.jobName);
 
         return pvp;
     }
@@ -102,6 +156,8 @@ public class SingleMassArgs extends MassArgs {
 
             if (param.equals(this.params.getConfig().getName())) {
                 this.config = new File(entry.getValue());
+            } else if (param.equals(this.params.getJobName().getName())) {
+                this.jobName = entry.getValue().trim();
             }
         }
     }

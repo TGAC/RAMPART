@@ -21,7 +21,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisProcess;
 import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassProcess;
-import uk.ac.tgac.rampart.tool.process.qt.QTProcess;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 import uk.ac.tgac.rampart.tool.process.report.ReportProcess;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public enum RampartFactory {
     QT {
         @Override
         public ConanProcess create() {
-            return new QTProcess();
+            return new MecqProcess();
         }
 
     },

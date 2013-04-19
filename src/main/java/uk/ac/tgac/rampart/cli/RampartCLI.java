@@ -87,7 +87,7 @@ public class RampartCLI {
         }
 
         // Load spring
-        RampartAppContext.INSTANCE.load("/applicationContext.xml");
+        //RampartAppContext.INSTANCE.load("/applicationContext.xml");
 
         // Load Conan properties
         final File conanPropsFile = new File(rampartSettingsDir + "conan.properties");

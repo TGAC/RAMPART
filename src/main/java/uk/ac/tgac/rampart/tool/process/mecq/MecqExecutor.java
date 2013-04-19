@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.qt;
+package uk.ac.tgac.rampart.tool.process.mecq;
 
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 
@@ -24,7 +24,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
  * Date: 20/03/13
  * Time: 15:44
  */
-public interface QTExecutor {
+public interface MecqExecutor {
 
-    public void executeQT(QTArgs qtArgs, ExecutionContext executionContext);
+    public void executeQT(MecqArgs mecqArgs, ExecutionContext executionContext);
 }

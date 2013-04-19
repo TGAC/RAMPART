@@ -31,8 +31,8 @@ import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassProcess;
-import uk.ac.tgac.rampart.tool.process.qt.QTArgs;
-import uk.ac.tgac.rampart.tool.process.qt.QTProcess;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,16 +153,16 @@ public class RampartPipeline implements ConanPipeline {
         String jobPrefix = createJobPrefix();
 
         // Create QT args
-        QTArgs qtArgs = QTArgs.parseConfig(this.args.getConfig());
-        qtArgs.setOutputDir(jobFS.getReadsDir());
-        qtArgs.setJobPrefix(jobPrefix + "-qt");
-        qtArgs.setCreateConfigs(true);
-        qtArgs.setRunParallel(true);
+        MecqArgs mecqArgs = MecqArgs.parseConfig(this.args.getConfig());
+        mecqArgs.setOutputDir(jobFS.getReadsDir());
+        mecqArgs.setJobPrefix(jobPrefix + "-mecq");
+        mecqArgs.setCreateConfigs(true);
+        mecqArgs.setRunParallel(true);
 
         // Create MASS args
         List<File> massConfigFiles = new ArrayList<File>();
         massConfigFiles.add(jobFS.getConfigRawFile());
-        if (!qtArgs.isNoQT()) {
+        if (!mecqArgs.isNoQT()) {
             massConfigFiles.add(jobFS.getConfigQtFile());
         }
 
@@ -185,7 +185,7 @@ public class RampartPipeline implements ConanPipeline {
 
         // Configure pipeline
         if (stages.contains(RampartStage.QT)) {
-            this.processList.add(new QTProcess(qtArgs));
+            this.processList.add(new MecqProcess(mecqArgs));
         }
 
         if (stages.contains(RampartStage.MASS)) {

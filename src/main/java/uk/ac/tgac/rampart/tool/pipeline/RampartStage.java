@@ -22,7 +22,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpParams;
 import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisParams;
 import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassParams;
-import uk.ac.tgac.rampart.tool.process.qt.QTParams;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqParams;
 import uk.ac.tgac.rampart.tool.process.report.ReportParams;
 
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public enum RampartStage {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new QTParams().getConanParameters();
+            return new MecqParams().getConanParameters();
         }
     },
     MASS {

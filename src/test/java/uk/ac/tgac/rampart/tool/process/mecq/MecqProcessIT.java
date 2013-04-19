@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.qt;
+package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
  * Time: 12:31
  */
 @Category(IntegrationTest.class)
-public class QTProcessIT {
+public class MecqProcessIT {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -50,13 +50,13 @@ public class QTProcessIT {
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
-        QTArgs qtArgs = new QTArgs();
-        qtArgs.setOutputDir(outputDir);
-        qtArgs.setConfig(cfgFile);
+        MecqArgs mecqArgs = new MecqArgs();
+        mecqArgs.setOutputDir(outputDir);
+        mecqArgs.setConfig(cfgFile);
 
-        QTProcess qtProcess = new QTProcess(qtArgs);
+        MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 
-        boolean success = qtProcess.execute(new DefaultExecutionContext());
+        boolean success = mecqProcess.execute(new DefaultExecutionContext());
 
         assertTrue(success);
     }
