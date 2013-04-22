@@ -102,6 +102,10 @@ public class MecqProcess extends AbstractConanProcess {
                     File ecqLibDir = new File(ecDir, libName);
                     ecqLibDir.mkdirs();
 
+                    // Add libs to ec
+                    ec.getArgs().setOutputDir(ecqLibDir);
+                    ec.getArgs().setFromLibrary(lib);
+
                     String jobName = args.getJobPrefix() + "_" + ecName + "_" + libName;
                     this.executeEcq(ec, jobName, args.isRunParallel(), ecqLibDir, executionContext);
                 }
@@ -135,7 +139,7 @@ public class MecqProcess extends AbstractConanProcess {
 
         // Ensure downstream process has access to the process service
         errorCorrector.configure(this.getConanProcessService());
-        errorCorrector.getArgs().setOutputDir(outputDir);
+
 
         if (executionContext.usingScheduler()) {
 
@@ -175,22 +179,27 @@ public class MecqProcess extends AbstractConanProcess {
         String name = errorCorrector == null ? "raw" : errorCorrector.getName().toLowerCase();
         baseConfig.getMassSettings().add("job", name);
 
-        for(Library lib : baseConfig.getLibs()) {
-            if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
+        if (errorCorrector != null) {
+            for(Library lib : baseConfig.getLibs()) {
+                if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
 
-                if (errorCorrector.getArgs().isSingleEndOnly()) {
+                    if (errorCorrector.getArgs().isSingleEndOnly()) {
 
-                    ErrorCorrectorSingleEndArgs ecPairedEndArgs = (ErrorCorrectorSingleEndArgs)errorCorrector.getArgs();
+                        ErrorCorrectorSingleEndArgs ecPairedEndArgs = (ErrorCorrectorSingleEndArgs)errorCorrector.getArgs();
 
-                    lib.setSeFile(new SeqFile(ecPairedEndArgs.getCorrectedFile()));
-                }
-                else {
+                        lib.setSeFile(new SeqFile(ecPairedEndArgs.getCorrectedFile()));
+                    }
+                    else {
 
-                    ErrorCorrectorPairedEndArgs ecPairedEndArgs = (ErrorCorrectorPairedEndArgs)errorCorrector.getArgs();
+                        ErrorCorrectorPairedEndArgs ecPairedEndArgs = (ErrorCorrectorPairedEndArgs)errorCorrector.getArgs();
 
-                    lib.setFilePaired1(new SeqFile(ecPairedEndArgs.getPairedEndCorrectedFiles().getFile1()));
-                    lib.setFilePaired2(new SeqFile(ecPairedEndArgs.getPairedEndCorrectedFiles().getFile2()));
-                    lib.setSeFile(new SeqFile(ecPairedEndArgs.getSingleEndCorrectedFiles().get(0)));
+                        lib.setFilePaired1(new SeqFile(ecPairedEndArgs.getPairedEndCorrectedFiles().getFile1()));
+                        lib.setFilePaired2(new SeqFile(ecPairedEndArgs.getPairedEndCorrectedFiles().getFile2()));
+
+                        // This is a hack for now... we should really save all se files here but the Library object only
+                        // handles a single se file, so for the time being just use the first one.
+                        lib.setSeFile(new SeqFile(ecPairedEndArgs.getSingleEndCorrectedFiles().get(0)));
+                    }
                 }
             }
         }

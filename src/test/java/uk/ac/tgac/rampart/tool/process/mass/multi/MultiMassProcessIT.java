@@ -87,7 +87,7 @@ public class MultiMassProcessIT {
 
         // Simulate RAMPART dir structure after QT
         RampartJobFileStructure jobFS = new RampartJobFileStructure(outputDir);
-        jobFS.getReadsDir().mkdir();
+        jobFS.getMeqcDir().mkdir();
 
         File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
         File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));

@@ -93,7 +93,7 @@ public class ReportProcessTest {
 
 
     private void createRampartDirStructure(File jobDir) {
-        File readsDir = new File(jobDir, "reads");
+        File readsDir = new File(jobDir, "mecq");
         File massDir = new File(jobDir, "mass");
         File massStatsDir = new File(massDir, "stats");
         File ampDir = new File(jobDir, "amp");

@@ -41,7 +41,6 @@ import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
-import uk.ac.tgac.rampart.spring.RampartAppContext;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
 
@@ -137,7 +136,7 @@ public class RampartCLI {
 
         RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
 
-        FileUtils.deleteDirectory(jobFs.getReadsDir());
+        FileUtils.deleteDirectory(jobFs.getMeqcDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());
         FileUtils.deleteDirectory(jobFs.getImproverDir());
         FileUtils.deleteDirectory(jobFs.getReportDir());

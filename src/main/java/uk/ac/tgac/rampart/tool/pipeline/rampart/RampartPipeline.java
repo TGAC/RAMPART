@@ -154,7 +154,7 @@ public class RampartPipeline implements ConanPipeline {
 
         // Create QT args
         MecqArgs mecqArgs = MecqArgs.parseConfig(this.args.getConfig());
-        mecqArgs.setOutputDir(jobFS.getReadsDir());
+        mecqArgs.setOutputDir(jobFS.getMeqcDir());
         mecqArgs.setJobPrefix(jobPrefix + "-mecq");
         mecqArgs.setCreateConfigs(true);
         mecqArgs.setRunParallel(true);
@@ -184,7 +184,7 @@ public class RampartPipeline implements ConanPipeline {
         List<RampartStage> stages = this.args.getStages();
 
         // Configure pipeline
-        if (stages.contains(RampartStage.QT)) {
+        if (stages.contains(RampartStage.MECQ)) {
             this.processList.add(new MecqProcess(mecqArgs));
         }
 

@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  */
 public enum RampartStage {
 
-    QT {
+    MECQ {
         @Override
         public String getStatsID() {
             return null;

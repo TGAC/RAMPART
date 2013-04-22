@@ -28,7 +28,7 @@ public class RampartJobFileStructure {
 	private File jobDir;
 	
 	// Directories
-	private File readsDir;
+	private File meqcDir;
 	private File massDir;
 	private File massStatsDir;
 	private File improverDir;
@@ -64,7 +64,7 @@ public class RampartJobFileStructure {
 	public void setupFileStructure() {
 		
 		// Record all important directories and make sure they exist
-		this.readsDir = new File(jobDir.getPath() + "/reads");
+		this.meqcDir = new File(jobDir.getPath() + "/mecq");
 		this.massDir = new File(jobDir.getPath() + "/mass");
 		this.massStatsDir = new File(massDir.getPath() + "/stats");
 		this.improverDir = new File(jobDir.getPath() + "/amp");
@@ -74,9 +74,9 @@ public class RampartJobFileStructure {
 		this.logDir = new File(jobDir.getPath() + "/log");
 		
 		this.configFile = new File(jobDir.getPath() + "/rampart.cfg");
-		this.configRawFile = new File(this.readsDir.getPath() + "/raw.cfg");
-		this.configQtFile = new File(this.readsDir.getPath() + "/qt.cfg");
-		this.qtLogFile = new File(this.readsDir.getPath() + "/qt.log");
+		this.configRawFile = new File(this.meqcDir.getPath() + "/raw.cfg");
+		this.configQtFile = new File(this.meqcDir.getPath() + "/qt.cfg");
+		this.qtLogFile = new File(this.meqcDir.getPath() + "/qt.log");
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
 		this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
 		this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
@@ -92,7 +92,7 @@ public class RampartJobFileStructure {
 	
 	public void validate(boolean includeReport, boolean includeFiles) throws IOException {
 		
-		if (!this.readsDir.exists() || !this.massDir.exists() || !this.massStatsDir.exists() || !this.improverDir.exists()) {
+		if (!this.meqcDir.exists() || !this.massDir.exists() || !this.massStatsDir.exists() || !this.improverDir.exists()) {
 			throw new IOException("RAMPART job directory structure is not valid.");
 		}
 		
@@ -127,8 +127,8 @@ public class RampartJobFileStructure {
 	}
 
 
-	public File getReadsDir() {
-		return readsDir;
+	public File getMeqcDir() {
+		return meqcDir;
 	}
 
 

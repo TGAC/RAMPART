@@ -43,7 +43,7 @@ public class RampartCLITest {
         File jobDir = temp.newFolder("rampartJobTest");
         RampartJobFileStructure jobFileStructure = new RampartJobFileStructure(jobDir);
 
-        jobFileStructure.getReadsDir().mkdir();
+        jobFileStructure.getMeqcDir().mkdir();
         jobFileStructure.getMassDir().mkdir();
         jobFileStructure.getImproverDir().mkdir();
         jobFileStructure.getReportDir().mkdir();
@@ -53,7 +53,7 @@ public class RampartCLITest {
 
         RampartCLI.main(new String[]{"--clean", jobDir.getAbsolutePath()});
 
-        assertTrue(!jobFileStructure.getReadsDir().exists());
+        assertTrue(!jobFileStructure.getMeqcDir().exists());
         assertTrue(!jobFileStructure.getMassDir().exists());
         assertTrue(!jobFileStructure.getImproverDir().exists());
         assertTrue(!jobFileStructure.getReportDir().exists());
