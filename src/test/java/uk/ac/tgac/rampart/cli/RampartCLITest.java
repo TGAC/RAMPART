@@ -45,7 +45,7 @@ public class RampartCLITest {
 
         jobFileStructure.getMeqcDir().mkdir();
         jobFileStructure.getMassDir().mkdir();
-        jobFileStructure.getImproverDir().mkdir();
+        jobFileStructure.getAmpDir().mkdir();
         jobFileStructure.getReportDir().mkdir();
 
         File noDelDir = new File(jobDir, "noDel");
@@ -55,7 +55,7 @@ public class RampartCLITest {
 
         assertTrue(!jobFileStructure.getMeqcDir().exists());
         assertTrue(!jobFileStructure.getMassDir().exists());
-        assertTrue(!jobFileStructure.getImproverDir().exists());
+        assertTrue(!jobFileStructure.getAmpDir().exists());
         assertTrue(!jobFileStructure.getReportDir().exists());
         assertTrue(noDelDir.exists());
     }

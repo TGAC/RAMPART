@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.tool.process.mass.single;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -33,10 +32,8 @@ import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisArgs;
-import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisExecutor;
-import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisExecutorImpl;
+import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
+import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
 import java.io.File;
@@ -46,9 +43,6 @@ import java.io.IOException;
 public class SingleMassProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(SingleMassProcess.class);
-
-    @Autowired
-    private LengthAnalysisExecutor lengthAnalysisExecutor = new LengthAnalysisExecutorImpl();
 
     public SingleMassProcess() {
         this(new SingleMassArgs());
@@ -156,10 +150,10 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         try {
 
-            log.info("Starting Single MASS run");
-
             // Make a shortcut to the args
             SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
+
+            log.info("Starting Single MASS run for " + args.getConfig().getAbsolutePath());
 
             // Check the range looks reasonable
             log.debug("Validating kmer range");
@@ -191,12 +185,18 @@ public class SingleMassProcess extends AbstractConanProcess {
             WaitCondition assemblerWait = null;
 
             // Create this wait job if we are using a scheduler and running in parallel.
-            if (executionContext.usingScheduler() &&
-                    (args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY ||
-                    args.getParallelismLevel() == MassArgs.ParallelismLevel.FULL)) {
+            if (executionContext.usingScheduler()) {
 
-                log.debug("Running assemblies in parallel, waiting for completion");
-                this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                if (args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY) {
+
+                    log.debug("Running assemblies in parallel, waiting for completion");
+                    this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                }
+                else if (args.getParallelismLevel().doParallelMass()) {
+
+                    log.debug("Running MASS in parallel, so creating wait condition for stats job and continuing");
+                    assemblerWait = executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "*");
+                }
             }
 
             // Run analyser job using the original execution context
@@ -215,7 +215,9 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
     protected String makeLinkCmdLine(File sourceFile, File outputDir, int k) {
-        return "ln -s -f " + sourceFile.getAbsolutePath() + " " + new File(outputDir, "MASS-k" + Integer.toString(k) + ".fa").getAbsolutePath();
+
+        String targetFileName = outputDir.getParentFile().getName() + "-k-" + Integer.toString(k) + "-" + outputDir.getName() + ".fa";
+        return "ln -s -f " + sourceFile.getAbsolutePath() + " " + new File(outputDir, targetFileName).getAbsolutePath();
     }
 
     protected void createLinks(Assembler assembler, int k, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
@@ -297,7 +299,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         // I think it's safe to assume we have at least one lib otherwise we wouldn't have got this far.
 
-        String dataset = args.getLibs() != null && args.getLibs().size() > 0 ? args.getLibs().get(0).getDataset().toString() : "";
+        String dataset = args.getLibs() != null && args.getLibs().size() > 0 ? args.getJobName() : "";
         String jobName = args.getJobPrefix() + "-analyser";
 
         if (executionContextCopy.usingScheduler()) {
@@ -309,7 +311,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             schedulerArgs.setMemoryMB(0);
             schedulerArgs.setWaitCondition(waitCondition);
 
-            executionContextCopy.setForegroundJob(!args.getParallelismLevel().doParallelAssemblies());
+            executionContextCopy.setForegroundJob(args.getParallelismLevel() == MassArgs.ParallelismLevel.LINEAR);
         }
 
         // Build compound command for running a stat job for each assembly type
@@ -330,14 +332,14 @@ public class SingleMassProcess extends AbstractConanProcess {
                 schedulerArgs.setMonitorFile(new File(args.getOutputDir(), unitigJobName + ".log"));
             }
 
-            LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
-            laArgs.setInputDir(args.getUnitigsDir());
-            laArgs.setOutputDir(args.getUnitigsDir());
-            laArgs.setRampartStage(RampartStage.MASS);
-            laArgs.setDataset(dataset);
+            AscV10Args ascArgs = new AscV10Args();
+            ascArgs.setInputDir(args.getUnitigsDir());
+            ascArgs.setOutputDir(args.getUnitigsDir());
+
+            AscV10Process ascProcess = new AscV10Process(ascArgs);
 
             try {
-                this.lengthAnalysisExecutor.executeLengthAnalysis(laArgs, this.conanProcessService, executionContextCopyUnitigs);
+                this.conanProcessService.execute(ascProcess, executionContextCopyUnitigs);
             }
             catch(ProcessExecutionException pee) {
                 // If an error occurs here it isn't critical so just log the error and continue
@@ -359,14 +361,14 @@ public class SingleMassProcess extends AbstractConanProcess {
                 schedulerArgs.setMonitorFile(new File(args.getOutputDir(), contigJobName + ".log"));
             }
 
-            LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
-            laArgs.setInputDir(args.getContigsDir());
-            laArgs.setOutputDir(args.getContigsDir());
-            laArgs.setRampartStage(RampartStage.MASS);
-            laArgs.setDataset(dataset);
+            AscV10Args ascArgs = new AscV10Args();
+            ascArgs.setInputDir(args.getContigsDir());
+            ascArgs.setOutputDir(args.getContigsDir());
+
+            AscV10Process ascProcess = new AscV10Process(ascArgs);
 
             try {
-                this.lengthAnalysisExecutor.executeLengthAnalysis(laArgs, this.conanProcessService, executionContextCopyContigs);
+                this.conanProcessService.execute(ascProcess, executionContextCopyContigs);
             }
             catch(ProcessExecutionException pee) {
                 // If an error occurs here it isn't critical so just log the error and continue
@@ -388,14 +390,14 @@ public class SingleMassProcess extends AbstractConanProcess {
                 schedulerArgs.setMonitorFile(new File(args.getOutputDir(), scaffoldJobName + ".log"));
             }
 
-            LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
-            laArgs.setInputDir(args.getScaffoldsDir());
-            laArgs.setOutputDir(args.getScaffoldsDir());
-            laArgs.setRampartStage(RampartStage.MASS);
-            laArgs.setDataset(dataset);
+            AscV10Args ascArgs = new AscV10Args();
+            ascArgs.setInputDir(args.getScaffoldsDir());
+            ascArgs.setOutputDir(args.getScaffoldsDir());
+
+            AscV10Process ascProcess = new AscV10Process(ascArgs);
 
             try {
-                this.lengthAnalysisExecutor.executeLengthAnalysis(laArgs, this.conanProcessService, executionContextCopyScaffolds);
+                this.conanProcessService.execute(ascProcess, executionContextCopyScaffolds);
             }
             catch(ProcessExecutionException pee) {
                 // If an error occurs here it isn't critical so just log the error and continue
@@ -403,10 +405,9 @@ public class SingleMassProcess extends AbstractConanProcess {
             }
         }
 
-        WaitCondition assemblerWait = null;
-
-        // Create this wait job if we are using a scheduler and running in parallel.
-        if (executionContext.usingScheduler() && args.getParallelismLevel().doParallelAssemblies()) {
+        // Create this wait job if we are using a scheduler and running in assemblies in parallel only.  If we are running
+        // MASS in parallel we skip this wait and continue
+        if (executionContext.usingScheduler() && args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY) {
 
             log.debug("Running assembly analysis in parallel, waiting for completion");
             this.executeScheduledWait(jobName, args.getOutputDir(), executionContext);

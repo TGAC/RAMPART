@@ -31,7 +31,7 @@ public class RampartSettings {
 
 	public static final String SECT_RAMPART	 					= "rampart";
 	public static final String KEY_RAMPART_VERSION 				= "version";
-	public static final String SECT_QT	 						= "QT";
+	public static final String SECT_MECQ                        = "MECQ";
 	public static final String KEY_QT_TOOL 						= "tool";
 	public static final String KEY_QT_VERSION 					= "version";
 	public static final String KEY_QT_THRESHOLD 				= "threshold";
@@ -42,7 +42,7 @@ public class RampartSettings {
 	public static final String KEY_MASS_MEMORY	 				= "memory";
 	public static final String KEY_MASS_KMIN 					= "kmin";
 	public static final String KEY_MASS_KMAX 					= "kmax";
-	public static final String SECT_IMPROVER					= "IMPROVER";
+	public static final String SECT_AMP                         = "AMP";
 	public static final String KEY_IMPROVER_SCAFFOLDING_TOOL	= "scaffolding.tool";
 	public static final String KEY_IMPROVER_SCAFFOLDING_VERSION	= "scaffolding.version";
 	public static final String KEY_IMPROVER_SCAFFOLDING_MEMORY  = "scaffolding.memory";
@@ -116,13 +116,13 @@ public class RampartSettings {
 	
 	public RampartSettings(RampartJobFileStructure jobDir) throws IOException {
 		
-		Section qtSection = new Ini(jobDir.getQtLogFile()).get(SECT_QT);
+		Section qtSection = new Ini(jobDir.getQtLogFile()).get(SECT_MECQ);
 		Section massSection = new Ini(jobDir.getMassLogFile()).get(SECT_MASS);
-		Section improverSection = new Ini(jobDir.getImproverLogFile()).get(SECT_IMPROVER);
+		Section improverSection = new Ini(jobDir.getAmpLogFile()).get(SECT_AMP);
 		
 		setQtFromIniSect(qtSection);
 		setMassFromIniSect(massSection);
-		setImpFromIniSect(improverSection);
+		setAmpFromIniSect(improverSection);
 	}
 	
 	public RampartSettings(File iniFile) throws IOException {
@@ -135,15 +135,15 @@ public class RampartSettings {
 		Ini ini = new Ini(iniFile);
 		
 		Section rampartSection = ini.get(SECT_RAMPART);
-		Section qtSection = ini.get(SECT_QT);
+		Section qtSection = ini.get(SECT_MECQ);
 		Section massSection = ini.get(SECT_MASS);
-		Section improverSection = ini.get(SECT_IMPROVER);
+		Section ampSection = ini.get(SECT_AMP);
 		
 		this.setRampartVersion(rampartSection.get(KEY_RAMPART_VERSION));
 		
 		setQtFromIniSect(qtSection);
 		setMassFromIniSect(massSection);
-		setImpFromIniSect(improverSection);
+		setAmpFromIniSect(ampSection);
 	}
 	
 	public void saveToIni(File iniFile) throws IOException {
@@ -151,10 +151,10 @@ public class RampartSettings {
 		
 		ini.put(SECT_RAMPART, KEY_RAMPART_VERSION, this.getRampartVersion());
 		
-		ini.put(SECT_QT, KEY_QT_TOOL, this.getQtTool());
-		ini.put(SECT_QT, KEY_QT_VERSION, this.getQtToolVersion());
-		ini.put(SECT_QT, KEY_QT_THRESHOLD, this.getQtThreshold());
-		ini.put(SECT_QT, KEY_QT_MINLEN, this.getQtMinLen());
+		ini.put(SECT_MECQ, KEY_QT_TOOL, this.getQtTool());
+		ini.put(SECT_MECQ, KEY_QT_VERSION, this.getQtToolVersion());
+		ini.put(SECT_MECQ, KEY_QT_THRESHOLD, this.getQtThreshold());
+		ini.put(SECT_MECQ, KEY_QT_MINLEN, this.getQtMinLen());
 		
 		ini.put(SECT_MASS, KEY_MASS_TOOL, this.getMassTool());
 		ini.put(SECT_MASS, KEY_MASS_VERSION, this.getMassToolVersion());
@@ -162,13 +162,13 @@ public class RampartSettings {
 		ini.put(SECT_MASS, KEY_MASS_KMIN, this.getMassKmin());
 		ini.put(SECT_MASS, KEY_MASS_KMAX, this.getMassKmax());
 		
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_TOOL, this.getImpScfTool());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_VERSION, this.getImpScfToolVersion());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_SCAFFOLDING_MEMORY, this.getImpScfMemory());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_TOOL, this.getImpDegapTool());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_VERSION, this.getImpDegapToolVersion());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_DEGAP_MEMORY, this.getImpDegapMemory());
-		ini.put(SECT_IMPROVER, KEY_IMPROVER_CLIP_MINLEN, this.getImpClipMinLen());
+		ini.put(SECT_AMP, KEY_IMPROVER_SCAFFOLDING_TOOL, this.getImpScfTool());
+		ini.put(SECT_AMP, KEY_IMPROVER_SCAFFOLDING_VERSION, this.getImpScfToolVersion());
+		ini.put(SECT_AMP, KEY_IMPROVER_SCAFFOLDING_MEMORY, this.getImpScfMemory());
+		ini.put(SECT_AMP, KEY_IMPROVER_DEGAP_TOOL, this.getImpDegapTool());
+		ini.put(SECT_AMP, KEY_IMPROVER_DEGAP_VERSION, this.getImpDegapToolVersion());
+		ini.put(SECT_AMP, KEY_IMPROVER_DEGAP_MEMORY, this.getImpDegapMemory());
+		ini.put(SECT_AMP, KEY_IMPROVER_CLIP_MINLEN, this.getImpClipMinLen());
 		
 		ini.store();
 	}
@@ -188,7 +188,7 @@ public class RampartSettings {
 		this.setMassKmax(Integer.parseInt(iniSection.get(KEY_MASS_KMAX)));
 	}
 	
-	protected void setImpFromIniSect(Section iniSection) {
+	protected void setAmpFromIniSect(Section iniSection) {
 		this.setImpScfTool(iniSection.get(KEY_IMPROVER_SCAFFOLDING_TOOL));
 		this.setImpScfToolVersion(iniSection.get(KEY_IMPROVER_SCAFFOLDING_VERSION));
 		this.setImpScfMemory(Integer.parseInt(iniSection.get(KEY_IMPROVER_SCAFFOLDING_MEMORY)));

@@ -25,6 +25,7 @@ import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -111,9 +112,44 @@ public abstract class MassArgs implements ProcessArgs {
 
     public enum InputSource {
 
-        RAW,
-        BEST,
-        ALL
+        RAW_ONLY {
+            @Override
+            public File[] filter(File configDir) {
+                return configDir.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String lowercaseName = name.toLowerCase();
+                        if (lowercaseName.equals("raw.cfg")) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                });
+            }
+        },
+        BEST {
+            @Override
+            public File[] filter(File configDir) {
+                return null;
+            }
+        },
+        ALL {
+            @Override
+            public File[] filter(File configDir) {
+                return configDir.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String lowercaseName = name.toLowerCase();
+                        if (lowercaseName.endsWith(".cfg")) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                });
+            }
+        };
+
+        public abstract File[] filter(File configDir);
     }
 
 

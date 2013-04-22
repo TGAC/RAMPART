@@ -160,16 +160,9 @@ public class RampartPipeline implements ConanPipeline {
         mecqArgs.setRunParallel(true);
 
         // Create MASS args
-        List<File> massConfigFiles = new ArrayList<File>();
-        massConfigFiles.add(jobFS.getConfigRawFile());
-        if (!mecqArgs.isNoQT()) {
-            massConfigFiles.add(jobFS.getConfigQtFile());
-        }
-
         MultiMassArgs multiMassArgs = new MultiMassArgs();
         multiMassArgs.parseConfig(this.args.getConfig());
-
-        multiMassArgs.setConfigs(massConfigFiles);
+        multiMassArgs.setConfigDir(jobFS.getMeqcConfigDir());
         multiMassArgs.setOutputDir(jobFS.getMassDir());
         multiMassArgs.setJobPrefix(jobPrefix + "-mass");
 
@@ -177,7 +170,7 @@ public class RampartPipeline implements ConanPipeline {
         AmpArgs ampArgs = AmpArgs.parseConfig(args.getConfig());
         ampArgs.setInputAssembly(jobFS.getMassOutFile());
         ampArgs.setJobPrefix(jobPrefix + "-amp");
-        ampArgs.setOutputDir(jobFS.getImproverDir());
+        ampArgs.setOutputDir(jobFS.getAmpDir());
 
 
         // Shortcut to stages

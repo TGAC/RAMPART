@@ -100,7 +100,7 @@ public class ReportProcess extends AbstractConanProcess {
             log.debug("Separated mass plots into separate files for report");
 
             // Create the plot files which are to be used in the report
-            this.rampartJobService.seperatePlots(jobFS.getImproverPlotsFile(), jobFS.getReportImagesDir(), "Improver");
+            this.rampartJobService.seperatePlots(jobFS.getAmpPlotsFile(), jobFS.getReportImagesDir(), "Improver");
             log.debug("Separated Improver plots into separate files for report");
 
             // Create the job context

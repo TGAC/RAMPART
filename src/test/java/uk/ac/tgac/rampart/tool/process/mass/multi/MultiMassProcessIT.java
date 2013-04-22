@@ -87,13 +87,14 @@ public class MultiMassProcessIT {
 
         // Simulate RAMPART dir structure after QT
         RampartJobFileStructure jobFS = new RampartJobFileStructure(outputDir);
-        jobFS.getMeqcDir().mkdir();
+        jobFS.getMeqcDir().mkdirs();
+        jobFS.getMeqcConfigDir().mkdirs();
 
         File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
         File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));
 
-        FileUtils.copyFile(cfgFile1, jobFS.getConfigRawFile());
-        FileUtils.copyFile(cfgFile2, jobFS.getConfigQtFile());
+        FileUtils.copyFile(cfgFile1, new File(jobFS.getMeqcConfigDir(), "raw.cfg"));
+        FileUtils.copyFile(cfgFile2, new File(jobFS.getMeqcConfigDir(), "mecqd.cfg"));
 
         RampartCLI.main(new String[]{
                 "--config",

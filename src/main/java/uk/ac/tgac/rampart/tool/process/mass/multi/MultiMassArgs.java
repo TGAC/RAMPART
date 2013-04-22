@@ -37,11 +37,13 @@ public class MultiMassArgs extends MassArgs {
 
     // Class vars
     private List<File> configs;
+    private File configDir;
     private File weightingsFile;
 
 
     public MultiMassArgs() {
         this.configs = null;
+        this.configDir = null;
         this.weightingsFile = new File(
                 new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(),
                 "/data/weightings.tab");
@@ -53,6 +55,14 @@ public class MultiMassArgs extends MassArgs {
 
     public void setConfigs(List<File> configs) {
         this.configs = configs;
+    }
+
+    public File getConfigDir() {
+        return configDir;
+    }
+
+    public void setConfigDir(File configDir) {
+        this.configDir = configDir;
     }
 
     public void setConfigs(String configList) {

@@ -99,7 +99,7 @@ public class MultiMassProcessTest {
         multiMass.execute(ec);
 
         assertTrue(new File(outputDir, "stats").exists());
-        assertTrue(new File(outputDir, "RAW").exists());
-        assertTrue(new File(outputDir, "QT").exists());
+        assertTrue(new File(outputDir, "raw").exists());
+        assertTrue(new File(outputDir, "sickle").exists());
     }
 }

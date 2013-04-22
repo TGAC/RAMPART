@@ -18,8 +18,8 @@ tpc <- t1[,c(col1,'t.pc')]
 npc <- t1[,c(col1,'n.pc')]
 total <- t1[,c(col1,'total')]
 minlen <- t1[,c(col1,'minlen')]
-maxlen <- t1[,c(col1,'maxlen')]
 avglen <- t1[,c(col1,'avglen')]
+maxlen <- t1[,c(col1,'maxlen')]
 n50 <- t1[,c(col1,'n50')]
 
 pdf(paste(outfile,sep=""))
@@ -31,8 +31,8 @@ plot(tpc, type="o", ylab = "T%")
 plot(npc, type="o", ylab = "N%")
 plot(total, type="o", ylab = "Total Bases")
 plot(minlen, type="o", ylab = "Minimum Length")
-plot(maxlen, type="o", ylab = "Maximum Length")
 plot(avglen, type="o", ylab = "Average Length")
+plot(maxlen, type="o", ylab = "Maximum Length")
 plot(n50, type="o", ylab = "N50")
 dev.off()
 

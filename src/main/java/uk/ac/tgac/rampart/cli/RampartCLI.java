@@ -138,7 +138,7 @@ public class RampartCLI {
 
         FileUtils.deleteDirectory(jobFs.getMeqcDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());
-        FileUtils.deleteDirectory(jobFs.getImproverDir());
+        FileUtils.deleteDirectory(jobFs.getAmpDir());
         FileUtils.deleteDirectory(jobFs.getReportDir());
         FileUtils.deleteDirectory(jobFs.getLogDir());
     }

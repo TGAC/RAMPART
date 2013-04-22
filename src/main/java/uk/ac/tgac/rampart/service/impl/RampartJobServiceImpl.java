@@ -116,24 +116,24 @@ public class RampartJobServiceImpl implements RampartJobService {
 
 		// Get Configuration info from config files
 		Job job = this.loadConfiguration(jobFS.getConfigFile()).getJob();
-		List<Library> libsRaw = this.loadConfiguration(jobFS.getConfigRawFile()).getLibs();
-		List<Library> libsQt = this.loadConfiguration(jobFS.getConfigQtFile()).getLibs();
+		//List<Library> libsRaw = this.loadConfiguration(jobFS.getConfigRawFile()).getLibs();
+		//List<Library> libsQt = this.loadConfiguration(jobFS.getConfigQtFile()).getLibs();
 		
 		// Tool Settings from settings file
 		RampartSettings rampartSettings = this.determineSettings(jobFS);
 		
 		// Analyse Read files and generate statistics for them.  Stats objects are already linked
 		// to the seq files in the libs.
-		calcReadStats(libsRaw);
-		calcReadStats(libsQt);
+		//calcReadStats(libsRaw);
+		//calcReadStats(libsQt);
 		
 		// Link libs to job object and vice versa
-		job.setLibsRaw(libsRaw);
-		job.setLibsQt(libsQt);
+		//job.setLibsRaw(libsRaw);
+		//job.setLibsQt(libsQt);
 		
 		// Get Info from Assemblies (MASS)
 		List<AssemblyStats> massStats = this.getAssemblyStats(jobFS.getMassStatsFile());
-		List<AssemblyStats> improverStats = this.getAssemblyStats(jobFS.getImproverStatsFile());
+		List<AssemblyStats> improverStats = this.getAssemblyStats(jobFS.getAmpStatsFile());
 		//AssemblyStats weights = this.getWeightings(null);
 		
 		// Get Info from Best Assembly statistics

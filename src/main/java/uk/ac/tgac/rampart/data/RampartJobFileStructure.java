@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.data;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 public class RampartJobFileStructure {
@@ -29,26 +30,25 @@ public class RampartJobFileStructure {
 	
 	// Directories
 	private File meqcDir;
+    private File meqcConfigDir;
 	private File massDir;
 	private File massStatsDir;
-	private File improverDir;
-	private File improverAssembliesDir;
+	private File ampDir;
+	private File ampAssembliesDir;
 	private File reportDir;
 	private File reportImagesDir;
 	private File logDir;
 	
 	// Important Files
 	private File configFile;
-	private File configRawFile;
-	private File configQtFile;
-	private File qtLogFile;
+    private File qtLogFile;
 	private File massPlotsFile;
 	private File massStatsFile;
 	private File massLogFile;
     private File massOutFile;
-	private File improverPlotsFile;
-	private File improverStatsFile;
-	private File improverLogFile;
+	private File ampPlotsFile;
+	private File ampStatsFile;
+	private File ampLogFile;
 	private File reportTemplateFile;
 	private File reportMergedFile;
 	private File settingsFile;
@@ -64,35 +64,36 @@ public class RampartJobFileStructure {
 	public void setupFileStructure() {
 		
 		// Record all important directories and make sure they exist
-		this.meqcDir = new File(jobDir.getPath() + "/mecq");
-		this.massDir = new File(jobDir.getPath() + "/mass");
-		this.massStatsDir = new File(massDir.getPath() + "/stats");
-		this.improverDir = new File(jobDir.getPath() + "/amp");
-		this.improverAssembliesDir = new File(improverDir.getPath() + "/assemblies");
-		this.reportDir = new File(jobDir.getPath() + "/report");
-		this.reportImagesDir = new File(reportDir.getPath() + "/images");
-		this.logDir = new File(jobDir.getPath() + "/log");
+		this.meqcDir = new File(jobDir, "mecq");
+        this.meqcConfigDir = new File(meqcDir, "configs");
+		this.massDir = new File(jobDir, "mass");
+		this.massStatsDir = new File(massDir, "stats");
+		this.ampDir = new File(jobDir, "amp");
+		this.ampAssembliesDir = new File(ampDir, "assemblies");
+		this.reportDir = new File(jobDir, "report");
+		this.reportImagesDir = new File(reportDir, "images");
+		this.logDir = new File(jobDir, "log");
 		
-		this.configFile = new File(jobDir.getPath() + "/rampart.cfg");
-		this.configRawFile = new File(this.meqcDir.getPath() + "/raw.cfg");
-		this.configQtFile = new File(this.meqcDir.getPath() + "/qt.cfg");
-		this.qtLogFile = new File(this.meqcDir.getPath() + "/qt.log");
+		this.configFile = new File(jobDir, "rampart.cfg");
+		this.qtLogFile = new File(this.meqcDir + "/qt.log");
 		this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
 		this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
 		this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
         this.massOutFile = new File(this.massStatsDir.getPath() + "/best.fa");
-		this.improverPlotsFile = new File(this.improverAssembliesDir.getPath() + "/analyser.pdf");
-		this.improverStatsFile = new File(this.improverAssembliesDir.getPath() + "/analyser.txt");
-		this.improverLogFile = new File(this.improverDir.getPath() + "/amp.log");
+		this.ampPlotsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.pdf");
+		this.ampStatsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.txt");
+		this.ampLogFile = new File(this.ampDir.getPath() + "/amp.log");
 		this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
 		this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");
 		this.settingsFile = new File(jobDir.getPath() + "/rampart_settings.log");
+
+
 	}
 	
 	
 	public void validate(boolean includeReport, boolean includeFiles) throws IOException {
 		
-		if (!this.meqcDir.exists() || !this.massDir.exists() || !this.massStatsDir.exists() || !this.improverDir.exists()) {
+		if (!this.meqcDir.exists() || !this.massDir.exists() || !this.massStatsDir.exists() || !this.ampDir.exists()) {
 			throw new IOException("RAMPART job directory structure is not valid.");
 		}
 		
@@ -100,7 +101,7 @@ public class RampartJobFileStructure {
 			throw new IOException("RAMPART report directory structure is not valid.");
 		}
 		
-		/*if (includeFiles && (!this.massPlotsFile.exists() || !this.improverPlotsFile.exists())) {
+		/*if (includeFiles && (!this.massPlotsFile.exists() || !this.ampPlotsFile.exists())) {
 			throw new IOException("Not all RAMPART files are present");
 		} */
 	}
@@ -131,8 +132,11 @@ public class RampartJobFileStructure {
 		return meqcDir;
 	}
 
+    public File getMeqcConfigDir() {
+        return meqcConfigDir;
+    }
 
-	public File getMassDir() {
+    public File getMassDir() {
 		return massDir;
 	}
 
@@ -142,8 +146,8 @@ public class RampartJobFileStructure {
 	}
 
 
-	public File getImproverDir() {
-		return improverDir;
+	public File getAmpDir() {
+		return ampDir;
 	}
 
 
@@ -170,15 +174,7 @@ public class RampartJobFileStructure {
 	public File getSettingsFile() {
 		return settingsFile;
 	}
-	
-	public File getConfigRawFile() {
-		return configRawFile;
-	}
-	
-	public File getConfigQtFile() {
-		return configQtFile;
-	}
-	
+
 	public File getQtLogFile() {
 		return qtLogFile;
 	}
@@ -207,20 +203,33 @@ public class RampartJobFileStructure {
 		return reportMergedFile;
 	}
 	
-	public File getImproverPlotsFile() {
-		return improverPlotsFile;
+	public File getAmpPlotsFile() {
+		return ampPlotsFile;
 	}
 
-	public File getImproverAssembliesDir() {
-		return improverAssembliesDir;
+	public File getAmpAssembliesDir() {
+		return ampAssembliesDir;
 	}
 
-	public File getImproverStatsFile() {
-		return improverStatsFile;
+	public File getAmpStatsFile() {
+		return ampStatsFile;
 	}
 
-	public File getImproverLogFile() {
-		return improverLogFile;
+	public File getAmpLogFile() {
+		return ampLogFile;
 	}
+
+    public File[] getMecqConfigFiles() {
+        return this.meqcConfigDir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                String lowercaseName = name.toLowerCase();
+                if (lowercaseName.endsWith(".cfg")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+    }
 
 }

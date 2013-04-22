@@ -39,6 +39,7 @@ import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassExecutor;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassExecutorImpl;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -177,7 +178,11 @@ public class MultiMassProcess extends AbstractConanProcess {
 
         List<SingleMassArgs> singleMassArgsList = new ArrayList<SingleMassArgs>();
 
-        List<RampartConfiguration> configs = RampartConfiguration.createList(args.getConfigs(), true);
+        List<RampartConfiguration> configs = RampartConfiguration.createList(
+                args.getConfigs() != null ?
+                    args.getConfigs() :
+                    filterConfigs(args.getConfigDir(), args.getInputSource())
+                , true);
 
         for (RampartConfiguration config : configs) {
 
@@ -210,10 +215,9 @@ public class MultiMassProcess extends AbstractConanProcess {
                 singleMassArgs.setCoverageCutoff(args.getCoverageCutoff());
             }
 
-
-            // These args are automatically set.
-            singleMassArgs.setOutputDir(new File(args.getOutputDir(), config.getJob().getName()));
-            singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + config.getJob().getName());
+             // These args are automatically set.
+            singleMassArgs.setOutputDir(new File(args.getOutputDir(), singleMassArgs.getJobName()));
+            singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + singleMassArgs.getJobName());
             singleMassArgs.setConfig(config.getFile());
 
             // Add to list
@@ -221,5 +225,26 @@ public class MultiMassProcess extends AbstractConanProcess {
         }
 
         return singleMassArgsList;
+    }
+
+    protected List<File> filterConfigs(File configDir, String inputSource) {
+
+        if (configDir == null || inputSource == null || inputSource.isEmpty())
+            return null;
+
+        MassArgs.InputSource source = MassArgs.InputSource.valueOf(inputSource);
+
+        File[] files = source != null ? source.filter(configDir) : new File[]{new File(inputSource)};
+
+        List<File> configFiles = new ArrayList<File>();
+
+        for(File f : files) {
+            configFiles.add(f);
+            log.debug("Running mass for: " + f.getAbsolutePath());
+        }
+
+
+
+        return configFiles;
     }
 }

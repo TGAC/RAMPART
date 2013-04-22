@@ -30,9 +30,8 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.process.AbstractAmpArgs;
 import uk.ac.tgac.conan.process.AbstractAmpProcess;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisArgs;
-import uk.ac.tgac.rampart.tool.process.analyser.length.LengthAnalysisProcess;
+import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
+import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -140,15 +139,14 @@ public class AmpPipeline implements ConanPipeline {
 
         File assembliesDir = new File(args.getOutputDir(), "assemblies");
 
-        LengthAnalysisArgs laArgs = new LengthAnalysisArgs();
-        laArgs.setInputDir(assembliesDir);
-        laArgs.setOutputDir(assembliesDir);
-        laArgs.setRampartStage(RampartStage.AMP);
 
-        LengthAnalysisProcess laProc = new LengthAnalysisProcess(laArgs);
-        laProc.setConanProcessService(this.conanProcessService);
+        AscV10Args ascArgs = new AscV10Args();
+        ascArgs.setInputDir(assembliesDir);
+        ascArgs.setOutputDir(assembliesDir);
 
-        return laProc;
+        AscV10Process ascProcess = new AscV10Process(ascArgs);
+
+        return ascProcess;
     }
 
     protected String makeLinkCommand(File source, File target) {
@@ -167,7 +165,7 @@ public class AmpPipeline implements ConanPipeline {
 
             AbstractAmpArgs ampArgs = args.getProcesses().get(i).getAmpArgs();
 
-            linkCmds.add(makeLinkCommand(ampArgs.getOutputFile(), new File(scaffoldsDir, "AMP-" + i + ".fa")));
+            linkCmds.add(makeLinkCommand(ampArgs.getOutputFile(), new File(scaffoldsDir, "amp-stage-" + i + "-scaffolds.fa")));
         }
 
         ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);

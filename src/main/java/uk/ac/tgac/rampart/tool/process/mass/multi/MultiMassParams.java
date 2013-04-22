@@ -33,16 +33,22 @@ import java.util.List;
 public class MultiMassParams extends MassParams {
 
     private ConanParameter configs;
+    private ConanParameter configDir;
     private ConanParameter weightingsFile;
 
     public MultiMassParams() {
 
         this.configs = new DefaultConanParameter(
                 "configs",
-                "The mass configuration files to assemble",
+                "The specific mass configuration files to assemble.  Overrides \"configDir\" param.",
                 false,
                 true,
                 false);
+
+        this.configDir = new PathParameter(
+                "configDir",
+                "The directory containing config files to assemble.  Assumes config files have a \".cfg\" extension.  Can select specific config profiles by combining with the inputSource parameter",
+                true);
 
         this.weightingsFile = new PathParameter(
                 "weightings",
@@ -52,6 +58,10 @@ public class MultiMassParams extends MassParams {
 
     public ConanParameter getConfigs() {
         return configs;
+    }
+
+    public ConanParameter getConfigDir() {
+        return configDir;
     }
 
     public ConanParameter getWeightingsFile() {
@@ -65,6 +75,7 @@ public class MultiMassParams extends MassParams {
 
         params.addAll(Arrays.asList(
                 this.configs,
+                this.configDir,
                 this.weightingsFile
         ));
 
