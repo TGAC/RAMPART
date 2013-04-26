@@ -66,11 +66,9 @@ public class MassSelectorParams implements ProcessParams {
                 "The approximate genome size for the organism being assembled.  Used for assessing assembly quality.  Default: 0 (i.e. off)",
                 true);
 
-        this.weightings = new DefaultConanParameter(
+        this.weightings = new PathParameter(
                 "weightings",
-                "The weightings used to balance each Assembly metric according to its usefulness",
-                false,
-                true,
+                "The file containing the weightings used to balance each assembly metric according to its usefulness",
                 false);
     }
 

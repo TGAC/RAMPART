@@ -25,6 +25,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.tgac.rampart.RampartConfig;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
@@ -163,6 +164,7 @@ public class RampartPipeline implements ConanPipeline {
         MultiMassArgs multiMassArgs = new MultiMassArgs();
         multiMassArgs.parseConfig(this.args.getConfig());
         multiMassArgs.setConfigDir(jobFS.getMeqcConfigDir());
+        multiMassArgs.setWeightingsFile(new File(RampartConfig.DATA_DIR, "weightings.tab"));
         multiMassArgs.setOutputDir(jobFS.getMassDir());
         multiMassArgs.setJobPrefix(jobPrefix + "-mass");
 

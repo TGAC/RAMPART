@@ -209,7 +209,7 @@ public class MecqProcess extends AbstractConanProcess {
 
     @Override
     public String getName() {
-        return "QT";
+        return "MECQ";
     }
 
     @Override

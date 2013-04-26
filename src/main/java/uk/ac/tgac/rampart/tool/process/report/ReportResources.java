@@ -32,8 +32,8 @@ public class ReportResources {
     private File imagesDir;
 
     public ReportResources() {
-        this.templateFile = FileUtils.toFile(this.getClass().getResource("/report/template.tex"));
-        this.imagesDir = FileUtils.toFile(this.getClass().getResource("/report/images/header.png")).getParentFile();
+        this.templateFile = FileUtils.toFile(this.getClass().getResource("/data/report/template.tex"));
+        this.imagesDir = FileUtils.toFile(this.getClass().getResource("/data/report/images/header.png")).getParentFile();
     }
 
     public File getTemplateFile() {

@@ -19,7 +19,7 @@ package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
-import uk.ac.tgac.conan.core.data.AssemblyStatsMatrixRow;
+import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,14 +41,14 @@ public class MassSelectorArgs implements ProcessArgs {
     private List<File> configs;
     private File outputDir;
     private long approxGenomeSize;
-    private AssemblyStatsMatrixRow weightings;
+    private File weightings;
 
     public MassSelectorArgs() {
         this.statsFiles = new ArrayList<File>();
         this.configs = new ArrayList<File>();
         this.outputDir = new File("");
         this.approxGenomeSize = 0;
-        this.weightings = new AssemblyStatsMatrixRow();
+        this.weightings = null;
     }
 
     public List<File> getStatsFiles() {
@@ -83,11 +83,11 @@ public class MassSelectorArgs implements ProcessArgs {
         this.approxGenomeSize = approxGenomeSize;
     }
 
-    public AssemblyStatsMatrixRow getWeightings() {
+    public File getWeightings() {
         return weightings;
     }
 
-    public void setWeightings(AssemblyStatsMatrixRow weightings) {
+    public void setWeightings(File weightings) {
         this.weightings = weightings;
     }
 

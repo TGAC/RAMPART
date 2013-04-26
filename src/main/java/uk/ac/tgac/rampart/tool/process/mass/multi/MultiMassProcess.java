@@ -26,11 +26,11 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.core.data.AssemblyStats;
-import uk.ac.tgac.conan.core.data.AssemblyStatsMatrixRow;
-import uk.ac.tgac.conan.core.data.AssemblyStatsTable;
+import uk.ac.tgac.asc.AssemblyStats;
+import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.selector.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorExecutor;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorExecutorImpl;
@@ -39,7 +39,6 @@ import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassExecutor;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassExecutorImpl;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -161,15 +160,12 @@ public class MultiMassProcess extends AbstractConanProcess {
             throw new IOException("Couldn't create directory for MASS analyser");
         }
 
-        AssemblyStatsTable weightingsTable = new AssemblyStatsTable(args.getWeightingsFile());
-        AssemblyStats weightings = weightingsTable.get(0);
-
         MassSelectorArgs massSelectorArgs = new MassSelectorArgs();
         massSelectorArgs.setStatsFiles(statsFiles);
         massSelectorArgs.setConfigs(args.getConfigs());
         massSelectorArgs.setOutputDir(statsDir);
-        massSelectorArgs.setApproxGenomeSize(-1);
-        massSelectorArgs.setWeightings(new AssemblyStatsMatrixRow(weightings));
+        massSelectorArgs.setApproxGenomeSize(0L);
+        massSelectorArgs.setWeightings(args.getWeightingsFile());
 
         this.massSelectorExecutor.executeMassSelector(massSelectorArgs, this.getConanProcessService(), executionContext);
     }
@@ -219,6 +215,7 @@ public class MultiMassProcess extends AbstractConanProcess {
             singleMassArgs.setOutputDir(new File(args.getOutputDir(), singleMassArgs.getJobName()));
             singleMassArgs.setJobPrefix(args.getJobPrefix() + "-" + singleMassArgs.getJobName());
             singleMassArgs.setConfig(config.getFile());
+            singleMassArgs.setStatsOnly(args.isStatsOnly());
 
             // Add to list
             singleMassArgsList.add(singleMassArgs);

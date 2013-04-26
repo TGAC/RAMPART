@@ -34,7 +34,7 @@ public class PerlHelperTest {
     @Test
     public void testMassGP() {
 
-        File massGpFile = PerlHelper.MASS_GP.getScript();
+        File massGpFile = PerlHelper.MASS_GP.getInternalScript();
 
         assertTrue(massGpFile != null);
         assertTrue(massGpFile.exists());

@@ -26,9 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
-import uk.ac.tgac.conan.core.dao.AssemblyStatsDao;
 import uk.ac.tgac.conan.core.dao.JobDao;
-import uk.ac.tgac.conan.core.data.AssemblyStats;
 import uk.ac.tgac.conan.core.data.Job;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.PlotFileStructure;
@@ -42,8 +40,6 @@ import uk.ac.tgac.rampart.service.RampartJobService;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -57,7 +53,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 	
 	// DAOs
 	@Autowired private JobDao jobDao;
-	@Autowired private AssemblyStatsDao assemblyStatsDao;
+	//@Autowired private AssemblyStatsDao assemblyStatsDao;
 	
 	
 	
@@ -90,7 +86,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		return stats;
 	}
 
-	@Override
+	/*@Override
 	public List<AssemblyStats> getAssemblyStats(File in) throws IOException {
 		
 		List<String[]> stats = getStats(in);
@@ -109,7 +105,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		String[] rawStats = stats.get(1);
 		AssemblyStats weightings = new AssemblyStats(rawStats);
 		return weightings;		
-	}
+	}       */
 	
 	@Override
 	public VelocityContext buildContext(RampartJobFileStructure jobFS) throws IOException {
@@ -132,12 +128,12 @@ public class RampartJobServiceImpl implements RampartJobService {
 		//job.setLibsQt(libsQt);
 		
 		// Get Info from Assemblies (MASS)
-		List<AssemblyStats> massStats = this.getAssemblyStats(jobFS.getMassStatsFile());
-		List<AssemblyStats> improverStats = this.getAssemblyStats(jobFS.getAmpStatsFile());
+		//List<AssemblyStats> massStats = this.getAssemblyStats(jobFS.getMassStatsFile());
+		//List<AssemblyStats> improverStats = this.getAssemblyStats(jobFS.getAmpStatsFile());
 		//AssemblyStats weights = this.getWeightings(null);
 		
 		// Get Info from Best Assembly statistics
-		AssemblyStats best = Collections.max(massStats);
+		//AssemblyStats best = Collections.max(massStats);
 		//best.setBest(true);
 		
 		// Link analyser to job object and vice versa
@@ -145,7 +141,7 @@ public class RampartJobServiceImpl implements RampartJobService {
 		//job.setImproverStats(improverStats);
 
 		// Get the final assembly statistics
-		AssemblyStats finalAssembly = improverStats.get(improverStats.size() - 1);
+		//AssemblyStats finalAssembly = improverStats.get(improverStats.size() - 1);
 		//finalAssembly.setFinalAssembly(Boolean.TRUE);
 		
 		// Getting the structure of this is important for both report building and data persistence
@@ -153,11 +149,11 @@ public class RampartJobServiceImpl implements RampartJobService {
 		VelocityContext vc = new VelocityContext();
 		vc.put("job", job);
 		vc.put("settings", rampartSettings);
-		vc.put("contigScores", massStats);
+		//vc.put("contigScores", massStats);
 		//vc.put("weightings", weights);
 		vc.put("locations", jobFS);
-		vc.put("best_mass_asm", best);
-		vc.put("final_asm", finalAssembly);
+		//vc.put("best_mass_asm", best);
+		//vc.put("final_asm", finalAssembly);
 		
 		return vc;
 	}

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.single;
+package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
@@ -29,19 +29,23 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.asc.AssemblyStats;
+import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 /**
  * User: maplesod
- * Date: 12/02/13
- * Time: 10:20
+ * Date: 25/04/13
+ * Time: 19:42
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SingleMassProcessTest {
+public class MassSelectorProcessTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -52,36 +56,34 @@ public class SingleMassProcessTest {
     @Mock
     private ConanProcessService conanProcessService;
 
+    private File statsFile1 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats1.txt"));
+    private File statsFile2 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats2.txt"));
+    private File weightingsFile = FileUtils.toFile(this.getClass().getResource("/data/weightings.tab"));
+
+
     @Test
-    public void testExecute() throws ProcessExecutionException, InterruptedException {
+    public void testExecute() throws IOException, InterruptedException, ProcessExecutionException {
 
-        File outputDir = temp.newFolder("singleMASSTest");
+        File outputDir = temp.newFolder("massSelectorDir");
 
-        File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
+        List<File> statsFiles = new ArrayList<File>();
+        statsFiles.add(statsFile1);
+        statsFiles.add(statsFile2);
 
-        SingleMassArgs args = new SingleMassArgs();
-        args.setAssembler("ABYSS_V1_3_4");
-        args.setKmin(51);
-        args.setKmax(65);
-        args.setJobPrefix("massTest");
+        MassSelectorArgs args = new MassSelectorArgs();
         args.setOutputDir(outputDir);
-        args.setConfig(cfgFile);
+        args.setStatsFiles(statsFiles);
+        args.setWeightings(weightingsFile);
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(args);
-        AbstractConanProcess smParent = singleMassProcess;
+        MassSelectorProcess process = new MassSelectorProcess(args);
+        AbstractConanProcess parentProcess = process;
 
-        when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(0);
-        //when(ec.getLocality()).thenReturn(new Local());
+        when(conanProcessService.execute(process, ec)).thenReturn(0);
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 
-        ReflectionTestUtils.setField(smParent, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(parentProcess, "conanProcessService", conanProcessService);
 
-        singleMassProcess.execute(ec);
-
-        assertTrue(new File(outputDir, "51").exists());
-        assertTrue(new File(outputDir, "65").exists());
-        assertTrue(new File(outputDir, "contigs").exists());
-        assertTrue(new File(outputDir, "logs").exists());
+        process.execute(ec);
     }
 }

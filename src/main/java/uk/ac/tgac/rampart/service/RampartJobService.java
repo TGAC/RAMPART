@@ -19,7 +19,6 @@ package uk.ac.tgac.rampart.service;
 
 import com.itextpdf.text.DocumentException;
 import org.apache.velocity.VelocityContext;
-import uk.ac.tgac.conan.core.data.AssemblyStats;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
@@ -35,9 +34,9 @@ public interface RampartJobService {
 	
 	RampartConfiguration loadConfiguration(File in) throws IOException;
 	
-	List<AssemblyStats> getAssemblyStats(File in) throws IOException;
+	/*List<AssemblyStats> getAssemblyStats(File in) throws IOException;
 
-	AssemblyStats getWeightings(File in) throws IOException;
+	AssemblyStats getWeightings(File in) throws IOException;    */
 	
 	void calcReadStats(List<Library> libs) throws IOException;
 	

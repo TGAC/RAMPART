@@ -124,7 +124,7 @@ public class AmpArgs implements ProcessArgs {
             AbstractAmpProcess ampProcess = this.processes.get(i);
             AbstractAmpArgs ampArgs = ampProcess.getAmpArgs();
 
-            String job = "AMP-" + Integer.toString(i);
+            String job = "AMP-" + Integer.toString(i+1);
 
             ampArgs.setInputFile(inputFile);
             ampArgs.setOutputDir(new File(this.getOutputDir(), job));

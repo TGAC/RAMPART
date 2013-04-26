@@ -17,13 +17,16 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass.selector;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.core.data.AssemblyStats;
-import uk.ac.tgac.conan.core.data.AssemblyStatsMatrix;
-import uk.ac.tgac.conan.core.data.AssemblyStatsTable;
+import uk.ac.tgac.asc.AssemblyStats;
+import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +39,9 @@ import java.util.List;
  * Time: 12:39
  */
 public class MassSelectorProcess extends AbstractConanProcess {
+
+    private static Logger log = LoggerFactory.getLogger(MassSelectorProcess.class);
+
 
     public MassSelectorProcess() {
         this(new MassSelectorArgs());
@@ -72,11 +78,14 @@ public class MassSelectorProcess extends AbstractConanProcess {
             matrix.normalise(args.getApproxGenomeSize());
 
             // Apply weightings and calculate final scores
-            matrix.weight(args.getWeightings());
+            matrix.weight(loadWeightings(args.getWeightings()));
             double[] scores = matrix.calcScores();
 
             // Save merged matrix with added scores
             merged.addScores(scores);
+
+            log.debug("Merged scores are: " + ArrayUtils.toString(scores));
+
             merged.save(new File(args.getOutputDir(), "scores.tab"));
 
             // Get best
@@ -85,6 +94,9 @@ public class MassSelectorProcess extends AbstractConanProcess {
 
             ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
 
+            log.debug("Best assembly stats: " + best.toString());
+            log.debug("Output assembly path: " + outputAssembly.getAbsolutePath());
+
             this.conanProcessService.execute("ln -s -f " + best.getFilePath() + " " + outputAssembly.getAbsolutePath(), linkingExecutionContext);
 
         } catch (IOException ioe) {
@@ -92,6 +104,24 @@ public class MassSelectorProcess extends AbstractConanProcess {
         }
 
         return true;
+    }
+
+    protected AssemblyStatsMatrixRow loadWeightings(File weightingsFile) throws IOException {
+
+        List<String> lines = FileUtils.readLines(weightingsFile);
+        String weightLine = lines.get(1);
+
+        String[] parts = weightLine.split("\\|");
+
+        double[] weights = new double[parts.length];
+
+        for(int i = 0; i < parts.length; i++) {
+            weights[i] = Double.parseDouble(parts[i]);
+        }
+
+        AssemblyStatsMatrixRow wMxRow = new AssemblyStatsMatrixRow(weights);
+
+        return wMxRow;
     }
 
     protected List<AssemblyStatsTable> loadStats(List<File> statsFiles) throws IOException {

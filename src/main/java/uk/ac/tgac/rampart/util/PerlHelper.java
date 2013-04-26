@@ -36,10 +36,17 @@ public enum PerlHelper {
         }
     };
 
-    public File getScript() {
+    public File getInternalScript() {
         URL scriptUrl = this.getClass().getResource(this.getPath());
         return FileUtils.toFile(scriptUrl);
     }
 
+    public File getExternalScript() {
+        return new File(
+                RAMPART_DIR,
+                this.getPath());
+    }
+
+    private static final File RAMPART_DIR = new File(System.getProperty("user.home") + "/.rampart/");
     public abstract String getPath();
 }

@@ -21,7 +21,6 @@ import org.ini4j.Profile;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
-import uk.ac.tgac.rampart.tool.process.mass.StepSize;
 
 import java.io.File;
 import java.io.IOException;

@@ -40,12 +40,16 @@ import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.asc.JarUtils;
+import uk.ac.tgac.conan.TgacConanConfigure;
+import uk.ac.tgac.rampart.RampartConfig;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.jar.JarFile;
 
 
 public class RampartCLI {
@@ -69,31 +73,8 @@ public class RampartCLI {
         return rampartOptions;
     }
 
-    private static void configureSystem(RampartOptions rampartOptions) throws IOException {
 
-        // Environment specific configuration options are set in the user's home directory
-        final String rampartSettingsDir = System.getProperty("user.home") + "/.rampart/";
 
-        // Setup logging first
-        File loggingProperties = new File(rampartSettingsDir, "log4j.properties");
-
-        // If logging file exists use settings from that, otherwise use basic settings.
-        if (loggingProperties.exists()) {
-            PropertyConfigurator.configure(loggingProperties.getAbsolutePath());
-        }
-        else {
-            BasicConfigurator.configure();
-        }
-
-        // Load spring
-        //RampartAppContext.INSTANCE.load("/applicationContext.xml");
-
-        // Load Conan properties
-        final File conanPropsFile = new File(rampartSettingsDir + "conan.properties");
-        if (conanPropsFile.exists()) {
-            ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
-        }
-    }
 
     private static ExecutionContext buildExecutionContext() throws IOException {
 
@@ -194,7 +175,7 @@ public class RampartCLI {
             else {
 
                 // Configure RAMPART system
-                configureSystem(rampartOptions);
+                RampartConfig.configureSystem(rampartOptions);
                 log.info("RAMPART: System configured");
 
                 // Build execution context

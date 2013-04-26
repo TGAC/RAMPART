@@ -34,13 +34,13 @@ public class RampartConfiguration implements Serializable {
 
 	public static final String SECTION_JOB_DETAILS = "JOB";
 	public static final String SECTION_LIB_PREFIX = "LIB";
-    public static final String SECTION_QT = "QT";
+    public static final String SECTION_MECQ = "MECQ";
     public static final String SECTION_MASS = "MASS";
     public static final String SECTION_AMP = "AMP";
 
     private Job job;
 	private List<Library> libs;
-    private Section qtSettings;
+    private Section mecqSettings;
     private Section massSettings;
     private Section ampSettings;
 
@@ -49,7 +49,7 @@ public class RampartConfiguration implements Serializable {
 	public RampartConfiguration() {
         this.job = new Job();
         this.libs = new ArrayList<Library>();
-        this.qtSettings = null;
+        this.mecqSettings = null;
         this.massSettings = null;
         this.ampSettings = null;
 
@@ -97,7 +97,7 @@ public class RampartConfiguration implements Serializable {
 
         this.setLibs(libs);
 
-        this.setQtSettings(ini.get(SECTION_QT));
+        this.setMecqSettings(ini.get(SECTION_MECQ));
         this.setMassSettings(ini.get(SECTION_MASS));
         this.setAmpSettings(ini.get(SECTION_AMP));
     }
@@ -114,7 +114,7 @@ public class RampartConfiguration implements Serializable {
 			sb.append(ld.toString());
 		}
 
-        sb.append(this.createToolSection(SECTION_QT, this.qtSettings));
+        sb.append(this.createToolSection(SECTION_MECQ, this.mecqSettings));
         sb.append(this.createToolSection(SECTION_MASS, this.massSettings));
         sb.append(this.createToolSection(SECTION_AMP, this.ampSettings));
 
@@ -137,12 +137,12 @@ public class RampartConfiguration implements Serializable {
         this.libs = libs;
     }
 
-    public Section getQtSettings() {
-        return qtSettings;
+    public Section getMecqSettings() {
+        return mecqSettings;
     }
 
-    public void setQtSettings(Section qtSettings) {
-        this.qtSettings = qtSettings;
+    public void setMecqSettings(Section mecqSettings) {
+        this.mecqSettings = mecqSettings;
     }
 
     public Section getMassSettings() {

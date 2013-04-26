@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.tool.process.mass;
 
 import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
 import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
@@ -47,6 +48,7 @@ public abstract class MassParams implements ProcessParams {
     private ConanParameter coverageCutoff;
     private ConanParameter outputLevel;
     private ConanParameter inputSource;
+    private ConanParameter statsOnly;
 
 
     public MassParams() {
@@ -129,6 +131,11 @@ public abstract class MassParams implements ProcessParams {
                 false,
                 true,
                 false);
+
+        this.statsOnly = new FlagParameter(
+                "statsOnly",
+                "If set then only statistics for assemblies are calculated in this MASS run.  This assumes that the user should already have assemblies generated in this job configuration.  (Default: false)"
+        );
     }
 
     public ConanParameter getAssembler() {
@@ -183,6 +190,10 @@ public abstract class MassParams implements ProcessParams {
         return inputSource;
     }
 
+    public ConanParameter getStatsOnly() {
+        return statsOnly;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
 
@@ -200,7 +211,8 @@ public abstract class MassParams implements ProcessParams {
                         this.parallelismLevel,
                         this.coverageCutoff,
                         this.outputLevel,
-                        this.inputSource
+                        this.inputSource,
+                        this.statsOnly
                 }));
     }
 

@@ -163,39 +163,42 @@ public class SingleMassProcess extends AbstractConanProcess {
             log.debug("Creating directories");
             this.createSupportDirectories();
 
-            // Dispatch an assembly job for each requested kmer
-            for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = nextKmer(k)) {
-
-                File outputDir = new File(args.getOutputDir(), Integer.toString(k));
-
-                log.debug("Starting " + args.getAssembler() + " in " + outputDir.getAbsolutePath());
-
-                Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), outputDir);
-
-                log.debug("Assembler: " + assembler != null ? assembler.getName() : "NULL");
-
-                assembler.getArgs().setThreads(args.getThreads());
-                assembler.getArgs().setCoverageCutoff(args.getCoverageCutoff());
-
-                this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, executionContext);
-
-                this.createLinks(assembler, k, executionContext);
-            }
-
             WaitCondition assemblerWait = null;
 
-            // Create this wait job if we are using a scheduler and running in parallel.
-            if (executionContext.usingScheduler()) {
+            if (!args.isStatsOnly()) {
 
-                if (args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY) {
+                // Dispatch an assembly job for each requested kmer
+                for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = nextKmer(k)) {
 
-                    log.debug("Running assemblies in parallel, waiting for completion");
-                    this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                    File outputDir = new File(args.getOutputDir(), Integer.toString(k));
+
+                    log.debug("Starting " + args.getAssembler() + " in " + outputDir.getAbsolutePath());
+
+                    Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), outputDir);
+
+                    log.debug("Assembler: " + assembler != null ? assembler.getName() : "NULL");
+
+                    assembler.getArgs().setThreads(args.getThreads());
+                    assembler.getArgs().setCoverageCutoff(args.getCoverageCutoff());
+
+                    this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, executionContext);
+
+                    this.createLinks(assembler, k, executionContext);
                 }
-                else if (args.getParallelismLevel().doParallelMass()) {
 
-                    log.debug("Running MASS in parallel, so creating wait condition for stats job and continuing");
-                    assemblerWait = executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "*");
+                // Create this wait job if we are using a scheduler and running in parallel.
+                if (executionContext.usingScheduler()) {
+
+                    if (args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY) {
+
+                        log.debug("Running assemblies in parallel, waiting for completion");
+                        this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                    }
+                    else if (args.getParallelismLevel().doParallelMass()) {
+
+                        log.debug("Running MASS in parallel, so creating wait condition for stats job and continuing");
+                        assemblerWait = executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "*");
+                    }
                 }
             }
 
@@ -306,7 +309,6 @@ public class SingleMassProcess extends AbstractConanProcess {
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
             schedulerArgs.setJobName(jobName);
-            schedulerArgs.setMonitorFile(new File(args.getOutputDir(), jobName + ".log"));
             schedulerArgs.setThreads(1);
             schedulerArgs.setMemoryMB(0);
             schedulerArgs.setWaitCondition(waitCondition);
@@ -329,7 +331,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                 String unitigJobName = jobName + "-unitigs";
 
                 schedulerArgs.setJobName(unitigJobName);
-                schedulerArgs.setMonitorFile(new File(args.getOutputDir(), unitigJobName + ".log"));
+                schedulerArgs.setMonitorFile(new File(args.getUnitigsDir(), unitigJobName + ".log"));
             }
 
             AscV10Args ascArgs = new AscV10Args();
@@ -358,7 +360,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                 String contigJobName = jobName + "-contigs";
 
                 schedulerArgs.setJobName(contigJobName);
-                schedulerArgs.setMonitorFile(new File(args.getOutputDir(), contigJobName + ".log"));
+                schedulerArgs.setMonitorFile(new File(args.getContigsDir(), contigJobName + ".log"));
             }
 
             AscV10Args ascArgs = new AscV10Args();
@@ -387,7 +389,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                 String scaffoldJobName = jobName + "-scaffolds";
 
                 schedulerArgs.setJobName(scaffoldJobName);
-                schedulerArgs.setMonitorFile(new File(args.getOutputDir(), scaffoldJobName + ".log"));
+                schedulerArgs.setMonitorFile(new File(args.getScaffoldsDir(), scaffoldJobName + ".log"));
             }
 
             AscV10Args ascArgs = new AscV10Args();

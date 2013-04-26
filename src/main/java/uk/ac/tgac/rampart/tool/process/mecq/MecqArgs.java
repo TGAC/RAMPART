@@ -229,7 +229,7 @@ public class MecqArgs implements ProcessArgs {
 
         rampartConfig.load(config);
         args.setLibs(rampartConfig.getLibs());
-        Profile.Section section = rampartConfig.getQtSettings();
+        Profile.Section section = rampartConfig.getMecqSettings();
 
         if (section != null) {
             for (Map.Entry<String, String> entry : section.entrySet()) {

@@ -130,23 +130,6 @@ public class AmpPipeline implements ConanPipeline {
             proc.initialise();
             this.processList.add(proc);
         }
-
-        this.processList.add(createStatsJob());
-
-    }
-
-    private ConanProcess createStatsJob() {
-
-        File assembliesDir = new File(args.getOutputDir(), "assemblies");
-
-
-        AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInputDir(assembliesDir);
-        ascArgs.setOutputDir(assembliesDir);
-
-        AscV10Process ascProcess = new AscV10Process(ascArgs);
-
-        return ascProcess;
     }
 
     protected String makeLinkCommand(File source, File target) {
@@ -161,11 +144,15 @@ public class AmpPipeline implements ConanPipeline {
 
         scaffoldsDir.mkdirs();
 
+        linkCmds.add(makeLinkCommand(this.args.getInputAssembly(), new File(scaffoldsDir, "amp-stage-0-scaffolds.fa")));
+
         for(int i = 0; i < args.getProcesses().size(); i++) {
 
             AbstractAmpArgs ampArgs = args.getProcesses().get(i).getAmpArgs();
 
-            linkCmds.add(makeLinkCommand(ampArgs.getOutputFile(), new File(scaffoldsDir, "amp-stage-" + i + "-scaffolds.fa")));
+            String stageNumber = Integer.toString(i+1);
+
+            linkCmds.add(makeLinkCommand(ampArgs.getOutputFile(), new File(scaffoldsDir, "amp-stage-" + stageNumber + "-scaffolds.fa")));
         }
 
         ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);

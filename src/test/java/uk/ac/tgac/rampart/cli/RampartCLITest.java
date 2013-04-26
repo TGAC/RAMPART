@@ -17,12 +17,14 @@
  **/
 package uk.ac.tgac.rampart.cli;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -58,6 +60,29 @@ public class RampartCLITest {
         assertTrue(!jobFileStructure.getAmpDir().exists());
         assertTrue(!jobFileStructure.getReportDir().exists());
         assertTrue(noDelDir.exists());
+    }
+
+    @Test
+    public void testAccessInternalResources() throws IOException {
+
+        File resDir = temp.newFolder("rampartResources");
+
+        // Copy resources to external system
+        File internalScripts = FileUtils.toFile(RampartCLI.class.getResource("/scripts"));
+        File internalData = FileUtils.toFile(RampartCLI.class.getResource("/data"));
+        File internalReport = FileUtils.toFile(RampartCLI.class.getResource("/data/report"));
+
+        File externalScriptsDir = new File(resDir, "scripts");
+        File externalDataDir = new File(resDir, "data");
+        File externalReportDir = new File(resDir, "data/report");
+
+        FileUtils.copyDirectory(internalScripts, externalScriptsDir);
+        FileUtils.copyDirectory(internalData, externalDataDir);
+        FileUtils.copyDirectory(internalReport, externalReportDir);
+
+        assertTrue(externalScriptsDir.exists());
+        assertTrue(externalDataDir.exists());
+        assertTrue(externalReportDir.exists());
     }
 
 }

@@ -43,9 +43,11 @@ public enum RHelper {
 
     public File getExternalScript() {
         return new File(
-                new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(),
+                RAMPART_DIR,
                 this.getPath());
     }
+
+    private static final File RAMPART_DIR = new File(System.getProperty("user.home") + "/.rampart/");
 
     public abstract String getPath();
 }

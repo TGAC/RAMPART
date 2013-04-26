@@ -50,6 +50,7 @@ public abstract class MassArgs implements ProcessArgs {
     public static final String MASS_CVG_CUTOFF = "cutoff";
     public static final String MASS_OUTPUT_LEVEL = "output_level";
     public static final String MASS_INPUT_SOURCE = "input_source";
+    public static final String MASS_STATS_ONLY = "stats_only";
 
     // Constants
     public static final int KMER_MIN = 11;
@@ -63,6 +64,8 @@ public abstract class MassArgs implements ProcessArgs {
     public static final int DEFAULT_CVG_CUTOFF = -1;
     public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
     public static final String DEFAULT_INPUT_SOURCE = InputSource.ALL.toString();
+    public static final boolean DEFAULT_STATS_ONLY = false;
+
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
@@ -81,6 +84,7 @@ public abstract class MassArgs implements ProcessArgs {
     private int coverageCutoff;
     private OutputLevel outputLevel;
     private String inputSource;
+    private boolean statsOnly;
 
     public enum ParallelismLevel {
 
@@ -167,6 +171,7 @@ public abstract class MassArgs implements ProcessArgs {
         this.coverageCutoff = DEFAULT_CVG_CUTOFF;
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
         this.inputSource = DEFAULT_INPUT_SOURCE;
+        this.statsOnly = DEFAULT_STATS_ONLY;
     }
 
 
@@ -274,6 +279,14 @@ public abstract class MassArgs implements ProcessArgs {
         this.inputSource = inputSource;
     }
 
+    public boolean isStatsOnly() {
+        return statsOnly;
+    }
+
+    public void setStatsOnly(boolean statsOnly) {
+        this.statsOnly = statsOnly;
+    }
+
     public void parseConfig(File config) throws IOException {
 
         RampartConfiguration rampartConfig = new RampartConfiguration();
@@ -318,6 +331,8 @@ public abstract class MassArgs implements ProcessArgs {
                     }
 
                     this.setInputSource(source);
+                } else if (entry.getKey().equalsIgnoreCase(MASS_STATS_ONLY)) {
+                    this.setStatsOnly(Boolean.parseBoolean(entry.getValue()));
                 }
             }
         }
@@ -335,6 +350,7 @@ public abstract class MassArgs implements ProcessArgs {
         pvp.put(params.getKmax(), String.valueOf(this.kmax));
         pvp.put(params.getThreads(), String.valueOf(this.threads));
         pvp.put(params.getMemory(), String.valueOf(this.memory));
+        pvp.put(params.getStatsOnly(), String.valueOf(this.statsOnly));
 
         if (this.stepSize != null) {
             pvp.put(params.getStepSize(), this.stepSize.toString());
@@ -405,6 +421,8 @@ public abstract class MassArgs implements ProcessArgs {
                 this.coverageCutoff = Integer.parseInt(entry.getValue());
             } else if (param.equalsIgnoreCase(this.params.getOutputLevel().getName())) {
                 this.outputLevel = OutputLevel.valueOf(entry.getValue());
+            } else if (param.equalsIgnoreCase(this.params.getStatsOnly().getName())) {
+                this.statsOnly = Boolean.parseBoolean(entry.getValue());
             }
         }
     }
