@@ -31,6 +31,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
@@ -178,8 +179,12 @@ public class SingleMassProcess extends AbstractConanProcess {
 
                     log.debug("Assembler: " + assembler != null ? assembler.getName() : "NULL");
 
-                    assembler.getArgs().setThreads(args.getThreads());
-                    assembler.getArgs().setCoverageCutoff(args.getCoverageCutoff());
+                    AssemblerArgs asmArgs = assembler.getArgs();
+
+                    log.debug("Assembler Args: " + asmArgs.toString());
+
+                    asmArgs.setThreads(args.getThreads());
+                    asmArgs.setCoverageCutoff(args.getCoverageCutoff());
 
                     this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, executionContext);
 
@@ -232,9 +237,17 @@ public class SingleMassProcess extends AbstractConanProcess {
         // Make a shortcut to the args
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
 
-        compoundLinkCmdLine.add(assembler.makesUnitigs(), "", makeLinkCmdLine(assembler.getUnitigsFile(), args.getUnitigsDir(), k));
-        compoundLinkCmdLine.add(assembler.makesContigs(), "", makeLinkCmdLine(assembler.getContigsFile(), args.getContigsDir(), k));
-        compoundLinkCmdLine.add(assembler.makesScaffolds(), "", makeLinkCmdLine(assembler.getScaffoldsFile(), args.getScaffoldsDir(), k));
+        if (assembler.makesUnitigs()) {
+            compoundLinkCmdLine.add(makeLinkCmdLine(assembler.getUnitigsFile(), args.getUnitigsDir(), k));
+        }
+
+        if (assembler.makesContigs()) {
+            compoundLinkCmdLine.add(makeLinkCmdLine(assembler.getContigsFile(), args.getContigsDir(), k));
+        }
+
+        if (assembler.makesScaffolds()) {
+            compoundLinkCmdLine.add(makeLinkCmdLine(assembler.getScaffoldsFile(), args.getScaffoldsDir(), k));
+        }
 
         this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
     }
@@ -243,6 +256,8 @@ public class SingleMassProcess extends AbstractConanProcess {
             throws IOException, ProcessExecutionException, InterruptedException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
+
+        assembler.initialise();
 
         SingleMassArgs args = (SingleMassArgs)this.getProcessArgs();
 

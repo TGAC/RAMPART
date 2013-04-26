@@ -23,10 +23,12 @@ import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.SeqFile;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
+import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorPairedEndArgs;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorSingleEndArgs;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
@@ -106,6 +108,8 @@ public class MecqProcess extends AbstractConanProcess {
                     ec.getArgs().setOutputDir(ecqLibDir);
                     ec.getArgs().setFromLibrary(lib);
 
+
+
                     String jobName = args.getJobPrefix() + "_" + ecName + "_" + libName;
                     this.executeEcq(ec, jobName, args.isRunParallel(), ecqLibDir, executionContext);
                 }
@@ -139,12 +143,18 @@ public class MecqProcess extends AbstractConanProcess {
 
         // Ensure downstream process has access to the process service
         errorCorrector.configure(this.getConanProcessService());
-
+        errorCorrector.initialise();
 
         if (executionContext.usingScheduler()) {
 
-            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
-            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
+            ErrorCorrectorArgs ecArgs = errorCorrector.getArgs();
+
+            schedulerArgs.setJobName(jobName);
+            schedulerArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
+            schedulerArgs.setThreads(ecArgs.getThreads());
+            schedulerArgs.setMemoryMB(ecArgs.getMemoryGb() * 1000);
+
             executionContextCopy.setForegroundJob(!runInParallel);
         }
 
