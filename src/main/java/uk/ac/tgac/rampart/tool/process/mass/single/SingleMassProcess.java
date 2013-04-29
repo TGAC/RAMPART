@@ -257,8 +257,6 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         ExecutionContext executionContextCopy = executionContext.copy();
 
-        assembler.initialise();
-
         SingleMassArgs args = (SingleMassArgs)this.getProcessArgs();
 
         File outputDir = assembler.getArgs().getOutputDir();
@@ -268,6 +266,10 @@ public class SingleMassProcess extends AbstractConanProcess {
             FileUtils.deleteDirectory(outputDir);
         }
         outputDir.mkdir();
+
+        // Important that this happens after directory cleaning.
+        assembler.initialise();
+
 
         // Modify the scheduler jobname is present
         if (executionContextCopy.usingScheduler()) {
