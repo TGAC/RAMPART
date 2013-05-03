@@ -208,7 +208,12 @@ public class MecqProcess extends AbstractConanProcess {
 
                         // This is a hack for now... we should really save all se files here but the Library object only
                         // handles a single se file, so for the time being just use the first one.
-                        lib.setSeFile(new SeqFile(ecPairedEndArgs.getSingleEndCorrectedFiles().get(0)));
+                        if (ecPairedEndArgs.getSingleEndCorrectedFiles() != null && !ecPairedEndArgs.getSingleEndCorrectedFiles().isEmpty()) {
+                            lib.setSeFile(new SeqFile(ecPairedEndArgs.getSingleEndCorrectedFiles().get(0)));
+                        }
+                        else {
+                            lib.setSeFile(null);
+                        }
                     }
                 }
             }
