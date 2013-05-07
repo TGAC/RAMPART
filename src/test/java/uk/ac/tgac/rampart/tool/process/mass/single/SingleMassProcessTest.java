@@ -82,6 +82,5 @@ public class SingleMassProcessTest {
         assertTrue(new File(outputDir, "51").exists());
         assertTrue(new File(outputDir, "65").exists());
         assertTrue(new File(outputDir, "contigs").exists());
-        assertTrue(new File(outputDir, "logs").exists());
     }
 }

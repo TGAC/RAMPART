@@ -127,11 +127,17 @@ public class MassSelectorProcess extends AbstractConanProcess {
     protected List<AssemblyStatsTable> loadStats(List<File> statsFiles) throws IOException {
         List<AssemblyStatsTable> tables = new ArrayList<AssemblyStatsTable>();
         for (File file : statsFiles) {
-            tables.add(new AssemblyStatsTable(file));
+            try {
+                tables.add(new AssemblyStatsTable(file));
+            }
+            catch (IOException ioe) {
+                log.warn("Could not open stats file: " + file.getAbsolutePath() + ".  This implies the MASS run for this dataset did not complete successfully.  Continuing...");
+            }
         }
 
         return tables;
     }
+
 
 
 }

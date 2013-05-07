@@ -132,9 +132,6 @@ public class SingleMassProcess extends AbstractConanProcess {
         if (assembler.makesScaffolds()) {
             args.getScaffoldsDir().mkdir();
         }
-
-        // Create directory for logs
-        args.getLogsDir().mkdir();
     }
 
     /**
