@@ -46,6 +46,7 @@ import uk.ac.tgac.rampart.RampartConfig;
 import uk.ac.tgac.rampart.data.RampartJobFileStructure;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
+import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,9 +112,7 @@ public class RampartCLI {
     private static void cleanJob(File jobDir) throws IOException {
 
         // If no job directory is specified assume we want to clean the current directory
-        if (jobDir == null) {
-            jobDir = new File(".");
-        }
+        jobDir = jobDir == null ? FileHelper.currentWorkingDir() : jobDir;
 
         RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
 

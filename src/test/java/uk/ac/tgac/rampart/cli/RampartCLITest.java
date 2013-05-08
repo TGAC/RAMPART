@@ -85,4 +85,11 @@ public class RampartCLITest {
         assertTrue(externalReportDir.exists());
     }
 
+    @Test
+    public void testFile() {
+        File pwd = new File(".").getAbsoluteFile().getParentFile();
+
+        assertTrue(pwd.exists());
+    }
+
 }

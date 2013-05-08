@@ -20,11 +20,13 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.SeqFile;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
@@ -61,6 +63,9 @@ public class MecqProcess extends AbstractConanProcess {
 
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+
 
         try {
 
@@ -104,10 +109,30 @@ public class MecqProcess extends AbstractConanProcess {
                     File ecqLibDir = new File(ecDir, libName);
                     ecqLibDir.mkdirs();
 
-                    // Add libs to ec
                     ec.getArgs().setOutputDir(ecqLibDir);
-                    ec.getArgs().setFromLibrary(lib);
 
+                    if (lib.isPairedEnd()) {
+
+                        // Create links to files in output dir (makes things simpler if we need to auto-gen config files)
+                        StringJoiner compoundLinkCmdLine = new StringJoiner(";");
+
+                        compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFilePaired1().getFile(), ecqLibDir));
+                        compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFilePaired2().getFile(), ecqLibDir));
+
+                        this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
+
+                        // Add libs to ec
+                        ((ErrorCorrectorPairedEndArgs)ec.getArgs()).setFromLibrary(lib,
+                                new File(ecqLibDir, lib.getFilePaired1().getFile().getName()),
+                                new File(ecqLibDir, lib.getFilePaired2().getFile().getName()));
+                    }
+                    else {
+                        this.conanProcessService.execute(makeLinkCmdLine(lib.getSeFile().getFile(), ecqLibDir), linkingExecutionContext);
+
+                        // Add libs to ec
+                        ((ErrorCorrectorSingleEndArgs)ec.getArgs()).setFromLibrary(lib,
+                                new File(ecqLibDir, lib.getSeFile().getFile().getName()));
+                    }
 
 
                     String jobName = args.getJobPrefix() + "_" + ecName + "_" + libName;
@@ -132,6 +157,12 @@ public class MecqProcess extends AbstractConanProcess {
 
         return true;
     }
+
+    protected String makeLinkCmdLine(File sourceFile, File outputDir) {
+
+        return "ln -s -f " + sourceFile.getAbsolutePath() + " " + new File(outputDir, sourceFile.getName()).getAbsolutePath();
+    }
+
 
 
     protected void executeEcq(ErrorCorrector errorCorrector, String jobName, boolean runInParallel,

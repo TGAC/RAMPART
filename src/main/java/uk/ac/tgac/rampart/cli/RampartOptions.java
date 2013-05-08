@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.cli;
 import org.apache.commons.cli.*;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
+import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 
@@ -60,7 +61,7 @@ public class RampartOptions {
                 clean = cmdLine.hasOption(OPT_CLEAN) ?
                     cmdLine.getOptionValue(OPT_CLEAN) != null ?
                             new File(cmdLine.getOptionValue(OPT_CLEAN)) :
-                            new File(".") :
+                            FileHelper.currentWorkingDir() :
                     null;
 
                 if (clean == null) {
@@ -72,7 +73,7 @@ public class RampartOptions {
                         throw new ParseException(OPT_CONFIG + " argument not specified.");
                     }
 
-                    output = cmdLine.hasOption(OPT_OUTPUT) ? new File(cmdLine.getOptionValue(OPT_OUTPUT)) : new File(".");
+                    output = cmdLine.hasOption(OPT_OUTPUT) ? new File(cmdLine.getOptionValue(OPT_OUTPUT)) : FileHelper.currentWorkingDir();
                     stages = cmdLine.hasOption(OPT_STAGES) ? cmdLine.getOptionValue(OPT_STAGES) : "ALL";
                     verbose = cmdLine.hasOption(OPT_VERBOSE);
                 }
