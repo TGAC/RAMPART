@@ -168,11 +168,13 @@ public class RampartPipeline implements ConanPipeline {
         multiMassArgs.setOutputDir(jobFS.getMassDir());
         multiMassArgs.setJobPrefix(jobPrefix + "-mass");
 
-        // Create AMP args
+        // Create AMP args (AMP stage is optional)
         AmpArgs ampArgs = AmpArgs.parseConfig(args.getConfig());
-        ampArgs.setInputAssembly(jobFS.getMassOutFile());
-        ampArgs.setJobPrefix(jobPrefix + "-amp");
-        ampArgs.setOutputDir(jobFS.getAmpDir());
+        if (ampArgs != null) {
+            ampArgs.setInputAssembly(jobFS.getMassOutFile());
+            ampArgs.setJobPrefix(jobPrefix + "-amp");
+            ampArgs.setOutputDir(jobFS.getAmpDir());
+        }
 
 
         // Shortcut to stages
@@ -187,7 +189,7 @@ public class RampartPipeline implements ConanPipeline {
             this.processList.add(new MultiMassProcess(multiMassArgs));
         }
 
-        if (stages.contains(RampartStage.AMP)) {
+        if (stages.contains(RampartStage.AMP) && ampArgs != null) {
             this.processList.add(new AmpProcess(ampArgs));
         }
 

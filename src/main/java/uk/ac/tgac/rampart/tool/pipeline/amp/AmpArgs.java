@@ -202,6 +202,10 @@ public class AmpArgs implements ProcessArgs {
                 }
             }
         }
+        else {
+            // If AMP is not specified in the config file then we don't want to run it.
+            return null;
+        }
 
         // Add processes in correct order
         Collections.sort(stageList);

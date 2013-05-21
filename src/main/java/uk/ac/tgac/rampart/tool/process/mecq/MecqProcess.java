@@ -144,7 +144,7 @@ public class MecqProcess extends AbstractConanProcess {
 
             // If we're using a scheduler and we have been asked to run the quality trimming processes for each library
             // in parallel, then we should wait for all those to complete before continueing.
-            if (executionContext.usingScheduler() && args.isRunParallel()) {
+            if (executionContext.usingScheduler() && args.isRunParallel() && !ecqs.isEmpty()) {
                 log.debug("Running Quality trimming step in parallel, waiting for completion");
                 this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
