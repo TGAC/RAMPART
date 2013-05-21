@@ -314,9 +314,6 @@ public class SingleMassProcess extends AbstractConanProcess {
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
         ExecutionContext executionContextCopy = executionContext.copy();
 
-        // I think it's safe to assume we have at least one lib otherwise we wouldn't have got this far.
-
-        String dataset = args.getLibs() != null && args.getLibs().size() > 0 ? args.getJobName() : "";
         String jobName = args.getJobPrefix() + "-analyser";
 
         if (executionContextCopy.usingScheduler()) {
@@ -332,93 +329,17 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         // Build compound command for running a stat job for each assembly type
         Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
-        StringJoiner statCommands = new StringJoiner("; ");
 
         if (assembler.makesUnitigs()) {
-
-            ExecutionContext executionContextCopyUnitigs = executionContextCopy.copy();
-
-            if (executionContextCopyUnitigs.usingScheduler()) {
-
-                SchedulerArgs schedulerArgs = executionContextCopyUnitigs.getScheduler().getArgs();
-
-                String unitigJobName = jobName + "-unitigs";
-
-                schedulerArgs.setJobName(unitigJobName);
-                schedulerArgs.setMonitorFile(new File(args.getUnitigsDir(), unitigJobName + ".log"));
-            }
-
-            AscV10Args ascArgs = new AscV10Args();
-            ascArgs.setInputDir(args.getUnitigsDir());
-            ascArgs.setOutputDir(args.getUnitigsDir());
-
-            AscV10Process ascProcess = new AscV10Process(ascArgs);
-
-            try {
-                this.conanProcessService.execute(ascProcess, executionContextCopyUnitigs);
-            }
-            catch(ProcessExecutionException pee) {
-                // If an error occurs here it isn't critical so just log the error and continue
-                log.error(pee.getMessage(), pee);
-            }
+            this.executeSingleStatsJob(args.getUnitigsDir(), jobName + "-unitigs", executionContextCopy);
         }
 
         if (assembler.makesContigs()) {
-
-            ExecutionContext executionContextCopyContigs = executionContextCopy.copy();
-
-            if (executionContextCopyContigs.usingScheduler()) {
-
-                SchedulerArgs schedulerArgs = executionContextCopyContigs.getScheduler().getArgs();
-
-                String contigJobName = jobName + "-contigs";
-
-                schedulerArgs.setJobName(contigJobName);
-                schedulerArgs.setMonitorFile(new File(args.getContigsDir(), contigJobName + ".log"));
-            }
-
-            AscV10Args ascArgs = new AscV10Args();
-            ascArgs.setInputDir(args.getContigsDir());
-            ascArgs.setOutputDir(args.getContigsDir());
-
-            AscV10Process ascProcess = new AscV10Process(ascArgs);
-
-            try {
-                this.conanProcessService.execute(ascProcess, executionContextCopyContigs);
-            }
-            catch(ProcessExecutionException pee) {
-                // If an error occurs here it isn't critical so just log the error and continue
-                log.error(pee.getMessage(), pee);
-            }
+            this.executeSingleStatsJob(args.getContigsDir(), jobName + "-contigs", executionContextCopy);
         }
 
         if (assembler.makesScaffolds()) {
-
-            ExecutionContext executionContextCopyScaffolds = executionContextCopy.copy();
-
-            if (executionContextCopyScaffolds.usingScheduler()) {
-
-                SchedulerArgs schedulerArgs = executionContextCopyScaffolds.getScheduler().getArgs();
-
-                String scaffoldJobName = jobName + "-scaffolds";
-
-                schedulerArgs.setJobName(scaffoldJobName);
-                schedulerArgs.setMonitorFile(new File(args.getScaffoldsDir(), scaffoldJobName + ".log"));
-            }
-
-            AscV10Args ascArgs = new AscV10Args();
-            ascArgs.setInputDir(args.getScaffoldsDir());
-            ascArgs.setOutputDir(args.getScaffoldsDir());
-
-            AscV10Process ascProcess = new AscV10Process(ascArgs);
-
-            try {
-                this.conanProcessService.execute(ascProcess, executionContextCopyScaffolds);
-            }
-            catch(ProcessExecutionException pee) {
-                // If an error occurs here it isn't critical so just log the error and continue
-                log.error(pee.getMessage(), pee);
-            }
+            this.executeSingleStatsJob(args.getScaffoldsDir(), jobName + "-scaffolds", executionContextCopy);
         }
 
         // Create this wait job if we are using a scheduler and running in assemblies in parallel only.  If we are running
@@ -427,6 +348,35 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             log.debug("Running assembly analysis in parallel, waiting for completion");
             this.executeScheduledWait(jobName, args.getOutputDir(), executionContext);
+        }
+    }
+
+    protected void executeSingleStatsJob(File inputDir, String jobName, ExecutionContext executionContext)
+            throws InterruptedException {
+
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContextCopy.usingScheduler()) {
+
+            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
+
+            schedulerArgs.setJobName(jobName);
+            schedulerArgs.setMonitorFile(new File(inputDir, jobName + ".log"));
+        }
+
+        AscV10Args ascArgs = new AscV10Args();
+        ascArgs.setInput(inputDir);
+        ascArgs.setOutput(inputDir);
+        ascArgs.setMode("FULL");
+
+        AscV10Process ascProcess = new AscV10Process(ascArgs);
+
+        try {
+            this.conanProcessService.execute(ascProcess, executionContextCopy);
+        }
+        catch(ProcessExecutionException pee) {
+            // If an error occurs here it isn't critical so just log the error and continue
+            log.error(pee.getMessage(), pee);
         }
     }
 

@@ -28,6 +28,8 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.asc.AssemblyStats;
 import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
+import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.data.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.AssemblyStatsTable;
@@ -91,16 +93,30 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             MultiMassArgs args = (MultiMassArgs) this.getProcessArgs();
 
-            List<File> statsFiles = new ArrayList<File>();
+            List<File> unitigStatsFiles = new ArrayList<File>();
+            List<File> contigStatsFiles = new ArrayList<File>();
+            List<File> scaffoldStatsFiles = new ArrayList<File>();
 
             List<SingleMassArgs> singleMassArgsList = this.createSingleMassArgsList(args);
 
             List<Thread> singleMassThreads = new ArrayList<Thread>();
 
+            // Add the predicted analyser file to the list for processing later.
+            Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
+
             for (SingleMassArgs singleMassArgs : singleMassArgsList) {
 
-                // Add the predicted analyser file to the list for processing later.
-                statsFiles.add(singleMassArgs.getStatsFile());
+                if (assembler.makesUnitigs()) {
+                    unitigStatsFiles.add(new File(singleMassArgs.getUnitigsDir(), "stats.txt"));
+                }
+
+                if (assembler.makesContigs()) {
+                    contigStatsFiles.add(new File(singleMassArgs.getContigsDir(), "stats.txt"));
+                }
+
+                if (assembler.makesScaffolds()) {
+                    scaffoldStatsFiles.add(new File(singleMassArgs.getScaffoldsDir(), "stats.txt"));
+                }
 
                 // Ensure output directory for this MASS run exists
                 if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
@@ -120,7 +136,20 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             // Execute the Mass Selector job
             log.info("Analysing and comparing assemblies");
-            executeMassSelector(args, statsFiles, executionContext);
+
+            File statsDir = new File(args.getOutputDir(), "stats");
+
+            if (assembler.makesUnitigs()) {
+                executeMassSelector(args, new File(statsDir, "unitigs"), unitigStatsFiles, executionContext);
+            }
+
+            if (assembler.makesContigs()) {
+                executeMassSelector(args, new File(statsDir, "contigs"), contigStatsFiles, executionContext);
+            }
+
+            if (assembler.makesScaffolds()) {
+                executeMassSelector(args, new File(statsDir, "scaffolds"), scaffoldStatsFiles, executionContext);
+            }
 
             log.info("Multi MASS run complete");
 
@@ -150,20 +179,19 @@ public class MultiMassProcess extends AbstractConanProcess {
                 executionContextCopy);
     }
 
-    protected void executeMassSelector(MultiMassArgs args, List<File> statsFiles, ExecutionContext executionContext)
+    protected void executeMassSelector(MultiMassArgs args, File outputDir, List<File> statsFiles, ExecutionContext executionContext)
             throws IOException, ProcessExecutionException, InterruptedException {
 
-        File statsDir = new File(args.getOutputDir(), "stats");
-        statsDir.mkdirs();
-
-        if (!statsDir.exists()) {
-            throw new IOException("Couldn't create directory for MASS analyser");
+        if (!outputDir.exists()) {
+            if (!outputDir.mkdirs()) {
+                throw new IOException("Couldn't create directory for MASS analyser: " + outputDir.getAbsolutePath());
+            }
         }
 
         MassSelectorArgs massSelectorArgs = new MassSelectorArgs();
         massSelectorArgs.setStatsFiles(statsFiles);
         massSelectorArgs.setConfigs(args.getConfigs());
-        massSelectorArgs.setOutputDir(statsDir);
+        massSelectorArgs.setOutputDir(outputDir);
         massSelectorArgs.setApproxGenomeSize(0L);
         massSelectorArgs.setWeightings(args.getWeightingsFile());
 

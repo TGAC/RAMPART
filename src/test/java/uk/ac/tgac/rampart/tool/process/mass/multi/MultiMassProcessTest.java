@@ -81,6 +81,7 @@ public class MultiMassProcessTest {
         args.setJobPrefix("testMultiMass");
         args.setOutputDir(outputDir);
         args.setWeightingsFile(weightingsFile);
+        args.setAssembler("ABYSS_V1_3_4");
 
         assertTrue(args.getKmin() == 31);
         assertTrue(args.getKmax() == MultiMassArgs.DEFAULT_KMER_MAX);

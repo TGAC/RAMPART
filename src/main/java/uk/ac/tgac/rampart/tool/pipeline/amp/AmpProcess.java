@@ -132,9 +132,9 @@ public class AmpProcess extends AbstractConanProcess {
         }
 
         AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInputDir(assembliesDir);
-        ascArgs.setOutputDir(assembliesDir);
-        ascArgs.setPlot(true);
+        ascArgs.setInput(assembliesDir);
+        ascArgs.setOutput(assembliesDir);
+        ascArgs.setMode("FULL");
 
         AscV10Process ascProcess = new AscV10Process(ascArgs);
 

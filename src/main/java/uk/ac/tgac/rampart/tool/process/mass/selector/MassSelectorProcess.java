@@ -24,9 +24,13 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.asc.AssemblyStats;
 import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
+import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
+import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
+import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,24 +90,36 @@ public class MassSelectorProcess extends AbstractConanProcess {
 
             log.debug("Merged scores are: " + ArrayUtils.toString(scores));
 
-            merged.save(new File(args.getOutputDir(), "scores.tab"));
+            // Save final scores file to disk
+            File finalFile = new File(args.getOutputDir(), "scores.tab");
+            merged.save(finalFile);
+
+            // Generate plots (Can run in its own time)
+            this.executePlots(
+                    finalFile,
+                    new File(finalFile.getParentFile(), finalFile.getName() + ".pdf"),
+                    executionContext.usingScheduler() ? executionContext.getScheduler().getArgs().getJobName() + "-asc_plots" : "asc_plots",
+                    executionContext);
 
             // Get best
             AssemblyStats best = merged.getBest();
             File outputAssembly = new File(args.getOutputDir(), "best.fa");
 
-            ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
             log.debug("Best assembly stats: " + best.toString());
             log.debug("Output assembly path: " + outputAssembly.getAbsolutePath());
 
-            this.conanProcessService.execute("ln -s -f " + best.getFilePath() + " " + outputAssembly.getAbsolutePath(), linkingExecutionContext);
+            // Create link to "best" assembly in stats dir
+            FileHelper.createSymbolicLink(this.conanProcessService, new File(best.getFilePath()), outputAssembly, executionContext.getLocality());
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
 
         return true;
+    }
+
+    protected void plot() {
+
     }
 
     protected AssemblyStatsMatrixRow loadWeightings(File weightingsFile) throws IOException {
@@ -138,6 +154,32 @@ public class MassSelectorProcess extends AbstractConanProcess {
         return tables;
     }
 
+    protected void executePlots(File inputFile, File outputFile, String jobName, ExecutionContext executionContext)
+            throws InterruptedException {
 
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        if (executionContextCopy.usingScheduler()) {
+
+            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
+
+            schedulerArgs.setJobName(jobName);
+            schedulerArgs.setMonitorFile(new File(inputFile.getParentFile(), jobName + ".log"));
+        }
+
+        AscV10Args ascArgs = new AscV10Args();
+        ascArgs.setInput(inputFile);
+        ascArgs.setOutput(outputFile);
+
+        AscV10Process ascProcess = new AscV10Process(ascArgs);
+
+        try {
+            this.conanProcessService.execute(ascProcess, executionContextCopy);
+        }
+        catch(ProcessExecutionException pee) {
+            // If an error occurs here it isn't critical so just log the error and continue
+            log.error(pee.getMessage(), pee);
+        }
+    }
 
 }

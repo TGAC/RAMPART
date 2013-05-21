@@ -17,7 +17,14 @@
  **/
 package uk.ac.tgac.rampart.util;
 
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.Locality;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+
 import java.io.File;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -29,5 +36,22 @@ public class FileHelper {
     public static File currentWorkingDir() {
 
         return new File(".").getAbsoluteFile().getParentFile();
+    }
+
+    public static void createSymbolicLinks(ConanProcessService conanProcessService, List<File> inputFiles, File outputDir, Locality locality)
+            throws InterruptedException, ProcessExecutionException {
+
+        for(File inputFile : inputFiles) {
+            createSymbolicLink(conanProcessService, inputFile, new File(outputDir, inputFile.getName()), locality);
+        }
+
+    }
+
+    public static void createSymbolicLink(ConanProcessService conanProcessService, File inputFile, File outputFile, Locality locality)
+            throws ProcessExecutionException, InterruptedException {
+
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(locality, null, null, true);
+
+        conanProcessService.execute("ln -s -f " + inputFile.getAbsolutePath() + " " + outputFile.getAbsolutePath(), linkingExecutionContext);
     }
 }
