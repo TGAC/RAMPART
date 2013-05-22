@@ -103,6 +103,7 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             // Add the predicted analyser file to the list for processing later.
             Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
+            assembler.getArgs().setLibraries(args.getLibs());
 
             for (SingleMassArgs singleMassArgs : singleMassArgsList) {
 

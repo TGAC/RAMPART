@@ -112,11 +112,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
 
-    protected void createSupportDirectories() {
-
-        SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
-
-        Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
+    protected void createSupportDirectories(Assembler assembler, SingleMassArgs args) {
 
         // Create directory for links to assembled unitigs
         if (assembler.makesUnitigs()) {
@@ -151,6 +147,14 @@ public class SingleMassProcess extends AbstractConanProcess {
             // Make a shortcut to the args
             SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
 
+            // Create an assembly object used for other stages in the MASS pipeline.. note this does not include
+            // specific kmer settings
+            Assembler genericAssembler = AssemblerFactory.createAssembler(args.getAssembler());
+
+            // Bit of a hack... for some assemblers to determine if they need certain output directories then they need
+            // to know what libraries are available (SE and/or PE)
+            genericAssembler.getArgs().setLibraries(args.getLibs());
+
             log.info("Starting Single MASS run for " + args.getConfig().getAbsolutePath());
 
             // Check the range looks reasonable
@@ -159,14 +163,14 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             // Create any required directories for this job
             log.debug("Creating directories");
-            this.createSupportDirectories();
+            this.createSupportDirectories(genericAssembler, args);
 
             WaitCondition assemblerWait = null;
 
             if (!args.isStatsOnly()) {
 
                 // Dispatch an assembly job for each requested kmer
-                for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = nextKmer(k)) {
+                for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = args.getStepSize().nextKmer(k)) {
 
                     File outputDir = new File(args.getOutputDir(), Integer.toString(k));
 
@@ -206,7 +210,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             // Run analyser job using the original execution context
             log.debug("Analysing and comparing assemblies");
-            this.dispatchStatsJob(assemblerWait, executionContext);
+            this.dispatchStatsJob(genericAssembler, assemblerWait, executionContext);
 
             log.info("Finished MASS run");
 
@@ -309,7 +313,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
 
-    protected void dispatchStatsJob(WaitCondition waitCondition, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+    protected void dispatchStatsJob(Assembler assembler, WaitCondition waitCondition, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
         ExecutionContext executionContextCopy = executionContext.copy();
@@ -326,9 +330,6 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             executionContextCopy.setForegroundJob(args.getParallelismLevel() == MassArgs.ParallelismLevel.LINEAR);
         }
-
-        // Build compound command for running a stat job for each assembly type
-        Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler());
 
         if (assembler.makesUnitigs()) {
             this.executeSingleStatsJob(args.getUnitigsDir(), jobName + "-unitigs", executionContextCopy);
