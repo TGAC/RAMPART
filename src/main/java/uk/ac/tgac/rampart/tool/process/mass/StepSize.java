@@ -28,6 +28,11 @@ public enum StepSize {
         public int nextKmer(int kmer) {
             return kmer += 2;
         }
+
+        @Override
+        public int firstValidKmer(int kmin) {
+            return nextOddNumber(kmin);
+        }
     },
     MEDIUM {
         @Override
@@ -43,13 +48,46 @@ public enum StepSize {
                 throw new IllegalArgumentException("Kmer values have somehow got out of step!!");
             }
         }
+
+        @Override
+        public int firstValidKmer(int kmin) {
+            if (kmin <= 11)
+                return 11;
+
+            String kminStr = String.valueOf(kmin);
+            if (kminStr.charAt(kminStr.length() - 1) == '1') {
+                return kmin;
+            } else {
+                char tensDigit = kminStr.charAt(kminStr.length() - 2);
+
+                int tens = (Integer.parseInt(String.valueOf(tensDigit)) + 1) * 10;
+
+                int rest = 0;
+
+                if (kminStr.length() > 2) {
+                    String restStr = kminStr.substring(0, kminStr.length() - 3) + "00";
+                    rest = Integer.parseInt(restStr);
+                }
+
+                return rest + tens + 1;
+            }
+        }
     },
     COARSE {
         @Override
         public int nextKmer(int kmer) {
             return kmer += 10;
         }
+
+        @Override
+        public int firstValidKmer(int kmin) {
+            return nextOddNumber(kmin);
+        }
     };
+
+    private static int nextOddNumber(int number) {
+        return (number % 2 == 0) ? number + 1 : number;
+    }
 
     /**
      * Retrieves the next k-mer value in the sequence
@@ -58,4 +96,5 @@ public enum StepSize {
      * @return The next kmer value
      */
     public abstract int nextKmer(int kmer);
+    public abstract int firstValidKmer(int kmin);
 }

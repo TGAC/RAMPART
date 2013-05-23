@@ -53,64 +53,6 @@ public class SingleMassProcess extends AbstractConanProcess {
         super("", args, new SingleMassParams());
     }
 
-    protected int getFirstValidKmer(int kmin) {
-
-        if (kmin <= 11)
-            return 11;
-
-        String kminStr = String.valueOf(kmin);
-        if (kminStr.charAt(kminStr.length() - 1) == '1') {
-            return kmin;
-        } else {
-            char tensDigit = kminStr.charAt(kminStr.length() - 2);
-
-            int tens = (Integer.parseInt(String.valueOf(tensDigit)) + 1) * 10;
-
-            int rest = 0;
-
-            if (kminStr.length() > 2) {
-                String restStr = kminStr.substring(0, kminStr.length() - 3) + "00";
-                rest = Integer.parseInt(restStr);
-            }
-
-            return rest + tens + 1;
-        }
-    }
-
-    /**
-     * Retrieves the next k-mer value in the sequence
-     *
-     * @param kmer The current k-mer value
-     * @return The next kmer value
-     */
-    protected int nextKmer(int kmer) {
-
-        int mod1 = (kmer - 1) % 10;
-        int mod2 = (kmer - 5) % 10;
-
-        if (mod1 == 0) {
-            return kmer + 4;
-        } else if (mod2 == 0) {
-            return kmer + 6;
-        } else {
-            throw new IllegalArgumentException("Kmer values have somehow got out of step!!");
-        }
-    }
-
-    /**
-     * Determines whether or not the supplied k-mer value is valid
-     *
-     * @param kmer The k-mer value to validate
-     * @return True if valid, false otherwise
-     */
-    public boolean validKmer(int kmer) {
-
-        int mod1 = (kmer - 1) % 10;
-        int mod2 = (kmer - 5) % 10;
-
-        return (mod1 == 0 || mod2 == 0);
-    }
-
 
     protected void createSupportDirectories(Assembler assembler, SingleMassArgs args) {
 
@@ -170,7 +112,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             if (!args.isStatsOnly()) {
 
                 // Dispatch an assembly job for each requested kmer
-                for (int k = getFirstValidKmer(args.getKmin()); k <= args.getKmax(); k = args.getStepSize().nextKmer(k)) {
+                for (int k = args.getStepSize().firstValidKmer(args.getKmin()); k <= args.getKmax(); k = args.getStepSize().nextKmer(k)) {
 
                     File outputDir = new File(args.getOutputDir(), Integer.toString(k));
 
