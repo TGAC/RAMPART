@@ -170,6 +170,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
         AscV10Args ascArgs = new AscV10Args();
         ascArgs.setInput(inputFile);
         ascArgs.setOutput(outputFile);
+        ascArgs.setMode("PLOTS");
 
         AscV10Process ascProcess = new AscV10Process(ascArgs);
 
