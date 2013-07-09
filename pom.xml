@@ -5,7 +5,7 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.4</version>
+	<version>0.4.1</version>
 	<packaging>jar</packaging>
 
 	<name>Rampart</name>
@@ -15,7 +15,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java-version>1.6</java-version>
-		<conan-version>3.0-SNAPSHOT</conan-version>
+		<conan-version>2.5-X-0.4.1</conan-version>
 		<slf4j-version>1.6.1</slf4j-version>
         <springframework-version>3.1.3.RELEASE</springframework-version>
 	</properties>
@@ -220,7 +220,7 @@
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
             <artifactId>tgac-conan</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.4.1</version>
         </dependency>
 
         <dependency>
