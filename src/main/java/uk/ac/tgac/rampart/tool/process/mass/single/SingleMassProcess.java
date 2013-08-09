@@ -35,10 +35,16 @@ import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
+import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
+import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class SingleMassProcess extends AbstractConanProcess {
@@ -150,11 +156,13 @@ public class SingleMassProcess extends AbstractConanProcess {
                 }
             }
 
+            // Not doing this anymore... we'll use Quast to get stats later on in multi-mass.
+
             // Run analyser job using the original execution context
             log.debug("Analysing and comparing assemblies");
             this.dispatchStatsJob(genericAssembler, assemblerWait, executionContext);
 
-            log.info("Finished MASS run");
+            log.info("Finished Single MASS run");
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
@@ -274,15 +282,15 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
 
         if (assembler.makesUnitigs()) {
-            this.executeSingleStatsJob(args.getUnitigsDir(), jobName + "-unitigs", executionContextCopy);
+            this.executeSingleStatsJob(args.getUnitigsDir(), jobName + "-unitigs", executionContextCopy, false);
         }
 
         if (assembler.makesContigs()) {
-            this.executeSingleStatsJob(args.getContigsDir(), jobName + "-contigs", executionContextCopy);
+            this.executeSingleStatsJob(args.getContigsDir(), jobName + "-contigs", executionContextCopy, false);
         }
 
         if (assembler.makesScaffolds()) {
-            this.executeSingleStatsJob(args.getScaffoldsDir(), jobName + "-scaffolds", executionContextCopy);
+            this.executeSingleStatsJob(args.getScaffoldsDir(), jobName + "-scaffolds", executionContextCopy, true);
         }
 
         // Create this wait job if we are using a scheduler and running in assemblies in parallel only.  If we are running
@@ -294,9 +302,10 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
     }
 
-    protected void executeSingleStatsJob(File inputDir, String jobName, ExecutionContext executionContext)
+    protected void executeSingleStatsJob(File inputDir, String jobName, ExecutionContext executionContext, boolean scaffolds)
             throws InterruptedException {
 
+        SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
         ExecutionContext executionContextCopy = executionContext.copy();
 
         if (executionContextCopy.usingScheduler()) {
@@ -307,20 +316,50 @@ public class SingleMassProcess extends AbstractConanProcess {
             schedulerArgs.setMonitorFile(new File(inputDir, jobName + ".log"));
         }
 
-        AscV10Args ascArgs = new AscV10Args();
+        /*AscV10Args ascArgs = new AscV10Args();
         ascArgs.setInput(inputDir);
         ascArgs.setOutput(inputDir);
         ascArgs.setMode("FULL");
 
-        AscV10Process ascProcess = new AscV10Process(ascArgs);
+        AscV10Process ascProcess = new AscV10Process(ascArgs);*/
+
+
+        QuastV2_2Args quastArgs = new QuastV2_2Args();
+        quastArgs.setInputFiles(filesFromDir(inputDir));
+        quastArgs.setOutputDir(new File(inputDir, "quast"));   // No need to create this directory first... quast will take care of that
+        //quastArgs.setEstimatedGenomeSize(((SingleMassArgs) this.getProcessArgs());
+        quastArgs.setThreads(args.getThreads());
+        quastArgs.setScaffolds(scaffolds);
+
+        QuastV2_2Process quastProcess = new QuastV2_2Process(quastArgs);
 
         try {
-            this.conanProcessService.execute(ascProcess, executionContextCopy);
+            this.conanProcessService.execute(quastProcess, executionContextCopy);
         }
         catch(ProcessExecutionException pee) {
             // If an error occurs here it isn't critical so just log the error and continue
             log.error(pee.getMessage(), pee);
         }
+    }
+
+    /**
+     * Gets all the FastA files in the directory specified by the user.
+     * @param inputDir
+     * @return
+     */
+    protected List<File> filesFromDir(File inputDir) {
+
+        List<File> fileList = new ArrayList<File>();
+
+        Collection<File> fileCollection = FileUtils.listFiles(inputDir, new String[]{"fa", "fasta"}, true);
+
+        for(File file : fileCollection) {
+            fileList.add(file);
+        }
+
+        Collections.sort(fileList);
+
+        return fileList;
     }
 
     @Override

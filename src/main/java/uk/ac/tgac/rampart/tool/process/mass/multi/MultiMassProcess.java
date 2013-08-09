@@ -133,7 +133,7 @@ public class MultiMassProcess extends AbstractConanProcess {
                 this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
-            log.info("Assemblies complete");
+            /*log.info("Assemblies complete");
 
             // Execute the Mass Selector job
             log.info("Analysing and comparing assemblies");
@@ -150,7 +150,7 @@ public class MultiMassProcess extends AbstractConanProcess {
 
             if (assembler.makesScaffolds()) {
                 executeMassSelector(args, new File(statsDir, "scaffolds"), scaffoldStatsFiles, executionContext);
-            }
+            }                                   */
 
             log.info("Multi MASS run complete");
 

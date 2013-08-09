@@ -220,7 +220,7 @@
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
             <artifactId>tgac-conan</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.4.1</version>
         </dependency>
 
         <dependency>
