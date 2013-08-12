@@ -33,13 +33,14 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -160,7 +161,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             // Run analyser job using the original execution context
             log.debug("Analysing and comparing assemblies");
-            this.dispatchStatsJob(genericAssembler, assemblerWait, executionContext);
+            this.dispatchStatsJobs(genericAssembler, assemblerWait, executionContext);
 
             log.info("Finished Single MASS run");
 
@@ -263,7 +264,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
 
-    protected void dispatchStatsJob(Assembler assembler, WaitCondition waitCondition, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+    protected void dispatchStatsJobs(Assembler assembler, WaitCondition waitCondition, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
         ExecutionContext executionContextCopy = executionContext.copy();
@@ -274,24 +275,17 @@ public class SingleMassProcess extends AbstractConanProcess {
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
             schedulerArgs.setJobName(jobName);
-            schedulerArgs.setThreads(1);
+            schedulerArgs.setThreads(args.getThreads());
             schedulerArgs.setMemoryMB(0);
             schedulerArgs.setWaitCondition(waitCondition);
 
             executionContextCopy.setForegroundJob(args.getParallelismLevel() == MassArgs.ParallelismLevel.LINEAR);
         }
 
-        if (assembler.makesUnitigs()) {
-            this.executeSingleStatsJob(args.getUnitigsDir(), jobName + "-unitigs", executionContextCopy, false);
-        }
+        this.executeQuastJobs(assembler, args, jobName + "-quast", executionContextCopy);
 
-        if (assembler.makesContigs()) {
-            this.executeSingleStatsJob(args.getContigsDir(), jobName + "-contigs", executionContextCopy, false);
-        }
+        this.executeCegmaJobs(assembler, args, jobName + "-cegma", executionContextCopy);
 
-        if (assembler.makesScaffolds()) {
-            this.executeSingleStatsJob(args.getScaffoldsDir(), jobName + "-scaffolds", executionContextCopy, true);
-        }
 
         // Create this wait job if we are using a scheduler and running in assemblies in parallel only.  If we are running
         // MASS in parallel we skip this wait and continue
@@ -302,7 +296,108 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
     }
 
-    protected void executeSingleStatsJob(File inputDir, String jobName, ExecutionContext executionContext, boolean scaffolds)
+    protected void executeCegmaJobs(Assembler assembler, SingleMassArgs args, String jobName, ExecutionContext executionContext)
+            throws IOException, ProcessExecutionException, InterruptedException {
+
+        File inputDir = null;
+
+        // We only do one level of Cegma jobs, technically there shouldn't be much / any different between different levels
+        if (assembler.makesScaffolds()) {
+            inputDir = args.getScaffoldsDir();
+        }
+        else if (assembler.makesContigs()) {
+            inputDir = args.getContigsDir();
+        }
+        else if (assembler.makesUnitigs()) {
+            inputDir = args.getUnitigsDir();
+        }
+        else {
+            log.warn("Couldn't run CEGMA because assembler does not support any recognised output types (unitigs, contigs, scaffods).");
+            return;
+        }
+
+        File[] files = inputDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith("fa") || name.endsWith("fasta");
+            }
+        });
+
+        File rootOutputDir = new File(inputDir, "cegma");
+        if (rootOutputDir.exists()) {
+            FileUtils.deleteDirectory(rootOutputDir);
+        }
+        rootOutputDir.mkdir();
+
+        int i = 1;
+        for(File f : files) {
+            ExecutionContext executionContextCopy = executionContext.copy();
+
+            if (executionContextCopy.usingScheduler()) {
+
+                SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
+
+                String cegmaJobName = jobName + "-" + i + ".log";
+
+                schedulerArgs.setJobName(cegmaJobName);
+                schedulerArgs.setMonitorFile(new File(inputDir, cegmaJobName));
+                i++;
+            }
+
+            File outputDir = new File(rootOutputDir, f.getName());
+            if (outputDir.exists()) {
+                FileUtils.deleteDirectory(outputDir);
+            }
+            outputDir.mkdir();
+
+            // Setup CEGMA
+            CegmaV2_4Args cegmaArgs = new CegmaV2_4Args();
+            cegmaArgs.setGenomeFile(f);
+            cegmaArgs.setOutputPrefix(new File(outputDir, f.getName()));
+            cegmaArgs.setThreads(args.getThreads());
+
+            CegmaV2_4Process cegmaProcess = new CegmaV2_4Process(cegmaArgs);
+
+            // Creates output and temp directories
+            // Also creates a modified genome file that's BLAST tolerant.
+            cegmaProcess.initialise();
+
+            // Execute CEGMA
+            try {
+                this.conanProcessService.execute(cegmaProcess, executionContextCopy);
+            }
+            catch(ProcessExecutionException pee) {
+                // If an error occurs here it isn't critical so just log the error and continue
+                log.error(pee.getMessage(), pee);
+            }
+
+            // Create symbolic links to completeness_reports
+            File sourceFile = new File(cegmaArgs.getOutputPrefix().getAbsolutePath() + ".completeness_report");
+            File destFile = new File(rootOutputDir, f.getName() + ".cegma");
+            String linkCmd = "ln -s -f " + sourceFile.getAbsolutePath() + " " + destFile.getAbsolutePath();
+            this.conanProcessService.execute(linkCmd, new DefaultExecutionContext(executionContext.getLocality(), null, null, true));
+        }
+
+
+    }
+
+    protected void executeQuastJobs(Assembler assembler, SingleMassArgs args, String jobName, ExecutionContext executionContext)
+            throws InterruptedException {
+
+        if (assembler.makesUnitigs()) {
+            this.executeSingleQuastJob(args.getUnitigsDir(), jobName + "-unitigs", executionContext, false);
+        }
+
+        if (assembler.makesContigs()) {
+            this.executeSingleQuastJob(args.getContigsDir(), jobName + "-contigs", executionContext, false);
+        }
+
+        if (assembler.makesScaffolds()) {
+            this.executeSingleQuastJob(args.getScaffoldsDir(), jobName + "-scaffolds", executionContext, true);
+        }
+    }
+
+    protected void executeSingleQuastJob(File inputDir, String jobName, ExecutionContext executionContext, boolean scaffolds)
             throws InterruptedException {
 
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();

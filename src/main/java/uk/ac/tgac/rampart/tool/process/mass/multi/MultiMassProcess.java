@@ -133,6 +133,14 @@ public class MultiMassProcess extends AbstractConanProcess {
                 this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
             }
 
+
+            // Compile Single MASS results
+
+            // Run MASS selector
+
+            // Decide on best assembly
+
+
             /*log.info("Assemblies complete");
 
             // Execute the Mass Selector job
