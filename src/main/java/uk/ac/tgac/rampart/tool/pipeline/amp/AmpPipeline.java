@@ -19,21 +19,14 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.util.StringJoiner;
-import uk.ac.tgac.conan.process.AbstractAmpArgs;
-import uk.ac.tgac.conan.process.AbstractAmpProcess;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
+import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
+import uk.ac.tgac.rampart.tool.process.amp.AmpStageProcess;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -122,41 +115,15 @@ public class AmpPipeline implements ConanPipeline {
 
     public void configureProcesses(AmpArgs args) {
 
-        args.linkProcesses();
+        for(AmpStageArgs ampStageArgs : args.getStageArgsList()) {
 
-        for(AbstractAmpProcess proc : args.getProcesses()) {
+            AmpStageProcess proc = new AmpStageProcess(ampStageArgs);
 
             proc.setConanProcessService(this.conanProcessService);
-            proc.initialise();
             this.processList.add(proc);
         }
     }
 
-    protected String makeLinkCommand(File source, File target) {
-        return "ln -s -f " + source.getAbsolutePath() + " " + target.getAbsolutePath();
-    }
 
-    public void createLinks(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
-        StringJoiner linkCmds = new StringJoiner(";");
-
-        File scaffoldsDir = new File(args.getOutputDir(), "assemblies");
-
-        scaffoldsDir.mkdirs();
-
-        linkCmds.add(makeLinkCommand(this.args.getInputAssembly(), new File(scaffoldsDir, "amp-stage-0-scaffolds.fa")));
-
-        for(int i = 0; i < args.getProcesses().size(); i++) {
-
-            AbstractAmpArgs ampArgs = args.getProcesses().get(i).getAmpArgs();
-
-            String stageNumber = Integer.toString(i+1);
-
-            linkCmds.add(makeLinkCommand(ampArgs.getOutputFile(), new File(scaffoldsDir, "amp-stage-" + stageNumber + "-scaffolds.fa")));
-        }
-
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        this.conanProcessService.execute(linkCmds.toString(), linkingExecutionContext);
-    }
 }

@@ -29,8 +29,6 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.asc.AssemblyStats;
-import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
 
 import java.io.File;
 import java.io.IOException;

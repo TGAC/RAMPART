@@ -64,7 +64,7 @@ public class MecqProcessTest {
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
-        MecqArgs mecqArgs = MecqArgs.parseConfig(cfgFile);
+        MecqArgs mecqArgs = new MecqArgs();
         mecqArgs.setOutputDir(outputDir);
 
         MecqProcess mecqProcess = new MecqProcess(mecqArgs);

@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass.selector;
 
-import junit.extensions.TestSetup;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;

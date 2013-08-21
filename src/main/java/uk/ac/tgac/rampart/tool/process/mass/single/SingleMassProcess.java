@@ -30,6 +30,7 @@ import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
@@ -37,7 +38,10 @@ import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
-import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.CoverageRange;
+import uk.ac.tgac.rampart.tool.process.mass.KmerRange;
+import uk.ac.tgac.rampart.tool.process.mass.MassInput;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -63,7 +67,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
     protected void createSupportDirectories(Assembler assembler, SingleMassArgs args) {
 
-        // Create directory for links to assembled unitigs
+        // Create directory for links to assembled contigs
         if (assembler.makesUnitigs()) {
             args.getUnitigsDir().mkdir();
         }
@@ -98,17 +102,18 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             // Create an assembly object used for other stages in the MASS pipeline.. note this does not include
             // specific kmer settings
-            Assembler genericAssembler = AssemblerFactory.createAssembler(args.getAssembler());
+            Assembler genericAssembler = AssemblerFactory.createAssembler(args.getTool());
 
-            // Bit of a hack... for some assemblers to determine if they need certain output directories then they need
-            // to know what libraries are available (SE and/or PE)
-            genericAssembler.getArgs().setLibraries(args.getLibs());
+            log.info("Starting Single MASS run for " + args.getName());
 
-            log.info("Starting Single MASS run for " + args.getConfig().getAbsolutePath());
+            // Make sure the kmer range is reasonable (if it's not already)
+            KmerRange validatedKmerRange = this.validateKmerRange(args.getName(), genericAssembler.hasKParam(), args.getKmerRange());
 
-            // Check the range looks reasonable
-            log.debug("Validating kmer range");
-            args.validateKmers(args.getKmin(), args.getKmax());
+            // Make sure the coverage range reasonable (if it's not already)
+            CoverageRange validatedCoverageRange = this.validateCoverageRange(args.getName(), args.getCoverageRange());
+
+            // Make sure the inputs are reasonable
+            List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(), args.getAllMecqs());
 
             // Create any required directories for this job
             log.debug("Creating directories");
@@ -116,51 +121,40 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             WaitCondition assemblerWait = null;
 
-            if (!args.isStatsOnly()) {
+            //if (!args.isStatsOnly()) {
 
-                // Dispatch an assembly job for each requested kmer
-                for (int k = args.getStepSize().firstValidKmer(args.getKmin()); k <= args.getKmax(); k = args.getStepSize().nextKmer(k)) {
+                // Dispatch an assembly job for coverage and kmer value
+                for (Integer cvg : validatedCoverageRange) {
 
-                    File outputDir = new File(args.getOutputDir(), Integer.toString(k));
+                    for (Integer k : validatedKmerRange) {
 
-                    log.debug("Starting " + args.getAssembler() + " in " + outputDir.getAbsolutePath());
+                        String cvgString = CoverageRange.toString(cvg);
 
-                    Assembler assembler = AssemblerFactory.createAssembler(args.getAssembler(), k, args.getLibs(), outputDir);
+                        String dirName = genericAssembler.hasKParam() ? ("cvg-" + cvgString + "_k-" + k) : "cvg-" + cvgString;
 
-                    log.debug("Assembler: " + assembler != null ? assembler.getName() : "NULL");
+                        File outputDir = new File(args.getOutputDir(), dirName);
 
-                    AssemblerArgs asmArgs = assembler.getArgs();
+                        log.debug("Starting " + args.getTool() + " in " + outputDir.getAbsolutePath());
 
-                    log.debug("Assembler Args: " + asmArgs.toString());
+                        // Create the actual assembler for these settings
+                        Assembler assembler = this.makeAssembler(args, k, cvg, selectedLibs, outputDir);
 
-                    asmArgs.setThreads(args.getThreads());
-                    asmArgs.setCoverageCutoff(args.getCoverageCutoff());
+                        // Execute the assembler
+                        this.executeAssembler(assembler, args.getJobPrefix() + "-" + dirName, executionContext);
 
-                    this.executeAssembler(assembler, args.getJobPrefix() + "-k" + k, executionContext);
-
-                    this.createLinks(assembler, k, executionContext);
-                }
-
-                // Create this wait job if we are using a scheduler and running in parallel.
-                if (executionContext.usingScheduler()) {
-
-                    if (args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY) {
-
-                        log.debug("Running assemblies in parallel, waiting for completion");
-                        this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
-                    }
-                    else if (args.getParallelismLevel().doParallelMass()) {
-
-                        log.debug("Running MASS in parallel, so creating wait condition for stats job and continuing");
-                        assemblerWait = executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "*");
+                        // Create links for outputs from this assembler to known locations
+                        this.createLinks(assembler, k, executionContext);
                     }
                 }
-            }
 
-            // Not doing this anymore... we'll use Quast to get stats later on in multi-mass.
+                // If using a scheduler create a wait condition that will be observed by the stats job
+                assemblerWait = executionContext.usingScheduler() ?
+                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "*") :
+                        null;
+            //}
 
             // Run analyser job using the original execution context
-            log.debug("Analysing and comparing assemblies");
+            log.debug("Analysing and comparing assemblies for MASS group: " + args.getName());
             this.dispatchStatsJobs(genericAssembler, assemblerWait, executionContext);
 
             log.info("Finished Single MASS run");
@@ -172,6 +166,106 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
 
         return true;
+    }
+
+
+    protected Assembler makeAssembler(SingleMassArgs massArgs, int k, int cvg, List<Library> selectedLibs, File outputDir) {
+
+        Assembler asm = AssemblerFactory.valueOf(massArgs.getTool()).create();
+        AssemblerArgs asmArgs = asm.getArgs();
+
+        asmArgs.setLibraries(selectedLibs);
+        asmArgs.setDesiredCoverage(cvg);
+        asmArgs.setKmer(k);
+        asmArgs.setThreads(massArgs.getThreads());
+        asmArgs.setMemory(massArgs.getMemory());
+        asmArgs.setOrganism(massArgs.getOrganism());
+        asmArgs.setOutputDir(outputDir);
+
+        return asm;
+    }
+
+    protected List<Library> validateInputs(String massName, List<MassInput> inputs, List<Library> allLibraries, List<MecqSingleArgs> allMecqs) throws IOException {
+
+        List<Library> selectedLibs = new ArrayList<Library>();
+
+        for(MassInput mi : inputs) {
+            Library lib = mi.findLibrary(allLibraries);
+            MecqSingleArgs mecqArgs = mi.findMecq(allMecqs);
+
+            if (lib == null) {
+                throw new IOException("Unrecognised library: " + mi.getLib() + "; not processing MASS run: " + massName);
+            }
+
+            if (mecqArgs == null) {
+                if (mi.getMecq().equalsIgnoreCase(MecqSingleArgs.RAW)) {
+                    selectedLibs.add(lib);
+                }
+                else {
+                    throw new IOException("Unrecognised MECQ dataset requested: " + mi.getMecq() + "; not processing MASS run: " + massName);
+                }
+            }
+            else {
+                Library modLib = lib.copy();
+
+                List<File> files = mecqArgs.getOutputFiles(lib.getName());
+
+                if (modLib.isPairedEnd()) {
+                    if (files.size() != 2) {
+                        throw new IOException("Paired end library: " + modLib.getName() + " from " + mecqArgs.getName() + " does not have two files");
+                    }
+
+                    modLib.setFiles(files.get(0), files.get(1));
+                }
+                else {
+                    if (files.size() != 1) {
+                        throw new IOException("Single end library: " + modLib.getName() + " from " + mecqArgs.getName() + " does not have one file");
+                    }
+
+                    modLib.setFiles(files.get(0), null);
+                }
+
+                selectedLibs.add(modLib);
+            }
+        }
+
+        return selectedLibs;
+    }
+
+    protected KmerRange validateKmerRange(String massName, boolean assemblerSupportsK, KmerRange kmerRange) throws CommandExecutionException {
+
+        if (!assemblerSupportsK) {
+            log.info("Selected assembler for: " + massName + " does not support K parameter");
+            return new KmerRange();
+        }
+        else if (kmerRange == null) {
+            KmerRange defaultKmerRange = new KmerRange();
+            log.info("No K-mer range specified for " + massName + " running assembler with default range: " + defaultKmerRange.toString());
+            return defaultKmerRange;
+        }
+        else if (kmerRange.validate()) {
+            log.info("K-mer range for " + massName + " validated: " + kmerRange.toString());
+            return kmerRange;
+        }
+        else {
+            throw new CommandExecutionException("Invalid K-mer range: " + kmerRange.toString() + " Not processing MASS run: " + massName);
+        }
+    }
+
+    protected CoverageRange validateCoverageRange(String massName, CoverageRange coverageRange) throws CommandExecutionException {
+
+        if (coverageRange == null) {
+            CoverageRange defaultCoverageRange = new CoverageRange();
+            log.info("No coverage range specified for " + massName + " running assembler with default range: " + defaultCoverageRange.toString());
+            return defaultCoverageRange;
+        }
+        else if (coverageRange.validate()) {
+            log.info("Coverage range for " + massName + " validated: " + coverageRange.toString());
+            return coverageRange;
+        }
+        else {
+            throw new CommandExecutionException("Invalid coverage range: " + coverageRange.toString() + " Not processing MASS run: " + massName);
+        }
     }
 
     protected String makeLinkCmdLine(File sourceFile, File outputDir, int k) {
@@ -188,10 +282,6 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         // Make a shortcut to the args
         SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
-
-        if (assembler.makesUnitigs()) {
-            compoundLinkCmdLine.add(makeLinkCmdLine(assembler.getUnitigsFile(), args.getUnitigsDir(), k));
-        }
 
         if (assembler.makesContigs()) {
             compoundLinkCmdLine.add(makeLinkCmdLine(assembler.getContigsFile(), args.getContigsDir(), k));
@@ -237,7 +327,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                 schArgs.setOpenmpi(true);
             }
 
-            executionContextCopy.setForegroundJob(!args.getParallelismLevel().doParallelAssemblies());
+            executionContextCopy.setForegroundJob(!args.isRunParallel());
         }
 
         // Create process
@@ -279,21 +369,15 @@ public class SingleMassProcess extends AbstractConanProcess {
             schedulerArgs.setMemoryMB(0);
             schedulerArgs.setWaitCondition(waitCondition);
 
-            executionContextCopy.setForegroundJob(args.getParallelismLevel() == MassArgs.ParallelismLevel.LINEAR);
+            // Always going to want to run these jobs in parallel if we have access to a scheduler!
+            executionContextCopy.setForegroundJob(false);
         }
 
+        // Kick off the quast jobs
         this.executeQuastJobs(assembler, args, jobName + "-quast", executionContextCopy);
 
+        // Kick off the cegma jobs
         this.executeCegmaJobs(assembler, args, jobName + "-cegma", executionContextCopy);
-
-
-        // Create this wait job if we are using a scheduler and running in assemblies in parallel only.  If we are running
-        // MASS in parallel we skip this wait and continue
-        if (executionContext.usingScheduler() && args.getParallelismLevel() == MassArgs.ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY) {
-
-            log.debug("Running assembly analysis in parallel, waiting for completion");
-            this.executeScheduledWait(jobName, args.getOutputDir(), executionContext);
-        }
     }
 
     protected void executeCegmaJobs(Assembler assembler, SingleMassArgs args, String jobName, ExecutionContext executionContext)
@@ -308,11 +392,8 @@ public class SingleMassProcess extends AbstractConanProcess {
         else if (assembler.makesContigs()) {
             inputDir = args.getContigsDir();
         }
-        else if (assembler.makesUnitigs()) {
-            inputDir = args.getUnitigsDir();
-        }
         else {
-            log.warn("Couldn't run CEGMA because assembler does not support any recognised output types (unitigs, contigs, scaffods).");
+            log.warn("Couldn't run CEGMA because assembler does not support any recognised output types (contigs, scaffods).");
             return;
         }
 
@@ -411,18 +492,10 @@ public class SingleMassProcess extends AbstractConanProcess {
             schedulerArgs.setMonitorFile(new File(inputDir, jobName + ".log"));
         }
 
-        /*AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInput(inputDir);
-        ascArgs.setOutput(inputDir);
-        ascArgs.setMode("FULL");
-
-        AscV10Process ascProcess = new AscV10Process(ascArgs);*/
-
-
         QuastV2_2Args quastArgs = new QuastV2_2Args();
         quastArgs.setInputFiles(filesFromDir(inputDir));
         quastArgs.setOutputDir(new File(inputDir, "quast"));   // No need to create this directory first... quast will take care of that
-        //quastArgs.setEstimatedGenomeSize(((SingleMassArgs) this.getProcessArgs());
+        quastArgs.setEstimatedGenomeSize(args.getOrganism() == null ? 0 : args.getOrganism().getEstGenomeSize());
         quastArgs.setThreads(args.getThreads());
         quastArgs.setScaffolds(scaffolds);
 
@@ -443,6 +516,9 @@ public class SingleMassProcess extends AbstractConanProcess {
      * @return
      */
     protected List<File> filesFromDir(File inputDir) {
+
+        if (inputDir == null || !inputDir.exists())
+            return null;
 
         List<File> fileList = new ArrayList<File>();
 

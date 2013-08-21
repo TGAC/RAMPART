@@ -15,18 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.selector;
+package uk.ac.tgac.rampart.tool.process.mass;
 
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
+import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+
+import java.io.File;
 
 /**
  * User: maplesod
- * Date: 20/03/13
- * Time: 12:08
+ * Date: 25/03/13
+ * Time: 11:10
  */
-public interface MassSelectorExecutor {
+public interface MassExecutor {
 
-    void executeMassSelector(MassSelectorArgs massSelectorArgs, ConanProcessService conanProcessService, ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException;
+    void executeSingleMass(SingleMassArgs singleMassArgs, ConanProcessService conanProcessService, ExecutionContext executionContext)
+            throws InterruptedException, ProcessExecutionException;
+
+    void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException;
+
+    void executeMassSelector(MassSelectorArgs massSelectorArgs, ConanProcessService conanProcessService, ExecutionContext executionContext)
+            throws InterruptedException, ProcessExecutionException;
 }

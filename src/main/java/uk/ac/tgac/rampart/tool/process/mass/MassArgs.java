@@ -17,16 +17,18 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
-import org.ini4j.Profile;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.rampart.data.RampartConfiguration;
+import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,183 +39,78 @@ import java.util.Map;
  * Date: 10/01/13
  * Time: 17:04
  */
-public abstract class MassArgs implements ProcessArgs {
+public class MassArgs implements ProcessArgs {
 
     // Keys for config file
-    public static final String MASS_TOOL = "tool";
-    public static final String MASS_KMIN = "kmin";
-    public static final String MASS_KMAX = "kmax";
-    public static final String MASS_STEP = "step";
-    public static final String MASS_THREADS = "threads";
-    public static final String MASS_MEMORY = "memory";
-    public static final String MASS_PARALLEL = "parallel";
-    public static final String MASS_CVG_CUTOFF = "cutoff";
-    public static final String MASS_OUTPUT_LEVEL = "output_level";
-    public static final String MASS_INPUT_SOURCE = "input_source";
-    public static final String MASS_STATS_ONLY = "stats_only";
+    public static final String KEY_ATTR_PARALLEL = "parallel";
+    public static final String KEY_ELEM_SINGLE_MASS = "single_mass";
 
     // Constants
-    public static final int KMER_MIN = 11;
-    public static final int KMER_MAX = 125;
-    public static final int DEFAULT_KMER_MIN = 51;
-    public static final int DEFAULT_KMER_MAX = 85;
-    public static final StepSize DEFAULT_STEP_SIZE = StepSize.MEDIUM;
-    public static final int DEFAULT_THREADS = 8;
-    public static final int DEFAULT_MEM = 50000;
-    public static final ParallelismLevel DEFAULT_PARALLELISM_LEVEL = ParallelismLevel.PARALLEL_ASSEMBLIES_ONLY;
     public static final int DEFAULT_CVG_CUTOFF = -1;
     public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
-    public static final String DEFAULT_INPUT_SOURCE = InputSource.ALL.toString();
-    public static final boolean DEFAULT_STATS_ONLY = false;
 
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
 
-    // Class vars
-    private String assembler;
-    private int kmin;
-    private int kmax;
-    private StepSize stepSize;
-    private List<Library> libs;
+    // Rampart vars
     private String jobPrefix;
     private File outputDir;
-    private int threads;
-    private int memory;
-    private ParallelismLevel parallelismLevel;
-    private int coverageCutoff;
+    List<SingleMassArgs> singleMassArgsList;    // List of Single MASS groups to run separately
+    List<Library> allLibraries;                    // All allLibraries available in this job
+    List<MecqSingleArgs> allMecqs;                 // All mecq configurations
+    private boolean runParallel;                // Whether to run MASS groups in parallel
+    private File weightings;
+    private Organism organism;
+
+
     private OutputLevel outputLevel;
-    private String inputSource;
-    private boolean statsOnly;
 
-    public enum ParallelismLevel {
-
-        LINEAR,
-        PARALLEL_ASSEMBLIES_ONLY,
-        PARALLEL_MASS_ONLY,
-        FULL;
-
-        public static ParallelismLevel P0 = LINEAR;
-        public static ParallelismLevel P1 = PARALLEL_ASSEMBLIES_ONLY;
-        public static ParallelismLevel P2 = PARALLEL_MASS_ONLY;
-        public static ParallelismLevel P3 = FULL;
-
-        public boolean doParallelAssemblies() {
-            return this == PARALLEL_ASSEMBLIES_ONLY || this == FULL;
-        }
-
-        public boolean doParallelMass() {
-            return this == PARALLEL_MASS_ONLY || this == FULL;
-        }
-    }
 
     public enum OutputLevel {
-
-        UNITIGS,
         CONTIGS,
         SCAFFOLDS
     }
 
-    public enum InputSource {
-
-        RAW_ONLY {
-            @Override
-            public File[] filter(File configDir) {
-                return configDir.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        String lowercaseName = name.toLowerCase();
-                        if (lowercaseName.equals("raw.cfg")) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                });
-            }
-        },
-        BEST {
-            @Override
-            public File[] filter(File configDir) {
-                return null;
-            }
-        },
-        ALL {
-            @Override
-            public File[] filter(File configDir) {
-                return configDir.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        String lowercaseName = name.toLowerCase();
-                        if (lowercaseName.endsWith(".cfg")) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                });
-            }
-        };
-
-        public abstract File[] filter(File configDir);
-    }
-
-
     public MassArgs() {
-        this.assembler = null;
-        this.kmin = DEFAULT_KMER_MIN;
-        this.kmax = DEFAULT_KMER_MAX;
-        this.stepSize = DEFAULT_STEP_SIZE;
-        this.libs = new ArrayList<Library>();
         this.jobPrefix = "";
         this.outputDir = null;
-        this.threads = DEFAULT_THREADS;
-        this.memory = DEFAULT_MEM;
-        this.parallelismLevel = DEFAULT_PARALLELISM_LEVEL;
-        this.coverageCutoff = DEFAULT_CVG_CUTOFF;
+
+        this.allLibraries = new ArrayList<Library>();
+        this.allMecqs = new ArrayList<MecqSingleArgs>();
+
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
-        this.inputSource = DEFAULT_INPUT_SOURCE;
-        this.statsOnly = DEFAULT_STATS_ONLY;
+        this.weightings = new File(
+                new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(),
+                "/data/weightings.tab");
+
+        this.organism = null;
     }
 
+    public MassArgs(Element ele, File outputDir, String jobPrefix, List<Library> allLibraries, List<MecqSingleArgs> allMecqs, Organism organism) {
 
-    public int getKmin() {
-        return kmin;
+        // Set defaults first
+        this();
+
+        // Set from parameters
+        this.outputDir = outputDir;
+        this.jobPrefix = jobPrefix;
+        this.allLibraries = allLibraries;
+        this.allMecqs = allMecqs;
+        this.organism = organism;
+
+        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
+
+        // All single mass args
+        NodeList nodes = ele.getElementsByTagName(KEY_ELEM_SINGLE_MASS);
+        for(int i = 0; i < nodes.getLength(); i++) {
+            this.singleMassArgsList.add(
+                    new SingleMassArgs(
+                            (Element)nodes.item(i), outputDir, jobPrefix,
+                            this.allLibraries, this.allMecqs, this.organism));
+        }
     }
 
-    public void setKmin(int kmin) {
-        this.kmin = kmin;
-    }
-
-    public int getKmax() {
-        return kmax;
-    }
-
-    public void setKmax(int kmax) {
-        this.kmax = kmax;
-    }
-
-    public StepSize getStepSize() {
-        return stepSize;
-    }
-
-    public void setStepSize(StepSize stepSize) {
-        this.stepSize = stepSize;
-    }
-
-    public String getAssembler() {
-        return assembler;
-    }
-
-    public void setAssembler(String assembler) {
-        this.assembler = assembler;
-    }
-
-    public List<Library> getLibs() {
-        return libs;
-    }
-
-    public void setLibs(List<Library> libs) {
-        this.libs = libs;
-    }
 
     public File getOutputDir() {
         return outputDir;
@@ -231,38 +128,6 @@ public abstract class MassArgs implements ProcessArgs {
         this.jobPrefix = jobPrefix;
     }
 
-    public int getThreads() {
-        return threads;
-    }
-
-    public void setThreads(int threads) {
-        this.threads = threads;
-    }
-
-    public int getMemory() {
-        return memory;
-    }
-
-    public void setMemory(int mem) {
-        this.memory = mem;
-    }
-
-    public ParallelismLevel getParallelismLevel() {
-        return parallelismLevel;
-    }
-
-    public void setParallelismLevel(ParallelismLevel parallelismLevel) {
-        this.parallelismLevel = parallelismLevel;
-    }
-
-    public int getCoverageCutoff() {
-        return coverageCutoff;
-    }
-
-    public void setCoverageCutoff(int coverageCutoff) {
-        this.coverageCutoff = coverageCutoff;
-    }
-
     public OutputLevel getOutputLevel() {
         return outputLevel;
     }
@@ -271,71 +136,57 @@ public abstract class MassArgs implements ProcessArgs {
         this.outputLevel = outputLevel;
     }
 
-    public String getInputSource() {
-        return inputSource;
+    public boolean isRunParallel() {
+        return runParallel;
     }
 
-    public void setInputSource(String inputSource) {
-        this.inputSource = inputSource;
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
     }
 
-    public boolean isStatsOnly() {
-        return statsOnly;
+    public File getWeightings() {
+        return weightings;
     }
 
-    public void setStatsOnly(boolean statsOnly) {
-        this.statsOnly = statsOnly;
+    public void setWeightings(File weightings) {
+        this.weightings = weightings;
     }
 
-    public void parseConfig(File config) throws IOException {
+    public Organism getOrganism() {
+        return organism;
+    }
 
-        RampartConfiguration rampartConfig = new RampartConfiguration();
+    public void setOrganism(Organism organism) {
+        this.organism = organism;
+    }
 
-        rampartConfig.load(config);
-        this.setLibs(rampartConfig.getLibs());
-        Profile.Section section = rampartConfig.getMassSettings();
+    public List<Library> getAllLibraries() {
+        return allLibraries;
+    }
 
-        if (section != null) {
-            for (Map.Entry<String, String> entry : section.entrySet()) {
+    public void setAllLibraries(List<Library> allLibraries) {
+        this.allLibraries = allLibraries;
+    }
 
-                if (entry.getKey().equalsIgnoreCase(MASS_TOOL)) {
-                    this.setAssembler(entry.getValue());
-                } else if (entry.getKey().equalsIgnoreCase(MASS_KMIN)) {
-                    this.setKmin(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_KMAX)) {
-                    this.setKmax(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_STEP)) {
-                    this.setStepSize(StepSize.valueOf(entry.getValue().toUpperCase()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_THREADS)) {
-                    this.setThreads(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_MEMORY)) {
-                    this.setMemory(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_PARALLEL)) {
-                    this.setParallelismLevel(ParallelismLevel.valueOf(entry.getValue().trim().toUpperCase()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_CVG_CUTOFF)) {
-                    this.setCoverageCutoff(Integer.parseInt(entry.getValue()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_OUTPUT_LEVEL)) {
-                    this.setOutputLevel(OutputLevel.valueOf(entry.getValue().trim().toUpperCase()));
-                } else if (entry.getKey().equalsIgnoreCase(MASS_INPUT_SOURCE)) {
+    public List<SingleMassArgs> getSingleMassArgsList() {
+        return singleMassArgsList;
+    }
 
-                    String source = InputSource.ALL.toString();
-                    String val = entry.getValue().trim().toUpperCase();
-                    try {
-                        source = InputSource.valueOf(val).toString();
-                    }
-                    catch (IllegalArgumentException ex) {
+    public void setSingleMassArgsList(List<SingleMassArgs> singleMassArgsList) {
+        this.singleMassArgsList = singleMassArgsList;
+    }
 
-                        // Checks if this is an integer (otherwise fails)
-                        Integer.parseInt(val);
-                        source = val;
-                    }
+    public List<MecqSingleArgs> getAllMecqs() {
+        return allMecqs;
+    }
 
-                    this.setInputSource(source);
-                } else if (entry.getKey().equalsIgnoreCase(MASS_STATS_ONLY)) {
-                    this.setStatsOnly(Boolean.parseBoolean(entry.getValue()));
-                }
-            }
-        }
+    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+        this.allMecqs = allMecqs;
+    }
+
+    @Override
+    public void parse(String args) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -343,38 +194,10 @@ public abstract class MassArgs implements ProcessArgs {
 
         Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
 
-        if (this.assembler != null)
-            pvp.put(params.getAssembler(), this.assembler);
-
-        pvp.put(params.getKmin(), String.valueOf(this.kmin));
-        pvp.put(params.getKmax(), String.valueOf(this.kmax));
-        pvp.put(params.getThreads(), String.valueOf(this.threads));
-        pvp.put(params.getMemory(), String.valueOf(this.memory));
-        pvp.put(params.getStatsOnly(), String.valueOf(this.statsOnly));
-
-        if (this.stepSize != null) {
-            pvp.put(params.getStepSize(), this.stepSize.toString());
-        }
-
-        if (this.parallelismLevel != null) {
-            pvp.put(params.getParallelismLevel(), this.parallelismLevel.toString());
-        }
 
         if (this.outputLevel != null) {
             pvp.put(params.getOutputLevel(), this.outputLevel.toString());
         }
-
-        if (this.inputSource != null && !this.inputSource.isEmpty()) {
-            pvp.put(params.getInputSource(), this.inputSource.toString());
-        }
-
-        if (this.coverageCutoff > -1) {
-            pvp.put(params.getCoverageCutoff(), Integer.toString(this.coverageCutoff));
-        }
-
-        // TODO not sure the toString method is sufficient here.
-        if (this.libs != null && this.libs.size() > 0)
-            pvp.put(params.getLibs(), this.libs.toString());
 
         if (this.outputDir != null)
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
@@ -396,54 +219,16 @@ public abstract class MassArgs implements ProcessArgs {
 
             String param = entry.getKey().getName();
 
-            if (param.equals(this.params.getAssembler().getName())) {
-                this.assembler = entry.getValue();
-            } else if (param.equals(this.params.getKmin().getName())) {
-                this.kmin = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getKmax().getName())) {
-                this.kmax = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getThreads().getName())) {
-                this.threads = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getMemory().getName())) {
-                this.memory = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getStepSize().getName())) {
-                this.stepSize = StepSize.valueOf(entry.getValue());
-            } else if (param.equals(this.params.getLibs().getName())) {
-                //TODO need to implement this at some point!
-                this.libs = new ArrayList<Library>();
-            } else if (param.equals(this.params.getJobPrefix().getName())) {
+            if (param.equals(this.params.getJobPrefix().getName())) {
                 this.jobPrefix = entry.getValue();
             } else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
-            } else if (param.equalsIgnoreCase(this.params.getParallelismLevel().getName())) {
-                this.parallelismLevel = ParallelismLevel.valueOf(entry.getValue());
-            } else if (param.equalsIgnoreCase(this.params.getCoverageCutoff().getName())) {
-                this.coverageCutoff = Integer.parseInt(entry.getValue());
             } else if (param.equalsIgnoreCase(this.params.getOutputLevel().getName())) {
                 this.outputLevel = OutputLevel.valueOf(entry.getValue());
-            } else if (param.equalsIgnoreCase(this.params.getStatsOnly().getName())) {
-                this.statsOnly = Boolean.parseBoolean(entry.getValue());
             }
         }
     }
 
 
-    /**
-     * Determines whether or not the supplied kmer range in this object is valid.  Throws an IllegalArgumentException if not.
-     */
-    public boolean validateKmers(int kmin, int kmax) {
 
-        //TODO This logic isn't bullet proof... we can still nudge the minKmer above the maxKmer
-
-        if (kmin < KMER_MIN || kmax < KMER_MIN)
-            throw new IllegalArgumentException("K-mer values must be >= " + KMER_MIN + "nt");
-
-        if (kmin > KMER_MAX || kmax > KMER_MAX)
-            throw new IllegalArgumentException("K-mer values must be <= " + KMER_MAX + "nt");
-
-        if (kmin > kmax)
-            throw new IllegalArgumentException("Error: Min K-mer value must be <= Max K-mer value");
-
-        return true;
-    }
 }

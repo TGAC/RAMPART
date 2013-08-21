@@ -9,7 +9,7 @@ What does RAMPART do?
 
 RAMPART is an automated de novo assembly pipeline.  The pipeline can be divided into a number of steps:
 
-1 - Create a quality trimmed version of the raw input libraries.
+1 - Create a quality trimmed version of the raw input allLibraries.
 2 - Perform a kmer optimisation procedure where multiple contig assemblies are execute with a range of kmer values.  
 The best assembly is selected for the next stage.
 3 - Enhance the best contig assembly using scaffolding, gap closing and other post-processing features.
@@ -173,9 +173,9 @@ Output
 
 A typical RAMPART run will produce the following directory structure:
 
-- /reads    - A directory containing quality trimmed versions of the input libraries and custom configuration files
+- /reads    - A directory containing quality trimmed versions of the input allLibraries and custom configuration files
 representing both the raw and quality trimmed datasets.
-- /mass     - A directory containing the results of assembling the raw and qt trimmed input libraries.
+- /mass     - A directory containing the results of assembling the raw and qt trimmed input allLibraries.
 - /amp - A directory containing the results of the assembly enhancement process applied to the best contig assembly
 from MASS.
 - /report   - A directory containing an automatically generated report detailing the results of this RAMPART job.

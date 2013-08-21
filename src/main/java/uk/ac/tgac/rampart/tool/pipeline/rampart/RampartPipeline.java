@@ -25,22 +25,14 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.tgac.rampart.RampartConfig;
-import uk.ac.tgac.rampart.data.RampartJobFileStructure;
+import uk.ac.tgac.rampart.config.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassArgs;
-import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassProcess;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
+import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 
-import java.io.File;
 import java.io.IOException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -130,13 +122,7 @@ public class RampartPipeline implements ConanPipeline {
     }
 
 
-    protected String createJobPrefix() {
-        Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        String dateTime = formatter.format(new Date());
-        String jobPrefix = "rampart-" + dateTime;
 
-        return jobPrefix;
-    }
 
     public void configureProcesses() throws IOException {
 
@@ -145,57 +131,28 @@ public class RampartPipeline implements ConanPipeline {
 
     public void configureProcesses(RampartArgs args) throws IOException {
 
+        // Capture the args
         this.args = args;
 
         // Create an object that maps expected RAMPART job directory structure based on specified output dir.
-        RampartJobFileStructure jobFS = new RampartJobFileStructure(this.args.getOutputDir());
-
-        // Create job prefix
-        String jobPrefix = createJobPrefix();
-
-        // Create QT args
-        MecqArgs mecqArgs = MecqArgs.parseConfig(this.args.getConfig());
-        mecqArgs.setOutputDir(jobFS.getMeqcDir());
-        mecqArgs.setJobPrefix(jobPrefix + "-mecq");
-        mecqArgs.setCreateConfigs(true);
-        mecqArgs.setRunParallel(true);
-
-        // Create MASS args
-        MultiMassArgs multiMassArgs = new MultiMassArgs();
-        multiMassArgs.parseConfig(this.args.getConfig());
-        multiMassArgs.setConfigDir(jobFS.getMeqcConfigDir());
-        multiMassArgs.setWeightingsFile(new File(RampartConfig.DATA_DIR, "weightings.tab"));
-        multiMassArgs.setOutputDir(jobFS.getMassDir());
-        multiMassArgs.setJobPrefix(jobPrefix + "-mass");
-
-        // Create AMP args (AMP stage is optional)
-        AmpArgs ampArgs = AmpArgs.parseConfig(args.getConfig());
-        if (ampArgs != null) {
-            ampArgs.setInputAssembly(jobFS.getMassOutFile());
-            ampArgs.setJobPrefix(jobPrefix + "-amp");
-            ampArgs.setOutputDir(jobFS.getAmpDir());
-        }
-
+        // Probably processes an Xml configuration file to do this.
+        RampartConfiguration config = new RampartConfiguration(this.args.getConfig(), this.args.getOutputDir());
 
         // Shortcut to stages
         List<RampartStage> stages = this.args.getStages();
 
         // Configure pipeline
         if (stages.contains(RampartStage.MECQ)) {
-            this.processList.add(new MecqProcess(mecqArgs));
+            this.processList.add(new MecqProcess(config.getMecqSettings()));
         }
 
         if (stages.contains(RampartStage.MASS)) {
-            this.processList.add(new MultiMassProcess(multiMassArgs));
+            this.processList.add(new MassProcess(config.getMassSettings()));
         }
 
-        if (stages.contains(RampartStage.AMP) && ampArgs != null) {
-            this.processList.add(new AmpProcess(ampArgs));
+        if (stages.contains(RampartStage.AMP)) {
+            this.processList.add(new AmpProcess(config.getAmpSettings()));
         }
-
-
-        // this.rampartPipeline.getAmpProcess().setProcessArgs(ampArgs);
-
 
 
         // Spring autowiring might fail here to explicitly set conanProcessService for all processes

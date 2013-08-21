@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.tool.process.mass.KmerRange;
 
 import java.io.File;
 
@@ -60,12 +61,10 @@ public class SingleMassProcessTest {
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         SingleMassArgs args = new SingleMassArgs();
-        args.setAssembler("ABYSS_V1_3_4");
-        args.setKmin(51);
-        args.setKmax(65);
+        args.setTool("ABYSS_V1_3_4");
+        args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
-        args.setConfig(cfgFile);
 
         SingleMassProcess singleMassProcess = new SingleMassProcess(args);
         AbstractConanProcess smParent = singleMassProcess;
@@ -79,8 +78,8 @@ public class SingleMassProcessTest {
 
         singleMassProcess.execute(ec);
 
-        assertTrue(new File(outputDir, "51").exists());
-        assertTrue(new File(outputDir, "65").exists());
+        assertTrue(new File(outputDir, "cvg-75_k-51").exists());
+        assertTrue(new File(outputDir, "cvg-all_k-65").exists());
         assertTrue(new File(outputDir, "unitigs").exists());
     }
 }

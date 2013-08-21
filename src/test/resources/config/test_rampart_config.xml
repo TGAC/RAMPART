@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rampart>
+    <author>Dan Mapleson</author>
+    <collaborator>Someone</collaborator>
+    <institution>Someplace</institution>
+    <title>Big assembly project</title>
+    <organism ploidy="1" est_genome_size="2000000">
+        <name>Bacterius maximus</name>
+    </organism>
+    <allLibraries>
+        <library name="pe1" read_length="101" avg_insert_size="500" insert_err_tolerance="0.3" orientation="FR" type="PE">
+            <files>
+                <path>lib1_R1.fastq</path>
+                <path>lib1_R2.fastq</path>
+            </files>
+        </library>
+        <library name="mp1" read_length="150" avg_insert_size="4000" insert_err_tolerance="0.3" orientation="RF" type="MP">
+            <files>
+                <path>lib2_R1.fastq</path>
+                <path>lib2_R2.fastq</path>
+            </files>
+        </library>
+        <library name="ope1" read_length="101" avg_insert_size="4000" insert_err_tolerance="0.3" orientation="FR" type="OPE">
+            <files>
+                <path>lib3_R1.fastq</path>
+                <path>lib3_R2.fastq</path>
+            </files>
+        </library>
+    </allLibraries>
+    <pipeline>
+        <mecq parallel="true">
+            <ecq name="sickle_agressive">
+                <tool>SICKLE_PE_V1_1</tool>
+                <min_len>70</min_len>
+                <min_qual>70</min_qual>
+                <allLibraries>pe1,mp1</allLibraries>
+            </ecq>
+            <ecq name="sickle_lite">
+                <tool>SICKLE_PE_V1_1</tool>
+                <min_len>90</min_len>
+                <min_qual>50</min_qual>
+                <allLibraries>pe1,mp1</allLibraries>
+            </ecq>
+            <ecq name="quake" threads="4" memory="2000">
+                <tool>QUAKE_V0_3_4</tool>
+                <min_len>70</min_len>
+                <kmer>25</kmer>
+            </ecq>
+        </mecq>
+        <mass parallel="true">
+            <single_mass name="abyss-raw-kmer" threads="16" memory="4000" parallel="true">
+                <tool>ABYSS_V1_3_4</tool>
+                <kmer min="61" max="75" step="MEDIUM"/>
+                <inputs>
+                    <input mecq="raw" lib="pe1"/>
+                    <input mecq="raw" lib="mp1"/>
+                </inputs>
+            </single_mass>
+            <single_mass name="abyss-quake-kmer" threads="16" memory="4000" parallel="true">
+                <tool>ABYSS_V1_3_4</tool>
+                <kmer min="61" max="75" step="MEDIUM"/>
+                <inputs>
+                    <input mecq="quake" lib="pe1"/>
+                    <input mecq="quake" lib="mp1"/>
+                </inputs>
+            </single_mass>
+            <single_mass name="allpaths-cvg" threads="12" memory="5000" parallel="true">
+                <tool>ALLPATHSLG_V44837</tool>
+                <coverage min="50" max="100" step="MEDIUM"/>
+                <inputs>
+                    <input mecq="raw" lib="ope1"/>
+                    <input mecq="raw" lib="mp1"/>
+                </inputs>
+            </single_mass>
+        </mass>
+        <amp>
+            <stage>
+                <tool>SSPACE_V2.0</tool>
+            </stage>
+            <stage>
+                <tool>DEDUP_V1.0</tool>
+            </stage>
+            <stage>
+                <tool>FASTA_2_AGP_V1.0</tool>
+            </stage>
+        </amp>
+    </pipeline>
+
+
+</rampart>

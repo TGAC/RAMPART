@@ -29,7 +29,6 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
-import uk.ac.tgac.rampart.service.RampartJobService;
 
 import java.io.File;
 
@@ -52,9 +51,6 @@ public class ReportProcessTest {
 
     @Mock
     ConanProcessService conanProcessService;
-
-    @Mock
-    RampartJobService rampartJobService;
 
     @Mock
     VelocityMergerService velocityMergerService;
@@ -81,7 +77,6 @@ public class ReportProcessTest {
         when(ec.copy()).thenReturn(ec);
 
         ReflectionTestUtils.setField(process, "conanProcessService", conanProcessService);
-        ReflectionTestUtils.setField(process, "rampartJobService", rampartJobService);
         ReflectionTestUtils.setField(process, "velocityMergerService", velocityMergerService);
 
         process.execute(ec);

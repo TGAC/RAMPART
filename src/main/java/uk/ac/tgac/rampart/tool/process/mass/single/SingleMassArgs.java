@@ -17,13 +17,22 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
-import org.ini4j.Profile;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.tgac.rampart.data.RampartConfiguration;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.conan.core.data.Library;
+import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.tool.process.mass.CoverageRange;
+import uk.ac.tgac.rampart.tool.process.mass.KmerRange;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.MassInput;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,36 +40,195 @@ import java.util.Map;
  * Date: 10/01/13
  * Time: 17:04
  */
-public class SingleMassArgs extends MassArgs {
+public class SingleMassArgs implements ProcessArgs {
 
-    private static final String MASS_JOB_NAME = "job";
+    public static final String KEY_ELEM_INPUTS = "inputs";
+    public static final String KEY_ELEM_SINGLE_INPUT = "input";
+
+    public static final String KEY_ATTR_NAME = "name";
+    public static final String KEY_ATTR_THREADS = "threads";
+    public static final String KEY_ATTR_MEMORY = "memory";
+    public static final String KEY_ATTR_PARALLEL = "parallel";
+
 
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
 
     // Class vars
-    private File config;
-    private String jobName;
+    private File outputDir;
+    private String jobPrefix;
+
+    private String name;
+    private String tool;
+    private KmerRange kmerRange;
+    private CoverageRange coverageRange;
+    private int coverageCutoff;
+    private Organism organism;
+
+    // Inputs
+    private List<MassInput> inputs;
+    private List<Library> allLibraries;
+    private List<MecqSingleArgs> allMecqs;
+
+    // System settings
+    private int threads;
+    private int memory;
+    private boolean runParallel;
+
+
 
     public SingleMassArgs() {
-        this.config = null;
-        this.jobName = "raw";
+        this.outputDir = null;
+        this.jobPrefix = "";
+
+        this.tool = "ABYSS_V1_3_4";
+        this.kmerRange = new KmerRange();
+        this.coverageRange = new CoverageRange();
+        this.coverageCutoff = -1;
+        this.runParallel = false;
+        this.organism = null;
+        this.inputs = new ArrayList<MassInput>();
+
+        this.threads = 1;
+        this.memory = 0;
     }
 
-    public File getConfig() {
-        return config;
+    public SingleMassArgs(Element ele, File parentOutputDir, String parentJobPrefix, List<Library> allLibraries, List<MecqSingleArgs> allMecqs, Organism organism) {
+
+        // Set defaults
+        this();
+
+        this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
+        this.threads = XmlHelper.getIntValue(ele, KEY_ATTR_THREADS);
+        this.memory = XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY);
+        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
+
+        Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
+
+        NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
+        for(int i = 0; i < actualInputs.getLength(); i++) {
+            this.inputs.add(new MassInput((Element) actualInputs.item(i)));
+        }
+
+        this.allLibraries = allLibraries;
+        this.allMecqs = allMecqs;
+
+        this.outputDir = new File(parentOutputDir, name);
+        this.jobPrefix = parentJobPrefix + "-" + name;
+        this.organism = organism;
     }
 
-    public void setConfig(File config) {
-        this.config = config;
+
+    public File getOutputDir() {
+        return outputDir;
     }
 
-    public String getJobName() {
-        return jobName;
+    public void setOutputDir(File outputDir) {
+        this.outputDir = outputDir;
     }
 
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
+    public String getJobPrefix() {
+        return jobPrefix;
+    }
+
+    public void setJobPrefix(String jobPrefix) {
+        this.jobPrefix = jobPrefix;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getTool() {
+        return tool;
+    }
+
+    public void setTool(String tool) {
+        this.tool = tool;
+    }
+
+    public KmerRange getKmerRange() {
+        return kmerRange;
+    }
+
+    public void setKmerRange(KmerRange kmerRange) {
+        this.kmerRange = kmerRange;
+    }
+
+    public CoverageRange getCoverageRange() {
+        return coverageRange;
+    }
+
+    public void setCoverageRange(CoverageRange coverageRange) {
+        this.coverageRange = coverageRange;
+    }
+
+    public int getCoverageCutoff() {
+        return coverageCutoff;
+    }
+
+    public void setCoverageCutoff(int coverageCutoff) {
+        this.coverageCutoff = coverageCutoff;
+    }
+
+    public boolean isRunParallel() {
+        return runParallel;
+    }
+
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
+    }
+
+    public List<MassInput> getInputs() {
+        return inputs;
+    }
+
+    public void setInputs(List<MassInput> inputs) {
+        this.inputs = inputs;
+    }
+
+    public int getThreads() {
+        return threads;
+    }
+
+    public void setThreads(int threads) {
+        this.threads = threads;
+    }
+
+    public int getMemory() {
+        return memory;
+    }
+
+    public void setMemory(int memory) {
+        this.memory = memory;
+    }
+
+    public Organism getOrganism() {
+        return organism;
+    }
+
+    public void setOrganism(Organism organism) {
+        this.organism = organism;
+    }
+
+    public List<Library> getAllLibraries() {
+        return allLibraries;
+    }
+
+    public void setAllLibraries(List<Library> allLibraries) {
+        this.allLibraries = allLibraries;
+    }
+
+    public List<MecqSingleArgs> getAllMecqs() {
+        return allMecqs;
+    }
+
+    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+        this.allMecqs = allMecqs;
     }
 
     public File getUnitigsDir() {
@@ -75,49 +243,22 @@ public class SingleMassArgs extends MassArgs {
         return new File(this.getOutputDir(), "scaffolds");
     }
 
-    public File getLogsDir() {
-        return new File(this.getOutputDir(), "logs");
-    }
 
-    public File getStatsFile() {
+    public File getStatsFile(MassArgs.OutputLevel outputLevel) {
 
         File outputLevelStatsDir = null;
 
-        if (this.getOutputLevel() == OutputLevel.UNITIGS) {
-            outputLevelStatsDir = this.getUnitigsDir();
-        }
-        else if (this.getOutputLevel() == OutputLevel.CONTIGS) {
+        if (outputLevel == MassArgs.OutputLevel.CONTIGS) {
             outputLevelStatsDir = this.getContigsDir();
         }
-        else if (this.getOutputLevel() == OutputLevel.SCAFFOLDS) {
-            outputLevelStatsDir = this.getContigsDir();
+        else if (outputLevel == MassArgs.OutputLevel.SCAFFOLDS) {
+            outputLevelStatsDir = this.getScaffoldsDir();
         }
         else {
             throw new IllegalArgumentException("Output Level not specified");
         }
 
         return new File(outputLevelStatsDir, "stats.txt");
-    }
-
-    @Override
-    public void parseConfig(File config) throws IOException {
-
-        super.parseConfig(config);
-
-        RampartConfiguration rampartConfig = new RampartConfiguration();
-
-        rampartConfig.load(config);
-        this.setLibs(rampartConfig.getLibs());
-        Profile.Section section = rampartConfig.getMassSettings();
-
-        if (section != null) {
-            for (Map.Entry<String, String> entry : section.entrySet()) {
-
-                if (entry.getKey().equalsIgnoreCase(MASS_JOB_NAME)) {
-                    this.jobName = entry.getValue().trim();
-                }
-            }
-        }
     }
 
 
@@ -129,21 +270,11 @@ public class SingleMassArgs extends MassArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = super.getArgMap();
-
-        if (this.config != null)
-            pvp.put(params.getConfig(), this.config.getAbsolutePath());
-
-        if (this.jobName != null && !this.jobName.isEmpty())
-            pvp.put(params.getJobName(), this.jobName);
-
-        return pvp;
+        return null;
     }
 
     @Override
     public void setFromArgMap(Map<ConanParameter, String> pvp) {
-
-        super.setFromArgMap(pvp);
 
         for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
@@ -153,11 +284,6 @@ public class SingleMassArgs extends MassArgs {
 
             String param = entry.getKey().getName();
 
-            if (param.equals(this.params.getConfig().getName())) {
-                this.config = new File(entry.getValue());
-            } else if (param.equals(this.params.getJobName().getName())) {
-                this.jobName = entry.getValue().trim();
-            }
         }
     }
 }

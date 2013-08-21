@@ -19,7 +19,7 @@ package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassProcess;
+import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 import uk.ac.tgac.rampart.tool.process.report.ReportProcess;
 
@@ -43,7 +43,7 @@ public enum RampartFactory {
     MASS {
         @Override
         public ConanProcess create() {
-            return new MultiMassProcess();
+            return new MassProcess();
         }
 
     },

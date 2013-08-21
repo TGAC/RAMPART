@@ -17,18 +17,20 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
-import org.apache.commons.lang.StringUtils;
-import org.ini4j.Profile;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.process.AbstractAmpArgs;
-import uk.ac.tgac.conan.process.AbstractAmpProcess;
-import uk.ac.tgac.rampart.data.RampartConfiguration;
+import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * User: maplesod
@@ -38,6 +40,7 @@ import java.util.*;
 public class AmpArgs implements ProcessArgs {
 
     private static final String INPUT_ASSEMBLY = "input";
+    private static final String KEY_ELEM_AMP_STAGE = "stage";
 
     // Need access to these
     private AmpParams params = new AmpParams();
@@ -45,19 +48,56 @@ public class AmpArgs implements ProcessArgs {
     private File inputAssembly;
     private File outputDir;
     private File config;
-    private List<Library> libs;
-    private List<AbstractAmpProcess> processes;
+    private List<Library> allLibraries;
+    private List<MecqSingleArgs> allMecqs;
+    private List<AmpStageArgs> stageArgsList;
     private String jobPrefix;
+    private Organism organism;
 
 
     public AmpArgs() {
         this.inputAssembly = null;
         this.outputDir = null;
-        this.libs = new ArrayList<Library>();
+        this.allLibraries = new ArrayList<Library>();
+        this.allMecqs = new ArrayList<MecqSingleArgs>();
         this.config = null;
-        this.processes = new ArrayList<AbstractAmpProcess>();
+        this.stageArgsList = new ArrayList<AmpStageArgs>();
         this.jobPrefix = "amp";
     }
+
+    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly, List<Library> allLibraries, List<MecqSingleArgs> allMecqs, Organism organism) {
+
+        // Set defaults
+        this();
+
+        // Set args
+        this.outputDir = outputDir;
+        this.jobPrefix = jobPrefix;
+        this.inputAssembly = inputAssembly;
+        this.allLibraries = allLibraries;
+        this.allMecqs = allMecqs;
+        this.organism = organism;
+
+        // Parse Xml for AMP stages
+        // All single mass args
+        File inputFile = this.inputAssembly;
+        NodeList nodes = ele.getElementsByTagName(KEY_ELEM_AMP_STAGE);
+        for(int i = 1; i <= nodes.getLength(); i++) {
+
+            String stageName = "amp-" + Integer.toString(i);
+            File stageOutputDir = new File(this.getOutputDir(), stageName);
+
+            AmpStageArgs stage = new AmpStageArgs(
+                    (Element)nodes.item(i-1), stageOutputDir, this.getAssembliesDir(), jobPrefix + "-" + stageName,
+                    this.allLibraries, this.allMecqs, this.organism,
+                    inputFile, i);
+
+            this.stageArgsList.add(stage);
+
+            inputFile = stage.getOutputFile();
+        }
+    }
+
 
     public AmpParams getParams() {
         return params;
@@ -83,12 +123,12 @@ public class AmpArgs implements ProcessArgs {
         this.outputDir = outputDir;
     }
 
-    public List<Library> getLibs() {
-        return libs;
+    public List<Library> getAllLibraries() {
+        return allLibraries;
     }
 
-    public void setLibs(List<Library> libs) {
-        this.libs = libs;
+    public void setAllLibraries(List<Library> allLibraries) {
+        this.allLibraries = allLibraries;
     }
 
     public File getConfig() {
@@ -99,14 +139,6 @@ public class AmpArgs implements ProcessArgs {
         this.config = config;
     }
 
-    public List<AbstractAmpProcess> getProcesses() {
-        return processes;
-    }
-
-    public void setProcesses(List<AbstractAmpProcess> processes) {
-        this.processes = processes;
-    }
-
     public String getJobPrefix() {
         return jobPrefix;
     }
@@ -115,107 +147,34 @@ public class AmpArgs implements ProcessArgs {
         this.jobPrefix = jobPrefix;
     }
 
-    public void linkProcesses() {
-
-        File inputFile = this.inputAssembly;
-
-        for(int i = 0; i < this.processes.size(); i++) {
-
-            AbstractAmpProcess ampProcess = this.processes.get(i);
-            AbstractAmpArgs ampArgs = ampProcess.getAmpArgs();
-
-            String job = "AMP-" + Integer.toString(i+1);
-
-            ampArgs.setInputFile(inputFile);
-            ampArgs.setOutputDir(new File(this.getOutputDir(), job));
-            ampArgs.setOutputPrefix(job);
-            ampArgs.setLibraries(this.getLibs());
-
-            inputFile = ampArgs.getOutputFile();
-        }
+    public List<MecqSingleArgs> getAllMecqs() {
+        return allMecqs;
     }
 
-
-    private static class IndexedAmpStage implements Comparable<IndexedAmpStage> {
-        private int index;
-        private AbstractAmpProcess stage;
-
-        private IndexedAmpStage(int index, AbstractAmpProcess stage) {
-            this.index = index;
-            this.stage = stage;
-        }
-
-        public AbstractAmpProcess getStage() {
-            return stage;
-        }
-
-        public void setStage(AbstractAmpProcess stage) {
-            this.stage = stage;
-        }
-
-        public int getIndex() {
-            return index;
-        }
-
-        public void setIndex(int index) {
-            this.index = index;
-        }
-
-        @Override
-        public int compareTo(IndexedAmpStage o) {
-            return index - o.getIndex();
-        }
+    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+        this.allMecqs = allMecqs;
     }
 
-    public static AmpArgs parseConfig(File config) throws IOException {
-
-        RampartConfiguration rampartConfig = new RampartConfiguration();
-
-        AmpArgs args = new AmpArgs();
-        args.getProcesses().clear();
-
-        rampartConfig.load(config);
-
-        // Add the libs from the config file
-        args.setLibs(rampartConfig.getLibs());
-
-        Profile.Section section = rampartConfig.getAmpSettings();
-
-        List<IndexedAmpStage> stageList = new ArrayList<IndexedAmpStage>();
-
-        if (section != null) {
-            for (Map.Entry<String, String> entry : section.entrySet()) {
-
-                try {
-                    int index = Integer.parseInt(entry.getKey());
-
-                    AbstractAmpProcess ampStage = AmpFactory.createFromString(entry.getValue());
-
-                    stageList.add(new IndexedAmpStage(index, ampStage));
-
-                } catch(NumberFormatException e) {
-
-                    // Not a process index so assume it's another AMP arg
-                    if (entry.getKey().equalsIgnoreCase(INPUT_ASSEMBLY)) {
-                        args.setInputAssembly(new File(entry.getValue()));
-                    }
-                }
-            }
-        }
-        else {
-            // If AMP is not specified in the config file then we don't want to run it.
-            return null;
-        }
-
-        // Add processes in correct order
-        Collections.sort(stageList);
-        for(IndexedAmpStage stage : stageList) {
-
-            args.processes.add(stage.getStage());
-        }
-
-        return args;
+    public List<AmpStageArgs> getStageArgsList() {
+        return stageArgsList;
     }
+
+    public void setStageArgsList(List<AmpStageArgs> stageArgsList) {
+        this.stageArgsList = stageArgsList;
+    }
+
+    public Organism getOrganism() {
+        return organism;
+    }
+
+    public void setOrganism(Organism organism) {
+        this.organism = organism;
+    }
+
+    public File getAssembliesDir() {
+        return new File(this.getOutputDir(), "assemblies");
+    }
+
 
     @Override
     public void parse(String args) {
@@ -235,9 +194,6 @@ public class AmpArgs implements ProcessArgs {
 
         if (this.config != null)
             pvp.put(params.getConfig(), this.config.getAbsolutePath());
-
-        if (this.processes != null)
-            pvp.put(params.getProcesses(), StringUtils.join(this.processes, ","));
 
         if (this.jobPrefix != null)
             pvp.put(params.getJobPrefix(), this.jobPrefix);

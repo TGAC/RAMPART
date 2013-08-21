@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.tool.pipeline;
 import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpParams;
-import uk.ac.tgac.rampart.tool.process.mass.multi.MultiMassParams;
+import uk.ac.tgac.rampart.tool.process.mass.MassParams;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqParams;
 import uk.ac.tgac.rampart.tool.process.report.ReportParams;
 
@@ -74,7 +74,7 @@ public enum RampartStage {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new MultiMassParams().getConanParameters();
+            return new MassParams().getConanParameters();
         }
     },
     AMP {

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.multi;
+package uk.ac.tgac.rampart.tool.process.mass;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
@@ -29,8 +29,7 @@ import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorExecutor;
-import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassExecutor;
+import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ import static org.mockito.Mockito.when;
  * Time: 10:20
  */
 @RunWith(MockitoJUnitRunner.class)
-public class MultiMassProcessTest {
+public class MassProcessTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -57,36 +56,32 @@ public class MultiMassProcessTest {
     private ConanProcessService conanProcessService;
 
     @Mock
-    private MassSelectorExecutor massSelectorExecutor;
-
-    @Mock
-    private SingleMassExecutor singleMassExecutor;
+    private MassExecutor massExecutor;
 
     @Test
     public void testExecute() throws InterruptedException, ProcessExecutionException {
 
-        File outputDir = temp.newFolder("testMultiMass");
+        File outputDir = temp.newFolder("testMass");
 
-        File cfgFile1 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
-        File cfgFile2 = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_2.cfg"));
         File weightingsFile = FileUtils.toFile(this.getClass().getResource("/data/weightings.tab"));
 
-        List<File> configs = new ArrayList<File>();
-        configs.add(cfgFile1);
-        configs.add(cfgFile2);
+        SingleMassArgs singleMassArgs = new SingleMassArgs();
+        singleMassArgs.setTool("ABYSS_V1_3_4");
+        singleMassArgs.setKmerRange(new KmerRange(31, 61, KmerRange.StepSize.COARSE));
+        singleMassArgs.setOutputDir(new File(outputDir, "raw"));
 
-        MultiMassArgs args = new MultiMassArgs();
-        args.setConfigs(configs);
-        args.setKmin(31);
-        args.setJobPrefix("testMultiMass");
+        List<SingleMassArgs> singleMassArgsList = new ArrayList<SingleMassArgs>();
+        singleMassArgsList.add(singleMassArgs);
+
+        MassArgs args = new MassArgs();
+        args.setJobPrefix("testMass");
         args.setOutputDir(outputDir);
-        args.setWeightingsFile(weightingsFile);
-        args.setAssembler("ABYSS_V1_3_4");
+        args.setWeightings(weightingsFile);
+        args.setSingleMassArgsList(singleMassArgsList);
 
-        assertTrue(args.getKmin() == 31);
-        assertTrue(args.getKmax() == MultiMassArgs.DEFAULT_KMER_MAX);
+        assertTrue(args.getSingleMassArgsList().get(0).getKmerRange().getFirstKmer() == 31);
 
-        MultiMassProcess multiMass = new MultiMassProcess(args);
+        MassProcess multiMass = new MassProcess(args);
 
         when(conanProcessService.execute(multiMass, ec)).thenReturn(0);
         when(ec.getLocality()).thenReturn(new Local());
@@ -94,13 +89,10 @@ public class MultiMassProcessTest {
         when(ec.copy()).thenReturn(ec);
 
         ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
-        ReflectionTestUtils.setField(multiMass, "massSelectorExecutor", massSelectorExecutor);
-        ReflectionTestUtils.setField(multiMass, "singleMassExecutor", singleMassExecutor);
+        ReflectionTestUtils.setField(multiMass, "massExecutor", massExecutor);
 
         multiMass.execute(ec);
 
-        //assertTrue(new File(outputDir, "stats").exists());
         assertTrue(new File(outputDir, "raw").exists());
-        assertTrue(new File(outputDir, "sickle").exists());
     }
 }

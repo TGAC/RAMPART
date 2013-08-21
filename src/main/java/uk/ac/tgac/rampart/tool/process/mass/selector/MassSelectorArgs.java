@@ -19,7 +19,6 @@ package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
-import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
 
 import java.io.File;
 import java.util.ArrayList;

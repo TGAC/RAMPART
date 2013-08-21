@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.tool.process.report;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.velocity.VelocityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +28,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
 import uk.ac.tgac.conan.process.latex.PdfLatex2012Args;
 import uk.ac.tgac.conan.process.latex.PdfLatex2012Process;
-import uk.ac.tgac.rampart.data.RampartJobFileStructure;
-import uk.ac.tgac.rampart.service.RampartJobService;
+import uk.ac.tgac.rampart.config.RampartJobFileStructure;
 
 /**
  * User: maplesod
@@ -41,10 +39,6 @@ import uk.ac.tgac.rampart.service.RampartJobService;
 public class ReportProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(ReportProcess.class);
-
-
-    @Autowired
-    private RampartJobService rampartJobService;
 
     @Autowired
     private VelocityMergerService velocityMergerService;
@@ -96,19 +90,19 @@ public class ReportProcess extends AbstractConanProcess {
             log.debug("Copied common resources to report directories");
 
             // Create the plot files which are to be used in the report
-            this.rampartJobService.seperatePlots(jobFS.getMassPlotsFile(), jobFS.getReportImagesDir(), "mass");
+            //this.rampartJobService.seperatePlots(jobFS.getMassPlotsFile(), jobFS.getReportImagesDir(), "mass");
             log.debug("Separated mass plots into separate files for report");
 
             // Create the plot files which are to be used in the report
-            this.rampartJobService.seperatePlots(jobFS.getAmpPlotsFile(), jobFS.getReportImagesDir(), "Improver");
+            //this.rampartJobService.seperatePlots(jobFS.getAmpPlotsFile(), jobFS.getReportImagesDir(), "amp");
             log.debug("Separated Improver plots into separate files for report");
 
             // Create the job context
-            VelocityContext velocityContext = this.rampartJobService.buildContext(jobFS);
+            //VelocityContext velocityContext = this.rampartJobService.buildContext(jobFS);
             log.debug("Created job context");
 
             // Merge the template and context
-            this.velocityMergerService.merge(jobFS.getReportTemplateFile(), velocityContext, jobFS.getReportMergedFile());
+            //this.velocityMergerService.merge(jobFS.getReportTemplateFile(), velocityContext, jobFS.getReportMergedFile());
             log.debug("Merged report template and context");
 
             // Compile report (If there were any errors carry on anyway, we might still be able to log the

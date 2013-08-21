@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.multi;
+package uk.ac.tgac.rampart.tool.process.mass;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -27,7 +27,9 @@ import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.cli.IntegrationTest;
 import uk.ac.tgac.rampart.cli.RampartCLI;
-import uk.ac.tgac.rampart.data.RampartJobFileStructure;
+import uk.ac.tgac.rampart.config.RampartJobFileStructure;
+import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +45,7 @@ import static org.junit.Assert.assertTrue;
  * Time: 12:12
  */
 @Category(IntegrationTest.class)
-public class MultiMassProcessIT {
+public class MassProcessIT {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -68,11 +70,10 @@ public class MultiMassProcessIT {
 
         File outputDir = temp.newFolder("massTest");
 
-        MultiMassArgs massArgs = new MultiMassArgs();
+        MassArgs massArgs = new MassArgs();
         massArgs.setOutputDir(outputDir);
-        massArgs.setConfigs(configs);
 
-        MultiMassProcess massProcess = new MultiMassProcess(massArgs);
+        MassProcess massProcess = new MassProcess(massArgs);
 
         boolean success = massProcess.execute(new DefaultExecutionContext());
 

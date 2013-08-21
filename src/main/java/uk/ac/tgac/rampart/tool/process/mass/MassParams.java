@@ -33,7 +33,7 @@ import java.util.List;
  * Date: 11/01/13
  * Time: 13:23
  */
-public abstract class MassParams implements ProcessParams {
+public class MassParams implements ProcessParams {
 
     private ConanParameter assembler;
     private ConanParameter kmin;
@@ -79,7 +79,7 @@ public abstract class MassParams implements ProcessParams {
 
         this.libs = new DefaultConanParameter(
                 "libs",
-                "The libraries to use for this MASS run",
+                "The allLibraries to use for this MASS run",
                 false,
                 true,
                 false);

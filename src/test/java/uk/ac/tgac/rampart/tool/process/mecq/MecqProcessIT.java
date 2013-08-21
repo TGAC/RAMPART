@@ -52,7 +52,6 @@ public class MecqProcessIT {
 
         MecqArgs mecqArgs = new MecqArgs();
         mecqArgs.setOutputDir(outputDir);
-        mecqArgs.setConfig(cfgFile);
 
         MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 

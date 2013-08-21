@@ -28,16 +28,9 @@ import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.core.data.SeqFile;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorPairedEndArgs;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorSingleEndArgs;
-import uk.ac.tgac.rampart.data.RampartConfiguration;
+import uk.ac.tgac.conan.process.ec.*;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -64,96 +57,75 @@ public class MecqProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
+        // Create this for situations where we need to create a symbolic link straight away
         ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
 
+        log.info("Starting MECQ Process");
 
-        try {
+        // Create shortcut to args for convienience
+        MecqArgs args = (MecqArgs) this.getProcessArgs();
 
-            log.info("Starting MECQ Process");
+        // If the output directory doesn't exist then make it
+        if (!args.getOutputDir().exists()) {
+            log.debug("Creating output directory");
+            args.getOutputDir().mkdirs();
+        }
 
-            // Create shortcut to args for convienience
-            MecqArgs args = (MecqArgs) this.getProcessArgs();
+        // For each ecq process all libraries
+        for(MecqSingleArgs singleMecqArgs : args.getEqcArgList()) {
 
-            // Create the QualityTrimmer processes to execute
-            List<ErrorCorrector> ecqs = args.createMecqs();
-            List<Library> libs = args.getLibsToProcess();
+            // Create an output dir for this error corrector
+            File ecDir = new File(args.getOutputDir(), singleMecqArgs.getName());
+            ecDir.mkdirs();
 
-            // If the output directory doesn't exist then make it
-            if (!args.getOutputDir().exists()) {
-                log.debug("Creating output directory");
-                args.getOutputDir().mkdirs();
-            }
+            // Process each lib
+            for(Library lib : singleMecqArgs.getLibraries()) {
 
-            // Create configs directory
-            File configDir = new File(args.getOutputDir(), "configs");
-            configDir.mkdirs();
+                String libName = lib.getName().toLowerCase();
 
-            // Essentially copy the file and rename as raw.cfg
-            createConfig(args.getConfig(), null, configDir);
+                File ecqLibDir = new File(ecDir, libName);
+                ecqLibDir.mkdirs();
 
-            // For each ecq process all libraries
-            for(ErrorCorrector ec : ecqs) {
+                // Create the actual error corrector
+                ErrorCorrector ec = makeErrorCorrector(singleMecqArgs, ecqLibDir);
 
-                // Get the name to call this error corrector
-                String ecName = ec.getName().toLowerCase();
+                if (lib.isPairedEnd()) {
 
-                // Create an output dir for this error corrector
-                File ecDir = new File(args.getOutputDir(), ecName);
-                ecDir.mkdirs();
+                    // Create links to files in output dir (makes things simpler if we need to auto-gen config files)
+                    StringJoiner compoundLinkCmdLine = new StringJoiner(";");
 
-                // Process each lib
-                for(Library lib : libs) {
+                    compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFile1(), ecqLibDir));
+                    compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFile2(), ecqLibDir));
 
-                    String libName = lib.getName().toLowerCase();
+                    this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
 
-                    File ecqLibDir = new File(ecDir, libName);
-                    ecqLibDir.mkdirs();
+                    // Add libs to ec
+                    ((ErrorCorrectorPairedEndArgs)ec.getArgs()).setFromLibrary(lib,
+                            new File(ecqLibDir, lib.getFile1().getName()),
+                            new File(ecqLibDir, lib.getFile2().getName()));
+                }
+                else {
+                    this.conanProcessService.execute(makeLinkCmdLine(lib.getFile1(), ecqLibDir), linkingExecutionContext);
 
-                    ec.getArgs().setOutputDir(ecqLibDir);
-
-                    if (lib.isPairedEnd()) {
-
-                        // Create links to files in output dir (makes things simpler if we need to auto-gen config files)
-                        StringJoiner compoundLinkCmdLine = new StringJoiner(";");
-
-                        compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFilePaired1().getFile(), ecqLibDir));
-                        compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFilePaired2().getFile(), ecqLibDir));
-
-                        this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
-
-                        // Add libs to ec
-                        ((ErrorCorrectorPairedEndArgs)ec.getArgs()).setFromLibrary(lib,
-                                new File(ecqLibDir, lib.getFilePaired1().getFile().getName()),
-                                new File(ecqLibDir, lib.getFilePaired2().getFile().getName()));
-                    }
-                    else {
-                        this.conanProcessService.execute(makeLinkCmdLine(lib.getSeFile().getFile(), ecqLibDir), linkingExecutionContext);
-
-                        // Add libs to ec
-                        ((ErrorCorrectorSingleEndArgs)ec.getArgs()).setFromLibrary(lib,
-                                new File(ecqLibDir, lib.getSeFile().getFile().getName()));
-                    }
-
-
-                    String jobName = args.getJobPrefix() + "_" + ecName + "_" + libName;
-                    this.executeEcq(ec, jobName, args.isRunParallel(), ecqLibDir, executionContext);
+                    // Add libs to ec
+                    ((ErrorCorrectorSingleEndArgs)ec.getArgs()).setFromLibrary(lib,
+                            new File(ecqLibDir, lib.getFile1().getName()));
                 }
 
-                createConfig(args.getConfig(), ec, configDir);
+
+                String jobName = args.getJobPrefix() + "_" + singleMecqArgs.getName() + "_" + libName;
+                this.executeEcq(ec, jobName, args.isRunParallel(), ecqLibDir, executionContext);
             }
-
-            // If we're using a scheduler and we have been asked to run the quality trimming processes for each library
-            // in parallel, then we should wait for all those to complete before continueing.
-            if (executionContext.usingScheduler() && args.isRunParallel() && !ecqs.isEmpty()) {
-                log.debug("Running Quality trimming step in parallel, waiting for completion");
-                this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
-            }
-
-            log.info("MECQ complete");
-
-        } catch (IOException ioe) {
-            throw new ProcessExecutionException(-1, ioe);
         }
+
+        // If we're using a scheduler and we have been asked to run the mecq processes for each library
+        // in parallel, then we should wait for all those to complete before continueing.
+        if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
+            log.debug("Running Quality trimming step in parallel, waiting for completion");
+            this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+        }
+
+        log.info("MECQ complete");
 
         return true;
     }
@@ -163,6 +135,21 @@ public class MecqProcess extends AbstractConanProcess {
         return "ln -s -f " + sourceFile.getAbsolutePath() + " " + new File(outputDir, sourceFile.getName()).getAbsolutePath();
     }
 
+
+    public ErrorCorrector makeErrorCorrector(MecqSingleArgs mecqArgs, File outputDir) {
+
+        ErrorCorrector ec = ErrorCorrectorFactory.valueOf(mecqArgs.getTool()).create();
+        ErrorCorrectorArgs ecArgs = ec.getArgs();
+
+        ecArgs.setMinLength(mecqArgs.getMinLen());
+        ecArgs.setQualityThreshold(mecqArgs.getMinQual());
+        ecArgs.setKmer(mecqArgs.getKmer());
+        ecArgs.setThreads(mecqArgs.getThreads());
+        ecArgs.setMemoryGb(mecqArgs.getMemory());
+        ecArgs.setOutputDir(outputDir);
+
+        return ec;
+    }
 
 
     protected void executeEcq(ErrorCorrector errorCorrector, String jobName, boolean runInParallel,
@@ -212,47 +199,6 @@ public class MecqProcess extends AbstractConanProcess {
     }
 
 
-
-    protected void createConfig(File baseConfigFile, ErrorCorrector errorCorrector, File configDir) throws IOException {
-
-        RampartConfiguration baseConfig = RampartConfiguration.loadFile(baseConfigFile);
-
-        String name = errorCorrector == null ? "raw" : errorCorrector.getName().toLowerCase();
-        baseConfig.getMassSettings().add("job", name);
-
-        if (errorCorrector != null) {
-            for(Library lib : baseConfig.getLibs()) {
-                if (lib.testUsage(Library.Usage.QUALITY_TRIMMING)) {
-
-                    if (errorCorrector.getArgs().isSingleEndOnly()) {
-
-                        ErrorCorrectorSingleEndArgs ecPairedEndArgs = (ErrorCorrectorSingleEndArgs)errorCorrector.getArgs();
-
-                        lib.setSeFile(new SeqFile(ecPairedEndArgs.getCorrectedFile()));
-                    }
-                    else {
-
-                        ErrorCorrectorPairedEndArgs ecPairedEndArgs = (ErrorCorrectorPairedEndArgs)errorCorrector.getArgs();
-
-                        lib.setFilePaired1(new SeqFile(ecPairedEndArgs.getPairedEndCorrectedFiles().getFile1()));
-                        lib.setFilePaired2(new SeqFile(ecPairedEndArgs.getPairedEndCorrectedFiles().getFile2()));
-
-                        // This is a hack for now... we should really save all se files here but the Library object only
-                        // handles a single se file, so for the time being just use the first one.
-                        if (ecPairedEndArgs.getSingleEndCorrectedFiles() != null && !ecPairedEndArgs.getSingleEndCorrectedFiles().isEmpty()) {
-                            lib.setSeFile(new SeqFile(ecPairedEndArgs.getSingleEndCorrectedFiles().get(0)));
-                        }
-                        else {
-                            lib.setSeFile(null);
-                        }
-                    }
-                }
-            }
-        }
-        baseConfig.save(new File(configDir, name + ".cfg"));
-    }
-
-
     @Override
     public String getName() {
         return "MECQ";
@@ -260,7 +206,7 @@ public class MecqProcess extends AbstractConanProcess {
 
     @Override
     public String getCommand() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
 }

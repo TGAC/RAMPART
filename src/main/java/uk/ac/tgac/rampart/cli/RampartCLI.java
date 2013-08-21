@@ -20,8 +20,6 @@ package uk.ac.tgac.rampart.cli;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
@@ -40,17 +38,14 @@ import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.tgac.asc.JarUtils;
-import uk.ac.tgac.conan.TgacConanConfigure;
 import uk.ac.tgac.rampart.RampartConfig;
-import uk.ac.tgac.rampart.data.RampartJobFileStructure;
+import uk.ac.tgac.rampart.config.RampartJobFileStructure;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
 import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.jar.JarFile;
 
 
 public class RampartCLI {

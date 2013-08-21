@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
@@ -27,19 +28,12 @@ import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
-import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.ebi.fgpt.conan.util.StringJoiner;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
-import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
-import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * This class wraps a Pipeline to manage each AMP stage
@@ -75,11 +69,18 @@ public class AmpProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
 
+        AmpArgs args = (AmpArgs)this.getProcessArgs();
+
         // Create AMP Pipeline
-        AmpPipeline ampPipeline = new AmpPipeline((AmpArgs)this.getProcessArgs());
+        AmpPipeline ampPipeline = new AmpPipeline();
         ampPipeline.setConanProcessService(this.getConanProcessService());
         ampPipeline.configureProcesses();
-        ampPipeline.createLinks(executionContext);
+
+        // Make sure the output directory exists
+        args.getAssembliesDir().mkdirs();
+
+        // Create link for the input file
+        this.createInitialLink(args.getInputAssembly(), args.getAssembliesDir(), executionContext);
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -118,22 +119,20 @@ public class AmpProcess extends AbstractConanProcess {
 
         String jobName = args.getJobPrefix() + "-analyser";
 
-        File assembliesDir = new File(args.getOutputDir(), "assemblies");
-
         if (executionContextCopy.usingScheduler()) {
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
             schedulerArgs.setJobName(jobName);
             schedulerArgs.setThreads(1);
             schedulerArgs.setMemoryMB(0);
-            schedulerArgs.setMonitorFile(new File(assembliesDir, jobName + ".log"));
+            schedulerArgs.setMonitorFile(new File(args.getAssembliesDir(), jobName + ".log"));
 
             executionContextCopy.setForegroundJob(true);
         }
 
         AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInput(assembliesDir);
-        ascArgs.setOutput(assembliesDir);
+        ascArgs.setInput(args.getAssembliesDir());
+        ascArgs.setOutput(args.getAssembliesDir());
         ascArgs.setMode("FULL");
 
         AscV10Process ascProcess = new AscV10Process(ascArgs);
@@ -147,4 +146,24 @@ public class AmpProcess extends AbstractConanProcess {
         }
     }
 
+    /**
+     * Creates the initial symbolic link between the input assembly and the output directory.  This is basically a
+     * convienience for the user and helps to compare assemblies at each stage later.
+     * @param inputFile
+     * @param outputDir
+     * @param executionContext
+     * @throws ProcessExecutionException
+     * @throws InterruptedException
+     */
+    protected void createInitialLink(File inputFile, File outputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+        String linkCommand = this.makeLinkCommand(inputFile, new File(outputDir, "amp-stage-0-scaffolds.fa"));
+
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+
+        this.conanProcessService.execute(linkCommand, linkingExecutionContext);
+    }
+
+    protected String makeLinkCommand(File source, File target) {
+        return "ln -s -f " + source.getAbsolutePath() + " " + target.getAbsolutePath();
+    }
 }

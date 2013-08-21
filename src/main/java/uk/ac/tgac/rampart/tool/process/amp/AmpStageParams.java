@@ -15,30 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.spring;
+package uk.ac.tgac.rampart.tool.process.amp;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
+
+import java.util.List;
 
 /**
  * User: maplesod
- * Date: 13/02/13
- * Time: 16:38
+ * Date: 16/08/13
+ * Time: 15:55
  */
-public enum RampartAppContext {
-    INSTANCE;
-
-    private ApplicationContext context;
-
-    private void RampartAppContext() {
-        context = null;
-    }
-
-    public void load(String applicationContextPath) {
-        context = new ClassPathXmlApplicationContext(applicationContextPath);
-    }
-
-    public ApplicationContext getApplicationContext() {
-        return context;
+public class AmpStageParams implements ProcessParams {
+    @Override
+    public List<ConanParameter> getConanParameters() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
