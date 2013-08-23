@@ -46,8 +46,7 @@ public class MassProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MassProcess.class);
 
-    @Autowired
-    private MassExecutor massExecutor = new MassExecutorImpl();
+    private MassExecutor massExecutor;
 
     public MassProcess() {
         this(new MassArgs());
@@ -55,6 +54,7 @@ public class MassProcess extends AbstractConanProcess {
 
     public MassProcess(MassArgs args) {
         super("", args, new MassParams());
+        this.massExecutor = new MassExecutorImpl();
     }
 
     @Override
@@ -78,7 +78,12 @@ public class MassProcess extends AbstractConanProcess {
         try {
             log.info("Starting MASS");
 
+            // Get shortcut to the args
             MassArgs args = (MassArgs) this.getProcessArgs();
+
+            // Initialise executor
+            this.massExecutor.initialise(this.conanProcessService, executionContext);
+
 
             List<File> contigStatsFiles = new ArrayList<File>();
             List<File> scaffoldStatsFiles = new ArrayList<File>();
@@ -104,19 +109,20 @@ public class MassProcess extends AbstractConanProcess {
                     throw new IOException("Couldn't create directory for MASS");
                 }
 
-                this.massExecutor.executeSingleMass(singleMassArgs, this.conanProcessService, executionContext);
+                // Execute this MASS group
+                this.massExecutor.executeSingleMass(singleMassArgs);
 
                 // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
                 if (!args.isRunParallel()) {
                     log.debug("Waiting for completion of: " + singleMassArgs.getName());
-                    this.massExecutor.executeScheduledWait(singleMassArgs.getJobPrefix(), singleMassArgs.getOutputDir(), executionContext);
+                    this.massExecutor.executeScheduledWait(singleMassArgs.getJobPrefix(), singleMassArgs.getOutputDir());
                 }
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
             if (args.isRunParallel()) {
                 log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
-                this.massExecutor.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+                this.massExecutor.executeScheduledWait(args.getJobPrefix(), args.getOutputDir());
             }
 
 
@@ -170,7 +176,7 @@ public class MassProcess extends AbstractConanProcess {
         massSelectorArgs.setApproxGenomeSize(0L);
         massSelectorArgs.setWeightings(args.getWeightings());
 
-        this.massExecutor.executeMassSelector(massSelectorArgs, this.getConanProcessService(), executionContext);
+        this.massExecutor.executeMassSelector(massSelectorArgs);
     }
 
 }

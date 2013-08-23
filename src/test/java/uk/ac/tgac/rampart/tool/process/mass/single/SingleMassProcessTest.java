@@ -27,13 +27,19 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.tool.process.mass.KmerRange;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.rampart.tool.process.mass.single.KmerRange;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 /**
@@ -53,8 +59,11 @@ public class SingleMassProcessTest {
     @Mock
     private ConanProcessService conanProcessService;
 
+    @Mock
+    private SingleMassExecutor singleMassExecutor;
+
     @Test
-    public void testExecute() throws ProcessExecutionException, InterruptedException {
+    public void testExecute() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException {
 
         File outputDir = temp.newFolder("singleMASSTest");
 
@@ -70,15 +79,17 @@ public class SingleMassProcessTest {
         AbstractConanProcess smParent = singleMassProcess;
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(0);
-        //when(ec.getLocality()).thenReturn(new Local());
+        doNothing().when(singleMassExecutor).executeAssembler((Assembler) any(), anyString(), anyBoolean());
+        doNothing().when(singleMassExecutor).dispatchStatsJobs((Assembler) any(), (SingleMassArgs) any(), (WaitCondition) any(), anyString());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 
         ReflectionTestUtils.setField(smParent, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(smParent, "singleMassExecutor", singleMassExecutor);
 
         singleMassProcess.execute(ec);
 
-        assertTrue(new File(outputDir, "cvg-75_k-51").exists());
+        assertTrue(new File(outputDir, "cvg-all_k-51").exists());
         assertTrue(new File(outputDir, "cvg-all_k-65").exists());
         assertTrue(new File(outputDir, "unitigs").exists());
     }

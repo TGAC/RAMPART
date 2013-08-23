@@ -47,7 +47,7 @@ public class MecqArgs implements ProcessArgs {
     private String jobPrefix;
     private List<Library> libraries;
     private boolean runParallel;
-    private List<MecqSingleArgs> eqcArgList;
+    private List<EcqArgs> eqcArgList;
 
 
     /**
@@ -55,7 +55,7 @@ public class MecqArgs implements ProcessArgs {
      */
     public MecqArgs() {
         this.outputDir = new File("");
-        this.eqcArgList = new ArrayList<MecqSingleArgs>();
+        this.eqcArgList = new ArrayList<EcqArgs>();
         this.libraries = new ArrayList<Library>();
         this.runParallel = false;
 
@@ -84,7 +84,7 @@ public class MecqArgs implements ProcessArgs {
         // All libraries
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
         for(int i = 0; i < nodes.getLength(); i++) {
-            this.eqcArgList.add(new MecqSingleArgs((Element)nodes.item(i), libraries, outputDir, jobPrefix));
+            this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, outputDir, jobPrefix, this.runParallel));
         }
     }
 
@@ -114,11 +114,11 @@ public class MecqArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
-    public List<MecqSingleArgs> getEqcArgList() {
+    public List<EcqArgs> getEqcArgList() {
         return eqcArgList;
     }
 
-    public void setEqcArgList(List<MecqSingleArgs> eqcArgList) {
+    public void setEqcArgList(List<EcqArgs> eqcArgList) {
         this.eqcArgList = eqcArgList;
     }
 

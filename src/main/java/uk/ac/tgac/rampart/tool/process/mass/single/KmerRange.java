@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass;
+package uk.ac.tgac.rampart.tool.process.mass.single;
 
 import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Element;
@@ -35,8 +35,8 @@ public class KmerRange extends ArrayList<Integer> {
     public static final int KMER_MAX = 125;
 
     // Xml Config keys
-    public static final String KEY_ATTR_K_MIN = "kmin";
-    public static final String KEY_ATTR_K_MAX = "kmax";
+    public static final String KEY_ATTR_K_MIN = "min";
+    public static final String KEY_ATTR_K_MAX = "max";
     public static final String KEY_ATTR_STEP = "step";
 
 

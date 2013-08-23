@@ -51,6 +51,7 @@ public class RampartConfiguration implements Serializable {
     public static final String KEY_ELEM_DESCRIPTION     = "description";
     public static final String KEY_ELEM_ORGANISM        = "organism";
     public static final String KEY_ELEM_LIBRARIES       = "libraries";
+    public static final String KEY_ELEM_LIBRARY         = "library";
     public static final String KEY_ELEM_PIPELINE        = "pipeline";
     public static final String KEY_ELEM_MECQ            = "mecq";
     public static final String KEY_ELEM_MASS            = "mass";
@@ -125,9 +126,10 @@ public class RampartConfiguration implements Serializable {
             this.organism = organismElement == null ? null : new Organism(organismElement);
 
             // All libraries
-            NodeList libNodes = root.getElementsByTagName(KEY_ELEM_LIBRARIES);
-            for(int i = 0; i < libNodes.getLength(); i++) {
-                this.libs.add(new Library((Element)libNodes.item(i)));
+            Element librariesElement = XmlHelper.getDistinctElementByName(root, KEY_ELEM_LIBRARIES);
+            NodeList libraries = librariesElement.getElementsByTagName(KEY_ELEM_LIBRARY);
+            for(int i = 0; i < libraries.getLength(); i++) {
+                this.libs.add(new Library((Element)libraries.item(i)));
             }
 
             Element pipelineElement = (Element)XmlHelper.getDistinctElementByName(root, KEY_ELEM_PIPELINE);

@@ -24,11 +24,9 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.tool.process.mass.CoverageRange;
-import uk.ac.tgac.rampart.tool.process.mass.KmerRange;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.MassInput;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -42,13 +40,19 @@ import java.util.Map;
  */
 public class SingleMassArgs implements ProcessArgs {
 
-    public static final String KEY_ELEM_INPUTS = "inputs";
-    public static final String KEY_ELEM_SINGLE_INPUT = "input";
+    private static final String KEY_ELEM_INPUTS = "inputs";
+    private static final String KEY_ELEM_SINGLE_INPUT = "input";
+    private static final String KEY_ELEM_KMER_RANGE = "kmer";
+    private static final String KEY_ELEM_CVG_RANGE = "coverage";
 
-    public static final String KEY_ATTR_NAME = "name";
-    public static final String KEY_ATTR_THREADS = "threads";
-    public static final String KEY_ATTR_MEMORY = "memory";
-    public static final String KEY_ATTR_PARALLEL = "parallel";
+    private static final String KEY_ATTR_NAME = "name";
+    private static final String KEY_ATTR_TOOL = "tool";
+    private static final String KEY_ATTR_THREADS = "threads";
+    private static final String KEY_ATTR_MEMORY = "memory";
+    private static final String KEY_ATTR_PARALLEL = "parallel";
+    private static final String KEY_ATTR_STATS_ONLY = "stats_only";
+    private static final String KEY_ATTR_STATS_LEVELS = "stats_levels";
+
 
 
     // Need access to these
@@ -68,12 +72,14 @@ public class SingleMassArgs implements ProcessArgs {
     // Inputs
     private List<MassInput> inputs;
     private List<Library> allLibraries;
-    private List<MecqSingleArgs> allMecqs;
+    private List<EcqArgs> allMecqs;
 
     // System settings
     private int threads;
     private int memory;
     private boolean runParallel;
+    private boolean statsOnly;
+    private List<StatsLevel> statsLevels;
 
 
 
@@ -85,34 +91,48 @@ public class SingleMassArgs implements ProcessArgs {
         this.kmerRange = new KmerRange();
         this.coverageRange = new CoverageRange();
         this.coverageCutoff = -1;
-        this.runParallel = false;
         this.organism = null;
         this.inputs = new ArrayList<MassInput>();
 
         this.threads = 1;
         this.memory = 0;
+        this.runParallel = false;
+        this.statsOnly = false;
+        this.statsLevels = StatsLevel.createAll();
     }
 
-    public SingleMassArgs(Element ele, File parentOutputDir, String parentJobPrefix, List<Library> allLibraries, List<MecqSingleArgs> allMecqs, Organism organism) {
+    public SingleMassArgs(Element ele, File parentOutputDir, String parentJobPrefix, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) {
 
         // Set defaults
         this();
 
+        // Required
         this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
+        this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
+        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
         this.threads = XmlHelper.getIntValue(ele, KEY_ATTR_THREADS);
         this.memory = XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY);
-        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
+        this.statsOnly = XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY);
 
         Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
-
         NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
         for(int i = 0; i < actualInputs.getLength(); i++) {
             this.inputs.add(new MassInput((Element) actualInputs.item(i)));
         }
 
+
+        // Optional
+        Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
+        Element cvgElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_CVG_RANGE);
+        this.kmerRange = kmerElement != null ? new KmerRange(kmerElement) : new KmerRange();
+        this.coverageRange = cvgElement != null ? new CoverageRange(cvgElement) : new CoverageRange();
+        this.statsLevels = ele.hasAttribute(KEY_ATTR_STATS_LEVELS) ?
+                StatsLevel.parseList(XmlHelper.getTextValue(ele, KEY_ATTR_STATS_LEVELS)) :
+                StatsLevel.createAll();
+
+        // Other args
         this.allLibraries = allLibraries;
         this.allMecqs = allMecqs;
-
         this.outputDir = new File(parentOutputDir, name);
         this.jobPrefix = parentJobPrefix + "-" + name;
         this.organism = organism;
@@ -207,6 +227,22 @@ public class SingleMassArgs implements ProcessArgs {
         this.memory = memory;
     }
 
+    public boolean isStatsOnly() {
+        return statsOnly;
+    }
+
+    public void setStatsOnly(boolean statsOnly) {
+        this.statsOnly = statsOnly;
+    }
+
+    public List<StatsLevel> getStatsLevels() {
+        return statsLevels;
+    }
+
+    public void setStatsLevels(List<StatsLevel> statsLevels) {
+        this.statsLevels = statsLevels;
+    }
+
     public Organism getOrganism() {
         return organism;
     }
@@ -223,11 +259,11 @@ public class SingleMassArgs implements ProcessArgs {
         this.allLibraries = allLibraries;
     }
 
-    public List<MecqSingleArgs> getAllMecqs() {
+    public List<EcqArgs> getAllMecqs() {
         return allMecqs;
     }
 
-    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+    public void setAllMecqs(List<EcqArgs> allMecqs) {
         this.allMecqs = allMecqs;
     }
 

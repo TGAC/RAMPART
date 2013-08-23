@@ -19,7 +19,9 @@ package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import uk.ac.tgac.asc.AssemblyStats;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsMatrix;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 
 import java.io.File;
 import java.io.IOException;

@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.util.List;
@@ -64,8 +64,8 @@ public class MassInput {
         this.lib = lib;
     }
 
-    public MecqSingleArgs findMecq(List<MecqSingleArgs> allMecqs) {
-        for(MecqSingleArgs currentMecq : allMecqs) {
+    public EcqArgs findMecq(List<EcqArgs> allMecqs) {
+        for(EcqArgs currentMecq : allMecqs) {
             if (currentMecq.getName().equalsIgnoreCase(this.mecq.trim())) {
                 return currentMecq;
             }
@@ -89,17 +89,17 @@ public class MassInput {
         return actualLib.isPairedEnd();
     }
 
-    public List<File> getFiles(List<MecqSingleArgs> allMecqs) {
+    public List<File> getFiles(List<EcqArgs> allMecqs) {
 
-        MecqSingleArgs actualMecq = findMecq(allMecqs);
+        EcqArgs actualMecq = findMecq(allMecqs);
         return actualMecq.getOutputFiles(this.lib.trim());
     }
 
-    public File getFile1(List<MecqSingleArgs> allMecqs) {
+    public File getFile1(List<EcqArgs> allMecqs) {
         return getFiles(allMecqs).get(0);
     }
 
-    public File getFile2(List<MecqSingleArgs> allMecqs) {
+    public File getFile2(List<EcqArgs> allMecqs) {
         return getFiles(allMecqs).get(0);
     }
 }

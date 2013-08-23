@@ -26,7 +26,7 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class MassArgs implements ProcessArgs {
     private File outputDir;
     List<SingleMassArgs> singleMassArgsList;    // List of Single MASS groups to run separately
     List<Library> allLibraries;                    // All allLibraries available in this job
-    List<MecqSingleArgs> allMecqs;                 // All mecq configurations
+    List<EcqArgs> allMecqs;                 // All mecq configurations
     private boolean runParallel;                // Whether to run MASS groups in parallel
     private File weightings;
     private Organism organism;
@@ -77,7 +77,7 @@ public class MassArgs implements ProcessArgs {
         this.outputDir = null;
 
         this.allLibraries = new ArrayList<Library>();
-        this.allMecqs = new ArrayList<MecqSingleArgs>();
+        this.allMecqs = new ArrayList<EcqArgs>();
 
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
         this.weightings = new File(
@@ -85,9 +85,10 @@ public class MassArgs implements ProcessArgs {
                 "/data/weightings.tab");
 
         this.organism = null;
+        this.singleMassArgsList = new ArrayList<SingleMassArgs>();
     }
 
-    public MassArgs(Element ele, File outputDir, String jobPrefix, List<Library> allLibraries, List<MecqSingleArgs> allMecqs, Organism organism) {
+    public MassArgs(Element ele, File outputDir, String jobPrefix, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) {
 
         // Set defaults first
         this();
@@ -176,11 +177,11 @@ public class MassArgs implements ProcessArgs {
         this.singleMassArgsList = singleMassArgsList;
     }
 
-    public List<MecqSingleArgs> getAllMecqs() {
+    public List<EcqArgs> getAllMecqs() {
         return allMecqs;
     }
 
-    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+    public void setAllMecqs(List<EcqArgs> allMecqs) {
         this.allMecqs = allMecqs;
     }
 

@@ -30,19 +30,20 @@ import java.util.List;
  * Date: 14/08/13
  * Time: 17:21
  */
-public class MecqSingleArgs {
+public class EcqArgs {
 
     // **** Xml Config file property keys ****
 
     public static final String KEY_ELEM_TOOL = "tool";
-    public static final String KEY_ELEM_MIN_LEN = "minlen";
-    public static final String KEY_ELEM_MIN_QUAL = "minqual";
+    public static final String KEY_ELEM_MIN_LEN = "min_len";
+    public static final String KEY_ELEM_MIN_QUAL = "min_qual";
     public static final String KEY_ELEM_KMER = "kmer";
     public static final String KEY_ELEM_LIBS = "libs";
 
     public static final String KEY_ATTR_NAME = "name";
     public static final String KEY_ATTR_THREADS = "threads";
     public static final String KEY_ATTR_MEMORY = "memory";
+    public static final String KEY_ATTR_PARALLEL = "parallel";
 
 
     // **** Default values ****
@@ -50,8 +51,9 @@ public class MecqSingleArgs {
     public static final int DEFAULT_MIN_LEN = 60;
     public static final int DEFAULT_MIN_QUAL = 30;
     public static final int DEFAULT_KMER = 17;
-    public static final int DEFAULT_THREADS = 8;
-    public static final int DEFUALT_MEMORY = 20;
+    public static final int DEFAULT_THREADS = 1;
+    public static final int DEFAULT_MEMORY = 0;
+    public static final boolean DEFAULT_RUN_PARALLEL = false;
 
     public static final String RAW = "raw";
 
@@ -65,33 +67,40 @@ public class MecqSingleArgs {
     private int kmer;
     private int threads;
     private int memory;
+    private boolean runParallel;
     private List<Library> libraries;
     private File outputDir;
     private String jobPrefix;
 
-    public MecqSingleArgs() {
+    public EcqArgs() {
         this.name = "";
         this.minLen = DEFAULT_MIN_LEN;
         this.minQual = DEFAULT_MIN_QUAL;
         this.kmer = DEFAULT_KMER;
         this.threads = DEFAULT_THREADS;
-        this.memory = DEFUALT_MEMORY;
+        this.memory = DEFAULT_MEMORY;
+        this.runParallel = DEFAULT_RUN_PARALLEL;
         this.libraries = new ArrayList<Library>();
     }
 
 
-    public MecqSingleArgs(Element ele, List<Library> allLibraries, File parentOutputDir, String parentJobPrefix) {
+    public EcqArgs(Element ele, List<Library> allLibraries, File parentOutputDir, String parentJobPrefix, boolean forceParallel) {
 
         // Set defaults
         this();
 
+        // Required
         this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
         this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
-        this.minLen = XmlHelper.getIntValue(ele, KEY_ELEM_MIN_LEN);
-        this.minQual = XmlHelper.getIntValue(ele, KEY_ELEM_MIN_QUAL);
-        this.kmer = XmlHelper.getIntValue(ele, KEY_ELEM_KMER);
-        this.threads = XmlHelper.getIntValue(ele, KEY_ATTR_THREADS);
-        this.memory = XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY);
+
+        // Optional
+        this.minLen = ele.hasAttribute(KEY_ELEM_MIN_LEN) ? XmlHelper.getIntValue(ele, KEY_ELEM_MIN_LEN) : DEFAULT_MIN_LEN;
+        this.minQual = ele.hasAttribute(KEY_ELEM_MIN_QUAL) ? XmlHelper.getIntValue(ele, KEY_ELEM_MIN_QUAL): DEFAULT_MIN_QUAL;
+        this.kmer = ele.hasAttribute(KEY_ELEM_KMER) ? XmlHelper.getIntValue(ele, KEY_ELEM_KMER) : DEFAULT_KMER;
+        this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
+        this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
+        this.runParallel = forceParallel ? true :
+                ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL;
 
         // Filter the provided libs
         String libList = XmlHelper.getTextValue(ele, KEY_ELEM_LIBS);
@@ -106,6 +115,7 @@ public class MecqSingleArgs {
             }
         }
 
+        // Other args
         this.outputDir = new File(parentOutputDir, name);
         this.jobPrefix = parentJobPrefix + "-name";
     }
@@ -167,6 +177,14 @@ public class MecqSingleArgs {
         this.memory = memory;
     }
 
+    public boolean isRunParallel() {
+        return runParallel;
+    }
+
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
+    }
+
     public List<Library> getLibraries() {
         return libraries;
     }
@@ -191,7 +209,20 @@ public class MecqSingleArgs {
         this.jobPrefix = jobPrefix;
     }
 
+    public Library findLibrary(String libName) {
+
+        for (Library lib : this.libraries) {
+            if (lib.getName().equalsIgnoreCase(libName)) {
+                return lib;
+            }
+        }
+
+        return null;
+    }
+
     public List<File> getOutputFiles(String libName) {
-        return new ArrayList<File>();
+
+        Library lib = this.findLibrary(libName);
+        return lib.getFiles();
     }
 }

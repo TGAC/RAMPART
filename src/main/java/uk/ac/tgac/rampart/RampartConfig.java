@@ -23,8 +23,8 @@ import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
-import uk.ac.tgac.asc.JarUtils;
 import uk.ac.tgac.conan.TgacConanConfigure;
+import uk.ac.tgac.conan.core.util.JarUtils;
 import uk.ac.tgac.rampart.cli.RampartOptions;
 
 import java.io.File;

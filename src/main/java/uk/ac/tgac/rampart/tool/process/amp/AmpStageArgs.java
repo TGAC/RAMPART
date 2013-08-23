@@ -23,7 +23,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.util.List;
@@ -42,12 +42,18 @@ public class AmpStageArgs implements ProcessArgs {
     private static final String KEY_ELEM_OTHER_ARGS = "args";
 
 
+    // Defaults
+    public static final int DEFAULT_THREADS = 1;
+    public static final int DEFAULT_MEMORY = 0;
+    public static final String DEFAULT_OTHER_ARGS = "";
+
+
     // Common stuff
     private File outputDir;
     private File assembliesDir;
     private String jobPrefix;
     private List<Library> allLibraries;
-    private List<MecqSingleArgs> allMecqs;
+    private List<EcqArgs> allMecqs;
     private Organism organism;
 
     // Specifics
@@ -61,14 +67,35 @@ public class AmpStageArgs implements ProcessArgs {
 
     public AmpStageArgs() {
 
+        this.tool = "";
+        this.input = null;
+        this.index = 0;
+        this.threads = DEFAULT_THREADS;
+        this.memory = DEFAULT_MEMORY;
+        this.otherArgs = DEFAULT_OTHER_ARGS;
+
+        this.outputDir = new File("");
+        this.jobPrefix = "AMP-" + this.index;
+        this.allLibraries = null;
+        this.allMecqs = null;
+        this.organism = null;
     }
 
     public AmpStageArgs(Element ele, File outputDir, File assembliesDir, String jobPrefix, List<Library> allLibraries,
-                        List<MecqSingleArgs> allMecqs, Organism organism, File input, int index) {
+                        List<EcqArgs> allMecqs, Organism organism, File input, int index) {
 
         // Set defaults
         this();
 
+        // Requires
+        this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
+
+        // Optional
+        this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
+        this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
+        this.otherArgs = ele.hasAttribute(KEY_ELEM_OTHER_ARGS) ? XmlHelper.getTextValue(ele, KEY_ELEM_OTHER_ARGS) : DEFAULT_OTHER_ARGS;
+
+        // Other args
         this.outputDir = outputDir;
         this.assembliesDir = assembliesDir;
         this.jobPrefix = jobPrefix;
@@ -77,11 +104,6 @@ public class AmpStageArgs implements ProcessArgs {
         this.organism = organism;
         this.input = input;
         this.index = index;
-
-        this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
-        this.threads = XmlHelper.getIntValue(ele, KEY_ATTR_THREADS);
-        this.memory = XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY);
-        this.otherArgs = XmlHelper.getTextValue(ele, KEY_ELEM_OTHER_ARGS);
     }
 
     public File getOutputDir() {
@@ -108,11 +130,11 @@ public class AmpStageArgs implements ProcessArgs {
         this.allLibraries = allLibraries;
     }
 
-    public List<MecqSingleArgs> getAllMecqs() {
+    public List<EcqArgs> getAllMecqs() {
         return allMecqs;
     }
 
-    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+    public void setAllMecqs(List<EcqArgs> allMecqs) {
         this.allMecqs = allMecqs;
     }
 

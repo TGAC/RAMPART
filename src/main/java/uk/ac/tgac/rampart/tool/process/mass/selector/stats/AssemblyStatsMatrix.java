@@ -15,10 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.selector;
-
-import uk.ac.tgac.asc.AssemblyStats;
-import uk.ac.tgac.asc.AssemblyStatsMatrixRow;
+package uk.ac.tgac.rampart.tool.process.mass.selector.stats;
 
 import java.util.ArrayList;
 
@@ -64,7 +61,7 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         return max;
     }
 
-    protected void standardNormalise(int index, boolean invert) {
+    public void standardNormalise(int index, boolean invert) {
 
         double min = this.getMin(index);
         double max = this.getMax(index);
@@ -79,7 +76,7 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         }
     }
 
-    protected void deviationNormalise(int index, double mean) {
+    public void deviationNormalise(int index, double mean) {
 
         for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
 

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass;
+package uk.ac.tgac.rampart.tool.process.mass.single;
 
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Element;
@@ -44,7 +44,12 @@ public class CoverageRange extends ArrayList<Integer> {
      * Generate default coverage range (just 75X and ALL)
      */
     public CoverageRange() {
-        this(75, 75, StepSize.MEDIUM, true);
+
+        // Initialise arraylist
+        super();
+
+        // Add ALL
+        this.add(ALL);
     }
 
     /**
@@ -79,7 +84,10 @@ public class CoverageRange extends ArrayList<Integer> {
         }
     }
 
-
+    /**
+     * Create a coverage range from an Xml element
+     * @param ele
+     */
     public CoverageRange(Element ele) {
         this(XmlHelper.getIntValue(ele, KEY_ATTR_CVG_MIN),
                 XmlHelper.getIntValue(ele, KEY_ATTR_CVG_MAX),

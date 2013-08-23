@@ -342,15 +342,6 @@
             </exclusions>
         </dependency>-->
 
-
-        <!-- ASC -->
-
-        <dependency>
-            <groupId>uk.ac.tgac.asc</groupId>
-            <artifactId>asc</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
 	</dependencies>
 
 </project>

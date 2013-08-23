@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.tool.process.mass.single.KmerRange;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 
 import java.io.File;

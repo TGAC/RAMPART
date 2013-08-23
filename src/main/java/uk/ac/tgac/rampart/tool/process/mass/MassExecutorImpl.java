@@ -17,17 +17,25 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.util.StringJoiner;
+import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.AssemblerArgs;
+import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorProcess;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * User: maplesod
@@ -35,50 +43,23 @@ import java.io.File;
  * Time: 11:10
  */
 @Service
-public class MassExecutorImpl implements MassExecutor {
-
-    private ConanProcessService conanProcessService;
+public class MassExecutorImpl extends RampartExecutorImpl implements MassExecutor {
 
     @Override
-    public void executeSingleMass(SingleMassArgs singleMassArgs, ConanProcessService conanProcessService, ExecutionContext executionContext)
+    public void executeSingleMass(SingleMassArgs singleMassArgs)
             throws InterruptedException, ProcessExecutionException {
 
         SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
-        singleMassProcess.setConanProcessService(conanProcessService);
-        singleMassProcess.execute(executionContext);
-
-        this.conanProcessService = conanProcessService;
-    }
-
-
-    @Override
-    public void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
-            throws ProcessExecutionException, InterruptedException {
-
-        // Duplicate the execution context so we don't modify the original accidentally.
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-        if (executionContext.usingScheduler()) {
-
-            String jobName = jobPrefix + "_wait";
-            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
-            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
-            executionContextCopy.setForegroundJob(true);
-        }
-
-        this.conanProcessService.waitFor(
-                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
-                executionContextCopy);
+        singleMassProcess.setConanProcessService(this.conanProcessService);
+        singleMassProcess.execute(this.executionContext);
     }
 
     @Override
-    public void executeMassSelector(MassSelectorArgs massSelectorArgs, ConanProcessService conanProcessService, ExecutionContext executionContext)
+    public void executeMassSelector(MassSelectorArgs massSelectorArgs)
             throws InterruptedException, ProcessExecutionException {
 
         MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
-        massSelectorProcess.setConanProcessService(conanProcessService);
-        massSelectorProcess.execute(executionContext);
-
-        this.conanProcessService = conanProcessService;
+        massSelectorProcess.setConanProcessService(this.conanProcessService);
+        massSelectorProcess.execute(this.executionContext);
     }
 }

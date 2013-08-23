@@ -24,7 +24,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqSingleArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class AmpArgs implements ProcessArgs {
     private File outputDir;
     private File config;
     private List<Library> allLibraries;
-    private List<MecqSingleArgs> allMecqs;
+    private List<EcqArgs> allMecqs;
     private List<AmpStageArgs> stageArgsList;
     private String jobPrefix;
     private Organism organism;
@@ -59,13 +59,13 @@ public class AmpArgs implements ProcessArgs {
         this.inputAssembly = null;
         this.outputDir = null;
         this.allLibraries = new ArrayList<Library>();
-        this.allMecqs = new ArrayList<MecqSingleArgs>();
+        this.allMecqs = new ArrayList<EcqArgs>();
         this.config = null;
         this.stageArgsList = new ArrayList<AmpStageArgs>();
         this.jobPrefix = "amp";
     }
 
-    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly, List<Library> allLibraries, List<MecqSingleArgs> allMecqs, Organism organism) {
+    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) {
 
         // Set defaults
         this();
@@ -147,11 +147,11 @@ public class AmpArgs implements ProcessArgs {
         this.jobPrefix = jobPrefix;
     }
 
-    public List<MecqSingleArgs> getAllMecqs() {
+    public List<EcqArgs> getAllMecqs() {
         return allMecqs;
     }
 
-    public void setAllMecqs(List<MecqSingleArgs> allMecqs) {
+    public void setAllMecqs(List<EcqArgs> allMecqs) {
         this.allMecqs = allMecqs;
     }
 

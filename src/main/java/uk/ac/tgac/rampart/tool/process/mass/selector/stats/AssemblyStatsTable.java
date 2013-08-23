@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.selector;
+package uk.ac.tgac.rampart.tool.process.mass.selector.stats;
 
 import org.apache.commons.io.FileUtils;
-import uk.ac.tgac.asc.AssemblyStats;
 
 import java.io.File;
 import java.io.IOException;

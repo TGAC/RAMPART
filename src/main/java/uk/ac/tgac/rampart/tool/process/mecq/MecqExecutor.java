@@ -18,13 +18,25 @@
 package uk.ac.tgac.rampart.tool.process.mecq;
 
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.conan.core.data.Library;
+import uk.ac.tgac.conan.process.ec.ErrorCorrector;
+import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
+import uk.ac.tgac.rampart.tool.RampartExecutor;
+
+import java.io.File;
 
 /**
  * User: maplesod
  * Date: 20/03/13
  * Time: 15:44
  */
-public interface MecqExecutor {
+public interface MecqExecutor extends RampartExecutor {
 
-    public void executeQT(MecqArgs mecqArgs, ExecutionContext executionContext);
+    void executeEcq(ErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
+            throws InterruptedException, ProcessExecutionException;
+
+    void createInputLinks(Library library, ErrorCorrectorArgs args)
+            throws ProcessExecutionException, InterruptedException;
 }

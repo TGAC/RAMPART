@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -29,6 +30,8 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.*;
+import uk.ac.tgac.rampart.tool.process.mass.MassExecutor;
+import uk.ac.tgac.rampart.tool.process.mass.MassExecutorImpl;
 
 import java.io.File;
 
@@ -44,6 +47,9 @@ public class MecqProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MecqProcess.class);
 
+    @Autowired
+    private MecqExecutor mecqExecutor = new MecqExecutorImpl();
+
 
     public MecqProcess() {
         this(new MecqArgs());
@@ -57,13 +63,13 @@ public class MecqProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
-        // Create this for situations where we need to create a symbolic link straight away
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
         log.info("Starting MECQ Process");
 
         // Create shortcut to args for convienience
         MecqArgs args = (MecqArgs) this.getProcessArgs();
+
+        // Initialise executor
+        this.mecqExecutor.initialise(this.conanProcessService, executionContext);
 
         // If the output directory doesn't exist then make it
         if (!args.getOutputDir().exists()) {
@@ -72,57 +78,51 @@ public class MecqProcess extends AbstractConanProcess {
         }
 
         // For each ecq process all libraries
-        for(MecqSingleArgs singleMecqArgs : args.getEqcArgList()) {
+        for(EcqArgs ecqArgs : args.getEqcArgList()) {
 
             // Create an output dir for this error corrector
-            File ecDir = new File(args.getOutputDir(), singleMecqArgs.getName());
+            File ecDir = new File(args.getOutputDir(), ecqArgs.getName());
             ecDir.mkdirs();
 
             // Process each lib
-            for(Library lib : singleMecqArgs.getLibraries()) {
+            for(Library lib : ecqArgs.getLibraries()) {
 
-                String libName = lib.getName().toLowerCase();
-
-                File ecqLibDir = new File(ecDir, libName);
+                // Create the output directory
+                File ecqLibDir = new File(ecDir, lib.getName());
                 ecqLibDir.mkdirs();
 
-                // Create the actual error corrector
-                ErrorCorrector ec = makeErrorCorrector(singleMecqArgs, ecqLibDir);
+                // Create a job name
+                String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
 
-                if (lib.isPairedEnd()) {
+                // Create the actual error corrector from the user provided EcqArgs
+                ErrorCorrector ec = makeErrorCorrector(ecqArgs, lib, ecqLibDir);
 
-                    // Create links to files in output dir (makes things simpler if we need to auto-gen config files)
-                    StringJoiner compoundLinkCmdLine = new StringJoiner(";");
+                // Create symbolic links between file paths specified by the library and the working directory for this ECQ
+                this.mecqExecutor.createInputLinks(lib, ec.getArgs());
 
-                    compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFile1(), ecqLibDir));
-                    compoundLinkCmdLine.add(makeLinkCmdLine(lib.getFile2(), ecqLibDir));
+                // Execute this error corrector
+                this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel());
 
-                    this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
-
-                    // Add libs to ec
-                    ((ErrorCorrectorPairedEndArgs)ec.getArgs()).setFromLibrary(lib,
-                            new File(ecqLibDir, lib.getFile1().getName()),
-                            new File(ecqLibDir, lib.getFile2().getName()));
+                // Check to see if we should run each ECQ in parallel, if not wait here until each ECQ has completed
+                if (executionContext.usingScheduler() && !ecqArgs.isRunParallel()) {
+                    log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for library: " + lib.getName());
+                    this.mecqExecutor.executeScheduledWait(ecqArgs.getJobPrefix(), ecqLibDir);
                 }
-                else {
-                    this.conanProcessService.execute(makeLinkCmdLine(lib.getFile1(), ecqLibDir), linkingExecutionContext);
+            }
 
-                    // Add libs to ec
-                    ((ErrorCorrectorSingleEndArgs)ec.getArgs()).setFromLibrary(lib,
-                            new File(ecqLibDir, lib.getFile1().getName()));
-                }
-
-
-                String jobName = args.getJobPrefix() + "_" + singleMecqArgs.getName() + "_" + libName;
-                this.executeEcq(ec, jobName, args.isRunParallel(), ecqLibDir, executionContext);
+            // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
+            // each library processed by this ECQ, then wait here.
+            if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
+                log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
+                this.mecqExecutor.executeScheduledWait(ecqArgs.getJobPrefix(), ecDir);
             }
         }
 
-        // If we're using a scheduler and we have been asked to run the mecq processes for each library
+        // If we're using a scheduler and we have been asked to run each MECQ group for each library
         // in parallel, then we should wait for all those to complete before continueing.
         if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
-            log.debug("Running Quality trimming step in parallel, waiting for completion");
-            this.executeScheduledWait(args.getJobPrefix(), args.getOutputDir(), executionContext);
+            log.debug("Running all MECQ groups in parallel, waiting for completion");
+            this.mecqExecutor.executeScheduledWait(args.getJobPrefix(), args.getOutputDir());
         }
 
         log.info("MECQ complete");
@@ -130,13 +130,15 @@ public class MecqProcess extends AbstractConanProcess {
         return true;
     }
 
-    protected String makeLinkCmdLine(File sourceFile, File outputDir) {
 
-        return "ln -s -f " + sourceFile.getAbsolutePath() + " " + new File(outputDir, sourceFile.getName()).getAbsolutePath();
-    }
-
-
-    public ErrorCorrector makeErrorCorrector(MecqSingleArgs mecqArgs, File outputDir) {
+    /**
+     * Using a set of ECQ specific args, creates an ErrorCorrector object for execution
+     * @param mecqArgs
+     * @param inputLib
+     * @param outputDir
+     * @return
+     */
+    public ErrorCorrector makeErrorCorrector(EcqArgs mecqArgs, Library inputLib, File outputDir) {
 
         ErrorCorrector ec = ErrorCorrectorFactory.valueOf(mecqArgs.getTool()).create();
         ErrorCorrectorArgs ecArgs = ec.getArgs();
@@ -148,56 +150,19 @@ public class MecqProcess extends AbstractConanProcess {
         ecArgs.setMemoryGb(mecqArgs.getMemory());
         ecArgs.setOutputDir(outputDir);
 
+        // Add files to ec (assumes ECQ tool and input libraries are compatible with regards to Paired / Single End)
+        if (inputLib.isPairedEnd()) {
+            ((ErrorCorrectorPairedEndArgs)ec.getArgs()).setFromLibrary(inputLib,
+                    new File(outputDir, inputLib.getFile1().getName()),
+                    new File(outputDir, inputLib.getFile2().getName()));
+        }
+        else {
+            ((ErrorCorrectorSingleEndArgs)ec.getArgs()).setFromLibrary(inputLib,
+                    new File(outputDir, inputLib.getFile1().getName()));
+        }
+
         return ec;
     }
-
-
-    protected void executeEcq(ErrorCorrector errorCorrector, String jobName, boolean runInParallel,
-                              File outputDir, ExecutionContext executionContext)
-            throws ProcessExecutionException, InterruptedException {
-
-        // Duplicate the execution context so we don't modify the original accidentally.
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-        // Ensure downstream process has access to the process service
-        errorCorrector.configure(this.getConanProcessService());
-        errorCorrector.initialise();
-
-        if (executionContext.usingScheduler()) {
-
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-            ErrorCorrectorArgs ecArgs = errorCorrector.getArgs();
-
-            schedulerArgs.setJobName(jobName);
-            schedulerArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
-            schedulerArgs.setThreads(ecArgs.getThreads());
-            schedulerArgs.setMemoryMB(ecArgs.getMemoryGb() * 1000);
-
-            executionContextCopy.setForegroundJob(!runInParallel);
-        }
-
-        this.conanProcessService.execute(errorCorrector, executionContextCopy);
-    }
-
-    protected void executeScheduledWait(String jobPrefix, File outputDir, ExecutionContext executionContext)
-            throws ProcessExecutionException, InterruptedException {
-
-        // Duplicate the execution context so we don't modify the original accidentally.
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-        if (executionContext.usingScheduler()) {
-
-            String jobName = jobPrefix + "_wait";
-            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
-            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
-            executionContextCopy.setForegroundJob(true);
-        }
-
-        this.conanProcessService.waitFor(
-                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, jobPrefix + "*"),
-                executionContextCopy);
-    }
-
 
     @Override
     public String getName() {

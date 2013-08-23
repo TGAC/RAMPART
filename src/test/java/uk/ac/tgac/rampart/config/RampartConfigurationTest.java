@@ -15,29 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass;
+package uk.ac.tgac.rampart.config;
 
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.rampart.tool.RampartExecutor;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
-import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * User: maplesod
- * Date: 25/03/13
- * Time: 11:10
+ * Date: 22/08/13
+ * Time: 10:44
  */
-public interface MassExecutor extends RampartExecutor {
+public class RampartConfigurationTest {
 
-    void executeSingleMass(SingleMassArgs singleMassArgs)
-            throws InterruptedException, ProcessExecutionException;
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
 
-    void executeMassSelector(MassSelectorArgs massSelectorArgs)
-            throws InterruptedException, ProcessExecutionException;
+
+
+    @Test
+    public void testConfigLoad() throws IOException {
+
+        File cfgFile = FileUtils.toFile(this.getClass().getResource("/config/test_rampart_config.xml"));
+        File outDir = temp.newFolder("configTest");
+
+        RampartConfiguration rampartConfiguration = new RampartConfiguration(cfgFile, outDir);
+
+        assertTrue(true);
+    }
+
 }

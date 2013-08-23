@@ -15,29 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass;
+package uk.ac.tgac.rampart.tool.process.mass.single;
 
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
-import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
  * User: maplesod
- * Date: 25/03/13
- * Time: 11:10
+ * Date: 23/08/13
+ * Time: 11:18
  */
-public interface MassExecutor extends RampartExecutor {
+public interface SingleMassExecutor extends RampartExecutor {
 
-    void executeSingleMass(SingleMassArgs singleMassArgs)
-            throws InterruptedException, ProcessExecutionException;
+    void executeAssembler(Assembler assembler, String jobName, boolean runParallel)
+            throws ProcessExecutionException, InterruptedException, IOException;
 
-    void executeMassSelector(MassSelectorArgs massSelectorArgs)
-            throws InterruptedException, ProcessExecutionException;
+    void createAssemblyLinks(Assembler assembler, SingleMassArgs smArgs, String jobName)
+            throws ProcessExecutionException, InterruptedException;
+
+    void dispatchStatsJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
+            throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 }
