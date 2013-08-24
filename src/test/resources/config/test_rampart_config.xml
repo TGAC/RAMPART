@@ -42,7 +42,7 @@
                 </inputs>
             </single_mass>
             <single_mass name="abyss-quake-kmer" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true">
-                <kmer min="61" max="75" step="MEDIUM"/>
+                <kmer list="61,65,71,75"/>
                 <inputs>
                     <input mecq="quake" lib="pe1"/>
                     <input mecq="quake" lib="mp1"/>
