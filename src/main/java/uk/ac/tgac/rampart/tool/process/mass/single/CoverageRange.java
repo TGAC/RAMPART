@@ -31,10 +31,11 @@ import java.util.ArrayList;
 public class CoverageRange extends ArrayList<Integer> {
 
     // Xml Config keys
-    public static final String KEY_ATTR_CVG_MIN = "min";
-    public static final String KEY_ATTR_CVG_MAX = "max";
-    public static final String KEY_ATTR_CVG_STEP = "step";
-    public static final String KEY_ATTR_ALL = "all";
+    private static final String KEY_ATTR_CVG_MIN = "min";
+    private static final String KEY_ATTR_CVG_MAX = "max";
+    private static final String KEY_ATTR_CVG_STEP = "step";
+    private static final String KEY_ATTR_ALL = "all";
+    private static final String KEY_ATTR_LIST = "list";
 
 
     public static final int ALL = -1;
@@ -60,8 +61,44 @@ public class CoverageRange extends ArrayList<Integer> {
      * @param all Whether add a coverage level representing ALL reads
      */
     public CoverageRange(int minCoverage, int maxCoverage, StepSize stepSize, boolean all) {
+
+        // Initialise arraylist
         super();
 
+        this.setFromProperties(minCoverage, maxCoverage, stepSize, all);
+    }
+
+    /**
+     * Generate a coverage range from a comma separated list
+     * @param list Coverage values separated by commas.  Whitespace is tolerated.
+     */
+    public CoverageRange(String list) {
+
+        // Initialise arraylist
+        super();
+
+        this.setFromString(list);
+    }
+
+    /**
+     * Create a coverage range from an Xml element
+     * @param ele
+     */
+    public CoverageRange(Element ele) {
+
+        if (ele.hasAttribute(KEY_ATTR_LIST)) {
+            this.setFromString(XmlHelper.getTextValue(ele, KEY_ATTR_LIST));
+        }
+        else {
+            this.setFromProperties(XmlHelper.getIntValue(ele, KEY_ATTR_CVG_MIN),
+                    XmlHelper.getIntValue(ele, KEY_ATTR_CVG_MAX),
+                    StepSize.valueOf(XmlHelper.getTextValue(ele, KEY_ATTR_CVG_STEP).toUpperCase()),
+                    XmlHelper.getBooleanValue(ele, KEY_ATTR_ALL));
+
+        }
+    }
+
+    protected final void setFromProperties(int minCoverage, int maxCoverage, StepSize stepSize, boolean all) {
         for(int i = minCoverage; i <= maxCoverage; i = stepSize.nextCoverage(i)) {
             this.add(i);
         }
@@ -71,29 +108,19 @@ public class CoverageRange extends ArrayList<Integer> {
         }
     }
 
-    /**
-     * Generate a coverage range from a comma separated list
-     * @param list Coverage values separated by commas.  Whitespace is tolerated.
-     */
-    public CoverageRange(String list) {
-        super();
-
+    protected final void setFromString(String list) {
         String[] parts = list.split(",");
         for(String part : parts) {
-            this.add(Integer.parseInt(part.trim()));
+
+            if (part.trim().equalsIgnoreCase("ALL")) {
+                this.add(-1);
+            }
+            else {
+                this.add(Integer.parseInt(part.trim()));
+            }
         }
     }
 
-    /**
-     * Create a coverage range from an Xml element
-     * @param ele
-     */
-    public CoverageRange(Element ele) {
-        this(XmlHelper.getIntValue(ele, KEY_ATTR_CVG_MIN),
-                XmlHelper.getIntValue(ele, KEY_ATTR_CVG_MAX),
-                StepSize.valueOf(XmlHelper.getTextValue(ele, KEY_ATTR_CVG_STEP).toUpperCase()),
-                XmlHelper.getBooleanValue(ele, KEY_ATTR_ALL));
-    }
 
 
     public enum StepSize {

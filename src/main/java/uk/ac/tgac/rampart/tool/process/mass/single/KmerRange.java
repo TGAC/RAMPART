@@ -35,9 +35,10 @@ public class KmerRange extends ArrayList<Integer> {
     public static final int KMER_MAX = 125;
 
     // Xml Config keys
-    public static final String KEY_ATTR_K_MIN = "min";
-    public static final String KEY_ATTR_K_MAX = "max";
-    public static final String KEY_ATTR_STEP = "step";
+    private static final String KEY_ATTR_K_MIN = "min";
+    private static final String KEY_ATTR_K_MAX = "max";
+    private static final String KEY_ATTR_STEP = "step";
+    private static final String KEY_ATTR_LIST = "list";
 
 
     /**
@@ -54,11 +55,12 @@ public class KmerRange extends ArrayList<Integer> {
      * @param stepSize How big the jump between kmer values should be
      */
     public KmerRange(int minKmer, int maxKmer, StepSize stepSize) {
+
+        // Init arraylist
         super();
 
-        for(int k = stepSize.firstValidKmer(minKmer); k <= maxKmer; k = stepSize.nextKmer(k)) {
-            this.add(k);
-        }
+        // Generate list of kmers from range properties
+        this.setFromProperties(minKmer, maxKmer, stepSize);
     }
 
     /**
@@ -66,23 +68,42 @@ public class KmerRange extends ArrayList<Integer> {
      * @param list kmer values separated by commas.  Whitespace is tolerated.
      */
     public KmerRange(String list) {
+
+        // Init arraylist
         super();
 
-        String[] parts = list.split(",");
-        for(String part : parts) {
-            this.add(Integer.parseInt(part.trim()));
-        }
+        // Split string and generate kmers from list
+        this.setFromString(list);
     }
 
     /**
-     * Creates a kmer range object from an Xml Config element
+     * Creates a kmer range object from an Xml Config element.  If there's a list attribute then use that.  If not then
+     * we assume a range has been specified, and we generate a list from those attributes.
      * @param ele
      */
     public KmerRange(Element ele) {
 
-        this(XmlHelper.getIntValue(ele, KEY_ATTR_K_MIN),
+        if (ele.hasAttribute(KEY_ATTR_LIST)) {
+            this.setFromString(XmlHelper.getTextValue(ele, KEY_ATTR_LIST));
+        }
+        else {
+            this.setFromProperties(XmlHelper.getIntValue(ele, KEY_ATTR_K_MIN),
                 XmlHelper.getIntValue(ele, KEY_ATTR_K_MAX),
                 StepSize.valueOf(XmlHelper.getTextValue(ele, KEY_ATTR_STEP).toUpperCase()));
+        }
+    }
+
+    protected final void setFromProperties(int minKmer, int maxKmer, StepSize stepSize) {
+        for(int k = stepSize.firstValidKmer(minKmer); k <= maxKmer; k = stepSize.nextKmer(k)) {
+            this.add(k);
+        }
+    }
+
+    protected final void setFromString(String list) {
+        String[] parts = list.split(",");
+        for(String part : parts) {
+            this.add(Integer.parseInt(part.trim()));
+        }
     }
 
     public int getFirstKmer() {
