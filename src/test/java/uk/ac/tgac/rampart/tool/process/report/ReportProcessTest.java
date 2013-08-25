@@ -32,7 +32,6 @@ import uk.ac.tgac.conan.core.service.VelocityMergerService;
 
 import java.io.File;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 /**

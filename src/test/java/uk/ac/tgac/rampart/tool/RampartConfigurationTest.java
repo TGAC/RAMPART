@@ -21,7 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.tool.RampartConfiguration;
 
 import java.io.File;
 import java.io.IOException;

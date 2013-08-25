@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.tool.process.report;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +25,6 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
-import uk.ac.tgac.conan.process.latex.PdfLatex2012Args;
-import uk.ac.tgac.conan.process.latex.PdfLatex2012Process;
 
 /**
  * User: maplesod

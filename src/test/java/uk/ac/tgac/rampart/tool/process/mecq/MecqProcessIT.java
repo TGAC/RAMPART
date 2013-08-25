@@ -24,8 +24,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.cli.IntegrationTest;
-import uk.ac.tgac.rampart.cli.RampartCLI;
 
 import java.io.File;
 import java.net.URISyntaxException;

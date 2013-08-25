@@ -17,25 +17,13 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
-import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.util.StringJoiner;
-import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorProcess;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * User: maplesod

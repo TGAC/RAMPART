@@ -21,11 +21,9 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
@@ -33,20 +31,12 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
-import uk.ac.tgac.rampart.tool.process.mass.MassExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.MassInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @Component

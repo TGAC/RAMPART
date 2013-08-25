@@ -17,16 +17,10 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * User: maplesod

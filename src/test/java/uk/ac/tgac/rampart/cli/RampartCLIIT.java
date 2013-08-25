@@ -22,6 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
+import uk.ac.tgac.rampart.RampartCLI;
 
 import java.io.File;
 import java.net.URISyntaxException;

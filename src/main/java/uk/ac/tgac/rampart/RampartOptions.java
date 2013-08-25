@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.cli;
+package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
@@ -69,7 +69,7 @@ public class RampartOptions {
                 clean = cmdLine.hasOption(OPT_CLEAN) ?
                     cmdLine.getOptionValue(OPT_CLEAN) != null ?
                             new File(cmdLine.getOptionValue(OPT_CLEAN)) :
-                            RampartConfig.currentWorkingDir() :
+                            RampartCLI.currentWorkingDir() :
                     null;
 
                 if (clean == null) {
@@ -83,15 +83,15 @@ public class RampartOptions {
 
                     environmentConfig = cmdLine.hasOption(OPT_ENV_CONFIG) ?
                             new File(cmdLine.getOptionValue(OPT_ENV_CONFIG)) :
-                            RampartConfig.DEFAULT_ENV_CONFIG;
+                            RampartCLI.DEFAULT_ENV_CONFIG;
 
                     logConfig = cmdLine.hasOption(OPT_LOG_CONFIG) ?
                             new File(cmdLine.getOptionValue(OPT_LOG_CONFIG)) :
-                            RampartConfig.DEFAULT_LOG_CONFIG;
+                            RampartCLI.DEFAULT_LOG_CONFIG;
 
                     output = cmdLine.hasOption(OPT_OUTPUT) ?
                             new File(cmdLine.getOptionValue(OPT_OUTPUT)) :
-                            RampartConfig.currentWorkingDir();
+                            RampartCLI.currentWorkingDir();
 
                     jobPrefix = cmdLine.hasOption(OPT_JOB_PREFIX) ?
                             cmdLine.getOptionValue(OPT_JOB_PREFIX) :
@@ -185,33 +185,33 @@ public class RampartOptions {
     @SuppressWarnings("static-access")
     public static Options createOptions() {
 
-        // Boolean options
-        Option opt_verbose = new Option("v", OPT_VERBOSE, false, "Output extra information while running.");
-        Option opt_help = new Option("?", OPT_HELP, false, "Print this message.");
-
-        // Options with arguments
-        Option opt_config = OptionBuilder.withArgName("file").withLongOpt(OPT_CONFIG).hasArg()
-                .withDescription("The rampart configuration file.").create("c");
-
-        Option opt_output = OptionBuilder.withArgName("file").withLongOpt(OPT_OUTPUT).hasArg()
-                .withDescription("The directory to put output from this job.").create("o");
-
-        Option opt_stages = OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
-                .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s");
-
-        Option opt_clean = OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasOptionalArg()
-                .withDescription("The directory to clean.").create("z");
-
         // create Options object
         Options options = new Options();
 
         // add t option
-        options.addOption(opt_verbose);
-        options.addOption(opt_help);
-        options.addOption(opt_config);
-        options.addOption(opt_output);
-        options.addOption(opt_stages);
-        options.addOption(opt_clean);
+        options.addOption(new Option("v", OPT_VERBOSE, false, "Output extra information while running."));
+        options.addOption(new Option("?", OPT_HELP, false, "Print this message."));
+
+        options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_CONFIG).hasArg()
+                .withDescription("The rampart job configuration file.").create("c"));
+
+        options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_ENV_CONFIG).hasArg()
+                .withDescription("The rampart environment configuration file.  Default: " + RampartCLI.DEFAULT_ENV_CONFIG).create("e"));
+
+        options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_LOG_CONFIG).hasArg()
+                .withDescription("The rampart logging configuration file.  Default: " + RampartCLI.DEFAULT_LOG_CONFIG).create("l"));
+
+        options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_OUTPUT).hasArg()
+                .withDescription("The directory to put output from this job.").create("o"));
+
+        options.addOption(OptionBuilder.withArgName("string").withLongOpt(OPT_JOB_PREFIX).hasArg()
+                .withDescription("The job prefix descriptor to use when scheduling.  Default: rampart-<timestamp>").create("p"));
+
+        options.addOption(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
+                .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));
+
+        options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_CLEAN).hasOptionalArg()
+                .withDescription("The directory to clean.").create("z"));
 
         return options;
     }
