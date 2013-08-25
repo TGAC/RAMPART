@@ -21,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import uk.ac.tgac.rampart.tool.RampartConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,8 +45,9 @@ public class RampartConfigurationTest {
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/config/test_rampart_config.xml"));
         File outDir = temp.newFolder("configTest");
+        String jobPrefix = "configTestJob";
 
-        RampartConfiguration rampartConfiguration = new RampartConfiguration(cfgFile, outDir);
+        RampartConfiguration rampartConfiguration = new RampartConfiguration(cfgFile, outDir, jobPrefix);
 
         assertTrue(true);
     }

@@ -28,7 +28,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
 import uk.ac.tgac.conan.process.latex.PdfLatex2012Args;
 import uk.ac.tgac.conan.process.latex.PdfLatex2012Process;
-import uk.ac.tgac.rampart.config.RampartJobFileStructure;
 
 /**
  * User: maplesod
@@ -73,7 +72,7 @@ public class ReportProcess extends AbstractConanProcess {
         try {
 
             log.info("Starting report generation");
-
+            /*
             RampartJobFileStructure jobFS = new RampartJobFileStructure(args.getJobDir());
 
             // Create the report directories
@@ -112,7 +111,7 @@ public class ReportProcess extends AbstractConanProcess {
             pdfLatex2012Args.setOutputDir(jobFS.getReportDir());
             PdfLatex2012Process pdfLatex2012Process = new PdfLatex2012Process(pdfLatex2012Args);
             this.conanProcessService.execute(pdfLatex2012Process, executionContext);
-
+              */
             log.info("Report built");
 
         } catch (Exception e) {

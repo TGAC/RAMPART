@@ -18,12 +18,13 @@
 package uk.ac.tgac.rampart.cli;
 
 import org.apache.commons.cli.*;
-import uk.ac.tgac.rampart.RampartConfig;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
-import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class RampartOptions {
 
@@ -33,6 +34,7 @@ public class RampartOptions {
     public static final String OPT_LOG_CONFIG = "log_config";
     public static final String OPT_STAGES = "stages";
     public static final String OPT_OUTPUT = "output";
+    public static final String OPT_JOB_PREFIX = "job_prefix";
     public static final String OPT_VERBOSE = "verbose";
     public static final String OPT_HELP = "help";
 
@@ -40,6 +42,7 @@ public class RampartOptions {
     private File environmentConfig = null;
     private File logConfig = null;
     private File output = null;
+    private String jobPrefix = "";
     private String stages = null;
     private File clean = null;
     private boolean verbose = false;
@@ -66,7 +69,7 @@ public class RampartOptions {
                 clean = cmdLine.hasOption(OPT_CLEAN) ?
                     cmdLine.getOptionValue(OPT_CLEAN) != null ?
                             new File(cmdLine.getOptionValue(OPT_CLEAN)) :
-                            FileHelper.currentWorkingDir() :
+                            RampartConfig.currentWorkingDir() :
                     null;
 
                 if (clean == null) {
@@ -88,7 +91,11 @@ public class RampartOptions {
 
                     output = cmdLine.hasOption(OPT_OUTPUT) ?
                             new File(cmdLine.getOptionValue(OPT_OUTPUT)) :
-                            FileHelper.currentWorkingDir();
+                            RampartConfig.currentWorkingDir();
+
+                    jobPrefix = cmdLine.hasOption(OPT_JOB_PREFIX) ?
+                            cmdLine.getOptionValue(OPT_JOB_PREFIX) :
+                            createDefaultJobPrefix();
 
                     stages = cmdLine.hasOption(OPT_STAGES) ? cmdLine.getOptionValue(OPT_STAGES) : "ALL";
 
@@ -136,6 +143,14 @@ public class RampartOptions {
 
     public void setOutput(File output) {
         this.output = output;
+    }
+
+    public String getJobPrefix() {
+        return jobPrefix;
+    }
+
+    public void setJobPrefix(String jobPrefix) {
+        this.jobPrefix = jobPrefix;
     }
 
     public File getClean() {
@@ -208,8 +223,15 @@ public class RampartOptions {
         RampartArgs args = new RampartArgs();
         args.setConfig(this.config);
         args.setOutputDir(this.output);
+        args.setJobPrefix(this.jobPrefix);
         args.setStages(RampartStage.parse(this.stages));
 
         return args;
+    }
+
+    protected final String createDefaultJobPrefix() {
+        Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String dateTime = formatter.format(new Date());
+        return "rampart-" + dateTime;
     }
 }

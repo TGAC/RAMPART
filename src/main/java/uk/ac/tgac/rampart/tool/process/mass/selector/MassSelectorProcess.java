@@ -31,7 +31,6 @@ import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsMatrix;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsMatrixRow;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -110,7 +109,8 @@ public class MassSelectorProcess extends AbstractConanProcess {
             log.debug("Output assembly path: " + outputAssembly.getAbsolutePath());
 
             // Create link to "best" assembly in stats dir
-            FileHelper.createSymbolicLink(this.conanProcessService, new File(best.getFilePath()), outputAssembly, executionContext.getLocality());
+            // TODO Use Rampart Executor for this
+            //FileHelper.createSymbolicLink(this.conanProcessService, new File(best.getFilePath()), outputAssembly, executionContext.getLocality());
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);

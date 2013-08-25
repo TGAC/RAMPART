@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart;
+package uk.ac.tgac.rampart.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.tgac.conan.TgacConanConfigure;
 import uk.ac.tgac.conan.core.util.JarUtils;
-import uk.ac.tgac.rampart.cli.RampartOptions;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,5 +104,9 @@ public class RampartConfig {
 
         // Intialise TGAC Conan
         TgacConanConfigure.initialise();
+    }
+
+    public static File currentWorkingDir() {
+        return new File(".").getAbsoluteFile().getParentFile();
     }
 }

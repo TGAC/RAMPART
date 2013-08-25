@@ -25,7 +25,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.tgac.rampart.config.RampartConfiguration;
+import uk.ac.tgac.rampart.tool.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
@@ -136,7 +136,7 @@ public class RampartPipeline implements ConanPipeline {
 
         // Create an object that maps expected RAMPART job directory structure based on specified output dir.
         // Probably processes an Xml configuration file to do this.
-        RampartConfiguration config = new RampartConfiguration(this.args.getConfig(), this.args.getOutputDir());
+        RampartConfiguration config = new RampartConfiguration(this.args.getConfig(), this.args.getOutputDir(), this.args.getJobPrefix());
 
         // Shortcut to stages
         List<RampartStage> stages = this.args.getStages();

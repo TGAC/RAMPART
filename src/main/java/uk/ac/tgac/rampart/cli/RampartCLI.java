@@ -38,11 +38,9 @@ import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.tgac.rampart.RampartConfig;
-import uk.ac.tgac.rampart.config.RampartJobFileStructure;
+import uk.ac.tgac.rampart.tool.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
-import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,15 +105,14 @@ public class RampartCLI {
     private static void cleanJob(File jobDir) throws IOException {
 
         // If no job directory is specified assume we want to clean the current directory
-        jobDir = jobDir == null ? FileHelper.currentWorkingDir() : jobDir;
+        jobDir = jobDir == null ? RampartConfig.currentWorkingDir() : jobDir;
 
-        RampartJobFileStructure jobFs = new RampartJobFileStructure(jobDir);
+        RampartConfiguration jobFs = new RampartConfiguration(jobDir);
 
         FileUtils.deleteDirectory(jobFs.getMeqcDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());
         FileUtils.deleteDirectory(jobFs.getAmpDir());
         FileUtils.deleteDirectory(jobFs.getReportDir());
-        FileUtils.deleteDirectory(jobFs.getLogDir());
     }
 
     private static void runRampart(RampartArgs rampartArgs, ExecutionContext executionContext)

@@ -19,8 +19,8 @@ package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.cli.RampartConfig;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.util.FileHelper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -39,11 +39,13 @@ public class RampartArgs implements ProcessArgs {
 
     private File config;
     private File outputDir;
+    private String jobPrefix;
     private List<RampartStage> stages;
 
     public RampartArgs() {
         this.config = null;
-        this.outputDir = FileHelper.currentWorkingDir();
+        this.outputDir = RampartConfig.currentWorkingDir();
+        this.jobPrefix = "";
         this.stages = new ArrayList<RampartStage>();
     }
 
@@ -61,6 +63,14 @@ public class RampartArgs implements ProcessArgs {
 
     public void setOutputDir(File outputDir) {
         this.outputDir = outputDir;
+    }
+
+    public String getJobPrefix() {
+        return jobPrefix;
+    }
+
+    public void setJobPrefix(String jobPrefix) {
+        this.jobPrefix = jobPrefix;
     }
 
     public List<RampartStage> getStages() {
