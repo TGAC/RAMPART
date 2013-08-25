@@ -47,6 +47,9 @@ public class RampartConfig {
     public static final File REPORT_DIR = new File(DATA_DIR, "report");
     public static final File SCRIPTS_DIR = new File(SETTINGS_DIR, "scripts");
 
+    public static final File DEFAULT_ENV_CONFIG = new File(SETTINGS_DIR, "conan.properties");
+    public static final File DEFAULT_LOG_CONFIG = new File(SETTINGS_DIR, "log4j.properties");
+
     public static void configureSystem(RampartOptions rampartOptions) throws IOException {
 
         if (!SETTINGS_DIR.exists()) {
@@ -56,7 +59,7 @@ public class RampartConfig {
         }
 
         // Setup logging first
-        File loggingProperties = new File(SETTINGS_DIR, "log4j.properties");
+        File loggingProperties = rampartOptions.getLogConfig();
 
         // If logging file exists use settings from that, otherwise use basic settings.
         if (loggingProperties.exists()) {
@@ -72,7 +75,7 @@ public class RampartConfig {
         //RampartAppContext.INSTANCE.load("/applicationContext.xml");
 
         // Load Conan properties
-        final File conanPropsFile = new File(SETTINGS_DIR, "conan.properties");
+        final File conanPropsFile = rampartOptions.getEnvironmentConfig();
         if (conanPropsFile.exists()) {
             ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
         }

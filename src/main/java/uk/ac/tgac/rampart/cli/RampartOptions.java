@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.cli;
 
 import org.apache.commons.cli.*;
+import uk.ac.tgac.rampart.RampartConfig;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.util.FileHelper;
@@ -28,12 +29,16 @@ public class RampartOptions {
 
     public static final String OPT_CLEAN = "clean";
     public static final String OPT_CONFIG = "config";
+    public static final String OPT_ENV_CONFIG = "env_config";
+    public static final String OPT_LOG_CONFIG = "log_config";
     public static final String OPT_STAGES = "stages";
     public static final String OPT_OUTPUT = "output";
     public static final String OPT_VERBOSE = "verbose";
     public static final String OPT_HELP = "help";
 
     private File config = null;
+    private File environmentConfig = null;
+    private File logConfig = null;
     private File output = null;
     private String stages = null;
     private File clean = null;
@@ -73,8 +78,20 @@ public class RampartOptions {
                         throw new ParseException(OPT_CONFIG + " argument not specified.");
                     }
 
-                    output = cmdLine.hasOption(OPT_OUTPUT) ? new File(cmdLine.getOptionValue(OPT_OUTPUT)) : FileHelper.currentWorkingDir();
+                    environmentConfig = cmdLine.hasOption(OPT_ENV_CONFIG) ?
+                            new File(cmdLine.getOptionValue(OPT_ENV_CONFIG)) :
+                            RampartConfig.DEFAULT_ENV_CONFIG;
+
+                    logConfig = cmdLine.hasOption(OPT_LOG_CONFIG) ?
+                            new File(cmdLine.getOptionValue(OPT_LOG_CONFIG)) :
+                            RampartConfig.DEFAULT_LOG_CONFIG;
+
+                    output = cmdLine.hasOption(OPT_OUTPUT) ?
+                            new File(cmdLine.getOptionValue(OPT_OUTPUT)) :
+                            FileHelper.currentWorkingDir();
+
                     stages = cmdLine.hasOption(OPT_STAGES) ? cmdLine.getOptionValue(OPT_STAGES) : "ALL";
+
                     verbose = cmdLine.hasOption(OPT_VERBOSE);
                 }
             }
@@ -87,6 +104,22 @@ public class RampartOptions {
 
     public void setConfig(File config) {
         this.config = config;
+    }
+
+    public File getEnvironmentConfig() {
+        return environmentConfig;
+    }
+
+    public void setEnvironmentConfig(File environmentConfig) {
+        this.environmentConfig = environmentConfig;
+    }
+
+    public File getLogConfig() {
+        return logConfig;
+    }
+
+    public void setLogConfig(File logConfig) {
+        this.logConfig = logConfig;
     }
 
     public String getStages() {
