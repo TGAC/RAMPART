@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.config;
+package uk.ac.tgac.rampart.tool;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
