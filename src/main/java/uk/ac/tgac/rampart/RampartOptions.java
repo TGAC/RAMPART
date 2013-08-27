@@ -243,7 +243,12 @@ public class RampartOptions {
                 .withDescription("The directory to put output from this job.").create("o"));
 
         options.addOption(OptionBuilder.withArgName("string").withLongOpt(OPT_JOB_PREFIX).hasArg()
-                .withDescription("The job prefix descriptor to use when scheduling.  Default: rampart-<timestamp>").create("p"));
+                .withDescription("The job prefix descriptor to use when scheduling.  " +
+                        "WARNING: Be careful what you set this to.  It's possible that if you run multiple jobs in succession " +
+                        "with the same job prefix, the scheduler may confuse old recently completed jobs with the same name " +
+                        "with this one.  This can cause some job's wait conditions to never be fulfilled.  Ideally, include " +
+                        "some kind of unique identifier with this option such as a timestamp.  To help with this RAMPART will automatically " +
+                        "replace any instances of \"TIMESTAMP\" in this argument with an actual timestamp.  Default: rampart-<timestamp>").create("p"));
 
         options.addOption(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
                 .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));
@@ -258,18 +263,24 @@ public class RampartOptions {
 
     public RampartArgs convert() {
 
+        String actualJobPrefix = this.jobPrefix.replaceAll("TIMESTAMP", createTimestamp());
+
         RampartArgs args = new RampartArgs();
         args.setConfig(this.config);
         args.setOutputDir(this.output);
-        args.setJobPrefix(this.jobPrefix);
+        args.setJobPrefix(actualJobPrefix);
         args.setStages(RampartStage.parse(this.stages));
 
         return args;
     }
 
-    protected final String createDefaultJobPrefix() {
+    protected final String createTimestamp() {
         Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        String dateTime = formatter.format(new Date());
-        return "rampart-" + dateTime;
+        return formatter.format(new Date());
+    }
+
+    protected final String createDefaultJobPrefix() {
+
+        return "rampart-" + createTimestamp();
     }
 }

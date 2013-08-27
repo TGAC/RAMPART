@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
+import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
@@ -68,8 +69,20 @@ public class MassArgs implements ProcessArgs {
 
 
     public enum OutputLevel {
+        UNITIGS,
         CONTIGS,
-        SCAFFOLDS
+        SCAFFOLDS;
+
+        public static String getListAsString() {
+
+            List<String> levels = new ArrayList<String>();
+
+            for(OutputLevel level : OutputLevel.values()) {
+                levels.add(level.toString());
+            }
+
+            return StringUtils.join(levels, ",");
+        }
     }
 
     public MassArgs() {
@@ -107,7 +120,7 @@ public class MassArgs implements ProcessArgs {
         for(int i = 0; i < nodes.getLength(); i++) {
             this.singleMassArgsList.add(
                     new SingleMassArgs(
-                            (Element)nodes.item(i), outputDir, jobPrefix,
+                            (Element)nodes.item(i), outputDir, jobPrefix + "-group",
                             this.allLibraries, this.allMecqs, this.organism));
         }
     }

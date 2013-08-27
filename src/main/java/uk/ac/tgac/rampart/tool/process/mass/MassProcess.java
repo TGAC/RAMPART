@@ -27,7 +27,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.single.StatsLevel;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,25 +86,7 @@ public class MassProcess extends AbstractConanProcess {
             // Initialise executor
             this.massExecutor.initialise(this.conanProcessService, executionContext);
 
-
-            List<File> contigStatsFiles = new ArrayList<File>();
-            List<File> scaffoldStatsFiles = new ArrayList<File>();
-
             for (SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
-
-                Assembler assembler = AssemblerFactory.createAssembler(singleMassArgs.getTool());
-
-                if (assembler.makesUnitigs()) {
-                    contigStatsFiles.add(new File(singleMassArgs.getUnitigsDir(), "stats.txt"));
-                }
-
-                if (assembler.makesContigs()) {
-                    contigStatsFiles.add(new File(singleMassArgs.getContigsDir(), "stats.txt"));
-                }
-
-                if (assembler.makesScaffolds()) {
-                    scaffoldStatsFiles.add(new File(singleMassArgs.getScaffoldsDir(), "stats.txt"));
-                }
 
                 // Ensure output directory for this MASS run exists
                 if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
@@ -114,43 +99,36 @@ public class MassProcess extends AbstractConanProcess {
                 // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
                 if (!args.isRunParallel()) {
                     log.debug("Waiting for completion of: " + singleMassArgs.getName());
-                    this.massExecutor.executeScheduledWait(singleMassArgs.getJobPrefix(), singleMassArgs.getOutputDir());
+                    this.massExecutor.executeScheduledWait(
+                            singleMassArgs.getJobPrefix() + "*",
+                            args.getJobPrefix() + "-wait",
+                            singleMassArgs.getOutputDir());
                 }
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
             if (args.isRunParallel()) {
                 log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
-                this.massExecutor.executeScheduledWait(args.getJobPrefix(), args.getOutputDir());
+                this.massExecutor.executeScheduledWait(
+                        args.getJobPrefix() + "-group*",
+                        args.getJobPrefix() + "-wait",
+                        args.getOutputDir());
             }
 
 
-            // Compile Single MASS results
-
-            // Run MASS selector
-
-            // Decide on best assembly
-
-
-            /*log.info("Assemblies complete");
-
-            // Execute the Mass Selector job
+            log.info("Assemblies complete");
             log.info("Analysing and comparing assemblies");
 
+            // Compile results
             File statsDir = new File(args.getOutputDir(), "stats");
 
-            if (assembler.makesUnitigs()) {
-                executeMassSelector(args, new File(statsDir, "unitigs"), unitigStatsFiles, executionContext);
-            }
+            AssemblyStatsTable results = this.compileMassResults(args);
 
-            if (assembler.makesContigs()) {
-                executeMassSelector(args, new File(statsDir, "contigs"), contigStatsFiles, executionContext);
-            }
+            // Run MASS selector
+            this.executeMassSelector(args, statsDir, results);
 
-            if (assembler.makesScaffolds()) {
-                executeMassSelector(args, new File(statsDir, "scaffolds"), scaffoldStatsFiles, executionContext);
-            }                                   */
 
+            log.info("Analysed all assemblies");
             log.info("Multi MASS run complete");
 
         } catch (IOException ioe) {
@@ -160,7 +138,25 @@ public class MassProcess extends AbstractConanProcess {
         return true;
     }
 
-    protected void executeMassSelector(MassArgs args, File outputDir, List<File> statsFiles, ExecutionContext executionContext)
+    protected AssemblyStatsTable compileMassResults(MassArgs args) throws IOException {
+
+        AssemblyStatsTable merged = new AssemblyStatsTable();
+
+        for (SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
+
+            AssemblyStatsTable singleMassResults = this.massExecutor.compileSingleMassResults(singleMassArgs);
+
+            if (singleMassResults != null) {
+                for(AssemblyStats stats : singleMassResults) {
+                    merged.add(stats);
+                }
+            }
+        }
+
+        return merged;
+    }
+
+    protected void executeMassSelector(MassArgs args, File outputDir, AssemblyStatsTable results)
             throws IOException, ProcessExecutionException, InterruptedException {
 
         if (!outputDir.exists()) {
@@ -170,9 +166,9 @@ public class MassProcess extends AbstractConanProcess {
         }
 
         MassSelectorArgs massSelectorArgs = new MassSelectorArgs();
-        massSelectorArgs.setStatsFiles(statsFiles);
+        //massSelectorArgs.setStatsFiles(statsFiles);
         massSelectorArgs.setOutputDir(outputDir);
-        massSelectorArgs.setApproxGenomeSize(0L);
+        massSelectorArgs.setOrganism(args.getOrganism());
         massSelectorArgs.setWeightings(args.getWeightings());
 
         this.massExecutor.executeMassSelector(massSelectorArgs);

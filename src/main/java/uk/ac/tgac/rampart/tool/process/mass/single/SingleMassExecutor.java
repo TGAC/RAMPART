@@ -38,6 +38,6 @@ public interface SingleMassExecutor extends RampartExecutor {
     void createAssemblyLinks(Assembler assembler, SingleMassArgs smArgs, String jobName)
             throws ProcessExecutionException, InterruptedException;
 
-    void dispatchStatsJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
+    void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 }

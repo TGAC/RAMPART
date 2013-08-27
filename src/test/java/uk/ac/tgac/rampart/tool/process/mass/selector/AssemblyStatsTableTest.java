@@ -55,6 +55,6 @@ public class AssemblyStatsTableTest {
 
         AssemblyStats bestStats = table.getBest();
 
-        assertTrue(bestStats.getScore() == 94.5);
+        assertTrue(bestStats.getScore() == 86.0);
     }
 }

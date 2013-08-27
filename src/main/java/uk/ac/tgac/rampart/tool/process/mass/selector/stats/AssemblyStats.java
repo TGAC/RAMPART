@@ -50,6 +50,8 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     private long n50;
     private long n20;
     private long l50;
+    private double gcPercentage;
+    private double completenessPercentage;
     private double score;
 
     public AssemblyStats()
@@ -68,6 +70,8 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.n50 = 0L;
         this.n20 = 0L;
         this.l50 = 0L;
+        this.gcPercentage = 0.0;
+        this.completenessPercentage = 0.0;
         this.score = 0.0;
     }
 
@@ -86,7 +90,9 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.n50 = Long.parseLong(stats[15]);
         this.n20 = Long.parseLong(stats[16]);
         this.l50 = Long.parseLong(stats[17]);
-        this.score = Double.parseDouble(stats[18]);
+        this.gcPercentage = Double.parseDouble(stats[18]);
+        this.completenessPercentage = Double.parseDouble(stats[19]);
+        this.score = Double.parseDouble(stats[19]);
     }
 
 
@@ -202,6 +208,22 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.l50 = l50;
     }
 
+    public double getGcPercentage() {
+        return gcPercentage;
+    }
+
+    public void setGcPercentage(double gcPercentage) {
+        this.gcPercentage = gcPercentage;
+    }
+
+    public double getCompletenessPercentage() {
+        return completenessPercentage;
+    }
+
+    public void setCompletenessPercentage(double completenessPercentage) {
+        this.completenessPercentage = completenessPercentage;
+    }
+
     public double getScore() {
         return score;
     }
@@ -211,7 +233,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     }
 
     public static String getStatsFileHeader() {
-        return "index|desc|dataset|file|nb_seqs|nb_bases|" + NucleotideCompositionPercents.getStatsFileHeaderPercents() +"|min_len|avg_len|max_len|n80|n50|n20|l50|score";
+        return "index|desc|dataset|file|nb_seqs|nb_bases|" + NucleotideCompositionPercents.getStatsFileHeaderPercents() +"|min_len|avg_len|max_len|n80|n50|n20|l50|gc|completeness|score";
     }
 
     public void setFromFileName(String filename) {
@@ -244,6 +266,8 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         sj.add(this.getN50());
         sj.add(this.getN20());
         sj.add(this.getL50());
+        sj.add(this.getGcPercentage());
+        sj.add(this.getCompletenessPercentage());
         sj.add(this.getScore());
 
         return sj.toString();
@@ -265,121 +289,4 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
             return o1.getIndex() < o2.getIndex() ? -1 : o1.getIndex() == o2.getIndex() ? 0 : 1;
         }
     }
-
-
-    public static AssemblyStats analyse(File in) throws IOException {
-
-        if (in == null || !in.exists()) {
-            throw new IOException("Input file does not exist: " + in.getAbsolutePath());
-        }
-
-
-        BufferedReader reader = new BufferedReader(new FileReader(in));
-
-
-        long totalNbBases = 0;
-        NucleotideComposition nc = new NucleotideComposition();
-        List<Long> lengths = new ArrayList<Long>();
-
-        // Ignore everything but the sequences
-        // While loop handles multi-line sequences
-        String line = null;
-        boolean firstLine = true;
-        long nbSeqBases = 0;
-        while ((line = reader.readLine()) != null) {
-
-            if (!line.isEmpty()) {
-                char firstChar = line.charAt(0);
-
-
-                // If we have found a header line then increment analyser for this seq (unless this is the first time here)
-                if (firstChar == '>') {
-
-                    if (firstLine) {
-                        firstLine = false;
-                        continue;
-                    }
-
-                    totalNbBases += nbSeqBases;
-                    lengths.add(nbSeqBases);
-                    nbSeqBases = 0;
-                }
-                else {
-                    nc.add(line);
-                    nbSeqBases += line.length();
-                }
-            }
-        }
-
-        reader.close();
-
-
-        Collections.sort(lengths, new Comparator<Long>() {
-            @Override
-            public int compare(Long o1, Long o2) {
-                return o2.compareTo(o1);
-            }
-        });
-
-        long n20 = 0;
-        long n50 = 0;
-        long n80 = 0;
-        long l20 = 0;
-        long l50 = 0;
-        long l80 = 0;
-
-        boolean foundN20 = false;
-        boolean foundN50 = false;
-        boolean foundN80 = false;
-
-        long cumulativeLength = 0;
-        long seqNb = 0;
-
-        for(Long seqLength : lengths) {
-            cumulativeLength += seqLength;
-            seqNb++;
-
-            if (!foundN20 && cumulativeLength >= totalNbBases * 0.2) {
-                n20 = seqLength;
-                l20 = seqNb;
-                foundN20 = true;
-            }
-
-            if (!foundN50 && cumulativeLength >= totalNbBases * 0.5) {
-                n50 = seqLength;
-                l50 = seqNb;
-                foundN50 = true;
-            }
-
-            if (!foundN80 && cumulativeLength >= totalNbBases * 0.8) {
-                n80 = seqLength;
-                l80 = seqNb;
-                foundN80 = true;
-            }
-        }
-
-        AssemblyStats stats = new AssemblyStats();
-        stats.setFilePath(in.getAbsolutePath());
-        stats.setNbSeqs((long) lengths.size());
-        stats.setNbBases(totalNbBases);
-        if (!lengths.isEmpty()) {
-            stats.setMinLen(lengths.get(lengths.size() - 1));
-            stats.setAvgLen((double) totalNbBases / (double) lengths.size());
-            stats.setMaxLen(lengths.get(0));
-        }
-        else {
-            stats.setMinLen(0);
-            stats.setAvgLen(0.0);
-            stats.setMaxLen(0);
-        }
-        stats.setN20(n20);
-        stats.setN50(n50);
-        stats.setN80(n80);
-        stats.setL50(l50);
-        stats.setNcPercents(nc.convert());
-        stats.setFromFileName(in.getName());
-
-        return stats;
-    }
-
 }

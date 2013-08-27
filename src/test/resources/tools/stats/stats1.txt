@@ -1,4 +1,4 @@
-index|desc|dataset|file|nb_seqs|nb_bases|a.pc|c.pc|g.pc|t.pc|n.pc|min_len|max_len|avg_len|n80|n50|n20|l50|score
-81|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/81/Abyss-mpi-k81-scaffolds.fa|369177|444872696|34.39|15.41|15.39|34.39|0.41|81|692110|1205|10000|25884|40000|100000|94.5
-85|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/85/Abyss-mpi-k85-scaffolds.fa|338632|429668001|34.33|15.34|15.32|34.31|0.71|85|643913|1268|9000|23327|35000|99000|87.2
-91|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/91/Abyss-mpi-k91-scaffolds.fa|316465|367915081|33.82|14.97|14.96|33.80|2.45|91|344797|1162|2000|6208|10000|97000|65.1
+index|desc|dataset|file|nb_seqs|nb_bases|a.pc|c.pc|g.pc|t.pc|n.pc|min_len|max_len|avg_len|n80|n50|n20|l50|gc|completeness|score
+81|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/81/Abyss-mpi-k81-scaffolds.fa|369177|444872696|34.39|15.41|15.39|34.39|0.41|81|692110|1205|10000|25884|40000|100000|43.0|85.0|94.5
+85|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/85/Abyss-mpi-k85-scaffolds.fa|338632|429668001|34.33|15.34|15.32|34.31|0.71|85|643913|1268|9000|23327|35000|99000|44.1|86.0|87.2
+91|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/91/Abyss-mpi-k91-scaffolds.fa|316465|367915081|33.82|14.97|14.96|33.80|2.45|91|344797|1162|2000|6208|10000|97000|45.0|85.5|65.1

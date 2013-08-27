@@ -79,7 +79,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
 
             // Normalise merged table
             AssemblyStatsMatrix matrix = merged.generateStatsMatrix();
-            matrix.normalise(args.getApproxGenomeSize());
+            matrix.normalise(args.getEstimatedGenomeSize());
 
             // Apply weightings and calculate final scores
             matrix.weight(loadWeightings(args.getWeightings()));

@@ -18,6 +18,8 @@
 package uk.ac.tgac.rampart.tool.process.mass.selector.stats;
 
 import org.apache.commons.io.FileUtils;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Report;
+import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Report;
 
 import java.io.File;
 import java.io.IOException;
@@ -122,5 +124,70 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         }
 
         return best;
+    }
+
+    public AssemblyStats findStatsByDescription(String description) {
+
+        for(AssemblyStats stats : this) {
+            if (stats.getDesc().equalsIgnoreCase(description)) {
+                return stats;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Overrides any existing entries with results from Quast.  If quast results contain unknown entries then they are
+     * created
+     * @param quastReportFile
+     * @param assemblyDir
+     * @throws IOException
+     */
+    public void mergeWithQuastResults(File quastReportFile, File assemblyDir, String massGroup) throws IOException {
+
+        QuastV2_2Report quastReport = new QuastV2_2Report(quastReportFile);
+
+        for(QuastV2_2Report.QuastV2_2AssemblyStats qStats : quastReport.getStatList()) {
+
+            if (!qStats.getName().endsWith("broken")) {
+
+                AssemblyStats stats = this.findStatsByDescription(qStats.getName());
+
+                // If not found then create a new entry
+                if (stats == null) {
+                    stats = new AssemblyStats();
+                    stats.setDesc(qStats.getName());
+                    stats.setFilePath(new File(assemblyDir, qStats.getName() + ".fa").getAbsolutePath());
+                    stats.setDataset(massGroup);
+                    this.add(stats);
+                }
+
+                // Override attributes
+                stats.setN50(qStats.getN50());
+                stats.setL50(qStats.getL50());
+                stats.setMaxLen(qStats.getLargestContig());
+                stats.setGcPercentage(qStats.getGcPc());
+                stats.setNbSeqs(qStats.getNbContigsGt0());
+                stats.setNbBases(qStats.getTotalLengthGt0());
+            }
+        }
+    }
+
+    public void mergeWithCegmaResults(File cegmaFile, File assemblyFile, String description, String massGroup) throws IOException {
+
+        CegmaV2_4Report cegmaReport = new CegmaV2_4Report(cegmaFile);
+
+        AssemblyStats stats = this.findStatsByDescription(description);
+
+        if (stats == null) {
+            stats = new AssemblyStats();
+            stats.setDesc(description);
+            stats.setFilePath(assemblyFile.getAbsolutePath());
+            stats.setDataset(massGroup);
+            this.add(stats);
+        }
+
+        stats.setCompletenessPercentage(cegmaReport.getPcComplete());
     }
 }

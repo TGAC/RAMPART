@@ -84,7 +84,7 @@ public class MecqArgs implements ProcessArgs {
         // All libraries
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
         for(int i = 0; i < nodes.getLength(); i++) {
-            this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, outputDir, jobPrefix, this.runParallel));
+            this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, outputDir, jobPrefix + "-ecq", this.runParallel));
         }
     }
 

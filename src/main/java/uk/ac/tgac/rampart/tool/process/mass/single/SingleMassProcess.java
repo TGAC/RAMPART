@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -31,12 +32,17 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
+import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Report;
 import uk.ac.tgac.rampart.tool.process.mass.MassInput;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -125,10 +131,10 @@ public class SingleMassProcess extends AbstractConanProcess {
                         if (outputDir.exists()) {
                             FileUtils.deleteDirectory(outputDir);
                         }
-                        outputDir.mkdir();
+                        outputDir.mkdirs();
 
                         // Execute the assembler
-                        this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-" + dirName, args.isRunParallel());
+                        this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
 
                         // Create links for outputs from this assembler to known locations
                         this.singleMassExecutor.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
@@ -137,14 +143,25 @@ public class SingleMassProcess extends AbstractConanProcess {
 
                 // If using a scheduler create a wait condition that will be observed by the stats job if running in parallel
                 assemblerWait = executionContext.usingScheduler() && args.isRunParallel() ?
-                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "*") :
+                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-assembly*") :
                         null;
             }
 
             // Run analyser job using the original execution context
-            log.debug("Analysing and comparing assemblies for MASS group: " + args.getName());
-            this.singleMassExecutor.dispatchStatsJobs(genericAssembler, args, assemblerWait, args.getJobPrefix() + "-analyser");
+            log.info("Analysing and comparing assemblies for MASS group: " + args.getName());
+            this.singleMassExecutor.dispatchAnalyserJobs(genericAssembler, args, assemblerWait, args.getJobPrefix() + "-analyser");
 
+            // Compile results
+            /*log.info("Compiling results for MASS group: " + args.getName());
+
+            // If using a scheduler create a wait condition that will be observed by the results compilation job
+            WaitCondition analyserWait = executionContext.usingScheduler() && args.isRunParallel() ?
+                    executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-analyser*") :
+                    null;
+
+            this.singleMassExecutor.compileResults(genericAssembler, args, analyserWait, args.getJobPrefix() + "-results");*/
+
+            // Finish
             log.info("Finished MASS group: " + args.getName());
 
         } catch (IOException ioe) {
@@ -287,6 +304,82 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
     }
 
+
+    protected File getHighestStatsLevelDir(SingleMassArgs args) {
+
+        if (args.getScaffoldsDir().exists()) {
+            return args.getScaffoldsDir();
+        }
+        else if (args.getContigsDir().exists()) {
+            return args.getContigsDir();
+        }
+        else if (args.getUnitigsDir().exists()) {
+            return args.getUnitigsDir();
+        }
+
+        return null;
+    }
+
+    public AssemblyStatsTable compileResults(SingleMassArgs args) throws IOException {
+
+        AssemblyStatsTable results = new AssemblyStatsTable();
+
+        File statsDir = this.getHighestStatsLevelDir(args);
+
+        if (statsDir == null) {
+            return results;
+        }
+
+        if (args.getStatsLevels().contains(StatsLevel.CONTIGUITY)) {
+
+            results.mergeWithQuastResults(new File(statsDir, "quast/report.txt"), statsDir, args.getName());
+        }
+
+        if (args.getStatsLevels().contains(StatsLevel.COMPLETENESS)) {
+
+            List<File> cegmaFiles = this.getCegmaFiles(new File(statsDir, "cegma"));
+
+            for(File cegmaFile : cegmaFiles) {
+
+                String assemblyName = FilenameUtils.getBaseName(cegmaFile.getName());
+
+                results.mergeWithCegmaResults(cegmaFile,
+                        new File(statsDir, assemblyName + ".fa"),
+                        assemblyName,
+                        args.getName());
+            }
+        }
+
+        // Save results to output directory so we have a record
+        results.save(new File(args.getOutputDir(), "stats.txt"));
+
+        // Return results
+        return results;
+    }
+
+
+    /**
+     * Gets all the FastA files in the directory specified by the user.
+     * @param cegmaDir
+     * @return
+     */
+    protected List<File> getCegmaFiles(File cegmaDir) {
+
+        if (cegmaDir == null || !cegmaDir.exists())
+            return null;
+
+        List<File> fileList = new ArrayList<File>();
+
+        Collection<File> fileCollection = FileUtils.listFiles(cegmaDir, new String[]{"cegma"}, true);
+
+        for(File file : fileCollection) {
+            fileList.add(file);
+        }
+
+        Collections.sort(fileList);
+
+        return fileList;
+    }
 
 
     @Override

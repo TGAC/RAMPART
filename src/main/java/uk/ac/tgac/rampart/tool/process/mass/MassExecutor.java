@@ -20,7 +20,10 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+
+import java.io.IOException;
 
 /**
  * User: maplesod
@@ -34,4 +37,6 @@ public interface MassExecutor extends RampartExecutor {
 
     void executeMassSelector(MassSelectorArgs massSelectorArgs)
             throws InterruptedException, ProcessExecutionException;
+
+    AssemblyStatsTable compileSingleMassResults(SingleMassArgs singleMassArgs) throws IOException;
 }

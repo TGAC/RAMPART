@@ -34,6 +34,6 @@ public interface RampartExecutor {
 
     String makeLinkCommand(File inputFile, File outputFile);
 
-    void executeScheduledWait(String jobPrefix, File outputDir)
+    void executeScheduledWait(String waitCondition, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException;
 }

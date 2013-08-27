@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.conan.core.data.Organism;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -39,14 +40,14 @@ public class MassSelectorArgs implements ProcessArgs {
     private List<File> statsFiles;
     private List<File> configs;
     private File outputDir;
-    private long approxGenomeSize;
+    private Organism organism;
     private File weightings;
 
     public MassSelectorArgs() {
         this.statsFiles = new ArrayList<File>();
         this.configs = new ArrayList<File>();
         this.outputDir = new File("");
-        this.approxGenomeSize = 0;
+        this.organism = null;
         this.weightings = null;
     }
 
@@ -74,12 +75,20 @@ public class MassSelectorArgs implements ProcessArgs {
         this.outputDir = outputDir;
     }
 
-    public long getApproxGenomeSize() {
-        return approxGenomeSize;
+    public Organism getOrganism() {
+        return organism;
     }
 
-    public void setApproxGenomeSize(long approxGenomeSize) {
-        this.approxGenomeSize = approxGenomeSize;
+    public void setOrganism(Organism organism) {
+        this.organism = organism;
+    }
+
+    public long getEstimatedGenomeSize() {
+        return this.organism != null ? this.organism.getEstGenomeSize() : 0;
+    }
+
+    public double getEstimatedGcPercentage() {
+        return this.organism != null ? this.organism.getEstGcPercentage() : 0.0;
     }
 
     public File getWeightings() {
@@ -113,9 +122,9 @@ public class MassSelectorArgs implements ProcessArgs {
             pvp.put(params.getOutputDir(), this.getOutputDir().getAbsolutePath());
         }
 
-        if (this.approxGenomeSize > 0) {
-            pvp.put(params.getApproxGenomeSize(), Long.toString(this.approxGenomeSize));
-        }
+        /*if (this.organism != null) {
+            pvp.put(params.getOrganism(), Long.toString(this.approxGenomeSize));
+        }            */
 
         return pvp;
     }
@@ -137,9 +146,9 @@ public class MassSelectorArgs implements ProcessArgs {
                 this.configs = createFileList(entry.getValue());
             } else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
-            } else if (param.equals(this.params.getApproxGenomeSize().getName())) {
+            } /*else if (param.equals(this.params.getApproxGenomeSize().getName())) {
                 this.approxGenomeSize = Long.parseLong(entry.getValue());
-            } else if (param.equals(this.params.getWeightings().getName())) {
+            } */else if (param.equals(this.params.getWeightings().getName())) {
                 //TODO This still needs parsing!
                 this.weightings = null;
             }

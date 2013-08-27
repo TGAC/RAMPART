@@ -32,6 +32,7 @@ import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
+import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -105,7 +106,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     }
 
     @Override
-    public void dispatchStatsJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
+    public void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         // Make a copy of the execution context so we can make modifications
@@ -120,7 +121,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
             schedulerArgs.setWaitCondition(waitCondition);
 
             // Always going to want to run these jobs in parallel if we have access to a scheduler!
-            executionContextCopy.setForegroundJob(false);
+            executionContextCopy.setForegroundJob(!args.isRunParallel());
         }
 
         // Kick off the quast jobs if requested
@@ -134,31 +135,27 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         }
     }
 
+
     protected void executeCegmaJobs(Assembler assembler, SingleMassArgs args, String jobName, ExecutionContext executionContext)
             throws IOException, ProcessExecutionException, InterruptedException {
 
         File inputDir = null;
 
-        // We only do one level of Cegma jobs, technically there shouldn't be much / any different between different levels
-        if (assembler.makesUnitigs()) {
-            inputDir = args.getUnitigsDir();
-        }
+        // We only do one level of Cegma jobs (the highest), technically there shouldn't be much / any different between different levels
         if (assembler.makesScaffolds()) {
             inputDir = args.getScaffoldsDir();
         }
         else if (assembler.makesContigs()) {
             inputDir = args.getContigsDir();
         }
+        else if (assembler.makesUnitigs()) {
+            inputDir = args.getUnitigsDir();
+        }
         else {
-            throw new IOException("Couldn't run CEGMA because assembler does not support any recognised output types (contigs, scaffods).");
+            throw new IOException("Couldn't run CEGMA because assembler does not support any recognised output types: " + MassArgs.OutputLevel.getListAsString());
         }
 
-        File[] files = inputDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith("fa") || name.endsWith("fasta");
-            }
-        });
+        List<File> files = filesFromDir(inputDir);
 
         File rootOutputDir = new File(inputDir, "cegma");
         if (rootOutputDir.exists()) {

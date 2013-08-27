@@ -22,8 +22,11 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorProcess;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
+
+import java.io.IOException;
 
 /**
  * User: maplesod
@@ -40,6 +43,14 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
         SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
         singleMassProcess.setConanProcessService(this.conanProcessService);
         singleMassProcess.execute(this.executionContext);
+    }
+
+    @Override
+    public AssemblyStatsTable compileSingleMassResults(SingleMassArgs singleMassArgs)
+            throws IOException {
+
+        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
+        return singleMassProcess.compileResults(singleMassArgs);
     }
 
     @Override

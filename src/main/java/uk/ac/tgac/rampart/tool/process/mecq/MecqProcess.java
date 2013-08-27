@@ -98,17 +98,23 @@ public class MecqProcess extends AbstractConanProcess {
                 this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel());
 
                 // Check to see if we should run each ECQ in parallel, if not wait here until each ECQ has completed
-                if (executionContext.usingScheduler() && !ecqArgs.isRunParallel()) {
+                /*if (executionContext.usingScheduler() && !ecqArgs.isRunParallel()) {
                     log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for library: " + lib.getName());
-                    this.mecqExecutor.executeScheduledWait(ecqArgs.getJobPrefix(), ecqLibDir);
-                }
+                    this.mecqExecutor.executeScheduledWait(
+                            ecqArgs.getJobPrefix() + "*",
+                            args.getJobPrefix() + "-wait",
+                            ecqLibDir);
+                } */
             }
 
             // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
             // each library processed by this ECQ, then wait here.
             if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
                 log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
-                this.mecqExecutor.executeScheduledWait(ecqArgs.getJobPrefix(), ecDir);
+                this.mecqExecutor.executeScheduledWait(
+                        ecqArgs.getJobPrefix() + "*",
+                        args.getJobPrefix() + "-wait",
+                        ecDir);
             }
         }
 
@@ -116,7 +122,10 @@ public class MecqProcess extends AbstractConanProcess {
         // in parallel, then we should wait for all those to complete before continueing.
         if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
             log.debug("Running all MECQ groups in parallel, waiting for completion");
-            this.mecqExecutor.executeScheduledWait(args.getJobPrefix(), args.getOutputDir());
+            this.mecqExecutor.executeScheduledWait(
+                    args.getJobPrefix() + "-ecq*",
+                    args.getJobPrefix() + "-wait",
+                    args.getOutputDir());
         }
 
         log.info("MECQ complete");

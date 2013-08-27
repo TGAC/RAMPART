@@ -79,7 +79,7 @@ public class SingleMassProcessTest {
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(0);
         doNothing().when(singleMassExecutor).executeAssembler((Assembler) any(), anyString(), anyBoolean());
-        doNothing().when(singleMassExecutor).dispatchStatsJobs((Assembler) any(), (SingleMassArgs) any(), (WaitCondition) any(), anyString());
+        doNothing().when(singleMassExecutor).dispatchAnalyserJobs((Assembler) any(), (SingleMassArgs) any(), (WaitCondition) any(), anyString());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 
