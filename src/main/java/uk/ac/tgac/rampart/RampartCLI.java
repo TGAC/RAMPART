@@ -246,7 +246,7 @@ public class RampartCLI {
 
             // If help was requested output that and finish before starting Spring
             if (rampartOptions.doHelp()) {
-                rampartOptions.printUsage();
+                rampartOptions.printHelp(System.out);
             }
             // Otherwise if clean option was selected then clean the specified job dir
             else if (rampartOptions.getClean() != null) {
@@ -279,6 +279,9 @@ public class RampartCLI {
         catch (ParseException exp) {
             System.err.println(exp.getMessage());
             System.err.println(StringUtils.join(exp.getStackTrace(), "\n"));
+
+            RampartOptions.printUsage(System.err);
+
             System.exit(3);
         }
         catch (InterruptedException ie) {

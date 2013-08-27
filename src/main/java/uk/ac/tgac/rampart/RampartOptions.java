@@ -18,16 +18,21 @@
 package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
+import uk.ac.tgac.conan.core.util.JarUtils;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 
 import java.io.File;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.jar.JarFile;
 
 public class RampartOptions {
 
+    // **** Option parameter names ****
     public static final String OPT_CLEAN = "clean";
     public static final String OPT_CONFIG = "config";
     public static final String OPT_ENV_CONFIG = "env_config";
@@ -38,6 +43,8 @@ public class RampartOptions {
     public static final String OPT_VERBOSE = "verbose";
     public static final String OPT_HELP = "help";
 
+
+    // **** Options ****
     private File config = null;
     private File environmentConfig = null;
     private File logConfig = null;
@@ -48,6 +55,9 @@ public class RampartOptions {
     private boolean verbose = false;
     private boolean help = false;
 
+
+    // **** Jar details ****
+    public static final String DEFAULT_JAR_NAME = "rampart-<version>.jar";
 
     /**
      * Process command line args.  Checks for help first, then clean, then args for normal operation.
@@ -177,9 +187,37 @@ public class RampartOptions {
         this.help = help;
     }
 
-    public void printUsage() {
+    public static String getJarName() {
+        JarFile jarFile = JarUtils.jarForClass(RampartOptions.class, null);
+        return jarFile != null ? jarFile.getName() : DEFAULT_JAR_NAME;
+    }
+
+    public static void printUsage(final OutputStream out) {
+
+        final String commandLineSyntax = "java -jar " + getJarName();
+        final PrintWriter writer = new PrintWriter(out);
+
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp(this.getClass().getName(), createOptions());
+        formatter.printUsage(writer, 80, commandLineSyntax, createOptions());
+        writer.flush();
+    }
+
+    public static void printHelp(final OutputStream out) {
+
+        final String commandLineSyntax = "java -jar " + getJarName();
+        final PrintWriter writer = new PrintWriter(out);
+        final HelpFormatter helpFormatter = new HelpFormatter();
+        helpFormatter.printHelp(
+                writer,
+                120,
+                commandLineSyntax,
+                "",
+                createOptions(),
+                3,
+                3,
+                "",
+                true);
+        writer.flush();
     }
 
     @SuppressWarnings("static-access")
@@ -193,7 +231,7 @@ public class RampartOptions {
         options.addOption(new Option("?", OPT_HELP, false, "Print this message."));
 
         options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_CONFIG).hasArg()
-                .withDescription("The rampart job configuration file.").create("c"));
+                .withDescription("The rampart job configuration file.  Required, unless cleaning or viewing help.").create("c"));
 
         options.addOption(OptionBuilder.withArgName("file").withLongOpt(OPT_ENV_CONFIG).hasArg()
                 .withDescription("The rampart environment configuration file.  Default: " + RampartCLI.DEFAULT_ENV_CONFIG).create("e"));
