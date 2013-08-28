@@ -72,7 +72,11 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
 
             double norm = delta / max;
 
-            assemblyStatsMatrixRow.setAt(index, invert ? 1.0 - norm : norm);
+            double diff = max - min;
+
+            double newVal = diff == 0.0 ? 0.5 : norm;
+
+            assemblyStatsMatrixRow.setAt(index, invert ? 1.0 - newVal : newVal);
         }
     }
 
@@ -88,19 +92,33 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         }
     }
 
+    public void percentageNormalise(int index) {
 
-    public void normalise(long approxGenomeSize) {
+        for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
+            assemblyStatsMatrixRow.setAt(index, assemblyStatsMatrixRow.getAt(index) / 100.0);
+        }
+    }
+
+
+    public void normalise(long estimatedGenomeSize, double estimatedGCPercentage) {
 
         standardNormalise(AssemblyStatsMatrixRow.IDX_NB_SEQS, true);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_MIN_LEN, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_AVG_LEN, false);
         standardNormalise(AssemblyStatsMatrixRow.IDX_MAX_LEN, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_N_80, false);
+        standardNormalise(AssemblyStatsMatrixRow.IDX_N_PERC, true);
         standardNormalise(AssemblyStatsMatrixRow.IDX_N_50, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_N_20, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_L_50, false);
-        if (approxGenomeSize != 0L) {
-            deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES, (double)approxGenomeSize);
+        standardNormalise(AssemblyStatsMatrixRow.IDX_L_50, true);
+
+        percentageNormalise(AssemblyStatsMatrixRow.IDX_COMPLETENESS);
+
+        if (estimatedGCPercentage != 0.0) {
+            deviationNormalise(AssemblyStatsMatrixRow.IDX_GC, estimatedGCPercentage);
+        }
+        else {
+            setColumn(AssemblyStatsMatrixRow.IDX_GC, 0.0);
+        }
+
+        if (estimatedGenomeSize != 0L) {
+            deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES, (double)estimatedGenomeSize);
         }
         else {
             setColumn(AssemblyStatsMatrixRow.IDX_NB_BASES, 0.0);

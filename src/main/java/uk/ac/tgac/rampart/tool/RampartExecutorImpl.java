@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool;
 
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
@@ -29,7 +30,7 @@ import java.io.File;
  * Date: 22/08/13
  * Time: 15:16
  */
-public abstract class RampartExecutorImpl implements RampartExecutor {
+public class RampartExecutorImpl implements RampartExecutor {
 
 
     protected ConanProcessService conanProcessService;
@@ -46,6 +47,21 @@ public abstract class RampartExecutorImpl implements RampartExecutor {
     public String makeLinkCommand(File inputFile, File outputFile) {
 
         return "ln -s -f " + inputFile.getAbsolutePath() + " " + outputFile.getAbsolutePath();
+    }
+
+    /**
+     * Creates a sumbolic link between the two provided files now! (i.e. we ignore any scheduling information in the
+     * execution context)
+     * @param inputFile
+     * @param outputFile
+     */
+    @Override
+    public void createLink(File inputFile, File outputFile)
+            throws ProcessExecutionException, InterruptedException {
+
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+
+        this.conanProcessService.execute(makeLinkCommand(inputFile, outputFile), linkingExecutionContext);
     }
 
 

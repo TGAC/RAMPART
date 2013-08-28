@@ -71,7 +71,7 @@ public class AssemblyStatsMatrixTest {
         assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_BASES) == 399155917.0);
         assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_SEQS) == 851620.0);
 
-        matrix.normalise(0);
+        matrix.normalise(0, 0.0);
 
         assertTrue(true);
     }
@@ -84,7 +84,7 @@ public class AssemblyStatsMatrixTest {
 
         AssemblyStatsMatrixRow weights = new AssemblyStatsMatrixRow(new double[]{0.2,0.1,0,0,0,0,0,0,0.2,0.2,0,0.2,0,0.1});
 
-        matrix.normalise(0);
+        matrix.normalise(0, 0.0);
         matrix.weight(weights);
 
         assertTrue(true);

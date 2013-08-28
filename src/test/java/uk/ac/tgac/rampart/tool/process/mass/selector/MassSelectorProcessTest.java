@@ -56,13 +56,14 @@ public class MassSelectorProcessTest {
 
     private File statsFile1 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats1.txt"));
     private File statsFile2 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats2.txt"));
+    private File statsMerged = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats-merged.tab"));
     private File weightingsFile = FileUtils.toFile(this.getClass().getResource("/data/weightings.tab"));
 
 
     @Test
-    public void testExecute() throws IOException, InterruptedException, ProcessExecutionException {
+    public void testMultiFileExecute() throws IOException, InterruptedException, ProcessExecutionException {
 
-        File outputDir = temp.newFolder("massSelectorDir");
+        File outputDir = temp.newFolder("massSelector-MultiFile");
 
         List<File> statsFiles = new ArrayList<File>();
         statsFiles.add(statsFile1);
@@ -71,6 +72,32 @@ public class MassSelectorProcessTest {
         MassSelectorArgs args = new MassSelectorArgs();
         args.setOutputDir(outputDir);
         args.setStatsFiles(statsFiles);
+        args.setWeightings(weightingsFile);
+
+        MassSelectorProcess process = new MassSelectorProcess(args);
+        AbstractConanProcess parentProcess = process;
+
+        when(conanProcessService.execute(process, ec)).thenReturn(0);
+        when(ec.usingScheduler()).thenReturn(false);
+        when(ec.copy()).thenReturn(ec);
+
+        ReflectionTestUtils.setField(parentProcess, "conanProcessService", conanProcessService);
+
+        process.execute(ec);
+    }
+
+    @Test
+    public void testSingleFileExecute() throws IOException, InterruptedException, ProcessExecutionException {
+
+        File outputDir = temp.newFolder("massSelector-SingleFile");
+
+        List<File> statsFiles = new ArrayList<File>();
+        statsFiles.add(statsFile1);
+        statsFiles.add(statsFile2);
+
+        MassSelectorArgs args = new MassSelectorArgs();
+        args.setOutputDir(outputDir);
+        args.setMergedFile(statsMerged);
         args.setWeightings(weightingsFile);
 
         MassSelectorProcess process = new MassSelectorProcess(args);

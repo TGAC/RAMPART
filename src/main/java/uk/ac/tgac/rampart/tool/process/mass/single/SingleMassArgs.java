@@ -53,6 +53,9 @@ public class SingleMassArgs implements ProcessArgs {
     private static final String KEY_ATTR_STATS_ONLY = "stats_only";
     private static final String KEY_ATTR_STATS_LEVELS = "stats_levels";
 
+    public static final boolean DEFAULT_STATS_ONLY = false;
+    public static final boolean DEFAULT_RUN_PARALLEL = false;
+
 
 
     // Need access to these
@@ -96,12 +99,13 @@ public class SingleMassArgs implements ProcessArgs {
 
         this.threads = 1;
         this.memory = 0;
-        this.runParallel = false;
-        this.statsOnly = false;
+        this.runParallel = DEFAULT_RUN_PARALLEL;
+        this.statsOnly = DEFAULT_STATS_ONLY;
         this.statsLevels = StatsLevel.createAll();
     }
 
-    public SingleMassArgs(Element ele, File parentOutputDir, String parentJobPrefix, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) {
+    public SingleMassArgs(Element ele, File parentOutputDir, String parentJobPrefix, List<Library> allLibraries,
+                          List<EcqArgs> allMecqs, Organism organism) {
 
         // Set defaults
         this();
@@ -109,10 +113,8 @@ public class SingleMassArgs implements ProcessArgs {
         // Required
         this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
         this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
-        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
         this.threads = XmlHelper.getIntValue(ele, KEY_ATTR_THREADS);
         this.memory = XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY);
-        this.statsOnly = XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY);
 
         Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
         NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
@@ -120,8 +122,15 @@ public class SingleMassArgs implements ProcessArgs {
             this.inputs.add(new MassInput((Element) actualInputs.item(i)));
         }
 
-
         // Optional
+        this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
+                XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
+                DEFAULT_RUN_PARALLEL;
+
+        this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
+                XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
+                DEFAULT_STATS_ONLY;
+
         Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
         Element cvgElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_CVG_RANGE);
         this.kmerRange = kmerElement != null ? new KmerRange(kmerElement) : new KmerRange();

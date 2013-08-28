@@ -27,6 +27,8 @@ import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
 import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
+import uk.ac.tgac.rampart.tool.RampartExecutor;
+import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsMatrix;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsMatrixRow;
@@ -46,6 +48,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MassSelectorProcess.class);
 
+    private RampartExecutor executor;
 
     public MassSelectorProcess() {
         this(new MassSelectorArgs());
@@ -53,6 +56,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
 
     public MassSelectorProcess(MassSelectorArgs args) {
         super("", args, new MassSelectorParams());
+        this.executor = new RampartExecutorImpl();
     }
 
     @Override
@@ -71,52 +75,84 @@ public class MassSelectorProcess extends AbstractConanProcess {
         MassSelectorArgs args = (MassSelectorArgs)this.getProcessArgs();
 
         try {
-            // Load all analyser files into tables
-            List<AssemblyStatsTable> tables = loadStats(args.getStatsFiles());
 
-            // Merge tables
-            AssemblyStatsTable merged = new AssemblyStatsTable(tables);
+            // Initialise the executor
+            this.executor.initialise(this.conanProcessService, executionContext);
+
+            // Get results from whatever source is available (prefer pre-merged table over dingle merged file over files)
+            AssemblyStatsTable merged = args.getMergedTable() != null ?
+                    args.getMergedTable() :
+                    args.getMergedFile() != null ?
+                        new AssemblyStatsTable(args.getMergedFile()) :
+                        this.mergeFiles(args);
+
+            log.debug("Collected merged assembly stats.  Merged table contains " + merged.size() + " entries");
+
+            // Saving merged results to disk
+            File mergedFile = new File(args.getOutputDir(), "merged.tab");
+            merged.save(mergedFile);
+            log.debug("Saved merged results to disk at: " + mergedFile.getAbsolutePath());
 
             // Normalise merged table
             AssemblyStatsMatrix matrix = merged.generateStatsMatrix();
-            matrix.normalise(args.getEstimatedGenomeSize());
+            matrix.normalise(args.getEstimatedGenomeSize(), args.getEstimatedGcPercentage());
+            log.debug("Normalised merged stats table");
+
+            // Load weightings
+            AssemblyStatsMatrixRow weightings = loadWeightings(args.getWeightings());
+            log.debug("Weightings loaded: " + ArrayUtils.toString(weightings.getStats()));
 
             // Apply weightings and calculate final scores
-            matrix.weight(loadWeightings(args.getWeightings()));
+            matrix.weight(weightings);
             double[] scores = matrix.calcScores();
+            log.debug("Weightings applied to normalised stats table.  Final scores calculated.");
 
             // Save merged matrix with added scores
             merged.addScores(scores);
-
-            log.debug("Merged scores are: " + ArrayUtils.toString(scores));
+            log.debug("Weighted and normalised scores are: " + ArrayUtils.toString(scores));
 
             // Save final scores file to disk
             File finalFile = new File(args.getOutputDir(), "scores.tab");
             merged.save(finalFile);
+            log.debug("Saved final results to disk at: " + finalFile.getAbsolutePath());
 
-            // Generate plots (Can run in its own time)
-            this.executePlots(
+            // Generate plots (Can run in its own time, i.e. they have no dependencies so we just fire them off and they
+            // finish when they finish)
+            /*this.executePlots(
                     finalFile,
                     new File(finalFile.getParentFile(), finalFile.getName() + ".pdf"),
                     executionContext.usingScheduler() ? executionContext.getScheduler().getArgs().getJobName() + "-asc_plots" : "asc_plots",
-                    executionContext);
+                    executionContext);*/
 
             // Get best
             AssemblyStats best = merged.getBest();
             File outputAssembly = new File(args.getOutputDir(), "best.fa");
 
             log.debug("Best assembly stats: " + best.toString());
-            log.debug("Output assembly path: " + outputAssembly.getAbsolutePath());
+            log.info("Best assembly path: " + best.getFilePath());
 
             // Create link to "best" assembly in stats dir
-            // TODO Use Rampart Executor for this
-            //FileHelper.createSymbolicLink(this.conanProcessService, new File(best.getFilePath()), outputAssembly, executionContext.getLocality());
+            this.executor.createLink(new File(best.getFilePath()), outputAssembly);
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
 
         return true;
+    }
+
+    private AssemblyStatsTable mergeFiles(MassSelectorArgs args) throws IOException {
+
+        log.debug("Loading " + args.getStatsFiles().size() + " stats files");
+
+        // Load all analyser files into tables
+        List<AssemblyStatsTable> tables = loadStats(args.getStatsFiles());
+
+        log.debug("Loaded " + tables.size() + " tables from stats files");
+
+        // Merge tables
+        return new AssemblyStatsTable(tables);
+
     }
 
     protected void plot() {
@@ -144,6 +180,10 @@ public class MassSelectorProcess extends AbstractConanProcess {
     protected List<AssemblyStatsTable> loadStats(List<File> statsFiles) throws IOException {
         List<AssemblyStatsTable> tables = new ArrayList<AssemblyStatsTable>();
         for (File file : statsFiles) {
+
+            // Notify system, we are attempting to load a file from disk
+            log.debug("Loading stats from: " + file.getAbsolutePath());
+
             try {
                 tables.add(new AssemblyStatsTable(file));
             }

@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.tool.process.mass.selector;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ public class MassSelectorArgs implements ProcessArgs {
     private File outputDir;
     private Organism organism;
     private File weightings;
+    private AssemblyStatsTable mergedTable;
+    private File mergedFile;
 
     public MassSelectorArgs() {
         this.statsFiles = new ArrayList<File>();
@@ -49,6 +52,8 @@ public class MassSelectorArgs implements ProcessArgs {
         this.outputDir = new File("");
         this.organism = null;
         this.weightings = null;
+        this.mergedTable = null;
+        this.mergedFile = null;
     }
 
     public List<File> getStatsFiles() {
@@ -99,6 +104,13 @@ public class MassSelectorArgs implements ProcessArgs {
         this.weightings = weightings;
     }
 
+    public File getMergedFile() {
+        return mergedFile;
+    }
+
+    public void setMergedFile(File mergedFile) {
+        this.mergedFile = mergedFile;
+    }
 
     @Override
     public void parse(String args) {
@@ -166,5 +178,13 @@ public class MassSelectorArgs implements ProcessArgs {
         }
 
         return fileList;
+    }
+
+    public void setMergedTable(AssemblyStatsTable mergedTable) {
+        this.mergedTable = mergedTable;
+    }
+
+    public AssemblyStatsTable getMergedTable() {
+        return mergedTable;
     }
 }

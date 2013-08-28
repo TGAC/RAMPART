@@ -17,8 +17,10 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
+import org.apache.commons.lang.ArrayUtils;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 
 import java.io.File;
@@ -126,5 +128,17 @@ public class RampartArgs implements ProcessArgs {
             }
 
         }
+    }
+
+    @Override
+    public String toString() {
+
+        StringJoiner sj = new StringJoiner("\n");
+        sj.add("Job Configuration File: " + config.getAbsolutePath());
+        sj.add("Output Directory: "+ outputDir.getAbsolutePath());
+        sj.add("Job Prefix: " + jobPrefix);
+        sj.add("Stages: " + ArrayUtils.toString(stages));
+
+        return sj.toString();
     }
 }

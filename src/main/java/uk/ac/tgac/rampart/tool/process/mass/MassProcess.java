@@ -86,38 +86,43 @@ public class MassProcess extends AbstractConanProcess {
             // Initialise executor
             this.massExecutor.initialise(this.conanProcessService, executionContext);
 
-            for (SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
+            // Only run single mass groups if we're not in stats only mode.
+            if (!args.isStatsOnly()) {
 
-                // Ensure output directory for this MASS run exists
-                if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
-                    throw new IOException("Couldn't create directory for MASS");
+                for (SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
+
+                    // Ensure output directory for this MASS run exists
+                    if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
+                        throw new IOException("Couldn't create directory for MASS");
+                    }
+
+                    // Execute this MASS group
+                    this.massExecutor.executeSingleMass(singleMassArgs);
+
+                    // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
+                    if (!args.isRunParallel()) {
+                        log.debug("Waiting for completion of: " + singleMassArgs.getName());
+                        this.massExecutor.executeScheduledWait(
+                                singleMassArgs.getJobPrefix() + "*",
+                                args.getJobPrefix() + "-wait",
+                                singleMassArgs.getOutputDir());
+                    }
                 }
 
-                // Execute this MASS group
-                this.massExecutor.executeSingleMass(singleMassArgs);
-
-                // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
-                if (!args.isRunParallel()) {
-                    log.debug("Waiting for completion of: " + singleMassArgs.getName());
+                // Wait for all assembly jobs to finish if they are running in parallel.
+                if (args.isRunParallel()) {
+                    log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
                     this.massExecutor.executeScheduledWait(
-                            singleMassArgs.getJobPrefix() + "*",
+                            args.getJobPrefix() + "-group*",
                             args.getJobPrefix() + "-wait",
-                            singleMassArgs.getOutputDir());
+                            args.getOutputDir());
                 }
+
+
+                log.info("Assemblies complete");
             }
 
-            // Wait for all assembly jobs to finish if they are running in parallel.
-            if (args.isRunParallel()) {
-                log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
-                this.massExecutor.executeScheduledWait(
-                        args.getJobPrefix() + "-group*",
-                        args.getJobPrefix() + "-wait",
-                        args.getOutputDir());
-            }
-
-
-            log.info("Assemblies complete");
-            log.info("Analysing and comparing assemblies");
+            log.info("Comparing assemblies");
 
             // Compile results
             File statsDir = new File(args.getOutputDir(), "stats");
@@ -127,8 +132,10 @@ public class MassProcess extends AbstractConanProcess {
             // Run MASS selector
             this.executeMassSelector(args, statsDir, results);
 
+            log.info("Compared all assemblies");
 
-            log.info("Analysed all assemblies");
+            log.info("Predicted best assembly can be accessed from: " + new File(statsDir, "best.fa").getAbsolutePath());
+
             log.info("Multi MASS run complete");
 
         } catch (IOException ioe) {
@@ -140,6 +147,8 @@ public class MassProcess extends AbstractConanProcess {
 
     protected AssemblyStatsTable compileMassResults(MassArgs args) throws IOException {
 
+        log.debug("Compiling results from each MASS group");
+
         AssemblyStatsTable merged = new AssemblyStatsTable();
 
         for (SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
@@ -148,10 +157,13 @@ public class MassProcess extends AbstractConanProcess {
 
             if (singleMassResults != null) {
                 for(AssemblyStats stats : singleMassResults) {
+
                     merged.add(stats);
                 }
             }
         }
+
+        log.debug("Compiled " + merged.size() + " entries from " + args.getSingleMassArgsList().size() + " MASS groups");
 
         return merged;
     }
@@ -167,6 +179,7 @@ public class MassProcess extends AbstractConanProcess {
 
         MassSelectorArgs massSelectorArgs = new MassSelectorArgs();
         //massSelectorArgs.setStatsFiles(statsFiles);
+        massSelectorArgs.setMergedTable(results);
         massSelectorArgs.setOutputDir(outputDir);
         massSelectorArgs.setOrganism(args.getOrganism());
         massSelectorArgs.setWeightings(args.getWeightings());

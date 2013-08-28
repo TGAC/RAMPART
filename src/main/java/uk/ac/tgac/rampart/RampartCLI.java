@@ -67,6 +67,7 @@ public class RampartCLI {
 
     public static final File DEFAULT_ENV_CONFIG = new File(SETTINGS_DIR, "conan.properties");
     public static final File DEFAULT_LOG_CONFIG = new File(SETTINGS_DIR, "log4j.properties");
+    public static final File DEFAULT_WEIGHTINGS_FILE = new File(DATA_DIR, "weightings.tab");
 
     /**
      * Configures the RAMPART system.  Specifically, this means initialising logging, initialising conan, and copying any
@@ -265,6 +266,8 @@ public class RampartCLI {
 
                 // Build Rampart args from the apache command line handler
                 RampartArgs rampartArgs = rampartOptions.convert();
+
+                log.debug("RAMPART: Arguments: \n" + rampartArgs.toString());
 
                 // Run RAMPART
                 log.info("RAMPART: Started");

@@ -25,6 +25,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
@@ -43,8 +44,10 @@ import java.util.Map;
 public class MassArgs implements ProcessArgs {
 
     // Keys for config file
-    public static final String KEY_ATTR_PARALLEL = "parallel";
-    public static final String KEY_ELEM_SINGLE_MASS = "single_mass";
+    private static final String KEY_ATTR_PARALLEL = "parallel";
+    private static final String KEY_ATTR_WEIGHTINGS = "weightings_file";
+    private static final String KEY_ELEM_SINGLE_MASS = "single_mass";
+    private static final String KEY_ATTR_STATS_ONLY = "stats_only";
 
     // Constants
     public static final int DEFAULT_CVG_CUTOFF = -1;
@@ -63,6 +66,7 @@ public class MassArgs implements ProcessArgs {
     private boolean runParallel;                // Whether to run MASS groups in parallel
     private File weightings;
     private Organism organism;
+    private boolean statsOnly;
 
 
     private OutputLevel outputLevel;
@@ -93,11 +97,10 @@ public class MassArgs implements ProcessArgs {
         this.allMecqs = new ArrayList<EcqArgs>();
 
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
-        this.weightings = new File(
-                new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile(),
-                "/data/weightings.tab");
+        this.weightings = RampartCLI.DEFAULT_WEIGHTINGS_FILE;
 
         this.organism = null;
+        this.statsOnly = false;
         this.singleMassArgsList = new ArrayList<SingleMassArgs>();
     }
 
@@ -113,7 +116,20 @@ public class MassArgs implements ProcessArgs {
         this.allMecqs = allMecqs;
         this.organism = organism;
 
-        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
+
+        // From Xml (optional)
+
+        this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
+                XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
+                false;
+
+        this.weightings = ele.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
+                new File(XmlHelper.getTextValue(ele, KEY_ATTR_WEIGHTINGS)) :
+                RampartCLI.DEFAULT_WEIGHTINGS_FILE;
+
+        this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
+                XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
+                false;
 
         // All single mass args
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_SINGLE_MASS);
@@ -196,6 +212,14 @@ public class MassArgs implements ProcessArgs {
 
     public void setAllMecqs(List<EcqArgs> allMecqs) {
         this.allMecqs = allMecqs;
+    }
+
+    public boolean isStatsOnly() {
+        return statsOnly;
+    }
+
+    public void setStatsOnly(boolean statsOnly) {
+        this.statsOnly = statsOnly;
     }
 
     @Override

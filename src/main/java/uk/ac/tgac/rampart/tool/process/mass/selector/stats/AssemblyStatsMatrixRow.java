@@ -28,24 +28,19 @@ public class AssemblyStatsMatrixRow {
 
     public static final int IDX_NB_SEQS = 0;
     public static final int IDX_NB_BASES = 1;
-    public static final int IDX_A_PERC = 2;
-    public static final int IDX_C_PERC = 3;
-    public static final int IDX_G_PERC = 4;
-    public static final int IDX_T_PERC = 5;
-    public static final int IDX_N_PERC = 6;
-    public static final int IDX_MIN_LEN = 7;
-    public static final int IDX_AVG_LEN = 8;
-    public static final int IDX_MAX_LEN = 9;
-    public static final int IDX_N_80 = 10;
-    public static final int IDX_N_50 = 11;
-    public static final int IDX_N_20 = 12;
-    public static final int IDX_L_50 = 13;
+    public static final int IDX_N_PERC = 2;
+    public static final int IDX_MAX_LEN = 3;
+    public static final int IDX_N_50 = 4;
+    public static final int IDX_L_50 = 5;
+    public static final int IDX_GC = 6;
+    public static final int IDX_COMPLETENESS = 7;
+
 
 
     private double[] stats;
 
     public AssemblyStatsMatrixRow() {
-        this(new double[14]);
+        this(new double[8]);
     }
 
     public AssemblyStatsMatrixRow(double[] stats) {
@@ -53,21 +48,19 @@ public class AssemblyStatsMatrixRow {
     }
 
     public AssemblyStatsMatrixRow(AssemblyStats assemblyStats) {
-        this.stats = new double[14];
+
+        // Initialise matrix
+        this();
+
+        // Add assembly stats
         this.stats[IDX_NB_SEQS] = new Double(assemblyStats.getNbSeqs()).doubleValue();
         this.stats[IDX_NB_BASES] = new Double(assemblyStats.getNbBases()).doubleValue();
-        this.stats[IDX_A_PERC] = new Double(assemblyStats.getNcPercents().getA());
-        this.stats[IDX_C_PERC] = new Double(assemblyStats.getNcPercents().getC());
-        this.stats[IDX_G_PERC] = new Double(assemblyStats.getNcPercents().getG());
-        this.stats[IDX_T_PERC] = new Double(assemblyStats.getNcPercents().getT());
         this.stats[IDX_N_PERC] = new Double(assemblyStats.getNcPercents().getN());
-        this.stats[IDX_MIN_LEN] = new Double(assemblyStats.getMinLen()).doubleValue();
-        this.stats[IDX_AVG_LEN] = new Double(assemblyStats.getAvgLen()).doubleValue();
         this.stats[IDX_MAX_LEN] = new Double(assemblyStats.getMaxLen()).doubleValue();
-        this.stats[IDX_N_80] = new Double(assemblyStats.getN80()).doubleValue();
         this.stats[IDX_N_50] = new Double(assemblyStats.getN50()).doubleValue();
-        this.stats[IDX_N_20] = new Double(assemblyStats.getN20()).doubleValue();
         this.stats[IDX_L_50] = new Double(assemblyStats.getL50()).doubleValue();
+        this.stats[IDX_GC] = new Double(assemblyStats.getGcPercentage()).doubleValue();
+        this.stats[IDX_COMPLETENESS] = new Double(assemblyStats.getCompletenessPercentage()).doubleValue();
     }
 
 
