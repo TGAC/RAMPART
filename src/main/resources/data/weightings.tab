@@ -1,2 +1,2 @@
-nb_seqs|nb_bases|n.pc|max_len|n50|l50|gc|completeness
-0.15|0.1|0.1|0.05|0.2|0.05|0.05|0.3
+nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness
+0.05|0.1|0.05|0.05|0.05|0.2|0.05|0.05|0.1|0.3

@@ -89,9 +89,9 @@ public class MassSelectorProcess extends AbstractConanProcess {
             log.debug("Collected merged assembly stats.  Merged table contains " + merged.size() + " entries");
 
             // Saving merged results to disk
-            File mergedFile = new File(args.getOutputDir(), "merged.tab");
+            /*File mergedFile = new File(args.getOutputDir(), "merged.tab");
             merged.save(mergedFile);
-            log.debug("Saved merged results to disk at: " + mergedFile.getAbsolutePath());
+            log.debug("Saved merged results to disk at: " + mergedFile.getAbsolutePath());*/
 
             // Normalise merged table
             AssemblyStatsMatrix matrix = merged.generateStatsMatrix();

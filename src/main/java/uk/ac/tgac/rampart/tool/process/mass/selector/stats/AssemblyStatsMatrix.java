@@ -92,36 +92,45 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         }
     }
 
-    public void percentageNormalise(int index) {
+    public void percentageNormalise(int index, boolean invert) {
 
         for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
-            assemblyStatsMatrixRow.setAt(index, assemblyStatsMatrixRow.getAt(index) / 100.0);
+
+            double norm = assemblyStatsMatrixRow.getAt(index) / 100.0;
+
+            assemblyStatsMatrixRow.setAt(index,invert ? 1.0 - norm : norm);
         }
     }
 
 
     public void normalise(long estimatedGenomeSize, double estimatedGCPercentage) {
 
+        // Standard variables
         standardNormalise(AssemblyStatsMatrixRow.IDX_NB_SEQS, true);
+        standardNormalise(AssemblyStatsMatrixRow.IDX_NB_SEQS_GT_1K, true);
         standardNormalise(AssemblyStatsMatrixRow.IDX_MAX_LEN, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_N_PERC, true);
         standardNormalise(AssemblyStatsMatrixRow.IDX_N_50, false);
         standardNormalise(AssemblyStatsMatrixRow.IDX_L_50, true);
 
-        percentageNormalise(AssemblyStatsMatrixRow.IDX_COMPLETENESS);
+        // Percentage variables
+        percentageNormalise(AssemblyStatsMatrixRow.IDX_COMPLETENESS, false);
+        percentageNormalise(AssemblyStatsMatrixRow.IDX_N_PERC, true);
 
+        // Deviation variables
         if (estimatedGCPercentage != 0.0) {
-            deviationNormalise(AssemblyStatsMatrixRow.IDX_GC, estimatedGCPercentage);
+            deviationNormalise(AssemblyStatsMatrixRow.IDX_GC_PERC, estimatedGCPercentage);
         }
         else {
-            setColumn(AssemblyStatsMatrixRow.IDX_GC, 0.0);
+            setColumn(AssemblyStatsMatrixRow.IDX_GC_PERC, 0.0);
         }
 
         if (estimatedGenomeSize != 0L) {
             deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES, (double)estimatedGenomeSize);
+            deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES_GT_1K, (double)estimatedGenomeSize);
         }
         else {
             setColumn(AssemblyStatsMatrixRow.IDX_NB_BASES, 0.0);
+            setColumn(AssemblyStatsMatrixRow.IDX_NB_BASES_GT_1K, 0.0);
         }
     }
 

@@ -27,20 +27,22 @@ import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 public class AssemblyStatsMatrixRow {
 
     public static final int IDX_NB_SEQS = 0;
-    public static final int IDX_NB_BASES = 1;
-    public static final int IDX_N_PERC = 2;
-    public static final int IDX_MAX_LEN = 3;
-    public static final int IDX_N_50 = 4;
-    public static final int IDX_L_50 = 5;
-    public static final int IDX_GC = 6;
-    public static final int IDX_COMPLETENESS = 7;
+    public static final int IDX_NB_SEQS_GT_1K = 1;
+    public static final int IDX_NB_BASES = 2;
+    public static final int IDX_NB_BASES_GT_1K = 3;
+    public static final int IDX_MAX_LEN = 4;
+    public static final int IDX_N_50 = 5;
+    public static final int IDX_L_50 = 6;
+    public static final int IDX_GC_PERC = 7;
+    public static final int IDX_N_PERC = 8;
+    public static final int IDX_COMPLETENESS = 9;
 
 
 
     private double[] stats;
 
     public AssemblyStatsMatrixRow() {
-        this(new double[8]);
+        this(new double[10]);
     }
 
     public AssemblyStatsMatrixRow(double[] stats) {
@@ -54,12 +56,14 @@ public class AssemblyStatsMatrixRow {
 
         // Add assembly stats
         this.stats[IDX_NB_SEQS] = new Double(assemblyStats.getNbSeqs()).doubleValue();
+        this.stats[IDX_NB_SEQS_GT_1K] = new Double(assemblyStats.getNbSeqsGt1K()).doubleValue();
         this.stats[IDX_NB_BASES] = new Double(assemblyStats.getNbBases()).doubleValue();
-        this.stats[IDX_N_PERC] = new Double(assemblyStats.getNcPercents().getN());
+        this.stats[IDX_NB_BASES_GT_1K] = new Double(assemblyStats.getNbBasesGt1K()).doubleValue();
         this.stats[IDX_MAX_LEN] = new Double(assemblyStats.getMaxLen()).doubleValue();
         this.stats[IDX_N_50] = new Double(assemblyStats.getN50()).doubleValue();
         this.stats[IDX_L_50] = new Double(assemblyStats.getL50()).doubleValue();
-        this.stats[IDX_GC] = new Double(assemblyStats.getGcPercentage()).doubleValue();
+        this.stats[IDX_GC_PERC] = new Double(assemblyStats.getGcPercentage()).doubleValue();
+        this.stats[IDX_N_PERC] = new Double(assemblyStats.getNPercentage());
         this.stats[IDX_COMPLETENESS] = new Double(assemblyStats.getCompletenessPercentage()).doubleValue();
     }
 

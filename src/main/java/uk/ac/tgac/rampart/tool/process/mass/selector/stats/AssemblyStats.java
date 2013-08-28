@@ -41,16 +41,14 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     private String dataset;
     private String filePath;
     private long nbSeqs;
+    private long nbSeqsGt1K;
     private long nbBases;
-    private NucleotideCompositionPercents ncPercents;
-    private long minLen;
-    private double avgLen;
+    private long nbBasesGt1K;
     private long maxLen;
-    private long n80;
     private long n50;
-    private long n20;
     private long l50;
     private double gcPercentage;
+    private double nPercentage;
     private double completenessPercentage;
     private double score;
 
@@ -61,16 +59,14 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.dataset = "";
         this.filePath = "";
         this.nbSeqs = 0;
-        this.ncPercents = new NucleotideCompositionPercents();
+        this.nbSeqsGt1K = 0;
         this.nbBases = 0L;
-        this.minLen = 0L;
-        this.avgLen = 0.0;
+        this.nbBasesGt1K = 0L;
         this.maxLen = 0L;
-        this.n80 = 0L;
         this.n50 = 0L;
-        this.n20 = 0L;
         this.l50 = 0L;
         this.gcPercentage = 0.0;
+        this.nPercentage = 0.0;
         this.completenessPercentage = 0.0;
         this.score = 0.0;
     }
@@ -81,18 +77,16 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.dataset = stats[2];
         this.filePath = stats[3];
         this.nbSeqs = Long.parseLong(stats[4]);
-        this.nbBases = Long.parseLong(stats[5]);
-        this.ncPercents = new NucleotideCompositionPercents(ArrayUtils.subarray(stats, 6, 11));
-        this.minLen = Long.parseLong(stats[11]);
-        this.avgLen = Double.parseDouble(stats[12]);
-        this.maxLen = Long.parseLong(stats[13]);
-        this.n80 = Long.parseLong(stats[14]);
-        this.n50 = Long.parseLong(stats[15]);
-        this.n20 = Long.parseLong(stats[16]);
-        this.l50 = Long.parseLong(stats[17]);
-        this.gcPercentage = Double.parseDouble(stats[18]);
-        this.completenessPercentage = Double.parseDouble(stats[19]);
-        this.score = Double.parseDouble(stats[19]);
+        this.nbSeqsGt1K = Long.parseLong(stats[5]);
+        this.nbBases = Long.parseLong(stats[6]);
+        this.nbBasesGt1K = Long.parseLong(stats[7]);
+        this.maxLen = Long.parseLong(stats[8]);
+        this.n50 = Long.parseLong(stats[9]);
+        this.l50 = Long.parseLong(stats[10]);
+        this.gcPercentage = Double.parseDouble(stats[11]);
+        this.nPercentage = Double.parseDouble(stats[12]);
+        this.completenessPercentage = Double.parseDouble(stats[13]);
+        this.score = Double.parseDouble(stats[14]);
     }
 
 
@@ -144,28 +138,36 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.nbBases = nbBases;
     }
 
-    public NucleotideCompositionPercents getNcPercents() {
-        return ncPercents;
+    public long getNbSeqsGt1K() {
+        return nbSeqsGt1K;
     }
 
-    public void setNcPercents(NucleotideCompositionPercents nucleotideComposition) {
-        this.ncPercents = nucleotideComposition;
+    public void setNbSeqsGt1K(long nbSeqsGt1K) {
+        this.nbSeqsGt1K = nbSeqsGt1K;
     }
 
-    public long getMinLen() {
-        return minLen;
+    public long getNbBasesGt1K() {
+        return nbBasesGt1K;
     }
 
-    public void setMinLen(long minLen) {
-        this.minLen = minLen;
+    public void setNbBasesGt1K(long nbBasesGt1K) {
+        this.nbBasesGt1K = nbBasesGt1K;
     }
 
-    public double getAvgLen() {
-        return avgLen;
+    public double getnPercentage() {
+        return nPercentage;
     }
 
-    public void setAvgLen(double avgLen) {
-        this.avgLen = avgLen;
+    public void setnPercentage(double nPercentage) {
+        this.nPercentage = nPercentage;
+    }
+
+    public double getNPercentage() {
+        return nPercentage;
+    }
+
+    public void setNPercentage(double nPercentage) {
+        this.nPercentage = nPercentage;
     }
 
     public long getMaxLen() {
@@ -176,28 +178,12 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.maxLen = maxLen;
     }
 
-    public long getN80() {
-        return n80;
-    }
-
-    public void setN80(long n80) {
-        this.n80 = n80;
-    }
-
     public long getN50() {
         return n50;
     }
 
     public void setN50(long n50) {
         this.n50 = n50;
-    }
-
-    public long getN20() {
-        return n20;
-    }
-
-    public void setN20(long n20) {
-        this.n20 = n20;
     }
 
     public long getL50() {
@@ -233,7 +219,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     }
 
     public static String getStatsFileHeader() {
-        return "index|desc|dataset|file|nb_seqs|nb_bases|" + NucleotideCompositionPercents.getStatsFileHeaderPercents() +"|min_len|avg_len|max_len|n80|n50|n20|l50|gc|completeness|score";
+        return "index|desc|dataset|file|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness|score";
     }
 
     public void setFromFileName(String filename) {
@@ -257,16 +243,14 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         sj.add(this.getDataset());
         sj.add(this.getFilePath());
         sj.add(this.getNbSeqs());
+        sj.add(this.getNbSeqsGt1K());
         sj.add(this.getNbBases());
-        sj.add(this.getNcPercents().toString());
-        sj.add(this.getMinLen());
-        sj.add(this.getAvgLen());
+        sj.add(this.getNbBasesGt1K());
         sj.add(this.getMaxLen());
-        sj.add(this.getN80());
         sj.add(this.getN50());
-        sj.add(this.getN20());
         sj.add(this.getL50());
         sj.add(this.getGcPercentage());
+        sj.add(this.getNPercentage());
         sj.add(this.getCompletenessPercentage());
         sj.add(this.getScore());
 

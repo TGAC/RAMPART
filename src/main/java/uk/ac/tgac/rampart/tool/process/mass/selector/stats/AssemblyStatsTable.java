@@ -169,7 +169,10 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
                 stats.setMaxLen(qStats.getLargestContig());
                 stats.setGcPercentage(qStats.getGcPc());
                 stats.setNbSeqs(qStats.getNbContigsGt0());
+                stats.setNbSeqsGt1K(qStats.getNbContigsGt1k());
                 stats.setNbBases(qStats.getTotalLengthGt0());
+                stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
+                stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
             }
         }
     }

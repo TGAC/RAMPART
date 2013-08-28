@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.conan.core.data.Organism;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +74,7 @@ public class MassSelectorProcessTest {
         args.setOutputDir(outputDir);
         args.setStatsFiles(statsFiles);
         args.setWeightings(weightingsFile);
+        args.setOrganism(new Organism("test", 1, 400000000, 52.0));
 
         MassSelectorProcess process = new MassSelectorProcess(args);
         AbstractConanProcess parentProcess = process;
