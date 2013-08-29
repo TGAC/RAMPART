@@ -66,7 +66,7 @@ public class RampartExecutorImpl implements RampartExecutor {
 
 
     @Override
-    public void executeScheduledWait(String waitCondition, String jobName, File outputDir)
+    public void executeScheduledWait(String waitCondition, ExitStatus.Type exitStatus, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException {
 
         // Duplicate the execution context so we don't modify the original accidentally.
@@ -80,7 +80,7 @@ public class RampartExecutorImpl implements RampartExecutor {
         }
 
         this.conanProcessService.waitFor(
-                executionContextCopy.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, waitCondition),
+                executionContextCopy.getScheduler().createWaitCondition(exitStatus, waitCondition),
                 executionContextCopy);
     }
 }

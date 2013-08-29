@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.tool;
 
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
@@ -36,6 +37,6 @@ public interface RampartExecutor {
 
     void createLink(File inputFile, File outputFile) throws ProcessExecutionException, InterruptedException;
 
-    void executeScheduledWait(String waitCondition, String jobName, File outputDir)
+    void executeScheduledWait(String waitCondition, ExitStatus.Type exitStatus, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException;
 }

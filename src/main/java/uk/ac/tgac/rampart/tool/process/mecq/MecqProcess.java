@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.*;
@@ -113,6 +114,7 @@ public class MecqProcess extends AbstractConanProcess {
                 log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
                 this.mecqExecutor.executeScheduledWait(
                         ecqArgs.getJobPrefix() + "*",
+                        ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
                         ecDir);
             }
@@ -121,9 +123,10 @@ public class MecqProcess extends AbstractConanProcess {
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
         // in parallel, then we should wait for all those to complete before continueing.
         if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
-            log.debug("Running all MECQ groups in parallel, waiting for completion");
+            log.debug("Running all ECQ groups in parallel, waiting for completion");
             this.mecqExecutor.executeScheduledWait(
                     args.getJobPrefix() + "-ecq*",
+                    ExitStatus.Type.COMPLETED_SUCCESS,
                     args.getJobPrefix() + "-wait",
                     args.getOutputDir());
         }

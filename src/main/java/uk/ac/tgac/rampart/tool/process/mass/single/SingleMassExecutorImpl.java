@@ -31,6 +31,8 @@ import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
+import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Args;
+import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
@@ -79,7 +81,6 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
         // Create process
         this.conanProcessService.execute(assembler, executionContextCopy);
-
     }
 
     @Override
@@ -133,6 +134,79 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         if (args.getStatsLevels().contains(StatsLevel.COMPLETENESS)) {
             this.executeCegmaJobs(assembler, args, jobName + "-cegma", executionContextCopy);
         }
+    }
+
+    @Override
+    public void executeSubsampler(double probability, long timestamp, File input, File output, String jobName)
+            throws ProcessExecutionException, InterruptedException, IOException {
+
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        // Modify the scheduler jobname is present
+        if (executionContextCopy.usingScheduler()) {
+
+            SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
+
+            schArgs.setJobName(jobName);
+            schArgs.setMonitorFile(new File(output.getParentFile(), jobName + ".log"));
+
+            executionContextCopy.setForegroundJob(true);
+        }
+
+        SubsamplerV1_0Args ssArgs = new SubsamplerV1_0Args();
+        ssArgs.setInputFile(input);
+        ssArgs.setOutputFile(output);
+        ssArgs.setLogFile(new File(output.getParentFile(), output.getName() + ".log"));
+        ssArgs.setSeed(timestamp);
+        ssArgs.setProbability(probability);
+
+        SubsamplerV1_0Process ssProc = new SubsamplerV1_0Process(ssArgs);
+
+        // Create process
+        this.conanProcessService.execute(ssProc, executionContextCopy);
+    }
+
+    @Override
+    public long getNbEntries(File seqFile, File outputDir, String jobName) throws ProcessExecutionException, InterruptedException, IOException {
+
+        return getCount(seqFile, outputDir, jobName, true);
+    }
+
+    @Override
+    public long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException {
+
+        return getCount(seqFile, outputDir, jobName, false);
+    }
+
+    protected long getCount(File seqFile, File outputDir, String jobName, boolean linesOnly) throws ProcessExecutionException, InterruptedException, IOException {
+
+        ExecutionContext executionContextCopy = executionContext.copy();
+
+        // Modify the scheduler jobname is present
+        if (executionContextCopy.usingScheduler()) {
+
+            SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
+
+            schArgs.setJobName(jobName);
+            schArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
+
+            executionContextCopy.setForegroundJob(true);
+        }
+
+        File outputFile = new File(outputDir, seqFile.getName() + ".nb_entries.out");
+
+        String wcOption = linesOnly ? "-l" : "-m";
+        String command = "awk '/^@/{getline; print}' " + seqFile.getAbsolutePath() + " | wc " + wcOption + " > " + outputFile.getAbsolutePath();
+
+        this.conanProcessService.execute(command, executionContextCopy);
+
+        List<String> lines = FileUtils.readLines(outputFile);
+
+        if (lines == null || lines.isEmpty()) {
+            throw new IOException("Failed to retrieve number of lines in file: " + seqFile.getAbsolutePath());
+        }
+
+        return Long.parseLong(lines.get(0).trim());
     }
 
 

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
@@ -103,7 +104,8 @@ public class MassProcess extends AbstractConanProcess {
                     if (!args.isRunParallel()) {
                         log.debug("Waiting for completion of: " + singleMassArgs.getName());
                         this.massExecutor.executeScheduledWait(
-                                singleMassArgs.getJobPrefix() + "*",
+                                singleMassArgs.getJobPrefix() + "-analyser-*",
+                                ExitStatus.Type.COMPLETED_ANY,
                                 args.getJobPrefix() + "-wait",
                                 singleMassArgs.getOutputDir());
                     }
@@ -114,6 +116,7 @@ public class MassProcess extends AbstractConanProcess {
                     log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
                     this.massExecutor.executeScheduledWait(
                             args.getJobPrefix() + "-group*",
+                            ExitStatus.Type.COMPLETED_ANY,
                             args.getJobPrefix() + "-wait",
                             args.getOutputDir());
                 }

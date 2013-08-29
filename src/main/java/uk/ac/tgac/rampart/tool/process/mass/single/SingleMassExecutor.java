@@ -23,6 +23,7 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -40,4 +41,11 @@ public interface SingleMassExecutor extends RampartExecutor {
 
     void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
+
+    void executeSubsampler(double probability, long timestamp, File input, File output, String jobName)
+            throws ProcessExecutionException, InterruptedException, IOException;
+
+    long getNbEntries(File seqFile, File outputDir, String jobName) throws ProcessExecutionException, InterruptedException, IOException;
+
+    long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException;
 }

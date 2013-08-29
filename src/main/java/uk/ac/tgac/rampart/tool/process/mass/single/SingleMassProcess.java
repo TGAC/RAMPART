@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
@@ -93,7 +94,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             KmerRange validatedKmerRange = this.validateKmerRange(args.getName(), genericAssembler.hasKParam(), args.getKmerRange());
 
             // Make sure the coverage range reasonable (if it's not already)
-            CoverageRange validatedCoverageRange = this.validateCoverageRange(args.getName(), args.getCoverageRange());
+            CoverageRange validatedCoverageRange = this.validateCoverageRange(args.getName(), args.getOrganism(), args.getCoverageRange());
 
             // Make sure the inputs are reasonable
             List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(), args.getAllMecqs());
@@ -110,9 +111,13 @@ public class SingleMassProcess extends AbstractConanProcess {
             // Execute assemblies only if user doesn't just want the statistics from existing assemblies.
             if (!args.isStatsOnly()) {
 
-                // Dispatch an assembly job for coverage and kmer value
+                // Iterate over coverage range
                 for (Integer cvg : validatedCoverageRange) {
 
+                    // Do subsampling for this coverage level if required
+                    List<Library> subsampledLibs = doSubsampling(args, genericAssembler.doesSubsampling(), cvg, selectedLibs);
+
+                    // Iterate over kmer range
                     for (Integer k : validatedKmerRange) {
 
                         // Generate a directory name for this assembly
@@ -125,7 +130,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                         log.debug("Starting " + args.getTool() + " in " + outputDir.getAbsolutePath());
 
                         // Create the actual assembler for these settings
-                        Assembler assembler = this.makeAssembler(args, k, cvg, selectedLibs, outputDir);
+                        Assembler assembler = this.makeAssembler(args, k, cvg, subsampledLibs, outputDir);
 
                         // Make the output directory for this child job (delete the directory if it already exists)
                         if (outputDir.exists()) {
@@ -151,16 +156,6 @@ public class SingleMassProcess extends AbstractConanProcess {
             log.info("Analysing and comparing assemblies for MASS group: " + args.getName());
             this.singleMassExecutor.dispatchAnalyserJobs(genericAssembler, args, assemblerWait, args.getJobPrefix() + "-analyser");
 
-            // Compile results
-            /*log.info("Compiling results for MASS group: " + args.getName());
-
-            // If using a scheduler create a wait condition that will be observed by the results compilation job
-            WaitCondition analyserWait = executionContext.usingScheduler() && args.isRunParallel() ?
-                    executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-analyser*") :
-                    null;
-
-            this.singleMassExecutor.compileResults(genericAssembler, args, analyserWait, args.getJobPrefix() + "-results");*/
-
             // Finish
             log.info("Finished MASS group: " + args.getName());
 
@@ -171,6 +166,91 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
 
         return true;
+    }
+
+    private List<Library> doSubsampling(SingleMassArgs args, boolean assemblerDoesSubsampling, int coverage, List<Library> libraries)
+            throws IOException, InterruptedException, ProcessExecutionException {
+
+
+        // Check to see if we even need to do subsampling.  If not just return the current libraries.
+        if (assemblerDoesSubsampling || coverage == CoverageRange.ALL) {
+            return libraries;
+        }
+
+        // Try to create directory to contain subsampled libraries
+        File subsamplingDir = new File(args.getOutputDir(), "subsampled_libs");
+
+        if (!subsamplingDir.exists()) {
+            if (!subsamplingDir.mkdirs()) {
+                throw new IOException("Couldn't create subsampling directory for " + args.getName() + " in " + args.getOutputDir().getAbsolutePath());
+            }
+        }
+
+        // Subsample each library
+        List<Library> subsampledLibs = new ArrayList<>();
+
+        for(Library lib : libraries) {
+
+            Library subsampledLib = lib.copy();
+
+            // Subsample to this coverage level if required
+            long timestamp = System.currentTimeMillis();
+            String fileSuffix = "_cvg-" + coverage + ".fastq";
+            String jobPrefix = args.getJobPrefix() + "-subsample-" + lib.getName() + "-" + coverage + "x";
+
+            subsampledLib.setName(lib.getName() + "-" + coverage + "x");
+
+            if (subsampledLib.isPairedEnd()) {
+
+                // This calculation is much quicker if library is uniform, in this case we just calculate from the number
+                // of entries, otherwise we have to scan the whole file.
+                long sequencedBases = lib.isUniform() ?
+                        2 * lib.getReadLength() * this.singleMassExecutor.getNbEntries(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-line_count") :
+                        this.singleMassExecutor.getNbBases(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-base_count") +
+                                this.singleMassExecutor.getNbBases(lib.getFile2(), subsamplingDir, jobPrefix + "-file2-base_count");
+
+                // Calculate the probability of keeping an entry
+                double probability = (double)sequencedBases / (double)args.getOrganism().getEstGenomeSize() / 2.0;
+
+                log.debug("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
+                        "Estimated genome size is: " + args.getOrganism().getEstGenomeSize() + "; so we plan only to keep " +
+                        probability + "% of the reads to achieve approximately " + coverage + "X coverage");
+
+
+                subsampledLib.setFiles(
+                        new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
+                        new File(subsamplingDir, lib.getFile2().getName() + fileSuffix)
+                );
+
+                this.singleMassExecutor.executeSubsampler(probability, timestamp, lib.getFile1(), subsampledLib.getFile1(), jobPrefix + "-file1");
+                this.singleMassExecutor.executeSubsampler(probability, timestamp, lib.getFile2(), subsampledLib.getFile2(), jobPrefix + "-file2");
+            }
+            else {
+
+                // This calculation is much quicker if library is uniform, in this case we just calculate from the number
+                // of entries, otherwise we have to scan the whole file.
+                long sequencedBases = lib.isUniform() ?
+                        lib.getReadLength() * this.singleMassExecutor.getNbEntries(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-line_count") :
+                        this.singleMassExecutor.getNbBases(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-base_count");
+
+                // Calculate the probability of keeping an entry
+                double probability = (double)sequencedBases / (double)args.getOrganism().getEstGenomeSize();
+
+                log.debug("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
+                        "Estimated genome size is: " + args.getOrganism().getEstGenomeSize() + "; so we plan only to keep " +
+                        probability + "% of the reads to achieve approximately " + coverage + "X coverage");
+
+                subsampledLib.setFiles(
+                        new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
+                        null
+                );
+                this.singleMassExecutor.executeSubsampler(probability, timestamp, lib.getFile1(), subsampledLib.getFile1(), jobPrefix);
+            }
+
+            subsampledLibs.add(subsampledLib);
+        }
+
+        return subsampledLibs;
     }
 
     /**
@@ -288,11 +368,16 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
     }
 
-    protected CoverageRange validateCoverageRange(String massName, CoverageRange coverageRange) throws CommandExecutionException {
+    protected CoverageRange validateCoverageRange(String massName, Organism organism, CoverageRange coverageRange) throws CommandExecutionException {
 
         if (coverageRange == null) {
             CoverageRange defaultCoverageRange = new CoverageRange();
             log.info("No coverage range specified for " + massName + " running assembler with default range: " + defaultCoverageRange.toString());
+            return defaultCoverageRange;
+        }
+        else if (organism == null || organism.getEstGenomeSize() <= 0) {
+            CoverageRange defaultCoverageRange = new CoverageRange();
+            log.info("No estimated genome size specfied.  Not possible to subsample to desired range without a genome size estimate. Running assembler with default coverage range: " + defaultCoverageRange.toString());
             return defaultCoverageRange;
         }
         else if (coverageRange.validate()) {
@@ -332,7 +417,14 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         if (args.getStatsLevels().contains(StatsLevel.CONTIGUITY)) {
 
-            results.mergeWithQuastResults(new File(statsDir, "quast/report.txt"), statsDir, args.getName());
+            File quastFile = new File(statsDir, "quast/report.txt");
+
+            if (!quastFile.exists()) {
+                throw new IOException("Contiguity analysis (Quast) did not complete successfully for: " + args.getName() +
+                    "; Could not find: " + quastFile.getAbsolutePath());
+            }
+
+            results.mergeWithQuastResults(quastFile, statsDir, args.getName());
         }
 
         if (args.getStatsLevels().contains(StatsLevel.COMPLETENESS)) {
@@ -340,6 +432,11 @@ public class SingleMassProcess extends AbstractConanProcess {
             List<File> cegmaFiles = this.getCegmaFiles(new File(statsDir, "cegma"));
 
             for(File cegmaFile : cegmaFiles) {
+
+                if (!cegmaFile.exists()) {
+                    throw new IOException("Completeness analysis (CEGMA) did not complete successfully for: " +
+                            args.getName() + "; Could not find: " + cegmaFile.getAbsolutePath());
+                }
 
                 String assemblyName = FilenameUtils.getBaseName(cegmaFile.getName());
 
