@@ -225,7 +225,7 @@ public class RampartConfiguration implements Serializable {
                             this.getMassDir(),
                             jobPrefix + "-mass",
                             this.libs,
-                            this.mecqSettings.getEqcArgList(),
+                            this.mecqSettings == null ? null : this.mecqSettings.getEqcArgList(),
                             this.organism);
 
             // AMP

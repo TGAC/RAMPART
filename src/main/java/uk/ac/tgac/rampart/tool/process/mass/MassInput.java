@@ -65,6 +65,10 @@ public class MassInput {
     }
 
     public EcqArgs findMecq(List<EcqArgs> allMecqs) {
+
+        if (allMecqs == null)
+            return null;
+
         for(EcqArgs currentMecq : allMecqs) {
             if (currentMecq.getName().equalsIgnoreCase(this.mecq.trim())) {
                 return currentMecq;

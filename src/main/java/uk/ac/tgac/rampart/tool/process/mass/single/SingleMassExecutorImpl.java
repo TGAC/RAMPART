@@ -37,7 +37,6 @@ import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;

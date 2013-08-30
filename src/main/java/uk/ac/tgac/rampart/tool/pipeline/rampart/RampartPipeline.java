@@ -142,15 +142,15 @@ public class RampartPipeline implements ConanPipeline {
         List<RampartStage> stages = this.args.getStages();
 
         // Configure pipeline
-        if (stages.contains(RampartStage.MECQ)) {
+        if (stages.contains(RampartStage.MECQ) && config.getMecqSettings() != null) {
             this.processList.add(new MecqProcess(config.getMecqSettings()));
         }
 
-        if (stages.contains(RampartStage.MASS)) {
+        if (stages.contains(RampartStage.MASS) && config.getMassSettings() != null) {
             this.processList.add(new MassProcess(config.getMassSettings()));
         }
 
-        if (stages.contains(RampartStage.AMP)) {
+        if (stages.contains(RampartStage.AMP) && config.getAmpSettings() != null) {
             this.processList.add(new AmpProcess(config.getAmpSettings()));
         }
 

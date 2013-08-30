@@ -33,9 +33,7 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Report;
 import uk.ac.tgac.rampart.tool.process.mass.MassInput;
-import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 

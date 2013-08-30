@@ -25,19 +25,14 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
-import uk.ac.tgac.rampart.tool.process.mass.single.StatsLevel;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * User: maplesod
