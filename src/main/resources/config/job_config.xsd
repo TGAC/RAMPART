@@ -1,0 +1,156 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="rampart">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="organism" maxOccurs="1" minOccurs="1">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                                <xs:attribute type="xs:string" name="name" use="required"/>
+                                <xs:attribute type="xs:byte" name="ploidy" use="required"/>
+                                <xs:attribute type="xs:int" name="est_genome_size" use="required"/>
+                                <xs:attribute type="xs:float" name="est_gc_percentage" use="optional"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="libraries">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="library" maxOccurs="unbounded" minOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="files">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:string" name="path" maxOccurs="2" minOccurs="1"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                    <xs:attribute type="xs:short" name="read_length" use="optional"/>
+                                    <xs:attribute type="xs:short" name="avg_insert_size" use="optional"/>
+                                    <xs:attribute type="xs:float" name="insert_err_tolerance" use="optional"/>
+                                    <xs:attribute type="xs:string" name="orientation" use="optional"/>
+                                    <xs:attribute type="xs:string" name="type" use="required"/>
+                                    <xs:attribute type="xs:string" name="uniform" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="pipeline">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="mecq" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="ecq" maxOccurs="unbounded" minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:string">
+                                                        <xs:attribute type="xs:string" name="name" use="required"/>
+                                                        <xs:attribute type="xs:string" name="tool" use="required"/>
+                                                        <xs:attribute type="xs:byte" name="min_len" use="optional"/>
+                                                        <xs:attribute type="xs:byte" name="min_qual" use="optional"/>
+                                                        <xs:attribute type="xs:string" name="libs" use="optional"/>
+                                                        <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                                        <xs:attribute type="xs:byte" name="kmer" use="optional"/>
+                                                        <xs:attribute type="xs:byte" name="threads" use="optional"/>
+                                                        <xs:attribute type="xs:short" name="memory" use="optional"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="mass" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="single_mass" maxOccurs="unbounded" minOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="kmer" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute type="xs:byte" name="min" use="optional"/>
+                                                                    <xs:attribute type="xs:byte" name="max" use="optional"/>
+                                                                    <xs:attribute type="xs:string" name="step" use="optional"/>
+                                                                    <xs:attribute type="xs:string" name="list" use="optional"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="coverage" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute type="xs:byte" name="min"/>
+                                                                    <xs:attribute type="xs:byte" name="max"/>
+                                                                    <xs:attribute type="xs:string" name="step"/>
+                                                                    <xs:attribute type="xs:string" name="list"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="inputs">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="input" maxOccurs="unbounded" minOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="mecq" use="required"/>
+                                                                                <xs:attribute type="xs:string" name="lib" use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute type="xs:string" name="name" use="required"/>
+                                                <xs:attribute type="xs:string" name="tool" use="required"/>
+                                                <xs:attribute type="xs:byte" name="threads" use="optional"/>
+                                                <xs:attribute type="xs:short" name="memory" use="optional"/>
+                                                <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                                <xs:attribute type="xs:string" name="stats_only" use="optional"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                    <xs:attribute type="xs:string" name="stats_only" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="amp" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="stage" maxOccurs="unbounded" minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:string">
+                                                        <xs:attribute type="xs:string" name="tool" use="required"/>
+                                                        <xs:attribute type="xs:string" name="extra_args" use="optional"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="author"/>
+            <xs:attribute type="xs:string" name="collaborator"/>
+            <xs:attribute type="xs:string" name="institution"/>
+            <xs:attribute type="xs:string" name="title"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

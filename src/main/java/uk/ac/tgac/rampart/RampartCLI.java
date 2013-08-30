@@ -78,6 +78,7 @@ public class RampartCLI {
      */
     private static void configureSystem(RampartOptions rampartOptions) throws IOException {
 
+        // Create the settings directory in user.home if it doesn't already exist
         if (!SETTINGS_DIR.exists()) {
             if (!SETTINGS_DIR.mkdirs()) {
                 throw new IOException("Could not create RAMPART settings directory in: " + SETTINGS_DIR.getAbsolutePath());
@@ -110,9 +111,12 @@ public class RampartCLI {
 
         File internalScripts = FileUtils.toFile(RampartCLI.class.getResource("/scripts"));
         File internalData = FileUtils.toFile(RampartCLI.class.getResource("/data"));
+        File internalConfig = FileUtils.toFile(RampartCLI.class.getResource("/config"));
+
 
         File externalScriptsDir = new File(SETTINGS_DIR, "scripts");
         File externalDataDir = new File(SETTINGS_DIR, "data");
+        File externalConfigDir = new File(SETTINGS_DIR, "config");
 
         JarFile thisJar = JarUtils.jarForClass(RampartCLI.class, null);
 
@@ -121,12 +125,14 @@ public class RampartCLI {
             log.debug("Copying resources to settings directory.");
             FileUtils.copyDirectory(internalScripts, externalScriptsDir);
             FileUtils.copyDirectory(internalData, externalDataDir);
+            FileUtils.copyDirectory(internalConfig, externalConfigDir);
         }
         else {
 
             log.debug("Executing from JAR.  Copying resources to settings directory.");
             JarUtils.copyResourcesToDirectory(thisJar, "scripts", externalScriptsDir.getAbsolutePath());
             JarUtils.copyResourcesToDirectory(thisJar, "data", externalDataDir.getAbsolutePath());
+            JarUtils.copyResourcesToDirectory(thisJar, "config", externalConfigDir.getAbsolutePath());
         }
 
         // Intialise TGAC Conan
