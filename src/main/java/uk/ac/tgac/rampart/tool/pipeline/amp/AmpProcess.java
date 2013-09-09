@@ -47,12 +47,15 @@ public class AmpProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(AmpProcess.class);
 
+    private AmpExecutor ampExecutor;
+
     public AmpProcess() {
         this(new AmpArgs());
     }
 
     public AmpProcess(AmpArgs args) {
         super("", args, new AmpParams());
+        this.ampExecutor = new AmpExecutorImpl();
     }
 
 
@@ -69,7 +72,11 @@ public class AmpProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
 
+        // Short cut to arguments
         AmpArgs args = (AmpArgs)this.getProcessArgs();
+
+        // Initialise object that makes system calls
+        this.ampExecutor.initialise(this.conanProcessService, executionContext);
 
         // Create AMP Pipeline
         AmpPipeline ampPipeline = new AmpPipeline();
@@ -80,7 +87,7 @@ public class AmpProcess extends AbstractConanProcess {
         args.getAssembliesDir().mkdirs();
 
         // Create link for the input file
-        this.createInitialLink(args.getInputAssembly(), args.getAssembliesDir(), executionContext);
+        this.ampExecutor.createInitialLink(args.getInputAssembly(), args.getAssembliesDir());
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -103,67 +110,16 @@ public class AmpProcess extends AbstractConanProcess {
             throw new ProcessExecutionException(-1, e);
         }
 
-        // Process assemblies and generate stats after pipeline has completed
-        this.dispatchStatsJob(executionContext);
-
-        return true;
-    }
-
-    private void dispatchStatsJob(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
-
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-
-        AmpArgs args = (AmpArgs)this.getProcessArgs();
-        // I think it's safe to assume we have at least one lib otherwise we wouldn't have got this far.
-
-        String jobName = args.getJobPrefix() + "-analyser";
-
-        if (executionContextCopy.usingScheduler()) {
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-            schedulerArgs.setJobName(jobName);
-            schedulerArgs.setThreads(1);
-            schedulerArgs.setMemoryMB(0);
-            schedulerArgs.setMonitorFile(new File(args.getAssembliesDir(), jobName + ".log"));
-
-            executionContextCopy.setForegroundJob(true);
-        }
-
-        AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInput(args.getAssembliesDir());
-        ascArgs.setOutput(args.getAssembliesDir());
-        ascArgs.setMode("FULL");
-
-        AscV10Process ascProcess = new AscV10Process(ascArgs);
-
+        // Process assemblies and generate stats for each stage after pipeline has completed
         try {
-            this.conanProcessService.execute(ascProcess, executionContextCopy);
+            this.ampExecutor.executeAnalysisJob(args);
         }
         catch(ProcessExecutionException pee) {
             // If an error occurs here it isn't critical so just log the error and continue
             log.error(pee.getMessage(), pee);
         }
+
+        return true;
     }
 
-    /**
-     * Creates the initial symbolic link between the input assembly and the output directory.  This is basically a
-     * convienience for the user and helps to compare assemblies at each stage later.
-     * @param inputFile
-     * @param outputDir
-     * @param executionContext
-     * @throws ProcessExecutionException
-     * @throws InterruptedException
-     */
-    protected void createInitialLink(File inputFile, File outputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
-        String linkCommand = this.makeLinkCommand(inputFile, new File(outputDir, "amp-stage-0-scaffolds.fa"));
-
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        this.conanProcessService.execute(linkCommand, linkingExecutionContext);
-    }
-
-    protected String makeLinkCommand(File source, File target) {
-        return "ln -s -f " + source.getAbsolutePath() + " " + target.getAbsolutePath();
-    }
 }

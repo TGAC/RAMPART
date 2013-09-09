@@ -39,9 +39,11 @@ public class AmpStageProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(AmpStageProcess.class);
 
+    private AmpStageExecutor ampStageExecutor;
 
     public AmpStageProcess(AmpStageArgs args) {
         super("", args, new AmpStageParams());
+        this.ampStageExecutor = new AmpStageExecutorImpl();
     }
 
     public AmpStageArgs getAmpArgs() {
@@ -65,6 +67,10 @@ public class AmpStageProcess extends AbstractConanProcess {
             // Make a shortcut to the args
             AmpStageArgs args = (AmpStageArgs) this.getProcessArgs();
 
+            // Initialise the object that makes system calls
+            this.ampStageExecutor.initialise(this.conanProcessService, executionContext);
+
+
             log.info("Starting AMP stage " + args.getIndex());
 
             // Make sure input file exists
@@ -77,14 +83,14 @@ public class AmpStageProcess extends AbstractConanProcess {
                 args.getOutputDir().mkdir();
             }
 
-            // Create the actual assembler for these settings
+            // Create the configuration for this stage
             AbstractAssemblyIOProcess ampProc = this.makeStage(args);
 
             // Execute the AMP stage
-            this.executeStage(ampProc, args.getJobPrefix(), executionContext);
+            this.ampStageExecutor.executeAmpStage(ampProc);
 
             // Create links for outputs from this assembler to known locations
-            this.createLink(args.getOutputFile(), args.getAssembliesDir(), args.getIndex(), executionContext);
+            this.ampStageExecutor.createAmpStageLink(args.getOutputFile(), args.getAssembliesDir(), args.getIndex());
 
             log.info("Finished AMP stage " + args.getIndex());
 
@@ -103,24 +109,6 @@ public class AmpStageProcess extends AbstractConanProcess {
         return proc;
     }
 
-    protected void executeStage(AbstractAssemblyIOProcess ampProc, String jobPrefix, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
-
-        this.conanProcessService.execute(ampProc, executionContext);
-    }
-
-    protected String makeLinkCommand(File source, File target) {
-        return "ln -s -f " + source.getAbsolutePath() + " " + target.getAbsolutePath();
-    }
-
-
-    protected void createLink(File sourceFile, File outputDir, int stageNumber, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
-
-        String linkCommand = makeLinkCommand(sourceFile, new File(outputDir, "amp-stage-" + stageNumber + "-scaffolds.fa"));
-
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        this.conanProcessService.execute(linkCommand, linkingExecutionContext);
-    }
 
     @Override
     public String getCommand() {
