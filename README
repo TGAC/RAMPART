@@ -1,7 +1,7 @@
 RAMPART README
 
-Version: 0.5.0
-Date: 30th August 2013
+Version: 0.5.1
+Date: 9th September 2013
 
 
 What does RAMPART do?
@@ -52,7 +52,7 @@ Quick Start
 ===========
 
 1. Create a job configuration file (details below) in a clean directory.
-2. Then make this directory the working directory and type: "java -jar rampart-0.5.0.jar --config <name of config file>"
+2. Then make this directory the working directory and type: "java -jar rampart-<version>.jar --config <name of config file>"
 
 This will run RAMPART with its default settings on the data you've provided in the config file.  Details on how to
 construct a config file are described in the next section.
@@ -60,7 +60,7 @@ construct a config file are described in the next section.
 Upon starting for the first time RAMPART automatically copies a number of resources to the "~/.tgac/rampart" directory.
 It is worth perusing this directory to see what options are available.
 
-More information on RAMPART usage can be obtained by typing "java -jar rampart-0.5.0.jar --help".
+More information on RAMPART usage can be obtained by typing "java -jar rampart-<version>.jar --help".
 
 
 
@@ -108,6 +108,23 @@ AllpathsLg_V44837
 
 Format: <key>=<command to bring tool onto PATH>
 
+The tools can be downloaded from the following urls:
+
+JRE             - http://www.oracle.com/technetwork/java/javase/downloads/index.html
+Sickle          - https://github.com/najoshi/sickle
+Abyss           - http://www.bcgsc.ca/platform/bioinfo/software/abyss
+SSPACE_Basic    - http://www.baseclear.com/landingpages/basetools-a-wide-range-of-bioinformatics-solutions/sspacev12/
+SOAP_GapCloser  - http://soap.genomics.org.cn/soapdenovo.html
+SoapDeNovo      - http://soap.genomics.org.cn/soapdenovo.html
+Quake           - http://www.cbcb.umd.edu/software/quake/
+Musket          - http://musket.sourceforge.net/homepage.htm#latest
+Quast           - http://bioinf.spbau.ru/quast
+Cegma           - http://korflab.ucdavis.edu/datasets/cegma/
+Subsampler      - https://github.com/homonecloco/subsampler
+AllpathsLg      - http://www.broadinstitute.org/software/allpaths-lg/blog/?page_id=12
+
+
+
 
 
 Output
@@ -141,11 +158,11 @@ Extending the Software / Compilation
 ====================================
 
 RAMPART is a java / maven project that depends on two other java / maven projects: TgacConanProcs and ConanX.  Both of
-these projects are available from github. The projects require JDK 1.6 or above to compile.  It should be possible to
+these projects are available from github. The projects require JDK 1.7 or above to compile.  It should be possible to
 load the maven poms from each project into any maven aware IDE (IntelliJ Idea, Net Beans, Eclipse).  The exact steps to
 create the projects locally on your machine are as follows:
 
-- Ensure GIT, Maven and JDK v1.6+ is installed
+- Ensure GIT, Maven and JDK v1.7+ is installed
 - Open a terminal
 - Type: "git clone https://github.com/tburdett/Conan2.git -b conanx"
 - Type: "cd Conan2"
