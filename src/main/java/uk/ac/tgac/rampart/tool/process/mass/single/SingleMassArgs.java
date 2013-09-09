@@ -55,7 +55,8 @@ public class SingleMassArgs implements ProcessArgs {
 
     public static final boolean DEFAULT_STATS_ONLY = false;
     public static final boolean DEFAULT_RUN_PARALLEL = false;
-
+    public static final int DEFAULT_THREADS = 1;
+    public static final int DEFAULT_MEMORY = 0;
 
 
     // Need access to these
@@ -113,8 +114,6 @@ public class SingleMassArgs implements ProcessArgs {
         // Required
         this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
         this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
-        this.threads = XmlHelper.getIntValue(ele, KEY_ATTR_THREADS);
-        this.memory = XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY);
 
         Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
         NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
@@ -123,6 +122,14 @@ public class SingleMassArgs implements ProcessArgs {
         }
 
         // Optional
+        this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ?
+                XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) :
+                DEFAULT_THREADS;
+
+        this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ?
+                XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) :
+                DEFAULT_MEMORY;
+
         this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                 XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                 DEFAULT_RUN_PARALLEL;
