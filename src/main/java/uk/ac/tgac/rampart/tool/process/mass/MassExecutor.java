@@ -24,6 +24,7 @@ import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -39,4 +40,6 @@ public interface MassExecutor extends RampartExecutor {
             throws InterruptedException, ProcessExecutionException;
 
     AssemblyStatsTable compileSingleMassResults(SingleMassArgs singleMassArgs) throws IOException;
+
+    List<Integer> getJobIds();
 }

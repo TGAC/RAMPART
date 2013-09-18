@@ -25,9 +25,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
@@ -77,9 +77,9 @@ public class SingleMassProcessTest {
         SingleMassProcess singleMassProcess = new SingleMassProcess(args);
         AbstractConanProcess smParent = singleMassProcess;
 
-        when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(0);
-        doNothing().when(singleMassExecutor).executeAssembler((Assembler) any(), anyString(), anyBoolean());
-        doNothing().when(singleMassExecutor).dispatchAnalyserJobs((Assembler) any(), (SingleMassArgs) any(), (WaitCondition) any(), anyString());
+        when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
+        when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean())).thenReturn(new DefaultExecutionResult(0, null, -1));
+        doNothing().when(singleMassExecutor).dispatchAnalyserJobs((Assembler) any(), (SingleMassArgs) any(), anyString(), anyString());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 

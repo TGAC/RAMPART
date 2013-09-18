@@ -20,10 +20,12 @@ package uk.ac.tgac.rampart.tool;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -50,7 +52,7 @@ public class RampartExecutorImpl implements RampartExecutor {
     }
 
     /**
-     * Creates a sumbolic link between the two provided files now! (i.e. we ignore any scheduling information in the
+     * Creates a symbolic link between the two provided files now! (i.e. we ignore any scheduling information in the
      * execution context)
      * @param inputFile
      * @param outputFile
@@ -66,21 +68,25 @@ public class RampartExecutorImpl implements RampartExecutor {
 
 
     @Override
-    public void executeScheduledWait(String waitCondition, ExitStatus.Type exitStatus, String jobName, File outputDir)
+    public void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException {
+
+        if (!executionContext.usingScheduler())
+            throw new UnsupportedOperationException("Cannot dispatch a scheduled wait job without using a scheduler");
 
         // Duplicate the execution context so we don't modify the original accidentally.
         ExecutionContext executionContextCopy = executionContext.copy();
 
-        if (executionContext.usingScheduler()) {
+        Scheduler scheduler = executionContextCopy.getScheduler();
 
-            executionContextCopy.getScheduler().getArgs().setJobName(jobName);
-            executionContextCopy.getScheduler().getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
-            executionContextCopy.setForegroundJob(true);
-        }
+        scheduler.getArgs().setJobName(jobName);
+        scheduler.getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+        executionContextCopy.setForegroundJob(true);
 
-        this.conanProcessService.waitFor(
-                executionContextCopy.getScheduler().createWaitCondition(exitStatus, waitCondition),
-                executionContextCopy);
+        String condition = scheduler.generatesJobIdFromOutput() ?
+                scheduler.createWaitCondition(exitStatusType, jobIds) :
+                scheduler.createWaitCondition(exitStatusType, waitCondition);
+
+        this.conanProcessService.waitFor(condition, executionContextCopy);
     }
 }

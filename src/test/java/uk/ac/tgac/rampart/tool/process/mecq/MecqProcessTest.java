@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -49,13 +50,13 @@ public class MecqProcessTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Mock
-    ExecutionContext ec;
+    private ExecutionContext ec;
 
     @Mock
-    ConanProcessService conanProcessService;
+    private ConanProcessService conanProcessService;
 
     @Mock
-    SickleV11Process sickle;
+    private SickleV11Process sickle;
 
     @Test
     public void testQT() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
@@ -69,7 +70,7 @@ public class MecqProcessTest {
 
         MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 
-        when(conanProcessService.execute(sickle, ec)).thenReturn(0);
+        when(conanProcessService.execute(sickle, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
 
         ReflectionTestUtils.setField(mecqProcess, "conanProcessService", conanProcessService);
 

@@ -22,9 +22,6 @@ import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
-import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 
 import java.io.File;

@@ -23,6 +23,7 @@ import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -37,6 +38,6 @@ public interface RampartExecutor {
 
     void createLink(File inputFile, File outputFile) throws ProcessExecutionException, InterruptedException;
 
-    void executeScheduledWait(String waitCondition, ExitStatus.Type exitStatus, String jobName, File outputDir)
+    void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException;
 }

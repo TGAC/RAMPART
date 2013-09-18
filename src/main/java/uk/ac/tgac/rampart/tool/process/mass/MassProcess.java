@@ -32,7 +32,9 @@ import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -85,6 +87,8 @@ public class MassProcess extends AbstractConanProcess {
             // Only run single mass groups if we're not in stats only mode.
             if (!args.isStatsOnly()) {
 
+                List<Integer> jobIds = new ArrayList<>();
+
                 for (SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
 
                     // Ensure output directory for this MASS run exists
@@ -95,14 +99,20 @@ public class MassProcess extends AbstractConanProcess {
                     // Execute this MASS group
                     this.massExecutor.executeSingleMass(singleMassArgs);
 
+                    // Collect job ids
+                    jobIds.addAll(this.massExecutor.getJobIds());
+
                     // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
                     if (executionContext.usingScheduler() && !args.isRunParallel()) {
                         log.debug("Waiting for completion of: " + singleMassArgs.getName());
                         this.massExecutor.executeScheduledWait(
+                                jobIds,
                                 singleMassArgs.getJobPrefix() + "-analyser-*",
                                 ExitStatus.Type.COMPLETED_ANY,
                                 args.getJobPrefix() + "-wait",
                                 singleMassArgs.getOutputDir());
+
+                        jobIds.clear();
                     }
                 }
 
@@ -110,6 +120,7 @@ public class MassProcess extends AbstractConanProcess {
                 if (executionContext.usingScheduler() && args.isRunParallel()) {
                     log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
                     this.massExecutor.executeScheduledWait(
+                            jobIds,
                             args.getJobPrefix() + "-group*",
                             ExitStatus.Type.COMPLETED_ANY,
                             args.getJobPrefix() + "-wait",

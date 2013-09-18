@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
@@ -46,13 +47,13 @@ public class ReportProcessTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Mock
-    ExecutionContext ec;
+    private ExecutionContext ec;
 
     @Mock
-    ConanProcessService conanProcessService;
+    private ConanProcessService conanProcessService;
 
     @Mock
-    VelocityMergerService velocityMergerService;
+    private VelocityMergerService velocityMergerService;
 
 
     @Test
@@ -70,7 +71,7 @@ public class ReportProcessTest {
 
         ReportProcess process = new ReportProcess(args);
 
-        when(conanProcessService.execute(process, ec)).thenReturn(0);
+        when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
         when(ec.getLocality()).thenReturn(new Local());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);

@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
@@ -79,7 +80,7 @@ public class MassSelectorProcessTest {
         MassSelectorProcess process = new MassSelectorProcess(args);
         AbstractConanProcess parentProcess = process;
 
-        when(conanProcessService.execute(process, ec)).thenReturn(0);
+        when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 
@@ -105,7 +106,7 @@ public class MassSelectorProcessTest {
         MassSelectorProcess process = new MassSelectorProcess(args);
         AbstractConanProcess parentProcess = process;
 
-        when(conanProcessService.execute(process, ec)).thenReturn(0);
+        when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 

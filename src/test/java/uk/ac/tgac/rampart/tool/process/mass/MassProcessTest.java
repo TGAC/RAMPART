@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
@@ -84,7 +85,7 @@ public class MassProcessTest {
 
         MassProcess multiMass = new MassProcess(args);
 
-        when(conanProcessService.execute(multiMass, ec)).thenReturn(0);
+        when(conanProcessService.execute(multiMass, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
         when(ec.getLocality()).thenReturn(new Local());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);

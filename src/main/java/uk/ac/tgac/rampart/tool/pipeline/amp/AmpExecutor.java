@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
 import java.io.File;

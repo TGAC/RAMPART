@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
@@ -104,10 +104,12 @@ public class SingleMassProcess extends AbstractConanProcess {
             log.debug("Creating directories");
             this.createSupportDirectories(genericAssembler, args);
 
-            WaitCondition assemblerWait = null;
+            String assemblerWait = null;
 
             // Execute assemblies only if user doesn't just want the statistics from existing assemblies.
             if (!args.isStatsOnly()) {
+
+                List<Integer> assemblyJobIds = new ArrayList<>();
 
                 // Iterate over coverage range
                 for (Integer cvg : validatedCoverageRange) {
@@ -137,7 +139,10 @@ public class SingleMassProcess extends AbstractConanProcess {
                         outputDir.mkdirs();
 
                         // Execute the assembler
-                        this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
+                        ExecutionResult result = this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
+
+                        // Add assembler id to list
+                        assemblyJobIds.add(result.getJobId());
 
                         // Create links for outputs from this assembler to known locations
                         this.singleMassExecutor.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
@@ -146,7 +151,9 @@ public class SingleMassProcess extends AbstractConanProcess {
 
                 // If using a scheduler create a wait condition that will be observed by the stats job if running in parallel
                 assemblerWait = executionContext.usingScheduler() && args.isRunParallel() ?
-                        executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-assembly*") :
+                        executionContext.getScheduler().generatesJobIdFromOutput() ?
+                                executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, assemblyJobIds) :
+                                executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-assembly*") :
                         null;
             }
 
@@ -164,6 +171,10 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
 
         return true;
+    }
+
+    public List<Integer> getJobIds() {
+        return this.singleMassExecutor.getJobIds();
     }
 
     private List<Library> doSubsampling(SingleMassArgs args, boolean assemblerDoesSubsampling, int coverage, List<Library> libraries)

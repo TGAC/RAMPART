@@ -27,6 +27,8 @@ import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -36,6 +38,12 @@ import java.io.IOException;
 @Service
 public class MassExecutorImpl extends RampartExecutorImpl implements MassExecutor {
 
+    private List<Integer> jobIds;
+
+    public MassExecutorImpl() {
+        this.jobIds = new ArrayList<>();
+    }
+
     @Override
     public void executeSingleMass(SingleMassArgs singleMassArgs)
             throws InterruptedException, ProcessExecutionException {
@@ -43,6 +51,7 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
         SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
         singleMassProcess.setConanProcessService(this.conanProcessService);
         singleMassProcess.execute(this.executionContext);
+        this.jobIds = singleMassProcess.getJobIds();
     }
 
     @Override
@@ -51,6 +60,11 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
 
         SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
         return singleMassProcess.compileResults(singleMassArgs);
+    }
+
+    @Override
+    public List<Integer> getJobIds() {
+        return this.jobIds;
     }
 
     @Override

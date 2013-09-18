@@ -17,7 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
-import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
@@ -25,6 +25,7 @@ import uk.ac.tgac.rampart.tool.RampartExecutor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * User: maplesod
@@ -33,13 +34,13 @@ import java.io.IOException;
  */
 public interface SingleMassExecutor extends RampartExecutor {
 
-    void executeAssembler(Assembler assembler, String jobName, boolean runParallel)
+    ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException;
 
     void createAssemblyLinks(Assembler assembler, SingleMassArgs smArgs, String jobName)
             throws ProcessExecutionException, InterruptedException;
 
-    void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
+    void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, String waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 
     void executeSubsampler(double probability, long timestamp, File input, File output, String jobName)
@@ -48,4 +49,6 @@ public interface SingleMassExecutor extends RampartExecutor {
     long getNbEntries(File seqFile, File outputDir, String jobName) throws ProcessExecutionException, InterruptedException, IOException;
 
     long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException;
+
+    List<Integer> getJobIds();
 }

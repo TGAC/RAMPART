@@ -20,8 +20,8 @@ package uk.ac.tgac.rampart.tool.process.mass.single;
 import org.apache.commons.io.FileUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
-import uk.ac.ebi.fgpt.conan.model.context.WaitCondition;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
@@ -50,8 +50,14 @@ import java.util.List;
  */
 public class SingleMassExecutorImpl extends RampartExecutorImpl implements SingleMassExecutor {
 
+    private List<Integer> jobIds;
+
+    public SingleMassExecutorImpl() {
+        this.jobIds = new ArrayList<>();
+    }
+
     @Override
-    public void executeAssembler(Assembler assembler, String jobName, boolean runParallel)
+    public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
@@ -79,7 +85,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         }
 
         // Create process
-        this.conanProcessService.execute(assembler, executionContextCopy);
+        return this.conanProcessService.execute(assembler, executionContextCopy);
     }
 
     @Override
@@ -106,7 +112,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     }
 
     @Override
-    public void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, WaitCondition waitCondition, String jobName)
+    public void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, String waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         // Make a copy of the execution context so we can make modifications
@@ -175,6 +181,11 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException {
 
         return getCount(seqFile, outputDir, jobName, false);
+    }
+
+    @Override
+    public List<Integer> getJobIds() {
+        return this.jobIds;
     }
 
     protected long getCount(File seqFile, File outputDir, String jobName, boolean linesOnly) throws ProcessExecutionException, InterruptedException, IOException {
@@ -270,13 +281,16 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
             cegmaProcess.initialise();
 
             // Execute CEGMA
-            this.conanProcessService.execute(cegmaProcess, executionContextCopy);
+            ExecutionResult result = this.conanProcessService.execute(cegmaProcess, executionContextCopy);
 
             // Create symbolic links to completeness_reports
             File sourceFile = new File(cegmaArgs.getOutputPrefix().getAbsolutePath() + ".completeness_report");
             File destFile = new File(rootOutputDir, f.getName() + ".cegma");
             String linkCmd = "ln -s -f " + sourceFile.getAbsolutePath() + " " + destFile.getAbsolutePath();
             this.conanProcessService.execute(linkCmd, new DefaultExecutionContext(executionContext.getLocality(), null, null, true));
+
+            // Add cegma job id to list
+            this.jobIds.add(result.getJobId());
         }
 
 
@@ -320,7 +334,10 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
         QuastV2_2Process quastProcess = new QuastV2_2Process(quastArgs);
 
-        this.conanProcessService.execute(quastProcess, executionContextCopy);
+        ExecutionResult result = this.conanProcessService.execute(quastProcess, executionContextCopy);
+
+        // Add quast job id to list
+        this.jobIds.add(result.getJobId());
     }
 
     /**

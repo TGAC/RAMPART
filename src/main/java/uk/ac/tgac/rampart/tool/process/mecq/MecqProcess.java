@@ -29,6 +29,8 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.*;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -72,6 +74,8 @@ public class MecqProcess extends AbstractConanProcess {
             args.getOutputDir().mkdirs();
         }
 
+        List<Integer> jobIds = new ArrayList<>();
+
         // For each ecq process all libraries
         for(EcqArgs ecqArgs : args.getEqcArgList()) {
 
@@ -98,14 +102,9 @@ public class MecqProcess extends AbstractConanProcess {
                 // Execute this error corrector
                 this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel());
 
-                // Check to see if we should run each ECQ in parallel, if not wait here until each ECQ has completed
-                /*if (executionContext.usingScheduler() && !ecqArgs.isRunParallel()) {
-                    log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for library: " + lib.getName());
-                    this.mecqExecutor.executeScheduledWait(
-                            ecqArgs.getJobPrefix() + "*",
-                            args.getJobPrefix() + "-wait",
-                            ecqLibDir);
-                } */
+                // The job id should be stored in the process if we are using a scheduler, add to the list regardless
+                // in case we need it later
+                jobIds.add(ec.getJobId());
             }
 
             // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
@@ -113,10 +112,13 @@ public class MecqProcess extends AbstractConanProcess {
             if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
                 log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
                 this.mecqExecutor.executeScheduledWait(
+                        jobIds,
                         ecqArgs.getJobPrefix() + "*",
                         ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
                         ecDir);
+
+                jobIds.clear();
             }
         }
 
@@ -125,6 +127,7 @@ public class MecqProcess extends AbstractConanProcess {
         if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
             log.debug("Running all ECQ groups in parallel, waiting for completion");
             this.mecqExecutor.executeScheduledWait(
+                    jobIds,
                     args.getJobPrefix() + "-ecq*",
                     ExitStatus.Type.COMPLETED_SUCCESS,
                     args.getJobPrefix() + "-wait",
