@@ -170,8 +170,34 @@
             </plugin> -->
 
         </plugins>
-
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>2.2</version>
+            </extension>
+        </extensions>
 	</build>
+
+
+    <!-- Maven repository deploy -->
+    <distributionManagement>
+        <downloadUrl>https://repos.tgac.ac.uk/maven/repo</downloadUrl>
+        <repository>
+            <id>tgac-repo</id>
+            <name>TGAC repository</name>
+            <url>scp://repos.tgac.ac.uk/storage/html/maven/repo</url>
+        </repository>
+    </distributionManagement>
+
+    <!-- TGAC Maven Repo -->
+    <repositories>
+        <repository>
+            <id>tgac-repo</id>
+            <name>TGAC Maven Repository</name>
+            <url>https://repos.tgac.ac.uk/maven/repo</url>
+        </repository>
+    </repositories>
 
 
 	<dependencies>
@@ -204,33 +230,6 @@
         </dependency>
 
 
-        <!-- Logging -->
-
-        <dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j-version}</version>
-            <scope>runtime</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.6.1</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.16</version>
-        </dependency>
-
-
-
         <!-- Conan -->
 
         <dependency>
@@ -239,25 +238,6 @@
             <version>0.5.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>uk.ac.ebi.fgpt</groupId>
-            <artifactId>conan-core-services</artifactId>
-            <version>${conan-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>uk.ac.ebi.fgpt</groupId>
-            <artifactId>conan-service</artifactId>
-            <version>${conan-version}</version>
-        </dependency>
-
-
 
         <!-- Apache -->
 
@@ -265,11 +245,6 @@
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
             <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
         </dependency>
 
 
@@ -282,26 +257,6 @@
         </dependency>
 
 
-        <!-- Hibernate -->
-
-        <!--<dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>4.1.7.Final</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>4.3.0.Final</version>
-        </dependency>-->
-
-
         <!-- MySQL -->
 
         <dependency>
@@ -309,54 +264,6 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.21</version>
         </dependency>
-
-
-        <!-- Spring -->
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${springframework-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-            <version>${springframework-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${springframework-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!--<dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-            <version>${springframework-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>-->
 
 	</dependencies>
 

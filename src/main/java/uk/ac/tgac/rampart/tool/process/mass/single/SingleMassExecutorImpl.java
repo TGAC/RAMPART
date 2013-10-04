@@ -343,7 +343,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     /**
      * Gets all the FastA files in the directory specified by the user.
      * @param inputDir
-     * @return
+     * @return A list of fasta files in the user specified directory
      */
     protected List<File> filesFromDir(File inputDir) {
 

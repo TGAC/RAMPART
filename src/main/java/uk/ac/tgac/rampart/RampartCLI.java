@@ -141,7 +141,7 @@ public class RampartCLI {
 
     /**
      * Returns the current working directory as an absolute file
-     * @return
+     * @return The current working directory
      */
     public static File currentWorkingDir() {
         return new File(".").getAbsoluteFile().getParentFile();
@@ -150,7 +150,7 @@ public class RampartCLI {
 
     /**
      * Constructs an execution context from details discovered from the environment configuration file.
-     * @return
+     * @return An execution content build from the environment configuration file
      * @throws IOException
      */
     private static ExecutionContext buildExecutionContext() throws IOException {

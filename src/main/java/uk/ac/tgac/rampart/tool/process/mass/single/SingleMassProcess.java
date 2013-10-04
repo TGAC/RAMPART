@@ -292,7 +292,7 @@ public class SingleMassProcess extends AbstractConanProcess {
      * @param cvg
      * @param selectedLibs
      * @param outputDir
-     * @return
+     * @return An assembler built using a combinarion of single mass args and user specified args
      */
     protected Assembler makeAssembler(SingleMassArgs massArgs, int k, int cvg, List<Library> selectedLibs, File outputDir) {
 
@@ -465,9 +465,9 @@ public class SingleMassProcess extends AbstractConanProcess {
 
 
     /**
-     * Gets all the FastA files in the directory specified by the user.
+     * Gets all the CEGMA files in the directory specified by the user.
      * @param cegmaDir
-     * @return
+     * @return A list of CEGMA files in the current directory
      */
     protected List<File> getCegmaFiles(File cegmaDir) {
 
