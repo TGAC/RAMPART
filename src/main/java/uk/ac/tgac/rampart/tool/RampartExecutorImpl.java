@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart.tool;
 
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
@@ -89,4 +90,20 @@ public class RampartExecutorImpl implements RampartExecutor {
 
         this.conanProcessService.waitFor(condition, executionContextCopy);
     }
+
+    @Override
+    public boolean processOperational(ConanProcess conanProcess) {
+
+        //TODO This still requires some changes to ConanX.
+        // What I'd like to do here is just do a "which" command on the exe of the process and see if we get output.
+        // If so then this process is probably operational
+
+        ExecutionContext operationalExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+
+        //this.conanProcessService.execute("which " + conanProcessExe + " > " + tempDir + "/process_test/" + conanProcessExe, operationalExecutionContext);
+
+        return true;
+    }
+
+
 }

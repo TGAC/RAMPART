@@ -43,7 +43,7 @@
                 <xs:element name="pipeline">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="mecq" maxOccurs="1" minOccurs="0">
+                            <xs:element name="ecq" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="ecq" maxOccurs="unbounded" minOccurs="0">
@@ -104,7 +104,7 @@
                                                                     <xs:complexType>
                                                                         <xs:simpleContent>
                                                                             <xs:extension base="xs:string">
-                                                                                <xs:attribute type="xs:string" name="mecq" use="required"/>
+                                                                                <xs:attribute type="xs:string" name="ecq" use="required"/>
                                                                                 <xs:attribute type="xs:string" name="lib" use="required"/>
                                                                             </xs:extension>
                                                                         </xs:simpleContent>

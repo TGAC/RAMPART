@@ -292,7 +292,7 @@ public class SingleMassProcess extends AbstractConanProcess {
      * @param cvg
      * @param selectedLibs
      * @param outputDir
-     * @return An assembler built using a combinarion of single mass args and user specified args
+     * @return An assembler built using a combination of single mass args and user specified args
      */
     protected Assembler makeAssembler(SingleMassArgs massArgs, int k, int cvg, List<Library> selectedLibs, File outputDir) {
 
@@ -323,21 +323,21 @@ public class SingleMassProcess extends AbstractConanProcess {
             }
 
             if (ecqArgs == null) {
-                if (mi.getMecq().equalsIgnoreCase(EcqArgs.RAW)) {
+                if (mi.getEcq().equalsIgnoreCase(EcqArgs.RAW)) {
                     selectedLibs.add(lib);
                 }
                 else {
-                    throw new IOException("Unrecognised MECQ dataset requested: " + mi.getMecq() + "; not processing MASS run: " + massName);
+                    throw new IOException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + massName);
                 }
             }
             else {
                 Library modLib = lib.copy();
 
-                List<File> files = ecqArgs.getOutputFiles(lib.getName());
+                List<File> files = ecqArgs.getOutputFiles(modLib);
 
                 if (modLib.isPairedEnd()) {
-                    if (files.size() != 2) {
-                        throw new IOException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two files");
+                    if (files.size() != 2 || files.size() != 3) {
+                        throw new IOException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two or three files");
                     }
 
                     modLib.setFiles(files.get(0), files.get(1));
@@ -352,6 +352,8 @@ public class SingleMassProcess extends AbstractConanProcess {
 
                 selectedLibs.add(modLib);
             }
+
+            log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq() + "; Single MASS name: " + massName);
         }
 
         return selectedLibs;
@@ -386,7 +388,8 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
         else if (organism == null || organism.getEstGenomeSize() <= 0) {
             CoverageRange defaultCoverageRange = new CoverageRange();
-            log.info("No estimated genome size specfied.  Not possible to subsample to desired range without a genome size estimate. Running assembler with default coverage range: " + defaultCoverageRange.toString());
+            log.info("No estimated genome size specified.  Not possible to subsample to desired range without a genome " +
+                    "size estimate. Running assembler with default coverage range: " + defaultCoverageRange.toString());
             return defaultCoverageRange;
         }
         else if (coverageRange.validate()) {

@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.conan.process.ec.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -220,9 +221,20 @@ public class EcqArgs {
         return null;
     }
 
-    public List<File> getOutputFiles(String libName) {
+    public List<File> getOutputFiles(Library lib) {
 
-        Library lib = this.findLibrary(libName);
-        return lib.getFiles();
+        ErrorCorrector ec = ErrorCorrectorFactory.createQualityTrimmer(this.getTool());
+
+        List<File> altInputFiles = new ArrayList<>();
+        if (lib.isPairedEnd()) {
+            altInputFiles.add(new File(outputDir, lib.getFile1().getName()));
+            altInputFiles.add(new File(outputDir, lib.getFile2().getName()));
+        }
+        else {
+            altInputFiles.add(new File(outputDir, lib.getFile1().getName()));
+        }
+        ec.getArgs().setFromLibrary(lib, altInputFiles);
+
+        return ec.getArgs().getCorrectedFiles();
     }
 }

@@ -167,13 +167,15 @@ public class RampartCLI {
                 LocalityFactory.createLocality(ConanProperties.getProperty("executionContext.locality")) :
                 new Local();
 
-        log.debug("RAMPART: ENV: Locality: " + locality == null ? "" : locality.toString());
+        String localityName = locality == null ? "" : locality.toString();
+        log.debug("RAMPART: ENV: Locality: " + localityName);
 
         Scheduler scheduler = ConanProperties.containsKey("executionContext.scheduler") ?
                 SchedulerFactory.createScheduler(ConanProperties.getProperty("executionContext.scheduler")) :
                 null;
 
-        log.debug("RAMPART: ENV: Scheduler: " + scheduler == null ? "" : scheduler.getName());
+        String schedulerName = scheduler == null ? "" : scheduler.getName();
+        log.debug("RAMPART: ENV: Scheduler: " + schedulerName);
 
         if (scheduler != null && ConanProperties.containsKey("executionContext.scheduler.queue")) {
             scheduler.getArgs().setQueueName(ConanProperties.getProperty("executionContext.scheduler.queue"));

@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool;
 
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
@@ -40,4 +41,6 @@ public interface RampartExecutor {
 
     void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException;
+
+    boolean processOperational(ConanProcess conanProcess);
 }

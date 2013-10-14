@@ -77,6 +77,8 @@ public class AmpProcess extends AbstractConanProcess {
         ampPipeline.setConanProcessService(this.getConanProcessService());
         ampPipeline.configureProcesses();
 
+        log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
+
         // Make sure the output directory exists
         args.getAssembliesDir().mkdirs();
 

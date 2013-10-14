@@ -32,28 +32,28 @@ import java.util.List;
  */
 public class MassInput {
 
-    public static final String KEY_ATTR_MECQ = "mecq";
+    public static final String KEY_ATTR_ECQ = "ecq";
     public static final String KEY_ATTR_LIB = "lib";
 
-    private String mecq;
+    private String ecq;
     private String lib;
 
-    public MassInput(String mecq, String lib) {
-        this.mecq = mecq;
+    public MassInput(String ecq, String lib) {
+        this.ecq = ecq;
         this.lib = lib;
     }
 
     public MassInput(Element ele) {
-        this.mecq = XmlHelper.getTextValue(ele, KEY_ATTR_MECQ);
+        this.ecq = XmlHelper.getTextValue(ele, KEY_ATTR_ECQ);
         this.lib = XmlHelper.getTextValue(ele, KEY_ATTR_LIB);
     }
 
-    public String getMecq() {
-        return mecq;
+    public String getEcq() {
+        return ecq;
     }
 
-    public void setMecq(String mecq) {
-        this.mecq = mecq;
+    public void setEcq(String ecq) {
+        this.ecq = ecq;
     }
 
     public String getLib() {
@@ -70,7 +70,7 @@ public class MassInput {
             return null;
 
         for(EcqArgs currentMecq : allMecqs) {
-            if (currentMecq.getName().equalsIgnoreCase(this.mecq.trim())) {
+            if (currentMecq.getName().equalsIgnoreCase(this.ecq.trim())) {
                 return currentMecq;
             }
         }
@@ -93,17 +93,18 @@ public class MassInput {
         return actualLib.isPairedEnd();
     }
 
-    public List<File> getFiles(List<EcqArgs> allMecqs) {
+    public List<File> getFiles(List<EcqArgs> allEcqs, List<Library> allLibraries) {
 
-        EcqArgs actualMecq = findMecq(allMecqs);
-        return actualMecq.getOutputFiles(this.lib.trim());
+        EcqArgs actualEcq = findMecq(allEcqs);
+        Library lib = findLibrary(allLibraries);
+        return actualEcq.getOutputFiles(lib);
     }
 
-    public File getFile1(List<EcqArgs> allMecqs) {
-        return getFiles(allMecqs).get(0);
+    public File getFile1(List<EcqArgs> allEcqs, List<Library> allLibraries) {
+        return getFiles(allEcqs, allLibraries).get(0);
     }
 
-    public File getFile2(List<EcqArgs> allMecqs) {
-        return getFiles(allMecqs).get(0);
+    public File getFile2(List<EcqArgs> allEcqs, List<Library> allLibraries) {
+        return getFiles(allEcqs, allLibraries).get(0);
     }
 }

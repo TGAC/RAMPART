@@ -160,15 +160,16 @@ public class MecqProcess extends AbstractConanProcess {
         ecArgs.setOutputDir(outputDir);
 
         // Add files to ec (assumes ECQ tool and input libraries are compatible with regards to Paired / Single End)
+        List<File> altInputFiles = new ArrayList<>();
         if (inputLib.isPairedEnd()) {
-            ((ErrorCorrectorPairedEndArgs)ec.getArgs()).setFromLibrary(inputLib,
-                    new File(outputDir, inputLib.getFile1().getName()),
-                    new File(outputDir, inputLib.getFile2().getName()));
+            altInputFiles.add(new File(outputDir, inputLib.getFile1().getName()));
+            altInputFiles.add(new File(outputDir, inputLib.getFile2().getName()));
         }
         else {
-            ((ErrorCorrectorSingleEndArgs)ec.getArgs()).setFromLibrary(inputLib,
-                    new File(outputDir, inputLib.getFile1().getName()));
+            altInputFiles.add(new File(outputDir, inputLib.getFile1().getName()));
         }
+        ec.getArgs().setFromLibrary(inputLib, altInputFiles);
+
 
         return ec;
     }
