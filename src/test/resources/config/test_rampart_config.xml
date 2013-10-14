@@ -31,22 +31,22 @@
             <single_mass name="abyss-raw-kmer" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true" stats_only="false">
                 <kmer min="61" max="75" step="MEDIUM"/>
                 <inputs>
-                    <input mecq="raw" lib="pe1"/>
-                    <input mecq="raw" lib="mp1"/>
+                    <input ecq="raw" lib="pe1"/>
+                    <input ecq="raw" lib="mp1"/>
                 </inputs>
             </single_mass>
             <single_mass name="abyss-quake-kmer" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true">
                 <kmer list="61,65,71,75"/>
                 <inputs>
-                    <input mecq="quake" lib="pe1"/>
-                    <input mecq="quake" lib="mp1"/>
+                    <input ecq="quake" lib="pe1"/>
+                    <input ecq="quake" lib="mp1"/>
                 </inputs>
             </single_mass>
             <single_mass name="allpaths-cvg" tool="ALLPATHSLG_V44837" threads="12" memory="5000" parallel="true">
                 <coverage min="50" max="100" step="MEDIUM"/>
                 <inputs>
-                    <input mecq="raw" lib="ope1"/>
-                    <input mecq="raw" lib="mp1"/>
+                    <input ecq="raw" lib="ope1"/>
+                    <input ecq="raw" lib="mp1"/>
                 </inputs>
             </single_mass>
         </mass>

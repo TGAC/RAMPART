@@ -89,7 +89,7 @@ public class SingleMassProcessTest {
         singleMassProcess.execute(ec);
 
         assertTrue(new File(outputDir, "cvg-all_k-51").exists());
-        assertTrue(new File(outputDir, "cvg-all_k-65").exists());
+        assertTrue(new File(outputDir, "cvg-all_k-63").exists());
         assertTrue(new File(outputDir, "unitigs").exists());
     }
 }
