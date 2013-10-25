@@ -25,12 +25,13 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.RampartCLI;
+import uk.ac.tgac.rampart.Rampart;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +53,8 @@ public class MassArgs implements ProcessArgs {
     // Constants
     public static final int DEFAULT_CVG_CUTOFF = -1;
     public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
+    public static final boolean DEFAULT_RUN_PARALLEL = false;
+    public static final boolean DEFAULT_STATS_ONLY = false;
 
 
     // Need access to these
@@ -60,9 +63,10 @@ public class MassArgs implements ProcessArgs {
     // Rampart vars
     private String jobPrefix;
     private File outputDir;
-    List<SingleMassArgs> singleMassArgsList;    // List of Single MASS groups to run separately
-    List<Library> allLibraries;                    // All allLibraries available in this job
-    List<EcqArgs> allMecqs;                 // All mecq configurations
+    private List<SingleMassArgs> singleMassArgsList;    // List of Single MASS groups to run separately
+    private List<Library> allLibraries;                    // All allLibraries available in this job
+    private List<EcqArgs> allMecqs;                 // All mecq configurations
+    private File mecqDir;
     private boolean runParallel;                // Whether to run MASS groups in parallel
     private File weightings;
     private Organism organism;
@@ -79,7 +83,7 @@ public class MassArgs implements ProcessArgs {
 
         public static String getListAsString() {
 
-            List<String> levels = new ArrayList<String>();
+            List<String> levels = new ArrayList<>();
 
             for(OutputLevel level : OutputLevel.values()) {
                 levels.add(level.toString());
@@ -93,18 +97,21 @@ public class MassArgs implements ProcessArgs {
         this.jobPrefix = "";
         this.outputDir = null;
 
-        this.allLibraries = new ArrayList<Library>();
-        this.allMecqs = new ArrayList<EcqArgs>();
+        this.allLibraries = new ArrayList<>();
+        this.allMecqs = new ArrayList<>();
+        this.mecqDir = null;
 
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
-        this.weightings = RampartCLI.DEFAULT_WEIGHTINGS_FILE;
+        this.weightings = Rampart.DEFAULT_WEIGHTINGS_FILE;
 
         this.organism = null;
-        this.statsOnly = false;
-        this.singleMassArgsList = new ArrayList<SingleMassArgs>();
+        this.runParallel = DEFAULT_RUN_PARALLEL;
+        this.statsOnly = DEFAULT_STATS_ONLY;
+        this.singleMassArgsList = new ArrayList<>();
     }
 
-    public MassArgs(Element ele, File outputDir, String jobPrefix, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) {
+    public MassArgs(Element ele, File outputDir, File mecqDir, String jobPrefix, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism)
+            throws IOException {
 
         // Set defaults first
         this();
@@ -115,28 +122,28 @@ public class MassArgs implements ProcessArgs {
         this.allLibraries = allLibraries;
         this.allMecqs = allMecqs;
         this.organism = organism;
+        this.mecqDir = mecqDir;
 
 
         // From Xml (optional)
-
         this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                 XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
-                false;
+                DEFAULT_RUN_PARALLEL;
 
         this.weightings = ele.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
                 new File(XmlHelper.getTextValue(ele, KEY_ATTR_WEIGHTINGS)) :
-                RampartCLI.DEFAULT_WEIGHTINGS_FILE;
+                Rampart.DEFAULT_WEIGHTINGS_FILE;
 
         this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
                 XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
-                false;
+                DEFAULT_STATS_ONLY;
 
         // All single mass args
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_SINGLE_MASS);
         for(int i = 0; i < nodes.getLength(); i++) {
             this.singleMassArgsList.add(
                     new SingleMassArgs(
-                            (Element)nodes.item(i), outputDir, jobPrefix + "-group",
+                            (Element)nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
                             this.allLibraries, this.allMecqs, this.organism));
         }
     }
@@ -222,6 +229,14 @@ public class MassArgs implements ProcessArgs {
         this.statsOnly = statsOnly;
     }
 
+    public File getMecqDir() {
+        return mecqDir;
+    }
+
+    public void setMecqDir(File mecqDir) {
+        this.mecqDir = mecqDir;
+    }
+
     @Override
     public void parse(String args) {
         //To change body of implemented methods use File | Settings | File Templates.
@@ -230,7 +245,7 @@ public class MassArgs implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new HashMap<>();
 
 
         if (this.outputLevel != null) {

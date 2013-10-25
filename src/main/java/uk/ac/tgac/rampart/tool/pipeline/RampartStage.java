@@ -144,7 +144,7 @@ public enum RampartStage {
 
     public static String getFullListAsString() {
 
-        List<String> stageNames = new ArrayList<String>();
+        List<String> stageNames = new ArrayList<>();
 
         for(RampartStage stage : RampartStage.values()) {
             stageNames.add(stage.toString());
@@ -161,7 +161,7 @@ public enum RampartStage {
 
         String[] stageArray = stages.split(",");
 
-        List<RampartStage> stageList = new ArrayList<RampartStage>();
+        List<RampartStage> stageList = new ArrayList<>();
 
         if (stageArray != null && stageArray.length != 0) {
             for(String stage : stageArray) {

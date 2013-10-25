@@ -53,7 +53,7 @@ public class AmpPipeline implements ConanPipeline {
 
     public AmpPipeline(AmpArgs ampArgs) {
         this.args = ampArgs;
-        this.processList = new ArrayList<ConanProcess>();
+        this.processList = new ArrayList<>();
     }
 
     public AmpArgs getArgs() {
@@ -95,7 +95,7 @@ public class AmpPipeline implements ConanPipeline {
     @Override
     public List<ConanProcess> getProcesses() {
 
-        List<ConanProcess> cProcs = new ArrayList<ConanProcess>();
+        List<ConanProcess> cProcs = new ArrayList<>();
 
         for(ConanProcess ampProcess : this.processList) {
             cProcs.add(ampProcess);
@@ -123,7 +123,5 @@ public class AmpPipeline implements ConanPipeline {
             this.processList.add(proc);
         }
     }
-
-
 
 }

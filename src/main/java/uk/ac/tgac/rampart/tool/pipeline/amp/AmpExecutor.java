@@ -18,9 +18,11 @@
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * User: maplesod
@@ -30,11 +32,11 @@ import java.io.File;
 public interface AmpExecutor extends RampartExecutor {
 
     void executeAnalysisJob(AmpArgs ampArgs)
-            throws InterruptedException, ProcessExecutionException;
+            throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 
     /**
      * Creates the initial symbolic link between the input assembly and the output directory.  This is basically a
-     * convienience for the user and helps to compare assemblies at each stage later.
+     * convenience for the user and helps to compare assemblies at each stage later.
      * @param sourceFile
      * @param outputDir
      * @throws ProcessExecutionException

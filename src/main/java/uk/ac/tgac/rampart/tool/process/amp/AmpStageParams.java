@@ -17,9 +17,14 @@
  **/
 package uk.ac.tgac.rampart.tool.process.amp;
 
+import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -28,8 +33,91 @@ import java.util.List;
  * Time: 15:55
  */
 public class AmpStageParams implements ProcessParams {
+
+    private ConanParameter input;
+    private ConanParameter outputDir;
+    private ConanParameter jobPrefix;
+    private ConanParameter threads;
+    private ConanParameter memory;
+    private ConanParameter otherArgs;
+
+    public AmpStageParams() {
+
+        this.input = new PathParameter(
+                "input",
+                "The input assembly containing the assembly to enhance",
+                true
+        );
+
+        this.outputDir = new PathParameter(
+                "output",
+                "The output directory which should contain the enhancement steps",
+                true
+        );
+
+        this.jobPrefix = new DefaultConanParameter(
+                "job_prefix",
+                "Describes the jobs that will be executed as part of this pipeline",
+                false,
+                true,
+                false
+        );
+
+        this.threads = new NumericParameter(
+                "threads",
+                "The number of threads to use for this AMP stage",
+                true
+        );
+
+        this.memory = new NumericParameter(
+                "memory",
+                "The amount of memory to request for this AMP stage",
+                true
+        );
+
+        this.otherArgs = new DefaultConanParameter(
+                "other_args",
+                "Any additional arguments to provide to this specific process",
+                false,
+                true,
+                false
+        );
+    }
+
+    public ConanParameter getInput() {
+        return input;
+    }
+
+    public ConanParameter getOutputDir() {
+        return outputDir;
+    }
+
+    public ConanParameter getJobPrefix() {
+        return jobPrefix;
+    }
+
+    public ConanParameter getThreads() {
+        return threads;
+    }
+
+    public ConanParameter getMemory() {
+        return memory;
+    }
+
+    public ConanParameter getOtherArgs() {
+        return otherArgs;
+    }
+
     @Override
     public List<ConanParameter> getConanParameters() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new ArrayList<>(Arrays.asList(
+                new ConanParameter[]{
+                        this.input,
+                        this.outputDir,
+                        this.jobPrefix,
+                        this.threads,
+                        this.memory,
+                        this.otherArgs
+                }));
     }
 }

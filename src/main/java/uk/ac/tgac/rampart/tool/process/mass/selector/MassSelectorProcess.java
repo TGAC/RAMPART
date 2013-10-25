@@ -178,7 +178,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
     }
 
     protected List<AssemblyStatsTable> loadStats(List<File> statsFiles) throws IOException {
-        List<AssemblyStatsTable> tables = new ArrayList<AssemblyStatsTable>();
+        List<AssemblyStatsTable> tables = new ArrayList<>();
         for (File file : statsFiles) {
 
             // Notify system, we are attempting to load a file from disk

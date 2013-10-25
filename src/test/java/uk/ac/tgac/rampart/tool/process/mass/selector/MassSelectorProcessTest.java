@@ -67,7 +67,7 @@ public class MassSelectorProcessTest {
 
         File outputDir = temp.newFolder("massSelector-MultiFile");
 
-        List<File> statsFiles = new ArrayList<File>();
+        List<File> statsFiles = new ArrayList<>();
         statsFiles.add(statsFile1);
         statsFiles.add(statsFile2);
 
@@ -94,7 +94,7 @@ public class MassSelectorProcessTest {
 
         File outputDir = temp.newFolder("massSelector-SingleFile");
 
-        List<File> statsFiles = new ArrayList<File>();
+        List<File> statsFiles = new ArrayList<>();
         statsFiles.add(statsFile1);
         statsFiles.add(statsFile2);
 

@@ -55,16 +55,16 @@ public class AssemblyStatsMatrixRow {
         this();
 
         // Add assembly stats
-        this.stats[IDX_NB_SEQS] = new Double(assemblyStats.getNbSeqs()).doubleValue();
-        this.stats[IDX_NB_SEQS_GT_1K] = new Double(assemblyStats.getNbSeqsGt1K()).doubleValue();
-        this.stats[IDX_NB_BASES] = new Double(assemblyStats.getNbBases()).doubleValue();
-        this.stats[IDX_NB_BASES_GT_1K] = new Double(assemblyStats.getNbBasesGt1K()).doubleValue();
-        this.stats[IDX_MAX_LEN] = new Double(assemblyStats.getMaxLen()).doubleValue();
-        this.stats[IDX_N_50] = new Double(assemblyStats.getN50()).doubleValue();
-        this.stats[IDX_L_50] = new Double(assemblyStats.getL50()).doubleValue();
-        this.stats[IDX_GC_PERC] = new Double(assemblyStats.getGcPercentage()).doubleValue();
-        this.stats[IDX_N_PERC] = new Double(assemblyStats.getNPercentage());
-        this.stats[IDX_COMPLETENESS] = new Double(assemblyStats.getCompletenessPercentage()).doubleValue();
+        this.stats[IDX_NB_SEQS] = assemblyStats.getNbSeqs();
+        this.stats[IDX_NB_SEQS_GT_1K] = assemblyStats.getNbSeqsGt1K();
+        this.stats[IDX_NB_BASES] = assemblyStats.getNbBases();
+        this.stats[IDX_NB_BASES_GT_1K] = assemblyStats.getNbBasesGt1K();
+        this.stats[IDX_MAX_LEN] = assemblyStats.getMaxLen();
+        this.stats[IDX_N_50] = assemblyStats.getN50();
+        this.stats[IDX_L_50] = assemblyStats.getL50();
+        this.stats[IDX_GC_PERC] = assemblyStats.getGcPercentage();
+        this.stats[IDX_N_PERC] = assemblyStats.getNPercentage();
+        this.stats[IDX_COMPLETENESS] = assemblyStats.getCompletenessPercentage();
     }
 
 

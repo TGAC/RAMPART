@@ -27,8 +27,10 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.MassInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
+import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +76,7 @@ public class SingleMassArgs implements ProcessArgs {
     private Organism organism;
 
     // Inputs
+    private File mecqDir;
     private List<MassInput> inputs;
     private List<Library> allLibraries;
     private List<EcqArgs> allMecqs;
@@ -96,25 +99,36 @@ public class SingleMassArgs implements ProcessArgs {
         this.coverageRange = new CoverageRange();
         this.coverageCutoff = -1;
         this.organism = null;
-        this.inputs = new ArrayList<MassInput>();
+
+        this.mecqDir = null;
+        this.inputs = new ArrayList<>();
+        this.allLibraries = new ArrayList<>();
+        this.allMecqs = new ArrayList<>();
 
         this.threads = 1;
         this.memory = 0;
         this.runParallel = DEFAULT_RUN_PARALLEL;
         this.statsOnly = DEFAULT_STATS_ONLY;
-        this.statsLevels = StatsLevel.createAll();
+        this.statsLevels = new ArrayList<>();
     }
 
-    public SingleMassArgs(Element ele, File parentOutputDir, String parentJobPrefix, List<Library> allLibraries,
-                          List<EcqArgs> allMecqs, Organism organism) {
+    public SingleMassArgs(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
+                          List<EcqArgs> allMecqs, Organism organism) throws IOException {
 
         // Set defaults
         this();
 
-        // Required
+        // Required Attributes
+        if (!ele.hasAttribute(KEY_ATTR_NAME))
+            throw new IOException("Could not find " + KEY_ATTR_NAME + " attribute in single mass element");
+
+        if (!ele.hasAttribute(KEY_ATTR_TOOL))
+            throw new IOException("Could not find " + KEY_ATTR_TOOL + " attribute in single mass element");
+
         this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
         this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
 
+        // Required Elements
         Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
         NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
         for(int i = 0; i < actualInputs.getLength(); i++) {
@@ -144,7 +158,7 @@ public class SingleMassArgs implements ProcessArgs {
         this.coverageRange = cvgElement != null ? new CoverageRange(cvgElement) : new CoverageRange();
         this.statsLevels = ele.hasAttribute(KEY_ATTR_STATS_LEVELS) ?
                 StatsLevel.parseList(XmlHelper.getTextValue(ele, KEY_ATTR_STATS_LEVELS)) :
-                StatsLevel.createAll();
+                new ArrayList<StatsLevel>();
 
         // Other args
         this.allLibraries = allLibraries;
@@ -152,6 +166,7 @@ public class SingleMassArgs implements ProcessArgs {
         this.outputDir = new File(parentOutputDir, name);
         this.jobPrefix = parentJobPrefix + "-" + name;
         this.organism = organism;
+        this.mecqDir = mecqDir;
     }
 
 
@@ -281,6 +296,14 @@ public class SingleMassArgs implements ProcessArgs {
 
     public void setAllMecqs(List<EcqArgs> allMecqs) {
         this.allMecqs = allMecqs;
+    }
+
+    public File getMecqDir() {
+        return mecqDir;
+    }
+
+    public void setMecqDir(File mecqDir) {
+        this.mecqDir = mecqDir;
     }
 
     public File getUnitigsDir() {

@@ -47,8 +47,8 @@ public class MassSelectorArgs implements ProcessArgs {
     private File mergedFile;
 
     public MassSelectorArgs() {
-        this.statsFiles = new ArrayList<File>();
-        this.configs = new ArrayList<File>();
+        this.statsFiles = new ArrayList<>();
+        this.configs = new ArrayList<>();
         this.outputDir = new File("");
         this.organism = null;
         this.weightings = null;
@@ -120,7 +120,7 @@ public class MassSelectorArgs implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new LinkedHashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new LinkedHashMap<>();
 
         if (this.statsFiles != null && this.statsFiles.size() > 0) {
             pvp.put(params.getStatsFiles(), this.getStatsFiles().toString());
@@ -169,7 +169,7 @@ public class MassSelectorArgs implements ProcessArgs {
 
     private List<File> createFileList(String value) {
 
-        List<File> fileList = new ArrayList<File>();
+        List<File> fileList = new ArrayList<>();
 
         String[] files = value.split(",");
 

@@ -81,7 +81,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
 
     public void save(File outputFile) throws IOException {
 
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
 
         // Add the header line
         lines.add(AssemblyStats.getStatsFileHeader());

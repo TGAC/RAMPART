@@ -23,10 +23,13 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
+import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,30 +45,49 @@ public class AmpArgs implements ProcessArgs {
     private static final String INPUT_ASSEMBLY = "input";
     private static final String KEY_ELEM_AMP_STAGE = "stage";
 
+    private static final String KEY_ATTR_THREADS = "threads";
+    private static final String KEY_ATTR_MEMORY = "memory";
+    private static final String KEY_ATTR_PARALLEL = "parallel";
+    private static final String KEY_ATTR_STATS_ONLY = "stats_only";
+    private static final String KEY_ATTR_STATS_LEVELS = "stats_levels";
+
+    public static final boolean DEFAULT_STATS_ONLY = false;
+    public static final boolean DEFAULT_RUN_PARALLEL = false;
+    public static final int DEFAULT_THREADS = 1;
+    public static final int DEFAULT_MEMORY = 0;
+
     // Need access to these
     private AmpParams params = new AmpParams();
 
     private File inputAssembly;
     private File outputDir;
-    private File config;
     private List<Library> allLibraries;
     private List<EcqArgs> allMecqs;
     private List<AmpStageArgs> stageArgsList;
     private String jobPrefix;
     private Organism organism;
+    private List<StatsLevel> statsLevels;
+    private boolean statsOnly;
+    private int threads;
+    private int memory;
+    private boolean runParallel;
 
 
     public AmpArgs() {
         this.inputAssembly = null;
         this.outputDir = null;
-        this.allLibraries = new ArrayList<Library>();
-        this.allMecqs = new ArrayList<EcqArgs>();
-        this.config = null;
-        this.stageArgsList = new ArrayList<AmpStageArgs>();
+        this.allLibraries = new ArrayList<>();
+        this.allMecqs = new ArrayList<>();
+        this.stageArgsList = new ArrayList<>();
         this.jobPrefix = "amp";
+        this.statsLevels = new ArrayList<>();
+        this.statsOnly = DEFAULT_STATS_ONLY;
+        this.threads = DEFAULT_THREADS;
+        this.memory = DEFAULT_MEMORY;
+        this.runParallel = DEFAULT_RUN_PARALLEL;
     }
 
-    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) {
+    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) throws IOException {
 
         // Set defaults
         this();
@@ -96,6 +118,28 @@ public class AmpArgs implements ProcessArgs {
 
             inputFile = stage.getOutputFile();
         }
+
+        // Optional
+
+        this.statsLevels = ele.hasAttribute(KEY_ATTR_STATS_LEVELS) ?
+                StatsLevel.parseList(XmlHelper.getTextValue(ele, KEY_ATTR_STATS_LEVELS)) :
+                new ArrayList<StatsLevel>();
+
+        this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
+                XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
+                DEFAULT_STATS_ONLY;
+
+        this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ?
+                XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) :
+                DEFAULT_THREADS;
+
+        this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ?
+                XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) :
+                DEFAULT_MEMORY;
+
+        this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
+                XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
+                DEFAULT_RUN_PARALLEL;
     }
 
 
@@ -129,14 +173,6 @@ public class AmpArgs implements ProcessArgs {
 
     public void setAllLibraries(List<Library> allLibraries) {
         this.allLibraries = allLibraries;
-    }
-
-    public File getConfig() {
-        return config;
-    }
-
-    public void setConfig(File config) {
-        this.config = config;
     }
 
     public String getJobPrefix() {
@@ -175,6 +211,45 @@ public class AmpArgs implements ProcessArgs {
         return new File(this.getOutputDir(), "assemblies");
     }
 
+    public List<StatsLevel> getStatsLevels() {
+        return statsLevels;
+    }
+
+    public void setStatsLevels(List<StatsLevel> statsLevels) {
+        this.statsLevels = statsLevels;
+    }
+
+    public boolean isStatsOnly() {
+        return statsOnly;
+    }
+
+    public void setStatsOnly(boolean statsOnly) {
+        this.statsOnly = statsOnly;
+    }
+
+    public int getThreads() {
+        return threads;
+    }
+
+    public void setThreads(int threads) {
+        this.threads = threads;
+    }
+
+    public int getMemory() {
+        return memory;
+    }
+
+    public void setMemory(int memory) {
+        this.memory = memory;
+    }
+
+    public boolean isRunParallel() {
+        return runParallel;
+    }
+
+    public void setRunParallel(boolean runParallel) {
+        this.runParallel = runParallel;
+    }
 
     @Override
     public void parse(String args) {
@@ -184,16 +259,13 @@ public class AmpArgs implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new HashMap<>();
 
         if (this.inputAssembly != null)
             pvp.put(params.getInputAssembly(), this.inputAssembly.getAbsolutePath());
 
         if (this.outputDir != null)
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
-
-        if (this.config != null)
-            pvp.put(params.getConfig(), this.config.getAbsolutePath());
 
         if (this.jobPrefix != null)
             pvp.put(params.getJobPrefix(), this.jobPrefix);
@@ -216,8 +288,6 @@ public class AmpArgs implements ProcessArgs {
                 this.inputAssembly = new File(entry.getValue());
             } else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
-            } else if (param.equals(this.params.getConfig().getName())) {
-                this.config = new File(entry.getValue());
             } else if (param.equals(this.params.getJobPrefix().getName())) {
                 this.jobPrefix = entry.getValue();
             }

@@ -72,7 +72,7 @@ public class MassProcessTest {
         singleMassArgs.setKmerRange(new KmerRange(31, 61, KmerRange.StepSize.COARSE));
         singleMassArgs.setOutputDir(new File(outputDir, "raw"));
 
-        List<SingleMassArgs> singleMassArgsList = new ArrayList<SingleMassArgs>();
+        List<SingleMassArgs> singleMassArgsList = new ArrayList<>();
         singleMassArgsList.add(singleMassArgs);
 
         MassArgs args = new MassArgs();

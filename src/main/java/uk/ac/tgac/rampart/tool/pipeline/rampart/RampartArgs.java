@@ -47,7 +47,7 @@ public class RampartArgs implements ProcessArgs {
         this.config = null;
         this.outputDir = new File(".").getAbsoluteFile().getParentFile();
         this.jobPrefix = "";
-        this.stages = new ArrayList<RampartStage>();
+        this.stages = new ArrayList<>();
     }
 
     public File getConfig() {
@@ -90,7 +90,7 @@ public class RampartArgs implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new HashMap<>();
 
         if (this.config != null) {
             pvp.put(params.getConfig(), this.config.getAbsolutePath());
@@ -123,7 +123,7 @@ public class RampartArgs implements ProcessArgs {
             else if (param.equals(this.params.getOutputDir().getName())) {
                 this.outputDir = new File(entry.getValue());
             }
-            else if (params.equals(this.params.getStageList().getName())) {
+            else if (param.equals(this.params.getStageList().getName())) {
                 this.stages = RampartStage.parse(entry.getValue());
             }
 

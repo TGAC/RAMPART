@@ -40,28 +40,7 @@ public class RampartCLITest {
     public TemporaryFolder temp = new TemporaryFolder();
 
 
-    @Test
-    public void testCleanJob() {
 
-        File jobDir = temp.newFolder("rampartJobTest");
-        RampartConfiguration jobFileStructure = new RampartConfiguration(jobDir);
-
-        jobFileStructure.getMeqcDir().mkdir();
-        jobFileStructure.getMassDir().mkdir();
-        jobFileStructure.getAmpDir().mkdir();
-        jobFileStructure.getReportDir().mkdir();
-
-        File noDelDir = new File(jobDir, "noDel");
-        noDelDir.mkdir();
-
-        RampartCLI.main(new String[]{"--clean", jobDir.getAbsolutePath()});
-
-        assertTrue(!jobFileStructure.getMeqcDir().exists());
-        assertTrue(!jobFileStructure.getMassDir().exists());
-        assertTrue(!jobFileStructure.getAmpDir().exists());
-        assertTrue(!jobFileStructure.getReportDir().exists());
-        assertTrue(noDelDir.exists());
-    }
 
     @Test
     public void testAccessInternalResources() throws IOException {

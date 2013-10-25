@@ -197,7 +197,7 @@ public class MassParams implements ProcessParams {
     @Override
     public List<ConanParameter> getConanParameters() {
 
-        return new ArrayList<ConanParameter>(Arrays.asList(
+        return new ArrayList<>(Arrays.asList(
                 new ConanParameter[]{
                         this.assembler,
                         this.kmin,

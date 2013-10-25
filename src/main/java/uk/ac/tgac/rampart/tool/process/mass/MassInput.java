@@ -22,7 +22,7 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -43,7 +43,14 @@ public class MassInput {
         this.lib = lib;
     }
 
-    public MassInput(Element ele) {
+    public MassInput(Element ele) throws IOException {
+
+        if (!ele.hasAttribute(KEY_ATTR_ECQ))
+            throw new IOException("Could not find " + KEY_ATTR_ECQ + " attribute in MASS Input element");
+
+        if (!ele.hasAttribute(KEY_ATTR_LIB))
+            throw new IOException("Could not find " + KEY_ATTR_LIB + " attribute in MASS input element");
+
         this.ecq = XmlHelper.getTextValue(ele, KEY_ATTR_ECQ);
         this.lib = XmlHelper.getTextValue(ele, KEY_ATTR_LIB);
     }
@@ -79,6 +86,10 @@ public class MassInput {
     }
 
     public Library findLibrary(List<Library> allLibraries) {
+
+        if (allLibraries == null)
+            return null;
+
         for(Library currentLib : allLibraries) {
             if (currentLib.getName().equalsIgnoreCase(this.lib.trim())) {
                 return currentLib;
@@ -88,7 +99,7 @@ public class MassInput {
         return null;
     }
 
-    public boolean isPairedEndLib(List<Library> allLibraries) {
+    /*public boolean isPairedEndLib(List<Library> allLibraries) {
         Library actualLib = findLibrary(allLibraries);
         return actualLib.isPairedEnd();
     }
@@ -97,7 +108,8 @@ public class MassInput {
 
         EcqArgs actualEcq = findMecq(allEcqs);
         Library lib = findLibrary(allLibraries);
-        return actualEcq.getOutputFiles(lib);
+        ErrorCorrector ec = new MecqExecutorImpl().makeErrorCorrector(actualEcq, lib, );
+        return ec.getArgs().getCorrectedFiles();
     }
 
     public File getFile1(List<EcqArgs> allEcqs, List<Library> allLibraries) {
@@ -106,5 +118,5 @@ public class MassInput {
 
     public File getFile2(List<EcqArgs> allEcqs, List<Library> allLibraries) {
         return getFiles(allEcqs, allLibraries).get(0);
-    }
+    }*/
 }

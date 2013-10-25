@@ -26,7 +26,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.process.ec.*;
+import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -94,7 +94,7 @@ public class MecqProcess extends AbstractConanProcess {
                 String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
 
                 // Create the actual error corrector from the user provided EcqArgs
-                ErrorCorrector ec = makeErrorCorrector(ecqArgs, lib, ecqLibDir);
+                ErrorCorrector ec = this.mecqExecutor.makeErrorCorrector(ecqArgs, lib, args.getOutputDir());
 
                 // Create symbolic links between file paths specified by the library and the working directory for this ECQ
                 this.mecqExecutor.createInputLinks(lib, ec.getArgs());
@@ -140,39 +140,7 @@ public class MecqProcess extends AbstractConanProcess {
     }
 
 
-    /**
-     * Using a set of ECQ specific args, creates an ErrorCorrector object for execution
-     * @param mecqArgs
-     * @param inputLib
-     * @param outputDir
-     * @return
-     */
-    public ErrorCorrector makeErrorCorrector(EcqArgs mecqArgs, Library inputLib, File outputDir) {
 
-        ErrorCorrector ec = ErrorCorrectorFactory.valueOf(mecqArgs.getTool()).create();
-        ErrorCorrectorArgs ecArgs = ec.getArgs();
-
-        ecArgs.setMinLength(mecqArgs.getMinLen());
-        ecArgs.setQualityThreshold(mecqArgs.getMinQual());
-        ecArgs.setKmer(mecqArgs.getKmer());
-        ecArgs.setThreads(mecqArgs.getThreads());
-        ecArgs.setMemoryGb(mecqArgs.getMemory());
-        ecArgs.setOutputDir(outputDir);
-
-        // Add files to ec (assumes ECQ tool and input libraries are compatible with regards to Paired / Single End)
-        List<File> altInputFiles = new ArrayList<>();
-        if (inputLib.isPairedEnd()) {
-            altInputFiles.add(new File(outputDir, inputLib.getFile1().getName()));
-            altInputFiles.add(new File(outputDir, inputLib.getFile2().getName()));
-        }
-        else {
-            altInputFiles.add(new File(outputDir, inputLib.getFile1().getName()));
-        }
-        ec.getArgs().setFromLibrary(inputLib, altInputFiles);
-
-
-        return ec;
-    }
 
     @Override
     public String getName() {

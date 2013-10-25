@@ -41,15 +41,18 @@ public class AmpStageExecutorImpl extends RampartExecutorImpl implements AmpStag
         // Add in this conan process service to the amp proc to run
         ampProc.setConanProcessService(this.conanProcessService);
 
+        // Initialise the proc
+        ampProc.initialise();
+
         // Run the amp proc.
         ampProc.execute(this.executionContext);
     }
 
     @Override
-    public void createAmpStageLink(File sourceFile, File outputDir, int stageNumber)
+    public void createAmpStageLink(File sourceFile, File outputFile)
             throws InterruptedException, ProcessExecutionException {
 
-        String linkCommand = this.makeLinkCommand(sourceFile, new File(outputDir, "amp-stage-" + stageNumber + "-scaffolds.fa"));
+        String linkCommand = this.makeLinkCommand(sourceFile, outputFile);
 
         ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
 

@@ -33,9 +33,12 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
+import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 import uk.ac.tgac.rampart.tool.process.mass.MassInput;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqExecutorImpl;
+import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,7 +98,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             CoverageRange validatedCoverageRange = this.validateCoverageRange(args.getName(), args.getOrganism(), args.getCoverageRange());
 
             // Make sure the inputs are reasonable
-            List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(), args.getAllMecqs());
+            List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(), args.getAllMecqs(), args.getMecqDir());
 
             // Add libs to generic assembler so we know what kind of output to expect
             genericAssembler.getArgs().setLibraries(selectedLibs);
@@ -310,9 +313,9 @@ public class SingleMassProcess extends AbstractConanProcess {
         return asm;
     }
 
-    protected List<Library> validateInputs(String massName, List<MassInput> inputs, List<Library> allLibraries, List<EcqArgs> allMecqs) throws IOException {
+    protected List<Library> validateInputs(String massName, List<MassInput> inputs, List<Library> allLibraries, List<EcqArgs> allMecqs, File mecqDir) throws IOException {
 
-        List<Library> selectedLibs = new ArrayList<Library>();
+        List<Library> selectedLibs = new ArrayList<>();
 
         for(MassInput mi : inputs) {
             Library lib = mi.findLibrary(allLibraries);
@@ -333,10 +336,11 @@ public class SingleMassProcess extends AbstractConanProcess {
             else {
                 Library modLib = lib.copy();
 
-                List<File> files = ecqArgs.getOutputFiles(modLib);
+                ErrorCorrector ec = new MecqExecutorImpl().makeErrorCorrector(ecqArgs, modLib, mecqDir);
+                List<File> files = ec.getArgs().getCorrectedFiles();
 
                 if (modLib.isPairedEnd()) {
-                    if (files.size() != 2 || files.size() != 3) {
+                    if (files.size() < 2 || files.size() > 3) {
                         throw new IOException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two or three files");
                     }
 
@@ -477,7 +481,7 @@ public class SingleMassProcess extends AbstractConanProcess {
         if (cegmaDir == null || !cegmaDir.exists())
             return null;
 
-        List<File> fileList = new ArrayList<File>();
+        List<File> fileList = new ArrayList<>();
 
         Collection<File> fileCollection = FileUtils.listFiles(cegmaDir, new String[]{"cegma"}, true);
 

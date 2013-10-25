@@ -25,6 +25,7 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,6 +42,8 @@ public class MecqArgs implements ProcessArgs {
     public static final String KEY_ELEM_ECQ         = "ecq";
 
 
+    public static final boolean DEFAULT_RUN_PARALLEL = false;
+
     private MecqParams params = new MecqParams();
 
     private File outputDir;
@@ -55,9 +58,9 @@ public class MecqArgs implements ProcessArgs {
      */
     public MecqArgs() {
         this.outputDir = new File("");
-        this.eqcArgList = new ArrayList<EcqArgs>();
-        this.libraries = new ArrayList<Library>();
-        this.runParallel = false;
+        this.eqcArgList = new ArrayList<>();
+        this.libraries = new ArrayList<>();
+        this.runParallel = DEFAULT_RUN_PARALLEL;
 
         Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
         String dateTime = formatter.format(new Date());
@@ -68,7 +71,7 @@ public class MecqArgs implements ProcessArgs {
      * Set from element and
      * @param ele
      */
-    public MecqArgs(Element ele, File outputDir, String jobPrefix, List<Library> libraries) {
+    public MecqArgs(Element ele, File outputDir, String jobPrefix, List<Library> libraries) throws IOException {
 
         // Set defaults first
         this();
@@ -79,7 +82,7 @@ public class MecqArgs implements ProcessArgs {
         this.libraries = libraries;
 
         // Set from Xml
-        this.runParallel = XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL);
+        this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL;
 
         // All libraries
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
@@ -130,7 +133,7 @@ public class MecqArgs implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new HashMap<>();
 
         if (this.outputDir != null)
             pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());

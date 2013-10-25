@@ -22,25 +22,22 @@ import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Args;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.stats.StatsExecutor;
+import uk.ac.tgac.rampart.tool.process.stats.StatsExecutorImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,9 +48,18 @@ import java.util.List;
 public class SingleMassExecutorImpl extends RampartExecutorImpl implements SingleMassExecutor {
 
     private List<Integer> jobIds;
+    private StatsExecutor statsExecutor;
 
     public SingleMassExecutorImpl() {
         this.jobIds = new ArrayList<>();
+        this.statsExecutor = new StatsExecutorImpl();
+    }
+
+    @Override
+    public void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext) {
+        super.initialise(conanProcessService, executionContext);
+
+        statsExecutor.initialise(conanProcessService, executionContext);
     }
 
     @Override
@@ -115,30 +121,25 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, String waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
-        // Make a copy of the execution context so we can make modifications
-        ExecutionContext executionContextCopy = executionContext.copy();
+        File inputDir = null;
 
-        if (executionContextCopy.usingScheduler()) {
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-            schedulerArgs.setJobName(jobName);
-            schedulerArgs.setThreads(args.getThreads());
-            schedulerArgs.setMemoryMB(0);
-            schedulerArgs.setWaitCondition(waitCondition);
-
-            // Always going to want to run these jobs in parallel if we have access to a scheduler!
-            executionContextCopy.setForegroundJob(!args.isRunParallel());
+        // We only do one level of Cegma jobs (the highest), technically there shouldn't be much / any different between different levels
+        if (assembler.makesScaffolds()) {
+            inputDir = args.getScaffoldsDir();
+        }
+        else if (assembler.makesContigs()) {
+            inputDir = args.getContigsDir();
+        }
+        else if (assembler.makesUnitigs()) {
+            inputDir = args.getUnitigsDir();
+        }
+        else {
+            throw new IOException("Couldn't run stats jobs because assembler does not support any recognised output types: " + MassArgs.OutputLevel.getListAsString());
         }
 
-        // Kick off the quast jobs if requested
-        if (args.getStatsLevels().contains(StatsLevel.CONTIGUITY)) {
-            this.executeQuastJobs(assembler, args, jobName + "-quast", executionContextCopy);
-        }
-
-        // Kick off the cegma jobs if requested
-        if (args.getStatsLevels().contains(StatsLevel.COMPLETENESS)) {
-            this.executeCegmaJobs(assembler, args, jobName + "-cegma", executionContextCopy);
-        }
+        this.statsExecutor.dispatchAnalyserJobs(args.getStatsLevels(), inputDir, args.getThreads(),
+                args.getOrganism() == null ? 0 : args.getOrganism().getEstGenomeSize(),
+                assembler.makesScaffolds(), args.isRunParallel(), waitCondition, jobName);
     }
 
     @Override
@@ -219,148 +220,5 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         return Long.parseLong(lines.get(0).trim());
     }
 
-
-    protected void executeCegmaJobs(Assembler assembler, SingleMassArgs args, String jobName, ExecutionContext executionContext)
-            throws IOException, ProcessExecutionException, InterruptedException {
-
-        File inputDir = null;
-
-        // We only do one level of Cegma jobs (the highest), technically there shouldn't be much / any different between different levels
-        if (assembler.makesScaffolds()) {
-            inputDir = args.getScaffoldsDir();
-        }
-        else if (assembler.makesContigs()) {
-            inputDir = args.getContigsDir();
-        }
-        else if (assembler.makesUnitigs()) {
-            inputDir = args.getUnitigsDir();
-        }
-        else {
-            throw new IOException("Couldn't run CEGMA because assembler does not support any recognised output types: " + MassArgs.OutputLevel.getListAsString());
-        }
-
-        List<File> files = filesFromDir(inputDir);
-
-        File rootOutputDir = new File(inputDir, "cegma");
-        if (rootOutputDir.exists()) {
-            FileUtils.deleteDirectory(rootOutputDir);
-        }
-        rootOutputDir.mkdir();
-
-        int i = 1;
-        for(File f : files) {
-            ExecutionContext executionContextCopy = executionContext.copy();
-
-            if (executionContextCopy.usingScheduler()) {
-
-                SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-                String cegmaJobName = jobName + "-" + i + ".log";
-
-                schedulerArgs.setJobName(cegmaJobName);
-                schedulerArgs.setMonitorFile(new File(inputDir, cegmaJobName));
-                i++;
-            }
-
-            File outputDir = new File(rootOutputDir, f.getName());
-            if (outputDir.exists()) {
-                FileUtils.deleteDirectory(outputDir);
-            }
-            outputDir.mkdir();
-
-            // Setup CEGMA
-            CegmaV2_4Args cegmaArgs = new CegmaV2_4Args();
-            cegmaArgs.setGenomeFile(f);
-            cegmaArgs.setOutputPrefix(new File(outputDir, f.getName()));
-            cegmaArgs.setThreads(args.getThreads());
-
-            CegmaV2_4Process cegmaProcess = new CegmaV2_4Process(cegmaArgs);
-
-            // Creates output and temp directories
-            // Also creates a modified genome file that's BLAST tolerant.
-            cegmaProcess.initialise();
-
-            // Execute CEGMA
-            ExecutionResult result = this.conanProcessService.execute(cegmaProcess, executionContextCopy);
-
-            // Create symbolic links to completeness_reports
-            File sourceFile = new File(cegmaArgs.getOutputPrefix().getAbsolutePath() + ".completeness_report");
-            File destFile = new File(rootOutputDir, f.getName() + ".cegma");
-            String linkCmd = "ln -s -f " + sourceFile.getAbsolutePath() + " " + destFile.getAbsolutePath();
-            this.conanProcessService.execute(linkCmd, new DefaultExecutionContext(executionContext.getLocality(), null, null, true));
-
-            // Add cegma job id to list
-            this.jobIds.add(result.getJobId());
-        }
-
-
-    }
-
-    protected void executeQuastJobs(Assembler assembler, SingleMassArgs args, String jobName, ExecutionContext executionContext)
-            throws InterruptedException, ProcessExecutionException {
-
-        if (assembler.makesUnitigs()) {
-            this.executeSingleQuastJob(args.getUnitigsDir(), args, jobName + "-unitigs", executionContext, false);
-        }
-
-        if (assembler.makesContigs()) {
-            this.executeSingleQuastJob(args.getContigsDir(), args, jobName + "-contigs", executionContext, false);
-        }
-
-        if (assembler.makesScaffolds()) {
-            this.executeSingleQuastJob(args.getScaffoldsDir(), args, jobName + "-scaffolds", executionContext, true);
-        }
-    }
-
-    protected void executeSingleQuastJob(File inputDir, SingleMassArgs args, String jobName, ExecutionContext executionContext, boolean scaffolds)
-            throws InterruptedException, ProcessExecutionException {
-
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-        if (executionContextCopy.usingScheduler()) {
-
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-            schedulerArgs.setJobName(jobName);
-            schedulerArgs.setMonitorFile(new File(inputDir, jobName + ".log"));
-        }
-
-        QuastV2_2Args quastArgs = new QuastV2_2Args();
-        quastArgs.setInputFiles(filesFromDir(inputDir));
-        quastArgs.setOutputDir(new File(inputDir, "quast"));   // No need to create this directory first... quast will take care of that
-        quastArgs.setEstimatedGenomeSize(args.getOrganism() == null ? 0 : args.getOrganism().getEstGenomeSize());
-        quastArgs.setThreads(args.getThreads());
-        quastArgs.setScaffolds(scaffolds);
-
-        QuastV2_2Process quastProcess = new QuastV2_2Process(quastArgs);
-
-        ExecutionResult result = this.conanProcessService.execute(quastProcess, executionContextCopy);
-
-        // Add quast job id to list
-        this.jobIds.add(result.getJobId());
-    }
-
-    /**
-     * Gets all the FastA files in the directory specified by the user.
-     * @param inputDir
-     * @return A list of fasta files in the user specified directory
-     */
-    protected List<File> filesFromDir(File inputDir) {
-
-        if (inputDir == null || !inputDir.exists())
-            return null;
-
-        List<File> fileList = new ArrayList<File>();
-
-        Collection<File> fileCollection = FileUtils.listFiles(inputDir, new String[]{"fa", "fasta"}, true);
-
-        for(File file : fileCollection) {
-            fileList.add(file);
-        }
-
-        Collections.sort(fileList);
-
-        return fileList;
-    }
 
 }

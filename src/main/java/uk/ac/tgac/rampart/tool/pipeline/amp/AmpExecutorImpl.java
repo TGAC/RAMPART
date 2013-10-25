@@ -20,11 +20,15 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
+import uk.ac.tgac.rampart.tool.process.stats.StatsExecutor;
+import uk.ac.tgac.rampart.tool.process.stats.StatsExecutorImpl;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * User: maplesod
@@ -34,38 +38,24 @@ import java.io.File;
 @Service
 public class AmpExecutorImpl extends RampartExecutorImpl implements AmpExecutor {
 
+    private StatsExecutor statsExecutor = new StatsExecutorImpl();
+
     @Override
-    public void executeAnalysisJob(AmpArgs ampArgs)
-            throws InterruptedException, ProcessExecutionException {
+    public void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext) {
+        super.initialise(conanProcessService, executionContext);
 
-        ExecutionContext executionContextCopy = executionContext.copy();
+        statsExecutor.initialise(conanProcessService, executionContext);
+    }
 
+    @Override
+    public void executeAnalysisJob(AmpArgs args)
+            throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
-        // I think it's safe to assume we have at least one lib otherwise we wouldn't have got this far.
-        String jobName = ampArgs.getJobPrefix() + "-analyser";
-
-        if (executionContextCopy.usingScheduler()) {
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-            schedulerArgs.setJobName(jobName);
-            schedulerArgs.setThreads(1);
-            schedulerArgs.setMemoryMB(0);
-            schedulerArgs.setMonitorFile(new File(ampArgs.getAssembliesDir(), jobName + ".log"));
-
-            executionContextCopy.setForegroundJob(true);
+        if (args.getStatsLevels() != null) {
+            this.statsExecutor.dispatchAnalyserJobs(args.getStatsLevels(), args.getAssembliesDir(), 1,
+                    args.getOrganism() != null ? args.getOrganism().getEstGenomeSize() : 0,
+                    true, args.isRunParallel(), null, args.getJobPrefix() + "-stats");
         }
-
-        // TODO Need to fix this... can't use ASC any longer.
-
-        /*AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInput(ampArgs.getAssembliesDir());
-        ascArgs.setOutput(ampArgs.getAssembliesDir());
-        ascArgs.setMode("FULL");
-
-        AscV10Process ascProcess = new AscV10Process(ascArgs);
-
-        this.conanProcessService.execute(ascProcess, executionContextCopy);*/
-
     }
 
     @Override

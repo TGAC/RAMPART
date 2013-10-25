@@ -74,7 +74,7 @@ public enum RampartFactory {
 
     public static List<ConanProcess> createFrom(RampartFactory startStage) {
 
-        List<ConanProcess> list = new ArrayList<ConanProcess>();
+        List<ConanProcess> list = new ArrayList<>();
         boolean add = false;
         for(RampartFactory stage : RampartFactory.values()) {
 
@@ -92,7 +92,7 @@ public enum RampartFactory {
 
     public static List<ConanProcess> createAfterAndIncluding(RampartFactory startStage) {
 
-        List<ConanProcess> list = new ArrayList<ConanProcess>();
+        List<ConanProcess> list = new ArrayList<>();
         boolean add = true;
         for(RampartFactory stage : RampartFactory.values()) {
 
@@ -110,7 +110,7 @@ public enum RampartFactory {
 
     public static List<ConanProcess> createAll() {
 
-        List<ConanProcess> list = new ArrayList<ConanProcess>();
+        List<ConanProcess> list = new ArrayList<>();
         for(RampartFactory stage : RampartFactory.values()) {
              list.add(stage.create());
         }

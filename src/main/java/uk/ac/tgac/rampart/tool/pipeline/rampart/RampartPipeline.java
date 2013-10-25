@@ -57,7 +57,7 @@ public class RampartPipeline implements ConanPipeline {
 
     public RampartPipeline(RampartArgs args) {
         this.args = args;
-        this.processList = new ArrayList<AbstractConanProcess>();
+        this.processList = new ArrayList<>();
     }
 
     public RampartArgs getArgs() {
@@ -100,7 +100,7 @@ public class RampartPipeline implements ConanPipeline {
     @Override
     public List<ConanProcess> getProcesses() {
 
-        List<ConanProcess> conanProcessList = new ArrayList<ConanProcess>();
+        List<ConanProcess> conanProcessList = new ArrayList<>();
 
         for(AbstractConanProcess process : this.processList) {
             conanProcessList.add(process);
@@ -112,7 +112,7 @@ public class RampartPipeline implements ConanPipeline {
     @Override
     public List<ConanParameter> getAllRequiredParameters() {
 
-        List<ConanParameter> params = new ArrayList<ConanParameter>();
+        List<ConanParameter> params = new ArrayList<>();
 
         for(AbstractConanProcess process : this.processList) {
             params.addAll(process.getParameters());

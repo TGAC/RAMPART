@@ -20,9 +20,10 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.conan.process.ec.*;
+import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,16 +36,16 @@ public class EcqArgs {
 
     // **** Xml Config file property keys ****
 
-    public static final String KEY_ELEM_TOOL = "tool";
-    public static final String KEY_ELEM_MIN_LEN = "min_len";
-    public static final String KEY_ELEM_MIN_QUAL = "min_qual";
     public static final String KEY_ELEM_KMER = "kmer";
     public static final String KEY_ELEM_LIBS = "libs";
 
     public static final String KEY_ATTR_NAME = "name";
+    public static final String KEY_ATTR_TOOL = "tool";
     public static final String KEY_ATTR_THREADS = "threads";
     public static final String KEY_ATTR_MEMORY = "memory";
     public static final String KEY_ATTR_PARALLEL = "parallel";
+    public static final String KEY_ATTR_MIN_LEN = "min_len";
+    public static final String KEY_ATTR_MIN_QUAL = "min_qual";
 
 
     // **** Default values ****
@@ -81,26 +82,33 @@ public class EcqArgs {
         this.threads = DEFAULT_THREADS;
         this.memory = DEFAULT_MEMORY;
         this.runParallel = DEFAULT_RUN_PARALLEL;
-        this.libraries = new ArrayList<Library>();
+        this.libraries = new ArrayList<>();
     }
 
 
-    public EcqArgs(Element ele, List<Library> allLibraries, File parentOutputDir, String parentJobPrefix, boolean forceParallel) {
+    public EcqArgs(Element ele, List<Library> allLibraries, File parentOutputDir, String parentJobPrefix, boolean forceParallel)
+            throws IOException {
 
         // Set defaults
         this();
 
         // Required
+        if (!ele.hasAttribute(KEY_ATTR_NAME))
+            throw new IOException("Could not find " + KEY_ATTR_NAME + " attribute in single mass element");
+
+        if (!ele.hasAttribute(KEY_ATTR_TOOL))
+            throw new IOException("Could not find " + KEY_ATTR_TOOL + " attribute in single mass element");
+
         this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
-        this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
+        this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
 
         // Optional
-        this.minLen = ele.hasAttribute(KEY_ELEM_MIN_LEN) ? XmlHelper.getIntValue(ele, KEY_ELEM_MIN_LEN) : DEFAULT_MIN_LEN;
-        this.minQual = ele.hasAttribute(KEY_ELEM_MIN_QUAL) ? XmlHelper.getIntValue(ele, KEY_ELEM_MIN_QUAL): DEFAULT_MIN_QUAL;
+        this.minLen = ele.hasAttribute(KEY_ATTR_MIN_LEN) ? XmlHelper.getIntValue(ele, KEY_ATTR_MIN_LEN) : DEFAULT_MIN_LEN;
+        this.minQual = ele.hasAttribute(KEY_ATTR_MIN_QUAL) ? XmlHelper.getIntValue(ele, KEY_ATTR_MIN_QUAL): DEFAULT_MIN_QUAL;
         this.kmer = ele.hasAttribute(KEY_ELEM_KMER) ? XmlHelper.getIntValue(ele, KEY_ELEM_KMER) : DEFAULT_KMER;
         this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
         this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
-        this.runParallel = forceParallel ? true :
+        this.runParallel = forceParallel ||
                 ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL;
 
         // Filter the provided libs
@@ -221,19 +229,7 @@ public class EcqArgs {
         return null;
     }
 
-    public List<File> getOutputFiles(Library lib) {
-
-        ErrorCorrector ec = ErrorCorrectorFactory.createQualityTrimmer(this.getTool());
-
-        List<File> altInputFiles = new ArrayList<>();
-        if (lib.isPairedEnd()) {
-            altInputFiles.add(new File(outputDir, lib.getFile1().getName()));
-            altInputFiles.add(new File(outputDir, lib.getFile2().getName()));
-        }
-        else {
-            altInputFiles.add(new File(outputDir, lib.getFile1().getName()));
-        }
-        ec.getArgs().setFromLibrary(lib, altInputFiles);
+    public List<File> getOutputFiles(ErrorCorrector ec) {
 
         return ec.getArgs().getCorrectedFiles();
     }

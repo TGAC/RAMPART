@@ -17,38 +17,15 @@
  **/
 package uk.ac.tgac.rampart;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExternalProcessConfiguration;
-import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
-import uk.ac.ebi.fgpt.conan.core.context.locality.LocalityFactory;
-import uk.ac.ebi.fgpt.conan.core.context.scheduler.SchedulerFactory;
-import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
-import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
-import uk.ac.ebi.fgpt.conan.model.ConanTask;
-import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExternalProcessConfiguration;
-import uk.ac.ebi.fgpt.conan.model.context.Locality;
-import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
-import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
-import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
-import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.tgac.conan.TgacConanConfigure;
 import uk.ac.tgac.conan.core.util.JarUtils;
-import uk.ac.tgac.rampart.tool.RampartConfiguration;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
+import uk.ac.tgac.rampart.util.CommandLineHelper;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.jar.JarFile;
 
 /**
@@ -56,257 +33,94 @@ import java.util.jar.JarFile;
  */
 public class RampartCLI {
 
-    private static Logger log = LoggerFactory.getLogger(RampartCLI.class);
+    private static final String OPT_HELP = "help";
 
-    // Environment specific configuration options and resource files are set in the user's home directory
-    public static final File SETTINGS_DIR = new File(System.getProperty("user.home") + "/.tgac/rampart/");
+    // **** Jar details ****
+    public static final String DEFAULT_JAR_NAME = "rampart-<version>.jar";
 
-    public static final File DATA_DIR = new File(SETTINGS_DIR, "data");
-    public static final File REPORT_DIR = new File(DATA_DIR, "report");
-    public static final File SCRIPTS_DIR = new File(SETTINGS_DIR, "scripts");
-
-    public static final File DEFAULT_ENV_CONFIG = new File(SETTINGS_DIR, "conan.properties");
-    public static final File DEFAULT_LOG_CONFIG = new File(SETTINGS_DIR, "log4j.properties");
-    public static final File DEFAULT_WEIGHTINGS_FILE = new File(DATA_DIR, "weightings.tab");
+    public static final String START_COMMAND_LINE = "java -jar " + getJarName();
+    public static final String COMMAND_LINE = START_COMMAND_LINE + " <mode> [MODE_ARGS...]";
+    public static final File CWD = currentWorkingDir();
 
     /**
-     * Configures the RAMPART system.  Specifically, this means initialising logging, initialising conan, and copying any
-     * required resources to a known location if they are not there already.
-     * @param rampartOptions Information provided by the user to the command line
-     * @throws IOException Thrown if there are any issues dealing with the environment or logging configuration files,
-     * or if resources couldn't be copied to a suitable location
+     * Returns the name of the Jar file that this code is being executed from
+     * @return The name of this Jar.
      */
-    private static void configureSystem(RampartOptions rampartOptions) throws IOException {
-
-        // Create the settings directory in user.home if it doesn't already exist
-        if (!SETTINGS_DIR.exists()) {
-            if (!SETTINGS_DIR.mkdirs()) {
-                throw new IOException("Could not create RAMPART settings directory in: " + SETTINGS_DIR.getAbsolutePath());
-            };
-        }
-
-        // Setup logging first
-        File loggingProperties = rampartOptions.getLogConfig();
-
-        // If logging file exists use settings from that, otherwise use basic settings.
-        if (loggingProperties.exists()) {
-            PropertyConfigurator.configure(loggingProperties.getAbsolutePath());
-            log.debug("Using user specified logging properties: " + loggingProperties.getAbsolutePath());
-        }
-        else {
-            BasicConfigurator.configure();
-            log.debug("No log4j properties file found.  Using default logging properties.");
-        }
-
-        // Load spring
-        //RampartAppContext.INSTANCE.load("/applicationContext.xml");
-
-        // Load Conan properties
-        final File conanPropsFile = rampartOptions.getEnvironmentConfig();
-        if (conanPropsFile.exists()) {
-            ConanProperties.getConanProperties().setPropertiesFile(conanPropsFile);
-        }
-
-        // Copy resources to external system
-
-        File internalScripts = FileUtils.toFile(RampartCLI.class.getResource("/scripts"));
-        File internalData = FileUtils.toFile(RampartCLI.class.getResource("/data"));
-        File internalConfig = FileUtils.toFile(RampartCLI.class.getResource("/config"));
-
-
-        File externalScriptsDir = new File(SETTINGS_DIR, "scripts");
-        File externalDataDir = new File(SETTINGS_DIR, "data");
-        File externalConfigDir = new File(SETTINGS_DIR, "config");
-
-        JarFile thisJar = JarUtils.jarForClass(RampartCLI.class, null);
-
-        if (thisJar == null) {
-
-            log.debug("Copying resources to settings directory.");
-            FileUtils.copyDirectory(internalScripts, externalScriptsDir);
-            FileUtils.copyDirectory(internalData, externalDataDir);
-            FileUtils.copyDirectory(internalConfig, externalConfigDir);
-        }
-        else {
-
-            log.debug("Executing from JAR.  Copying resources to settings directory.");
-            JarUtils.copyResourcesToDirectory(thisJar, "scripts", externalScriptsDir.getAbsolutePath());
-            JarUtils.copyResourcesToDirectory(thisJar, "data", externalDataDir.getAbsolutePath());
-            JarUtils.copyResourcesToDirectory(thisJar, "config", externalConfigDir.getAbsolutePath());
-        }
-
-        // Intialise TGAC Conan
-        TgacConanConfigure.initialise();
+    private static String getJarName() {
+        JarFile jarFile = JarUtils.jarForClass(RampartCLI.class, null);
+        return jarFile != null ? jarFile.getName() : DEFAULT_JAR_NAME;
     }
+
 
     /**
      * Returns the current working directory as an absolute file
      * @return The current working directory
      */
-    public static File currentWorkingDir() {
+    private static File currentWorkingDir() {
         return new File(".").getAbsoluteFile().getParentFile();
     }
 
 
     /**
-     * Constructs an execution context from details discovered from the environment configuration file.
-     * @return An execution content build from the environment configuration file
-     * @throws IOException
+     * Options for RAMPART
+     * @return
      */
-    private static ExecutionContext buildExecutionContext() throws IOException {
+    private static Options createOptions() {
 
-        // Get external process pre-commands
-        ExternalProcessConfiguration externalProcessConfiguration = new DefaultExternalProcessConfiguration();
-        if (ConanProperties.containsKey("externalProcessConfigFile")) {
-            externalProcessConfiguration.setProcessConfigFilePath(ConanProperties.getProperty("externalProcessConfigFile"));
-            externalProcessConfiguration.load();
-        }
+        // create Options object
+        Options options = new Options();
 
-        // Get execution context
-        Locality locality = ConanProperties.containsKey("executionContext.locality") ?
-                LocalityFactory.createLocality(ConanProperties.getProperty("executionContext.locality")) :
-                new Local();
+        // add t option
+        options.addOption(new Option("?", OPT_HELP, false, "Print this message."));
 
-        String localityName = locality == null ? "" : locality.toString();
-        log.debug("RAMPART: ENV: Locality: " + localityName);
-
-        Scheduler scheduler = ConanProperties.containsKey("executionContext.scheduler") ?
-                SchedulerFactory.createScheduler(ConanProperties.getProperty("executionContext.scheduler")) :
-                null;
-
-        String schedulerName = scheduler == null ? "" : scheduler.getName();
-        log.debug("RAMPART: ENV: Scheduler: " + schedulerName);
-
-        if (scheduler != null && ConanProperties.containsKey("executionContext.scheduler.queue")) {
-            scheduler.getArgs().setQueueName(ConanProperties.getProperty("executionContext.scheduler.queue"));
-        }
-
-        if (scheduler != null && ConanProperties.containsKey("executionContext.scheduler.extraArgs")) {
-            scheduler.getArgs().setExtraArgs(ConanProperties.getProperty("executionContext.scheduler.extraArgs"));
-        }
-
-
-        return new DefaultExecutionContext(locality, scheduler, externalProcessConfiguration, true);
+        return options;
     }
 
-    /**
-     * Cleans a RAMPART job directory of any known temporary information.  This will not delete any information not in
-     * the MECQ, MASS, AMP or REPORT directories.
-     * @param jobDir The RAMPART job directory to clean
-     * @throws IOException Thrown if there were an issues cleaning the directory
-     */
-    private static void cleanJob(File jobDir) throws IOException {
 
-        // If no job directory is specified assume we want to clean the current directory
-        jobDir = jobDir == null ? currentWorkingDir() : jobDir;
 
-        RampartConfiguration jobFs = new RampartConfiguration(jobDir);
+    private static void printHelp() {
 
-        FileUtils.deleteDirectory(jobFs.getMeqcDir());
-        FileUtils.deleteDirectory(jobFs.getMassDir());
-        FileUtils.deleteDirectory(jobFs.getAmpDir());
-        FileUtils.deleteDirectory(jobFs.getReportDir());
-    }
-
-    /**
-     * Constructs and configures a RAMPART pipeline using information provided by the user in the job configuration and
-     * the environment configuration.  The pipeline is then added to a conan task and executed.
-     * @param rampartArgs Details of the RAMPART job
-     * @param executionContext How and where to run the RAMPART job
-     * @throws InterruptedException
-     * @throws TaskExecutionException
-     * @throws IOException
-     */
-    private static void runRampart(RampartArgs rampartArgs, ExecutionContext executionContext)
-            throws InterruptedException, TaskExecutionException, IOException {
-
-        // Create Rampart Pipeline (use Spring for autowiring)
-        RampartPipeline rampartPipeline = new RampartPipeline();
-        rampartPipeline.setConanProcessService(new DefaultProcessService());
-        rampartPipeline.configureProcesses(rampartArgs);
-
-        // Ensure the output directory exists before we start
-        if (!rampartArgs.getOutputDir().exists()) {
-            rampartArgs.getOutputDir().mkdirs();
-        }
-
-        // Create a guest user
-        ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
-
-        // Create the RAMPART task
-        ConanTask<RampartPipeline> rampartTask = new DefaultTaskFactory().createTask(
-                rampartPipeline,
-                0,
-                rampartPipeline.getArgs().getArgMap(),
-                ConanTask.Priority.HIGHEST,
-                rampartUser);
-        rampartTask.setId("rampart");
-        rampartTask.submit();
-        rampartTask.execute(executionContext);
+        CommandLineHelper.printHelp(
+                System.err,
+                COMMAND_LINE,
+                "RAMPART\n\n" +
+                "RAMPART is a de novo assembly pipeline that makes use of third party-tools and High Performance Computing " +
+                "resources.  It can be used as a single interface to several popular assemblers, and can perform " +
+                "automated comparison and analysis of any generated assemblies.\n\n" +
+                "The first argument must describe the mode in which you wish to run RAMPART.  Each mode contains its own " +
+                "command line help, which can be accessed by entering the mode then adding \"--help\".  Available modes:\n\n" +
+                RampartMode.description() + "\n\n",
+                createOptions());
     }
 
 
     /**
-     * The main entry point for RAMPART
+     * The main entry point for RAMPART.  Looks at the first argument to decide which mode to run in.  Execution of each
+     * mode is handled by RampartMode.
      * @param args Command line arguments
      */
     public static void main(String[] args) {
 
+        // Process the command line
         try {
 
-            // Process the command line
-            RampartOptions rampartOptions = new RampartOptions(new PosixParser().parse(RampartOptions.createOptions(), args));
-
-            // If help was requested output that and finish before starting Spring
-            if (rampartOptions.doHelp()) {
-                rampartOptions.printHelp(System.out);
+            if (args.length == 0 || args[0].equals("--" + OPT_HELP)) {
+                printHelp();
+                System.exit(0);
             }
-            // Otherwise if clean option was selected then clean the specified job dir
-            else if (rampartOptions.getClean() != null) {
-                cleanJob(rampartOptions.getClean());
-            }
-            // Otherwise run RAMPART proper
-            else {
 
-                // Configure RAMPART system
-                configureSystem(rampartOptions);
-                log.info("RAMPART: System configured");
-
-                // Build execution context
-                ExecutionContext executionContext = buildExecutionContext();
-                log.info("RAMPART: Built execution context");
-
-                // Build Rampart args from the apache command line handler
-                RampartArgs rampartArgs = rampartOptions.convert();
-
-                log.debug("RAMPART: Arguments: \n" + rampartArgs.toString());
-
-                // Run RAMPART
-                log.info("RAMPART: Started");
-                runRampart(rampartArgs, executionContext);
-                log.info("RAMPART: Finished");
-            }
+            RampartMode mode = RampartMode.valueOf(args[0].toUpperCase());
+            mode.execute((String[])ArrayUtils.subarray(args, 1, args.length));
         }
-        catch (IOException ioe) {
-            log.error(ioe.getMessage(), ioe);
-            System.exit(2);
-        }
-        catch (ParseException exp) {
-            System.err.println(exp.getMessage());
-            System.err.println(StringUtils.join(exp.getStackTrace(), "\n"));
-
-            RampartOptions.printUsage(System.err);
-
-            System.exit(3);
-        }
-        catch (InterruptedException ie) {
-            log.error(ie.getMessage(), ie);
-            System.exit(4);
+        catch (IllegalArgumentException | ParseException e) {
+            System.err.println(e.getMessage());
+            printHelp();
+            System.exit(1);
         }
         catch (Exception e) {
-            log.error(e.getMessage(), e);
-            System.exit(6);
+            System.err.println(e.getMessage());
+            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
+            System.exit(2);
         }
     }
-
 }

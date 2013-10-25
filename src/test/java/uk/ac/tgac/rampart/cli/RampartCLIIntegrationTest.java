@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.tgac.rampart.RampartCLI;
+import uk.ac.tgac.rampart.tool.RampartConfiguration;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -30,7 +31,7 @@ import java.net.URISyntaxException;
 import static org.junit.Assert.assertTrue;
 
 @Category(IntegrationTest.class)
-public class RampartCLIIT {
+public class RampartCLIIntegrationTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -60,25 +61,6 @@ public class RampartCLIIT {
         });
     }
 
-    @Test
-    public void testClean() throws URISyntaxException {
 
-        File outputDir = temp.newFolder("rampartCleanTest");
-
-        new File(outputDir, "mass").mkdir();
-        new File(outputDir, "reads").mkdir();
-        new File(outputDir, "amp").mkdir();
-        new File(outputDir, "random").mkdir();
-
-        RampartCLI.main(new String[]{
-                "--clean",
-                outputDir.getAbsolutePath()
-        });
-
-        File[] outputDirContents = outputDir.listFiles();
-
-        assertTrue(outputDirContents.length == 1);
-        assertTrue(new File(outputDir, "random").exists());
-    }
 
 }

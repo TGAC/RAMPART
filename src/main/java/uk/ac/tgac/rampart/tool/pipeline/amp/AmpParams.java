@@ -35,7 +35,6 @@ public class AmpParams implements ProcessParams {
 
     private ConanParameter inputAssembly;
     private ConanParameter outputDir;
-    private ConanParameter config;
     private ConanParameter processes;
     private ConanParameter jobPrefix;
 
@@ -49,11 +48,6 @@ public class AmpParams implements ProcessParams {
         this.outputDir = new PathParameter(
                 "output",
                 "The output directory which should contain the enhancement steps",
-                true);
-
-        this.config = new PathParameter(
-                "config",
-                "The RAMPART configuration file that contains details describing how to enhance the assembly",
                 true);
 
         this.processes = new DefaultConanParameter(
@@ -79,10 +73,6 @@ public class AmpParams implements ProcessParams {
         return outputDir;
     }
 
-    public ConanParameter getConfig() {
-        return config;
-    }
-
     public ConanParameter getProcesses() {
         return processes;
     }
@@ -93,11 +83,10 @@ public class AmpParams implements ProcessParams {
 
     @Override
     public List<ConanParameter> getConanParameters() {
-        return new ArrayList<ConanParameter>(Arrays.asList(
+        return new ArrayList<>(Arrays.asList(
                 new ConanParameter[]{
                         this.inputAssembly,
                         this.outputDir,
-                        this.config,
                         this.processes,
                         this.jobPrefix}));
     }

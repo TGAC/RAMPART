@@ -52,7 +52,6 @@ public class AmpStageProcess extends AbstractConanProcess {
      * Dispatches amp stage to the specified environments
      *
      * @param executionContext The environment to dispatch jobs too
-     * @throws java.io.IOException
      * @throws IllegalArgumentException
      * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
      * @throws InterruptedException
@@ -73,7 +72,8 @@ public class AmpStageProcess extends AbstractConanProcess {
 
             // Make sure input file exists
             if (args.getInput() == null || !args.getInput().exists()) {
-                throw new IOException("Input file for stage: " + args.getIndex() + " does not exist");
+                throw new IOException("Input file for stage: " + args.getIndex() + " does not exist: " +
+                        (args.getInput() == null ? "null" : args.getInput().getAbsolutePath()));
             }
 
             // Create output directory
@@ -88,21 +88,24 @@ public class AmpStageProcess extends AbstractConanProcess {
             this.ampStageExecutor.executeAmpStage(ampProc);
 
             // Create links for outputs from this assembler to known locations
-            this.ampStageExecutor.createAmpStageLink(args.getOutputFile(), args.getAssembliesDir(), args.getIndex());
+            this.ampStageExecutor.createAmpStageLink(ampProc.getAmpArgs().getOutputFile(), args.getOutputFile());
 
             log.info("Finished AMP stage " + args.getIndex());
-
-        } catch (IOException ioe) {
+        }
+        catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
 
         return true;
     }
 
-    protected AbstractAssemblyIOProcess makeStage(AmpStageArgs args) {
+    protected AbstractAssemblyIOProcess makeStage(AmpStageArgs args) throws IOException {
 
         AbstractAssemblyIOProcess proc = AssemblyIOFactory.create(args.getTool(), args.getInput(), args.getOutputDir(), "amp-" + args.getIndex(),
                 args.getAllLibraries(), args.getThreads(), args.getMemory(), args.getOtherArgs());
+
+        if (proc == null)
+            throw new IOException("Could not find requested tool: " + args.getTool());
 
         return proc;
     }

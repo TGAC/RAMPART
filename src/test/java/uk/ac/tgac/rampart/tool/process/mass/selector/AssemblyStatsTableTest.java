@@ -44,7 +44,7 @@ public class AssemblyStatsTableTest {
     @Test
     public void testAssemblyStatsTable() throws IOException {
 
-        List<File> statsFiles = new ArrayList<File>();
+        List<File> statsFiles = new ArrayList<>();
         statsFiles.add(statsFile1);
         statsFiles.add(statsFile2);
 

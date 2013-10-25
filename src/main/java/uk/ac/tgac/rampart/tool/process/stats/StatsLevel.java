@@ -15,39 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.util;
+package uk.ac.tgac.rampart.tool.process.stats;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * User: maplesod
- * Date: 30/01/13
- * Time: 17:25
+ * Date: 23/08/13
+ * Time: 11:34
  */
-public enum RHelper {
+public enum StatsLevel {
 
-    STATS_PLOTTER {
-        @Override
-        public String getPath() {
-            return "/scripts/r/stats_plotter.R";
+    CONTIGUITY,
+    COMPLETENESS;
+
+
+    public static List<StatsLevel> parseList(String statsLevelsString) {
+
+        List<StatsLevel> allStats = new ArrayList<>();
+
+        String[] statsLevels = statsLevelsString.split(",");
+
+        for(String level : statsLevels) {
+            allStats.add(StatsLevel.valueOf(level.trim().toUpperCase()));
         }
-    };
 
-    public File getInternalScript() {
-        URL scriptUrl = this.getClass().getResource(this.getPath());
-        return FileUtils.toFile(scriptUrl);
+        return allStats;
     }
 
-    public File getExternalScript() {
-        return new File(
-                RAMPART_DIR,
-                this.getPath());
+    public static List<StatsLevel> createAll() {
+
+        List<StatsLevel> allStats = new ArrayList<>();
+
+        Collections.addAll(allStats, StatsLevel.values());
+
+        return allStats;
     }
-
-    private static final File RAMPART_DIR = new File(System.getProperty("user.home") + "/.rampart/");
-
-    public abstract String getPath();
 }

@@ -252,8 +252,8 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     @Override
     public int compareTo(AssemblyStats o) {
 
-        Double thisScore = new Double(this.score);
-        Double thatScore = new Double(o.getScore());
+        Double thisScore = this.score;
+        Double thatScore = o.getScore();
 
         return thisScore.compareTo(thatScore);
     }

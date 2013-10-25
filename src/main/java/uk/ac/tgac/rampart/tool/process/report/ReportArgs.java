@@ -57,7 +57,7 @@ public class ReportArgs implements ProcessArgs {
     @Override
     public Map<ConanParameter, String> getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<ConanParameter, String>();
+        Map<ConanParameter, String> pvp = new HashMap<>();
 
         if (this.jobDir != null)
             pvp.put(params.getJobDir(), this.getJobDir().getAbsolutePath());

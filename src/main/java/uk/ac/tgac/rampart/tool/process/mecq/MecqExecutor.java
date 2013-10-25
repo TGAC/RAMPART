@@ -37,4 +37,6 @@ public interface MecqExecutor extends RampartExecutor {
 
     void createInputLinks(Library library, ErrorCorrectorArgs args)
             throws ProcessExecutionException, InterruptedException;
+
+    ErrorCorrector makeErrorCorrector(EcqArgs mecqArgs, Library inputLib, File outputDir);
 }

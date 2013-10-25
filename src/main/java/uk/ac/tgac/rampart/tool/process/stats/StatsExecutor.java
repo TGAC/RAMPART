@@ -15,43 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
-package uk.ac.tgac.rampart.tool.process.mass.single;
+package uk.ac.tgac.rampart.tool.process.stats;
 
-import java.util.ArrayList;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.rampart.tool.RampartExecutor;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
  * User: maplesod
  * Date: 23/08/13
- * Time: 11:34
+ * Time: 11:18
  */
-public enum StatsLevel {
+public interface StatsExecutor extends RampartExecutor {
 
-    CONTIGUITY,
-    COMPLETENESS;
+    List<Integer> dispatchAnalyserJobs(List<StatsLevel> statsLevels, File inputDir, int threadsPerProcess, int estGenomeSize,
+                              boolean scaffolds, boolean runParallel, String waitCondition, String jobName)
+            throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 
-
-    public static List<StatsLevel> parseList(String statsLevelsString) {
-
-        List<StatsLevel> allStats = new ArrayList<StatsLevel>();
-
-        String[] statsLevels = statsLevelsString.split(",");
-
-        for(String level : statsLevels) {
-            allStats.add(StatsLevel.valueOf(level.trim().toUpperCase()));
-        }
-
-        return allStats;
-    }
-
-    public static List<StatsLevel> createAll() {
-
-        List<StatsLevel> allStats = new ArrayList<StatsLevel>();
-
-        for(StatsLevel sl : StatsLevel.values()) {
-            allStats.add(sl);
-        }
-
-        return allStats;
-    }
 }

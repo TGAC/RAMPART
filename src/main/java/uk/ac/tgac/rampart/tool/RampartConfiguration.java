@@ -120,7 +120,7 @@ public class RampartConfiguration implements Serializable {
         this.title = "Rampart Assembly";
         this.description = "";
         this.organism = null;
-        this.libs = new ArrayList<Library>();
+        this.libs = new ArrayList<>();
         this.mecqSettings = null;
         this.massSettings = null;
         this.ampSettings = null;
@@ -196,7 +196,7 @@ public class RampartConfiguration implements Serializable {
             this.description = XmlHelper.getTextValue(root, KEY_ELEM_DESCRIPTION);
 
             // Organism
-            Element organismElement = (Element)XmlHelper.getDistinctElementByName(root, KEY_ELEM_ORGANISM);
+            Element organismElement = XmlHelper.getDistinctElementByName(root, KEY_ELEM_ORGANISM);
             this.organism = organismElement == null ? null : new Organism(organismElement);
 
             // All libraries
@@ -206,10 +206,10 @@ public class RampartConfiguration implements Serializable {
                 this.libs.add(new Library((Element)libraries.item(i)));
             }
 
-            Element pipelineElement = (Element)XmlHelper.getDistinctElementByName(root, KEY_ELEM_PIPELINE);
+            Element pipelineElement = XmlHelper.getDistinctElementByName(root, KEY_ELEM_PIPELINE);
 
             // MECQ
-            Element mecqElement = (Element)XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MECQ);
+            Element mecqElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MECQ);
             this.mecqSettings = mecqElement == null ? null :
                     new MecqArgs(
                             mecqElement,
@@ -218,18 +218,19 @@ public class RampartConfiguration implements Serializable {
                             this.libs);
 
             // MASS
-            Element massElement = (Element)XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
+            Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
             this.massSettings = massElement == null ? null :
                     new MassArgs(
                             massElement,
                             this.getMassDir(),
+                            this.getMeqcDir(),
                             jobPrefix + "-mass",
                             this.libs,
                             this.mecqSettings == null ? null : this.mecqSettings.getEqcArgList(),
                             this.organism);
 
             // AMP
-            Element ampElement = (Element)XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
+            Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
             this.ampSettings = ampElement == null ? null :
                     new AmpArgs(
                             ampElement,
@@ -240,10 +241,9 @@ public class RampartConfiguration implements Serializable {
                             this.mecqSettings.getEqcArgList(),
                             this.organism);
 
-        }catch(ParserConfigurationException pce) {
+        }
+        catch(ParserConfigurationException | SAXException pce) {
             throw new IOException(pce);
-        }catch(SAXException se) {
-            throw new IOException(se);
         }
     }
 
