@@ -83,9 +83,9 @@ public class Rampart {
     public static final File    DEFAULT_ENV_CONFIG      = new File(SETTINGS_DIR, "conan.properties");
     public static final File    DEFAULT_LOG_CONFIG      = new File(SETTINGS_DIR, "log4j.properties");
     public static final File    DEFAULT_WEIGHTINGS_FILE = new File(DATA_DIR, "weightings.tab");
-    public static final File    DEFAULT_OUTPUT_DIR      = new File("");
+    public static final File    DEFAULT_OUTPUT_DIR      = RampartCLI.CWD;
     public static final String  DEFAULT_JOB_PREFIX      = "rampart-" + createTimestamp();
-    public static final String  DEFAULT_STAGES          = null;
+    public static final String  DEFAULT_STAGES          = "ALL";
 
 
     // **** Options ****
@@ -155,6 +155,12 @@ public class Rampart {
                 cmdLine.getOptionValue(OPT_STAGES) :
                 DEFAULT_STAGES;
 
+        // Check for a single arg left on the command line
+        if (cmdLine.getArgs().length != 1)
+            throw new ParseException("Unexpected number of arguments on the command line");
+
+        // This is the job config file.
+        this.jobConfig = new File(cmdLine.getArgs()[0]);
     }
 
 
