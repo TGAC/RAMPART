@@ -18,19 +18,18 @@
 package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.mockito.MockitoAnnotations;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,17 +43,10 @@ import static org.mockito.Mockito.when;
  * Date: 25/04/13
  * Time: 19:42
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MassSelectorProcessTest {
+public class MassSelectorProcessTest extends MockedConanProcess {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
-
-    @Mock
-    private ExecutionContext ec;
-
-    @Mock
-    private ConanProcessService conanProcessService;
 
     private File statsFile1 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats1.txt"));
     private File statsFile2 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats2.txt"));
@@ -78,13 +70,11 @@ public class MassSelectorProcessTest {
         args.setOrganism(new Organism("test", 1, 400000000, 52.0));
 
         MassSelectorProcess process = new MassSelectorProcess(args);
-        AbstractConanProcess parentProcess = process;
+        process.setConanProcessService(conanProcessService);
 
         when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
-
-        ReflectionTestUtils.setField(parentProcess, "conanProcessService", conanProcessService);
 
         process.execute(ec);
     }
@@ -104,13 +94,11 @@ public class MassSelectorProcessTest {
         args.setWeightings(weightingsFile);
 
         MassSelectorProcess process = new MassSelectorProcess(args);
-        AbstractConanProcess parentProcess = process;
+        process.setConanProcessService(conanProcessService);
 
         when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
-
-        ReflectionTestUtils.setField(parentProcess, "conanProcessService", conanProcessService);
 
         process.execute(ec);
     }

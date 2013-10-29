@@ -18,10 +18,15 @@
 package uk.ac.tgac.rampart.tool.pipeline;
 
 import org.apache.commons.lang.StringUtils;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpParams;
+import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
 import uk.ac.tgac.rampart.tool.process.mass.MassParams;
+import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqParams;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 import uk.ac.tgac.rampart.tool.process.report.ReportParams;
 
 import java.util.ArrayList;
@@ -38,11 +43,6 @@ public enum RampartStage {
 
     MECQ {
         @Override
-        public String getStatsID() {
-            return null;
-        }
-
-        @Override
         public String translateFilenameToKey(String filename) {
             return null;
         }
@@ -51,13 +51,13 @@ public enum RampartStage {
         public List<ConanParameter> getParameters() {
             return new MecqParams().getConanParameters();
         }
+
+        @Override
+        public AbstractConanProcess create(ProcessArgs processArgs) {
+            return new MecqProcess(processArgs);
+        }
     },
     MASS {
-        @Override
-        public String getStatsID() {
-            return "kmer";
-        }
-
         @Override
         public String translateFilenameToKey(String filename) {
 
@@ -76,13 +76,13 @@ public enum RampartStage {
         public List<ConanParameter> getParameters() {
             return new MassParams().getConanParameters();
         }
+
+        @Override
+        public AbstractConanProcess create(ProcessArgs processArgs) {
+            return new MassProcess(processArgs);
+        }
     },
     AMP {
-        @Override
-        public String getStatsID() {
-            return "index";
-        }
-
         @Override
         public String translateFilenameToKey(String filename) {
 
@@ -100,13 +100,13 @@ public enum RampartStage {
         public List<ConanParameter> getParameters() {
             return new AmpParams().getConanParameters();
         }
-    },
-    ANALYSE {
 
         @Override
-        public String getStatsID() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        public AbstractConanProcess create(ProcessArgs processArgs) {
+            return new AmpProcess(processArgs);
         }
+    },
+    ANALYSE {
 
         @Override
         public String translateFilenameToKey(String filename) {
@@ -117,13 +117,13 @@ public enum RampartStage {
         public List<ConanParameter> getParameters() {
             return null;
         }
-    },
-    REPORT {
 
         @Override
-        public String getStatsID() {
+        public AbstractConanProcess create(ProcessArgs processArgs) {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
+    },
+    REPORT {
 
         @Override
         public String translateFilenameToKey(String filename) {
@@ -134,13 +134,18 @@ public enum RampartStage {
         public List<ConanParameter> getParameters() {
             return new ReportParams().getConanParameters();
         }
-    };
 
-    public abstract String getStatsID();
+        @Override
+        public AbstractConanProcess create(ProcessArgs processArgs) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+    };
 
     public abstract String translateFilenameToKey(String filename);
 
     public abstract List<ConanParameter> getParameters();
+
+    public abstract AbstractConanProcess create(ProcessArgs processArgs);
 
     public static String getFullListAsString() {
 

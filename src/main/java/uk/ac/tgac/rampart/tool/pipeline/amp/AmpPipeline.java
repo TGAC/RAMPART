@@ -17,18 +17,12 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageProcess;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,23 +31,23 @@ import java.util.List;
  * Time: 10:55
  * To change this template use File | Settings | File Templates.
  */
-@Component
-public class AmpPipeline implements ConanPipeline {
+public class AmpPipeline extends AbstractConanPipeline {
 
-    @Autowired
-    private ConanProcessService conanProcessService;
+    private static final String NAME = "AMP";
+    private static final ConanUser USER = new GuestUser("rampart@tgac.ac.uk");
 
-    private List<ConanProcess> processList;
+
     private AmpParams params = new AmpParams();
+
     private AmpArgs args;
 
-    public AmpPipeline() {
-        this(new AmpArgs());
-    }
+    public AmpPipeline(AmpArgs ampArgs, ConanProcessService conanProcessService) {
 
-    public AmpPipeline(AmpArgs ampArgs) {
+        super(NAME, USER, false, false, conanProcessService);
+
         this.args = ampArgs;
-        this.processList = new ArrayList<>();
+
+        this.init();
     }
 
     public AmpArgs getArgs() {
@@ -62,65 +56,18 @@ public class AmpPipeline implements ConanPipeline {
 
     public void setArgs(AmpArgs args) {
         this.args = args;
+
+        this.init();
     }
 
-    public ConanProcessService getConanProcessService() {
-        return conanProcessService;
-    }
 
-    public void setConanProcessService(ConanProcessService conanProcessService) {
-        this.conanProcessService = conanProcessService;
-    }
+    public void init() {
 
-    @Override
-    public String getName() {
-        return "Assembly iMProver (AMP)";
-    }
-
-    @Override
-    public ConanUser getCreator() {
-        return null;
-    }
-
-    @Override
-    public boolean isPrivate() {
-        return false;
-    }
-
-    @Override
-    public boolean isDaemonized() {
-        return false;
-    }
-
-    @Override
-    public List<ConanProcess> getProcesses() {
-
-        List<ConanProcess> cProcs = new ArrayList<>();
-
-        for(ConanProcess ampProcess : this.processList) {
-            cProcs.add(ampProcess);
-        }
-
-        return cProcs;
-    }
-
-    @Override
-    public List<ConanParameter> getAllRequiredParameters() {
-        return this.params.getConanParameters();
-    }
-
-    public void configureProcesses() {
-        this.configureProcesses(this.args);
-    }
-
-    public void configureProcesses(AmpArgs args) {
-
-        for(AmpStageArgs ampStageArgs : args.getStageArgsList()) {
+        for(AmpStageArgs ampStageArgs : this.args.getStageArgsList()) {
 
             AmpStageProcess proc = new AmpStageProcess(ampStageArgs);
-
-            proc.setConanProcessService(this.conanProcessService);
-            this.processList.add(proc);
+            proc.setConanProcessService(this.getConanProcessService());
+            this.addProcess(proc);
         }
     }
 

@@ -23,10 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Args;
-import uk.ac.tgac.conan.process.asm.stats.AscV10Process;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
@@ -193,35 +190,6 @@ public class MassSelectorProcess extends AbstractConanProcess {
         }
 
         return tables;
-    }
-
-    protected void executePlots(File inputFile, File outputFile, String jobName, ExecutionContext executionContext)
-            throws InterruptedException {
-
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-        if (executionContextCopy.usingScheduler()) {
-
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-            schedulerArgs.setJobName(jobName);
-            schedulerArgs.setMonitorFile(new File(inputFile.getParentFile(), jobName + ".log"));
-        }
-
-        AscV10Args ascArgs = new AscV10Args();
-        ascArgs.setInput(inputFile);
-        ascArgs.setOutput(outputFile);
-        ascArgs.setMode("PLOTS");
-
-        AscV10Process ascProcess = new AscV10Process(ascArgs);
-
-        try {
-            this.conanProcessService.execute(ascProcess, executionContextCopy);
-        }
-        catch(ProcessExecutionException pee) {
-            // If an error occurs here it isn't critical so just log the error and continue
-            log.error(pee.getMessage(), pee);
-        }
     }
 
 }

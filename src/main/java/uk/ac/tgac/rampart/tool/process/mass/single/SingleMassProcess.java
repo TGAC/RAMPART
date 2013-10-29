@@ -21,7 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
@@ -47,7 +46,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-@Component
 public class SingleMassProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(SingleMassProcess.class);

@@ -23,12 +23,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.tgac.rampart.RampartCLI;
-import uk.ac.tgac.rampart.tool.RampartConfiguration;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
-
-import static org.junit.Assert.assertTrue;
 
 @Category(IntegrationTest.class)
 public class RampartCLIIntegrationTest {
@@ -37,7 +35,7 @@ public class RampartCLIIntegrationTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
-    public void testRampart() throws URISyntaxException {
+    public void testRampart() throws URISyntaxException, IOException {
 
         File outputDir = temp.newFolder("rampartTest");
 

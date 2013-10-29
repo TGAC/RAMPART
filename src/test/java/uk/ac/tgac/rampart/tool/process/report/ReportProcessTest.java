@@ -20,9 +20,7 @@ package uk.ac.tgac.rampart.tool.process.report;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
@@ -30,8 +28,10 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
+import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.mockito.Mockito.when;
 
@@ -40,24 +40,17 @@ import static org.mockito.Mockito.when;
  * Date: 08/03/13
  * Time: 11:41
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ReportProcessTest {
+public class ReportProcessTest extends MockedConanProcess {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
-
-    @Mock
-    private ExecutionContext ec;
-
-    @Mock
-    private ConanProcessService conanProcessService;
 
     @Mock
     private VelocityMergerService velocityMergerService;
 
 
     @Test
-    public void testReportExecute() throws InterruptedException, ProcessExecutionException {
+    public void testReportExecute() throws InterruptedException, ProcessExecutionException, IOException {
 
         File testDir = temp.newFolder("testReport");
         File jobDir = new File(testDir, "job");

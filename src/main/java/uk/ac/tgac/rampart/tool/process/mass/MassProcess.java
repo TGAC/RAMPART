@@ -19,11 +19,11 @@ package uk.ac.tgac.rampart.tool.process.mass;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
@@ -41,7 +41,6 @@ import java.util.List;
  * Date: 01/02/13
  * Time: 11:10
  */
-@Component
 public class MassProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MassProcess.class);
@@ -52,7 +51,7 @@ public class MassProcess extends AbstractConanProcess {
         this(new MassArgs());
     }
 
-    public MassProcess(MassArgs args) {
+    public MassProcess(ProcessArgs args) {
         super("", args, new MassParams());
         this.massExecutor = new MassExecutorImpl();
     }

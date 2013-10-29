@@ -3,7 +3,7 @@ package uk.ac.tgac.rampart.util;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import uk.ac.tgac.rampart.RampartCLI;
-import uk.ac.tgac.rampart.tool.RampartConfiguration;
+import uk.ac.tgac.rampart.RampartJobFileSystem;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class JobCleaner {
             System.out.print("Cleaning RAMPART job directory: " + jobDir.getAbsolutePath() + " ...");
         }
 
-        RampartConfiguration jobFs = new RampartConfiguration(jobDir);
+        RampartJobFileSystem jobFs = new RampartJobFileSystem(jobDir);
 
         FileUtils.deleteDirectory(jobFs.getMeqcDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());

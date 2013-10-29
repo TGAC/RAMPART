@@ -21,9 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -32,6 +30,7 @@ import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,17 +45,10 @@ import static org.mockito.Mockito.when;
  * Date: 12/02/13
  * Time: 10:20
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SingleMassProcessTest {
+public class SingleMassProcessTest extends MockedConanProcess {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
-
-    @Mock
-    private ExecutionContext ec;
-
-    @Mock
-    private ConanProcessService conanProcessService;
 
     @Mock
     private SingleMassExecutor singleMassExecutor;

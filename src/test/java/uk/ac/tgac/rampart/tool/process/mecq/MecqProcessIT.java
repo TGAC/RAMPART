@@ -28,6 +28,7 @@ import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.cli.IntegrationTest;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertTrue;
@@ -44,7 +45,7 @@ public class MecqProcessIT {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
-    public void testQTDirect() throws InterruptedException, ProcessExecutionException {
+    public void testQTDirect() throws InterruptedException, ProcessExecutionException, IOException {
 
         File outputDir = temp.newFolder("qtTest");
 
@@ -62,7 +63,7 @@ public class MecqProcessIT {
 
 
     @Test
-    public void testQTViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException {
+    public void testQTViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException, IOException {
 
         File outputDir = temp.newFolder("qtTestCLI");
 

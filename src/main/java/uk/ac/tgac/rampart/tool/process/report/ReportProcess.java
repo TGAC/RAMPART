@@ -19,8 +19,6 @@ package uk.ac.tgac.rampart.tool.process.report;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -31,12 +29,10 @@ import uk.ac.tgac.conan.core.service.VelocityMergerService;
  * Date: 05/02/13
  * Time: 17:48
  */
-@Component
 public class ReportProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(ReportProcess.class);
 
-    @Autowired
     private VelocityMergerService velocityMergerService;
 
 

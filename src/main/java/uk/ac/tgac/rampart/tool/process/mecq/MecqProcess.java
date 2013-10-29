@@ -19,11 +19,10 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
@@ -39,21 +38,21 @@ import java.util.List;
  * Time: 10:54
  * To change this template use File | Settings | File Templates.
  */
-@Component
 public class MecqProcess extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MecqProcess.class);
 
-    @Autowired
-    private MecqExecutor mecqExecutor = new MecqExecutorImpl();
+    private MecqExecutor mecqExecutor;
 
 
     public MecqProcess() {
         this(new MecqArgs());
     }
 
-    public MecqProcess(MecqArgs args) {
+    public MecqProcess(ProcessArgs args) {
         super("", args, new MecqParams());
+
+        this.mecqExecutor = new MecqExecutorImpl();
     }
 
 

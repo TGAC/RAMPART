@@ -1,4 +1,4 @@
-/**
+/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
  * Copyright (C) 2013  Daniel Mapleson - TGAC
  *
@@ -14,13 +14,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
-package uk.ac.tgac.rampart.tool;
+ */
+
+package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,15 +30,16 @@ import java.io.IOException;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Created with IntelliJ IDEA.
  * User: maplesod
- * Date: 22/08/13
- * Time: 10:44
+ * Date: 29/10/13
+ * Time: 16:46
+ * To change this template use File | Settings | File Templates.
  */
-public class RampartConfigurationTest {
+public class RampartArgsTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
-
 
 
     @Test
@@ -46,9 +49,8 @@ public class RampartConfigurationTest {
         File outDir = temp.newFolder("configTest");
         String jobPrefix = "configTestJob";
 
-        RampartConfiguration rampartConfiguration = new RampartConfiguration(cfgFile, outDir, jobPrefix);
+        RampartArgs args = new RampartArgs(cfgFile, outDir, jobPrefix, RampartStage.parse("ALL"));
 
         assertTrue(true);
     }
-
 }

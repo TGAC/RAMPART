@@ -17,23 +17,14 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.tgac.rampart.tool.RampartConfiguration;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
-import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,122 +33,46 @@ import java.util.List;
  * Time: 10:48
  * To change this template use File | Settings | File Templates.
  */
-@Component
-public class RampartPipeline implements ConanPipeline {
+public class RampartPipeline extends AbstractConanPipeline {
 
-    private List<AbstractConanProcess> processList;
     private RampartArgs args;
 
-    @Autowired
-    private ConanProcessService conanProcessService;
+    private static final String NAME = "RAMPART";
+    private static final ConanUser USER = new GuestUser("rampart@tgac.ac.uk");
 
-    public RampartPipeline() {
-        this(new RampartArgs());
-    }
+    public RampartPipeline(RampartArgs args, ConanProcessService conanProcessService) throws IOException {
 
-    public RampartPipeline(RampartArgs args) {
+        super(NAME, USER, false, false, conanProcessService);
+
         this.args = args;
-        this.processList = new ArrayList<>();
+
+        this.init();
     }
 
     public RampartArgs getArgs() {
         return args;
     }
 
-    public void setArgs(RampartArgs args) {
-        this.args = args;
-    }
-
-    public ConanProcessService getConanProcessService() {
-        return conanProcessService;
-    }
-
-    public void setConanProcessService(ConanProcessService conanProcessService) {
-        this.conanProcessService = conanProcessService;
-    }
-
-    @Override
-    public String getName() {
-        return "RAMPART";
-    }
-
-    @Override
-    public ConanUser getCreator() {
-        return null;
-    }
-
-    @Override
-    public boolean isPrivate() {
-        return false;
-    }
-
-    @Override
-    public boolean isDaemonized() {
-        return false;
-    }
-
-
-    @Override
-    public List<ConanProcess> getProcesses() {
-
-        List<ConanProcess> conanProcessList = new ArrayList<>();
-
-        for(AbstractConanProcess process : this.processList) {
-            conanProcessList.add(process);
-        }
-
-        return conanProcessList;
-    }
-
-    @Override
-    public List<ConanParameter> getAllRequiredParameters() {
-
-        List<ConanParameter> params = new ArrayList<>();
-
-        for(AbstractConanProcess process : this.processList) {
-            params.addAll(process.getParameters());
-        }
-
-        return params;
-    }
-
-
-
-
-    public void configureProcesses() throws IOException {
-
-        this.configureProcesses(this.args);
-    }
-
-    public void configureProcesses(RampartArgs args) throws IOException {
-
-        // Capture the args
+    public void setArgs(RampartArgs args) throws IOException {
         this.args = args;
 
-        // Create an object that maps expected RAMPART job directory structure based on specified output dir.
-        // Probably processes an Xml configuration file to do this.
-        RampartConfiguration config = new RampartConfiguration(this.args.getConfig(), this.args.getOutputDir(), this.args.getJobPrefix());
+        this.init();
+    }
 
-        // Shortcut to stages
-        List<RampartStage> stages = this.args.getStages();
+
+    public void init() throws IOException {
 
         // Configure pipeline
-        if (stages.contains(RampartStage.MECQ) && config.getMecqSettings() != null) {
-            this.processList.add(new MecqProcess(config.getMecqSettings()));
-        }
+        this.clearProcessList();
 
-        if (stages.contains(RampartStage.MASS) && config.getMassSettings() != null) {
-            this.processList.add(new MassProcess(config.getMassSettings()));
-        }
+        addProcessIfRequested(RampartStage.MECQ, this.args.getMecqSettings());
+        addProcessIfRequested(RampartStage.MASS, this.args.getMassSettings());
+        addProcessIfRequested(RampartStage.AMP, this.args.getAmpSettings());
+    }
 
-        if (stages.contains(RampartStage.AMP) && config.getAmpSettings() != null) {
-            this.processList.add(new AmpProcess(config.getAmpSettings()));
-        }
-
-
-        // Spring autowiring might fail here to explicitly set conanProcessService for all processes
-        for(AbstractConanProcess process : this.processList) {
-            process.setConanProcessService(this.conanProcessService);
+    private void addProcessIfRequested(RampartStage stage, ProcessArgs stageArgs) {
+        if (this.args.getStages().contains(stage) && stageArgs != null) {
+            this.addProcess(stage.create(stageArgs));
         }
     }
 
