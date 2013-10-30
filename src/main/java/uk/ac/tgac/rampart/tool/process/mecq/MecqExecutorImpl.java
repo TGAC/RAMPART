@@ -54,12 +54,13 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
             ErrorCorrectorArgs ecArgs = errorCorrector.getArgs();
 
             schedulerArgs.setJobName(jobName);
-            schedulerArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
             schedulerArgs.setThreads(ecArgs.getThreads());
             schedulerArgs.setMemoryMB(ecArgs.getMemoryGb() * 1000);
 
             executionContextCopy.setForegroundJob(!runInParallel);
         }
+
+        executionContextCopy.setMonitorFile(new File(outputDir, jobName + ".log"));
 
         this.conanProcessService.execute(errorCorrector, executionContextCopy);
     }

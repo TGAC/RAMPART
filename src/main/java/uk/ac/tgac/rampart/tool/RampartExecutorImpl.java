@@ -81,7 +81,7 @@ public class RampartExecutorImpl implements RampartExecutor {
         Scheduler scheduler = executionContextCopy.getScheduler();
 
         scheduler.getArgs().setJobName(jobName);
-        scheduler.getArgs().setMonitorFile(new File(outputDir, jobName + ".log"));
+        executionContextCopy.setMonitorFile(new File(outputDir, jobName + ".log"));
         executionContextCopy.setForegroundJob(true);
 
         String condition = scheduler.generatesJobIdFromOutput() ?

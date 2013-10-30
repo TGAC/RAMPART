@@ -65,6 +65,7 @@ public class Rampart extends AbstractConanCLI {
     // **** Options ****
     private File weightingsFile;
     private List<RampartStage> stages;
+    private File jobConfig;
 
 
     private RampartArgs args;
@@ -78,6 +79,7 @@ public class Rampart extends AbstractConanCLI {
 
         this.weightingsFile     = DEFAULT_WEIGHTINGS_FILE;
         this.stages             = DEFAULT_STAGES;
+        this.jobConfig          = null;
 
         this.args               = null;
     }
@@ -89,42 +91,49 @@ public class Rampart extends AbstractConanCLI {
      */
     public Rampart(String[] args) throws ParseException, IOException {
 
+        // Creates the instance and parses the command line, setting the class variables
         super(APP_NAME, SETTINGS_DIR);
 
-        // Parse the command line arguments
-        CommandLine cmdLine = new PosixParser().parse(createOptions(), args, true);
+        // Parses the command line using a posix parser and sets all the variables
+        this.parse(new PosixParser().parse(createOptions(), args, true));
 
-        super.parse(cmdLine);
-
-        this.weightingsFile = cmdLine.hasOption(OPT_WEIGHTINGS) ?
-                new File(cmdLine.getOptionValue(OPT_WEIGHTINGS)) :
-                DEFAULT_WEIGHTINGS_FILE;
-
-        this.stages = cmdLine.hasOption(OPT_STAGES) ?
-                RampartStage.parse(cmdLine.getOptionValue(OPT_STAGES)) :
-                DEFAULT_STAGES;
-
-        // Check for a single arg left on the command line
-        if (cmdLine.getArgs().length != 1)
-            throw new ParseException("Unexpected number of arguments on the command line");
-
-        // This is the job config file.
-        File jobConfig = new File(cmdLine.getArgs()[0]);
+        // Initialise logging and load conan properties
+        this.init();
 
         // Create RnaSeqEvalArgs based on input from the command line
         this.args = new RampartArgs(
-                jobConfig,
+                this.jobConfig,
                 this.getOutputDir(),
                 this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
                 this.stages);
 
-        // Parse the job config file and set internal variables
+        // Parse the job config file and set internal variables in RampartArgs
         this.args.parseXml();
 
         // Prep resources
         this.configureSystem();
     }
 
+
+    @Override
+    protected void parseExtra(CommandLine commandLine) throws ParseException {
+
+        this.weightingsFile = commandLine.hasOption(OPT_WEIGHTINGS) ?
+                new File(commandLine.getOptionValue(OPT_WEIGHTINGS)) :
+                DEFAULT_WEIGHTINGS_FILE;
+
+        this.stages = commandLine.hasOption(OPT_STAGES) ?
+                RampartStage.parse(commandLine.getOptionValue(OPT_STAGES)) :
+                DEFAULT_STAGES;
+
+        // Check for a single arg left on the command line
+        if (commandLine.getArgs().length != 1)
+            throw new ParseException("Unexpected number of arguments on the command line.  Expected 1, found " +
+                    commandLine.getArgs().length);
+
+        // This is the job config file.
+        this.jobConfig = new File(commandLine.getArgs()[0]);
+    }
 
 
     /**
@@ -148,14 +157,16 @@ public class Rampart extends AbstractConanCLI {
 
         if (thisJar == null) {
 
-            log.debug("Copying resources to settings directory.");
+            log.debug("Executing from project.  Copying resources to settings directory: \"" +
+                    SETTINGS_DIR.getAbsolutePath() + "\"");
             FileUtils.copyDirectory(internalScripts, externalScriptsDir);
             FileUtils.copyDirectory(internalData, externalDataDir);
             FileUtils.copyDirectory(internalConfig, externalConfigDir);
         }
         else {
 
-            log.debug("Executing from JAR.  Copying resources to settings directory.");
+            log.debug("Executing from jar: " + thisJar.getName() + "; Copying jar resources to settings directory: \"" +
+                    SETTINGS_DIR.getAbsolutePath() + "\"");
             JarUtils.copyResourcesToDirectory(thisJar, "scripts", externalScriptsDir.getAbsolutePath());
             JarUtils.copyResourcesToDirectory(thisJar, "data", externalDataDir.getAbsolutePath());
             JarUtils.copyResourcesToDirectory(thisJar, "config", externalConfigDir.getAbsolutePath());

@@ -79,7 +79,6 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
             AssemblerArgs asmArgs = assembler.getArgs();
 
             schArgs.setJobName(jobName);
-            schArgs.setMonitorFile(new File(assembler.getArgs().getOutputDir(), jobName + ".log"));
             schArgs.setThreads(asmArgs.getThreads());
             schArgs.setMemoryMB(asmArgs.getMemory());
 
@@ -89,6 +88,8 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
             executionContextCopy.setForegroundJob(!runParallel);
         }
+
+        executionContextCopy.setMonitorFile(new File(assembler.getArgs().getOutputDir(), jobName + ".log"));
 
         // Create process
         return this.conanProcessService.execute(assembler, executionContextCopy);

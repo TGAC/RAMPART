@@ -58,9 +58,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     private List<RampartStage> stages;
     private List<Library> libs;
-    private MecqArgs mecqSettings;
-    private MassArgs massSettings;
-    private AmpArgs ampSettings;
+    private MecqArgs mecqArgs;
+    private MassArgs massArgs;
+    private AmpArgs ampArgs;
     private RampartJobFileSystem rampartJobFileSystem;
 
 
@@ -69,8 +69,11 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         super(configFile, outputDir, jobPrefix);
 
-        this.stages = new ArrayList<>();
-
+        this.stages = stages;
+        this.libs = new ArrayList<>();
+        this.mecqArgs = null;
+        this.massArgs = null;
+        this.ampArgs = null;
         this.rampartJobFileSystem = new RampartJobFileSystem(outputDir);
     }
 
@@ -82,6 +85,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         // All libraries
         Element librariesElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_LIBRARIES);
         NodeList libraries = librariesElement.getElementsByTagName(KEY_ELEM_LIBRARY);
+        this.libs = new ArrayList<>();
         for(int i = 0; i < libraries.getLength(); i++) {
             this.libs.add(new Library((Element)libraries.item(i)));
         }
@@ -90,7 +94,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         // MECQ
         Element mecqElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MECQ);
-        this.mecqSettings = mecqElement == null ? null :
+        this.mecqArgs = mecqElement == null ? null :
                 new MecqArgs(
                         mecqElement,
                         this.rampartJobFileSystem.getMeqcDir(),
@@ -99,26 +103,26 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         // MASS
         Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
-        this.massSettings = massElement == null ? null :
+        this.massArgs = massElement == null ? null :
                 new MassArgs(
                         massElement,
                         this.rampartJobFileSystem.getMassDir(),
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.getJobPrefix() + "-mass",
                         this.libs,
-                        this.mecqSettings == null ? null : this.mecqSettings.getEqcArgList(),
+                        this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
         // AMP
         Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
-        this.ampSettings = ampElement == null ? null :
+        this.ampArgs = ampElement == null ? null :
                 new AmpArgs(
                         ampElement,
                         this.rampartJobFileSystem.getAmpDir(),
                         this.getJobPrefix() + "-amp",
                         this.rampartJobFileSystem.getMassOutFile(),
                         this.libs,
-                        this.mecqSettings.getEqcArgList(),
+                        this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
     }
@@ -194,28 +198,28 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         return sj.toString();
     }
 
-    public AmpArgs getAmpSettings() {
-        return ampSettings;
+    public AmpArgs getAmpArgs() {
+        return ampArgs;
     }
 
-    public void setAmpSettings(AmpArgs ampSettings) {
-        this.ampSettings = ampSettings;
+    public void setAmpArgs(AmpArgs ampArgs) {
+        this.ampArgs = ampArgs;
     }
 
-    public MecqArgs getMecqSettings() {
-        return mecqSettings;
+    public MecqArgs getMecqArgs() {
+        return mecqArgs;
     }
 
-    public void setMecqSettings(MecqArgs mecqSettings) {
-        this.mecqSettings = mecqSettings;
+    public void setMecqArgs(MecqArgs mecqArgs) {
+        this.mecqArgs = mecqArgs;
     }
 
-    public MassArgs getMassSettings() {
-        return massSettings;
+    public MassArgs getMassArgs() {
+        return massArgs;
     }
 
-    public void setMassSettings(MassArgs massSettings) {
-        this.massSettings = massSettings;
+    public void setMassArgs(MassArgs massArgs) {
+        this.massArgs = massArgs;
     }
 
     public List<Library> getLibs() {

@@ -87,7 +87,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             // specific kmer settings
             Assembler genericAssembler = AssemblerFactory.createAssembler(args.getTool());
 
-            log.info("Starting Single MASS run for " + args.getName());
+            log.info("Starting Single MASS run for \"" + args.getName() + "\"");
 
             // Make sure the kmer range is reasonable (if it's not already)
             KmerRange validatedKmerRange = this.validateKmerRange(args.getName(), genericAssembler.hasKParam(), args.getKmerRange());
@@ -102,8 +102,8 @@ public class SingleMassProcess extends AbstractConanProcess {
             genericAssembler.getArgs().setLibraries(selectedLibs);
 
             // Create any required directories for this job
-            log.debug("Creating directories");
             this.createSupportDirectories(genericAssembler, args);
+            log.debug("Created directories in: \"" + args.getOutputDir() + "\"");
 
             String assemblerWait = null;
 
@@ -128,7 +128,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                         // This is the output directory for this particular assembly
                         File outputDir = new File(args.getOutputDir(), dirName);
 
-                        log.debug("Starting " + args.getTool() + " in " + outputDir.getAbsolutePath());
+                        log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
                         // Create the actual assembler for these settings
                         Assembler assembler = this.makeAssembler(args, k, cvg, subsampledLibs, outputDir);
@@ -159,11 +159,11 @@ public class SingleMassProcess extends AbstractConanProcess {
             }
 
             // Run analyser job using the original execution context
-            log.info("Analysing and comparing assemblies for MASS group: " + args.getName());
+            log.info("Analysing and comparing assemblies for MASS group: \"" + args.getName() + "\"");
             this.singleMassExecutor.dispatchAnalyserJobs(genericAssembler, args, assemblerWait, args.getJobPrefix() + "-analyser");
 
             // Finish
-            log.info("Finished MASS group: " + args.getName());
+            log.info("Finished MASS group: \"" + args.getName() + "\"");
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
@@ -364,16 +364,16 @@ public class SingleMassProcess extends AbstractConanProcess {
     protected KmerRange validateKmerRange(String massName, boolean assemblerSupportsK, KmerRange kmerRange) throws CommandExecutionException {
 
         if (!assemblerSupportsK) {
-            log.info("Selected assembler for: " + massName + " does not support K parameter");
+            log.info("Selected assembler for: \"" + massName + "\" does not support K parameter");
             return new KmerRange();
         }
         else if (kmerRange == null) {
             KmerRange defaultKmerRange = new KmerRange();
-            log.info("No K-mer range specified for " + massName + " running assembler with default range: " + defaultKmerRange.toString());
+            log.info("No K-mer range specified for \"" + massName + "\" running assembler with default range: " + defaultKmerRange.toString());
             return defaultKmerRange;
         }
         else if (kmerRange.validate()) {
-            log.info("K-mer range for " + massName + " validated: " + kmerRange.toString());
+            log.info("K-mer range for \"" + massName + "\" validated: " + kmerRange.toString());
             return kmerRange;
         }
         else {
@@ -385,7 +385,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         if (coverageRange == null) {
             CoverageRange defaultCoverageRange = new CoverageRange();
-            log.info("No coverage range specified for " + massName + " running assembler with default range: " + defaultCoverageRange.toString());
+            log.info("No coverage range specified for \"" + massName + "\" running assembler with default range: " + defaultCoverageRange.toString());
             return defaultCoverageRange;
         }
         else if (organism == null || organism.getEstGenomeSize() <= 0) {
@@ -395,11 +395,11 @@ public class SingleMassProcess extends AbstractConanProcess {
             return defaultCoverageRange;
         }
         else if (coverageRange.validate()) {
-            log.info("Coverage range for " + massName + " validated: " + coverageRange.toString());
+            log.info("Coverage range for \"" + massName + "\" validated: " + coverageRange.toString());
             return coverageRange;
         }
         else {
-            throw new CommandExecutionException("Invalid coverage range: " + coverageRange.toString() + " Not processing MASS run: " + massName);
+            throw new CommandExecutionException("Invalid coverage range: " + coverageRange.toString() + " Not processing MASS run: \"" + massName + "\"");
         }
     }
 

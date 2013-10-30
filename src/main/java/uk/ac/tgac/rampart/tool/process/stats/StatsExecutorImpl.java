@@ -98,16 +98,19 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
         for(File f : files) {
             ExecutionContext executionContextCopy = executionContext.copy();
 
+            String cegmaJobName = jobName + "-" + i + ".log";
+
             if (executionContextCopy.usingScheduler()) {
 
                 SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
-                String cegmaJobName = jobName + "-" + i + ".log";
 
                 schedulerArgs.setJobName(cegmaJobName);
-                schedulerArgs.setMonitorFile(new File(inputDir, cegmaJobName));
-                i++;
+                 i++;
             }
+
+            executionContextCopy.setMonitorFile(new File(inputDir, cegmaJobName));
+
 
             File outputDir = new File(rootOutputDir, f.getName());
             if (outputDir.exists()) {
@@ -153,8 +156,9 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
             schedulerArgs.setJobName(jobName);
-            schedulerArgs.setMonitorFile(new File(inputDir, jobName + ".log"));
+
         }
+        executionContextCopy.setMonitorFile(new File(inputDir, jobName + ".log"));
 
         QuastV2_2Args quastArgs = new QuastV2_2Args();
         quastArgs.setInputFiles(filesFromDir(inputDir));

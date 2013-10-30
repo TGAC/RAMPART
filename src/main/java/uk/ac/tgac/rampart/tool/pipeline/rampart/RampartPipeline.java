@@ -37,7 +37,7 @@ public class RampartPipeline extends AbstractConanPipeline {
 
     private RampartArgs args;
 
-    private static final String NAME = "RAMPART";
+    private static final String NAME = "rampart-pipeline";
     private static final ConanUser USER = new GuestUser("rampart@tgac.ac.uk");
 
     public RampartPipeline(RampartArgs args, ConanProcessService conanProcessService) throws IOException {
@@ -65,9 +65,9 @@ public class RampartPipeline extends AbstractConanPipeline {
         // Configure pipeline
         this.clearProcessList();
 
-        addProcessIfRequested(RampartStage.MECQ, this.args.getMecqSettings());
-        addProcessIfRequested(RampartStage.MASS, this.args.getMassSettings());
-        addProcessIfRequested(RampartStage.AMP, this.args.getAmpSettings());
+        addProcessIfRequested(RampartStage.MECQ, this.args.getMecqArgs());
+        addProcessIfRequested(RampartStage.MASS, this.args.getMassArgs());
+        addProcessIfRequested(RampartStage.AMP, this.args.getAmpArgs());
     }
 
     private void addProcessIfRequested(RampartStage stage, ProcessArgs stageArgs) {
