@@ -43,7 +43,7 @@ public class JobCleaner {
 
         // If there's a remaining argument then this will be the target directory, if not then assume the user wants
         // to download packages into the current working directory
-        this.targetDir = cmdLine.getArgList().isEmpty() ? new File("") : new File((String)cmdLine.getArgList().get(0));
+        this.targetDir = cmdLine.getArgList().isEmpty() ? new File("").getAbsoluteFile() : new File((String)cmdLine.getArgList().get(0));
     }
 
     private Options createOptions() {

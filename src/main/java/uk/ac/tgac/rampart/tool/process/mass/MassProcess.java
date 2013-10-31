@@ -124,6 +124,8 @@ public class MassProcess extends AbstractConanProcess {
                             ExitStatus.Type.COMPLETED_ANY,
                             args.getJobPrefix() + "-wait",
                             args.getOutputDir());
+
+                    jobIds.clear();
                 }
 
 

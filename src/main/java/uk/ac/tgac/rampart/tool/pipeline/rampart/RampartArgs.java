@@ -122,7 +122,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.getJobPrefix() + "-amp",
                         this.rampartJobFileSystem.getMassOutFile(),
                         this.libs,
-                        this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
     }

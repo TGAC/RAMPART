@@ -158,7 +158,8 @@ public class SingleMassProcess extends AbstractConanProcess {
                         null;
             }
 
-            // Run analyser job using the original execution context
+            // Run analyser job using the original execution context (single MASS executor stores running job ids, in case
+            // we need to wait for these to finish later).
             log.info("Analysing and comparing assemblies for MASS group: \"" + args.getName() + "\"");
             this.singleMassExecutor.dispatchAnalyserJobs(genericAssembler, args, assemblerWait, args.getJobPrefix() + "-analyser");
 

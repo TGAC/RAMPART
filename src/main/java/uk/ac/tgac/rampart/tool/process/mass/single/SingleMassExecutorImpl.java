@@ -59,7 +59,8 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext) {
         super.initialise(conanProcessService, executionContext);
 
-        statsExecutor.initialise(conanProcessService, executionContext);
+        this.jobIds.clear();
+        this.statsExecutor.initialise(conanProcessService, executionContext);
     }
 
     @Override
@@ -106,19 +107,19 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         if (assembler.makesUnitigs()) {
             compoundLinkCmdLine.add(
                             this.conanProcessService.makeLinkCommand(assembler.getUnitigsFile(),
-                            new File(smArgs.getUnitigsDir(), jobName + "-unitigs.fa")));
+                                    new File(smArgs.getUnitigsDir(), jobName + "-unitigs.fa")));
         }
 
         if (assembler.makesContigs()) {
             compoundLinkCmdLine.add(
                             this.conanProcessService.makeLinkCommand(assembler.getContigsFile(),
-                            new File(smArgs.getContigsDir(), jobName + "-contigs.fa")));
+                                    new File(smArgs.getContigsDir(), jobName + "-contigs.fa")));
         }
 
         if (assembler.makesScaffolds()) {
             compoundLinkCmdLine.add(
                             this.conanProcessService.makeLinkCommand(assembler.getScaffoldsFile(),
-                            new File(smArgs.getScaffoldsDir(), jobName + "-scaffolds.fa")));
+                                    new File(smArgs.getScaffoldsDir(), jobName + "-scaffolds.fa")));
         }
 
         this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
@@ -144,9 +145,13 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
             throw new IOException("Couldn't run stats jobs because assembler does not support any recognised output types: " + MassArgs.OutputLevel.getListAsString());
         }
 
-        this.statsExecutor.dispatchAnalyserJobs(args.getStatsLevels(), inputDir, args.getThreads(),
+        // Execute the jobs
+        List<Integer> jobIds = this.statsExecutor.dispatchAnalyserJobs(args.getStatsLevels(), inputDir, args.getThreads(),
                 args.getOrganism() == null ? 0 : args.getOrganism().getEstGenomeSize(),
                 assembler.makesScaffolds(), args.isRunParallel(), waitCondition, jobName);
+
+        // Add these jobs to the list of running jobs
+        this.jobIds.addAll(jobIds);
     }
 
     @Override

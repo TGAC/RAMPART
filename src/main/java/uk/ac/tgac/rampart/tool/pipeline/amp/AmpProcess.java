@@ -20,9 +20,14 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
+import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
+import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 
 import java.io.File;
@@ -70,10 +75,10 @@ public class AmpProcess extends AbstractConanProcess {
         // Initialise object that makes system calls
         this.ampExecutor.initialise(this.conanProcessService, executionContext);
 
-        // Create AMP Pipeline
-        AmpPipeline ampPipeline = new AmpPipeline(args, this.getConanProcessService());
-
         if (!args.isStatsOnly()) {
+
+            // Create AMP Pipeline
+            AmpPipeline ampPipeline = new AmpPipeline(args, this.getConanProcessService());
 
             log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
 
@@ -85,14 +90,34 @@ public class AmpProcess extends AbstractConanProcess {
                     args.getInputAssembly(),
                     new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
 
-            this.execute(ampPipeline.getArgs().getArgMap(), executionContext);
+            // Create a guest user
+            ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
+
+            // Create the AMP task
+            ConanTask<AmpPipeline> ampTask = new DefaultTaskFactory().createTask(
+                    ampPipeline,
+                    0,
+                    ampPipeline.getArgs().getArgMap(),
+                    ConanTask.Priority.HIGHEST,
+                    rampartUser);
+
+            ampTask.setId("AMP");
+            ampTask.submit();
+
+            // Run the AMP pipeline
+            try {
+                ampTask.execute(executionContext);
+            }
+            catch (TaskExecutionException e) {
+                throw new ProcessExecutionException(-1, e);
+            }
         }
 
         // Process assemblies and generate stats for each stage after pipeline has completed
         try {
             this.ampExecutor.executeAnalysisJob(args);
         }
-        catch(ProcessExecutionException | IOException |CommandExecutionException e) {
+        catch(IOException |CommandExecutionException e) {
             throw new ProcessExecutionException(-2, e);
         }
 
