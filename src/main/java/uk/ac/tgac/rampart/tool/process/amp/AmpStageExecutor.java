@@ -33,7 +33,4 @@ public interface AmpStageExecutor extends RampartExecutor {
     void executeAmpStage(AbstractAssemblyIOProcess ampProc)
             throws InterruptedException, ProcessExecutionException;
 
-    void createAmpStageLink(File sourceFile, File outputFile)
-            throws InterruptedException, ProcessExecutionException;
-
 }

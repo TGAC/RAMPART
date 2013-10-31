@@ -57,16 +57,4 @@ public class AmpExecutorImpl extends RampartExecutorImpl implements AmpExecutor 
                     true, args.isRunParallel(), null, args.getJobPrefix() + "-stats");
         }
     }
-
-    @Override
-    public void createInitialLink(File sourceFile, File outputDir)
-            throws InterruptedException, ProcessExecutionException {
-
-        String linkCommand = this.makeLinkCommand(sourceFile, new File(outputDir, "amp-stage-0-scaffolds.fa"));
-
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        this.conanProcessService.execute(linkCommand, linkingExecutionContext);
-    }
-
 }

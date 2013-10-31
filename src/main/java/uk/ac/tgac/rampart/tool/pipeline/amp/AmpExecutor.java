@@ -34,15 +34,4 @@ public interface AmpExecutor extends RampartExecutor {
     void executeAnalysisJob(AmpArgs ampArgs)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 
-    /**
-     * Creates the initial symbolic link between the input assembly and the output directory.  This is basically a
-     * convenience for the user and helps to compare assemblies at each stage later.
-     * @param sourceFile
-     * @param outputDir
-     * @throws ProcessExecutionException
-     * @throws InterruptedException
-     */
-    void createInitialLink(File sourceFile, File outputDir)
-            throws InterruptedException, ProcessExecutionException;
-
 }

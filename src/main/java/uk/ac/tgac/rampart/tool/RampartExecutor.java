@@ -35,12 +35,6 @@ public interface RampartExecutor {
 
     void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext);
 
-    String makeLinkCommand(File inputFile, File outputFile);
-
-    void createLink(File inputFile, File outputFile) throws ProcessExecutionException, InterruptedException;
-
     void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException;
-
-    boolean processOperational(ConanProcess conanProcess);
 }

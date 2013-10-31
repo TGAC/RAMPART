@@ -51,17 +51,17 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
 
         // Make a copy of the execution context so we can make modifications
         ExecutionContext executionContextCopy = this.executionContext.copy();
+        executionContextCopy.setContext(
+                jobName,
+                executionContextCopy.usingScheduler() ? !runParallel : true,
+                null);
 
         if (executionContextCopy.usingScheduler()) {
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
 
-            schedulerArgs.setJobName(jobName);
             schedulerArgs.setThreads(threadsPerProcess);
             schedulerArgs.setMemoryMB(0);
             schedulerArgs.setWaitCondition(waitCondition);
-
-            // Always going to want to run these jobs in parallel if we have access to a scheduler!
-            executionContextCopy.setForegroundJob(!runParallel);
         }
 
         List<Integer> jobIds = new ArrayList<>();
@@ -96,21 +96,11 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
 
         int i = 1;
         for(File f : files) {
+
+            String cegmaJobName = jobName + "-" + i++;
+
             ExecutionContext executionContextCopy = executionContext.copy();
-
-            String cegmaJobName = jobName + "-" + i + ".log";
-
-            if (executionContextCopy.usingScheduler()) {
-
-                SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-
-                schedulerArgs.setJobName(cegmaJobName);
-                 i++;
-            }
-
-            executionContextCopy.setMonitorFile(new File(inputDir, cegmaJobName));
-
+            executionContextCopy.setContext(cegmaJobName, executionContext.isForegroundJob(), new File(inputDir, cegmaJobName + ".log"));
 
             File outputDir = new File(rootOutputDir, f.getName());
             if (outputDir.exists()) {
@@ -137,7 +127,7 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
             File sourceFile = new File(cegmaArgs.getOutputPrefix().getAbsolutePath() + ".completeness_report");
             File destFile = new File(rootOutputDir, f.getName() + ".cegma");
             String linkCmd = "ln -s -f " + sourceFile.getAbsolutePath() + " " + destFile.getAbsolutePath();
-            this.conanProcessService.execute(linkCmd, new DefaultExecutionContext(executionContext.getLocality(), null, null, true));
+            this.conanProcessService.execute(linkCmd, new DefaultExecutionContext(executionContext.getLocality(), null, null));
 
             // Add cegma job id to list
             jobIds.add(result.getJobId());
@@ -150,15 +140,7 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
             throws InterruptedException, ProcessExecutionException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
-
-        if (executionContextCopy.usingScheduler()) {
-
-            SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-
-            schedulerArgs.setJobName(jobName);
-
-        }
-        executionContextCopy.setMonitorFile(new File(inputDir, jobName + ".log"));
+        executionContextCopy.setContext(jobName, executionContext.isForegroundJob(), new File(inputDir, jobName + ".log"));
 
         QuastV2_2Args quastArgs = new QuastV2_2Args();
         quastArgs.setInputFiles(filesFromDir(inputDir));

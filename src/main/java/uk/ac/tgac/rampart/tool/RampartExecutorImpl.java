@@ -35,7 +35,6 @@ import java.util.List;
  */
 public class RampartExecutorImpl implements RampartExecutor {
 
-
     protected ConanProcessService conanProcessService;
     protected ExecutionContext executionContext;
 
@@ -45,65 +44,14 @@ public class RampartExecutorImpl implements RampartExecutor {
         this.executionContext = executionContext;
     }
 
-
-    @Override
-    public String makeLinkCommand(File inputFile, File outputFile) {
-
-        return "ln -s -f " + inputFile.getAbsolutePath() + " " + outputFile.getAbsolutePath();
-    }
-
-    /**
-     * Creates a symbolic link between the two provided files now! (i.e. we ignore any scheduling information in the
-     * execution context)
-     * @param inputFile
-     * @param outputFile
-     */
-    @Override
-    public void createLink(File inputFile, File outputFile)
-            throws ProcessExecutionException, InterruptedException {
-
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        this.conanProcessService.execute(makeLinkCommand(inputFile, outputFile), linkingExecutionContext);
-    }
-
-
     @Override
     public void executeScheduledWait(List<Integer> jobIds, String waitCondition, ExitStatus.Type exitStatusType, String jobName, File outputDir)
             throws ProcessExecutionException, InterruptedException {
 
-        if (!executionContext.usingScheduler())
-            throw new UnsupportedOperationException("Cannot dispatch a scheduled wait job without using a scheduler");
-
         // Duplicate the execution context so we don't modify the original accidentally.
         ExecutionContext executionContextCopy = executionContext.copy();
+        executionContextCopy.setContext(jobName, true, new File(outputDir, jobName + ".log"));
 
-        Scheduler scheduler = executionContextCopy.getScheduler();
-
-        scheduler.getArgs().setJobName(jobName);
-        executionContextCopy.setMonitorFile(new File(outputDir, jobName + ".log"));
-        executionContextCopy.setForegroundJob(true);
-
-        String condition = scheduler.generatesJobIdFromOutput() ?
-                scheduler.createWaitCondition(exitStatusType, jobIds) :
-                scheduler.createWaitCondition(exitStatusType, waitCondition);
-
-        this.conanProcessService.waitFor(condition, executionContextCopy);
+        this.conanProcessService.executeScheduledWait(jobIds, waitCondition, exitStatusType, executionContextCopy);
     }
-
-    @Override
-    public boolean processOperational(ConanProcess conanProcess) {
-
-        //TODO This still requires some changes to ConanX.
-        // What I'd like to do here is just do a "which" command on the exe of the process and see if we get output.
-        // If so then this process is probably operational
-
-        ExecutionContext operationalExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        //this.conanProcessService.execute("which " + conanProcessExe + " > " + tempDir + "/process_test/" + conanProcessExe, operationalExecutionContext);
-
-        return true;
-    }
-
-
 }

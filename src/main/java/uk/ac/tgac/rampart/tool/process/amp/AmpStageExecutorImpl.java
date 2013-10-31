@@ -48,15 +48,4 @@ public class AmpStageExecutorImpl extends RampartExecutorImpl implements AmpStag
         ampProc.execute(this.executionContext);
     }
 
-    @Override
-    public void createAmpStageLink(File sourceFile, File outputFile)
-            throws InterruptedException, ProcessExecutionException {
-
-        String linkCommand = this.makeLinkCommand(sourceFile, outputFile);
-
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
-
-        this.conanProcessService.execute(linkCommand, linkingExecutionContext);
-    }
-
 }

@@ -66,30 +66,30 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException {
 
-        ExecutionContext executionContextCopy = executionContext.copy();
-
         // Important that this happens after directory cleaning.
         assembler.initialise();
 
-        // Modify the scheduler jobname is present
+        // Create execution context
+        ExecutionContext executionContextCopy = executionContext.copy();
+        executionContextCopy.setContext(
+                jobName,
+                executionContextCopy.usingScheduler() ? !runParallel : true,
+                new File(assembler.getArgs().getOutputDir(), jobName + ".log"));
+
+        // Modify the scheduling settings if present
         if (executionContextCopy.usingScheduler()) {
 
             SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
 
             AssemblerArgs asmArgs = assembler.getArgs();
 
-            schArgs.setJobName(jobName);
             schArgs.setThreads(asmArgs.getThreads());
             schArgs.setMemoryMB(asmArgs.getMemory());
 
             if (assembler.usesOpenMpi() && asmArgs.getThreads() > 1) {
                 schArgs.setOpenmpi(true);
             }
-
-            executionContextCopy.setForegroundJob(!runParallel);
         }
-
-        executionContextCopy.setMonitorFile(new File(assembler.getArgs().getOutputDir(), jobName + ".log"));
 
         // Create process
         return this.conanProcessService.execute(assembler, executionContextCopy);
@@ -99,20 +99,26 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public void createAssemblyLinks(Assembler assembler, SingleMassArgs smArgs, String jobName)
             throws ProcessExecutionException, InterruptedException {
 
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null, true);
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(executionContext.getLocality(), null, null);
 
         StringJoiner compoundLinkCmdLine = new StringJoiner(";");
 
         if (assembler.makesUnitigs()) {
-            compoundLinkCmdLine.add(this.makeLinkCommand(assembler.getUnitigsFile(), new File(smArgs.getUnitigsDir(), jobName + "-unitigs.fa")));
+            compoundLinkCmdLine.add(
+                            this.conanProcessService.makeLinkCommand(assembler.getUnitigsFile(),
+                            new File(smArgs.getUnitigsDir(), jobName + "-unitigs.fa")));
         }
 
         if (assembler.makesContigs()) {
-            compoundLinkCmdLine.add(this.makeLinkCommand(assembler.getContigsFile(), new File(smArgs.getContigsDir(), jobName + "-contigs.fa")));
+            compoundLinkCmdLine.add(
+                            this.conanProcessService.makeLinkCommand(assembler.getContigsFile(),
+                            new File(smArgs.getContigsDir(), jobName + "-contigs.fa")));
         }
 
         if (assembler.makesScaffolds()) {
-            compoundLinkCmdLine.add(this.makeLinkCommand(assembler.getScaffoldsFile(), new File(smArgs.getScaffoldsDir(), jobName + "-scaffolds.fa")));
+            compoundLinkCmdLine.add(
+                            this.conanProcessService.makeLinkCommand(assembler.getScaffoldsFile(),
+                            new File(smArgs.getScaffoldsDir(), jobName + "-scaffolds.fa")));
         }
 
         this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
@@ -148,17 +154,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
             throws ProcessExecutionException, InterruptedException, IOException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
-
-        // Modify the scheduler jobname is present
-        if (executionContextCopy.usingScheduler()) {
-
-            SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
-
-            schArgs.setJobName(jobName);
-            schArgs.setMonitorFile(new File(output.getParentFile(), jobName + ".log"));
-
-            executionContextCopy.setForegroundJob(true);
-        }
+        executionContextCopy.setContext(jobName, true, new File(output.getParentFile(), jobName + ".log"));
 
         SubsamplerV1_0Args ssArgs = new SubsamplerV1_0Args();
         ssArgs.setInputFile(input);
@@ -192,18 +188,8 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
     protected long getCount(File seqFile, File outputDir, String jobName, boolean linesOnly) throws ProcessExecutionException, InterruptedException, IOException {
 
-        ExecutionContext executionContextCopy = executionContext.copy();
-
-        // Modify the scheduler jobname is present
-        if (executionContextCopy.usingScheduler()) {
-
-            SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
-
-            schArgs.setJobName(jobName);
-            schArgs.setMonitorFile(new File(outputDir, jobName + ".log"));
-
-            executionContextCopy.setForegroundJob(true);
-        }
+        ExecutionContext executionContextCopy = this.executionContext.copy();
+        executionContextCopy.setContext(jobName, true, new File(outputDir, jobName + ".log"));
 
         File outputFile = new File(outputDir, seqFile.getName() + ".nb_entries.out");
 

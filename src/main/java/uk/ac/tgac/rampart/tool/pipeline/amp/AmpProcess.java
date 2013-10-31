@@ -25,6 +25,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -80,7 +81,9 @@ public class AmpProcess extends AbstractConanProcess {
             args.getAssembliesDir().mkdirs();
 
             // Create link for the input file
-            this.ampExecutor.createInitialLink(args.getInputAssembly(), args.getAssembliesDir());
+            this.conanProcessService.createLocalSymbolicLink(
+                    args.getInputAssembly(),
+                    new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
 
             this.execute(ampPipeline.getArgs().getArgMap(), executionContext);
         }

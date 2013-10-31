@@ -129,7 +129,7 @@ public class MassSelectorProcess extends AbstractConanProcess {
             log.info("Best assembly path: " + best.getFilePath());
 
             // Create link to "best" assembly in stats dir
-            this.executor.createLink(new File(best.getFilePath()), outputAssembly);
+            this.conanProcessService.createLocalSymbolicLink(new File(best.getFilePath()), outputAssembly);
 
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);

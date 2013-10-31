@@ -42,25 +42,24 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
     public void executeEcq(ErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException {
 
-        // Duplicate the execution context so we don't modify the original accidentally.
-        ExecutionContext executionContextCopy = this.executionContext.copy();
-
         // Ensure downstream process has access to the process service
         errorCorrector.initialise();
+
+        // Duplicate the execution context so we don't modify the original accidentally.
+        ExecutionContext executionContextCopy = this.executionContext.copy();
+        executionContextCopy.setContext(
+                jobName,
+                executionContextCopy.usingScheduler() ? !runInParallel : true,
+                new File(outputDir, jobName + ".log"));
 
         if (this.executionContext.usingScheduler()) {
 
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
             ErrorCorrectorArgs ecArgs = errorCorrector.getArgs();
 
-            schedulerArgs.setJobName(jobName);
             schedulerArgs.setThreads(ecArgs.getThreads());
             schedulerArgs.setMemoryMB(ecArgs.getMemoryGb() * 1000);
-
-            executionContextCopy.setForegroundJob(!runInParallel);
         }
-
-        executionContextCopy.setMonitorFile(new File(outputDir, jobName + ".log"));
 
         this.conanProcessService.execute(errorCorrector, executionContextCopy);
     }
@@ -70,7 +69,7 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
             throws ProcessExecutionException, InterruptedException {
 
         // Modify execution context so we execute these instructions straight away (i.e. no scheduling)
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(this.executionContext.getLocality(), null, null, true);
+        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(this.executionContext.getLocality(), null, null);
 
         if (library.isPairedEnd()) {
 
@@ -78,13 +77,13 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
 
             StringJoiner compoundLinkCmdLine = new StringJoiner(";");
 
-            compoundLinkCmdLine.add(this.makeLinkCommand(library.getFile1(), pairedEndFiles.getFile1()));
-            compoundLinkCmdLine.add(this.makeLinkCommand(library.getFile2(), pairedEndFiles.getFile2()));
+            compoundLinkCmdLine.add(this.conanProcessService.makeLinkCommand(library.getFile1(), pairedEndFiles.getFile1()));
+            compoundLinkCmdLine.add(this.conanProcessService.makeLinkCommand(library.getFile2(), pairedEndFiles.getFile2()));
 
             this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
         }
         else {
-            conanProcessService.execute(this.makeLinkCommand(library.getFile1(),
+            conanProcessService.execute(this.conanProcessService.makeLinkCommand(library.getFile1(),
                     ((ErrorCorrectorSingleEndArgs)args).getSingleEndInputFile()), linkingExecutionContext);
         }
     }

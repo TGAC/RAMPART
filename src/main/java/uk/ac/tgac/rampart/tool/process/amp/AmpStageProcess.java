@@ -88,7 +88,7 @@ public class AmpStageProcess extends AbstractConanProcess {
             this.ampStageExecutor.executeAmpStage(ampProc);
 
             // Create links for outputs from this assembler to known locations
-            this.ampStageExecutor.createAmpStageLink(ampProc.getAmpArgs().getOutputFile(), args.getOutputFile());
+            this.conanProcessService.createLocalSymbolicLink(ampProc.getAmpArgs().getOutputFile(), args.getOutputFile());
 
             log.info("Finished AMP stage " + args.getIndex());
         }
