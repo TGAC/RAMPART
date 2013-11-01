@@ -85,7 +85,7 @@ public class AmpStageProcess extends AbstractConanProcess {
             AbstractAssemblyIOProcess ampProc = this.makeStage(args);
 
             // Execute the AMP stage
-            this.ampStageExecutor.executeAmpStage(ampProc);
+            this.ampStageExecutor.executeAmpStage(ampProc, "amp-" + args.getIndex());
 
             // Create links for outputs from this assembler to known locations
             this.conanProcessService.createLocalSymbolicLink(ampProc.getAmpArgs().getOutputFile(), args.getOutputFile());
@@ -118,6 +118,9 @@ public class AmpStageProcess extends AbstractConanProcess {
 
     @Override
     public String getName() {
-        return null;
+        // Make a shortcut to the args
+        AmpStageArgs args = (AmpStageArgs) this.getProcessArgs();
+
+        return args != null ? "AMP-" + args.getIndex() + " - " + args.getTool() : "Undefined-AMP-stage";
     }
 }

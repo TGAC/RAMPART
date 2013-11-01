@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.tool.process.amp;
 
 import org.springframework.stereotype.Service;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
@@ -35,7 +34,7 @@ import java.io.File;
 public class AmpStageExecutorImpl extends RampartExecutorImpl implements AmpStageExecutor {
 
     @Override
-    public void executeAmpStage(AbstractAssemblyIOProcess ampProc)
+    public void executeAmpStage(AbstractAssemblyIOProcess ampProc, String jobName)
             throws InterruptedException, ProcessExecutionException {
 
         // Add in this conan process service to the amp proc to run
@@ -44,8 +43,15 @@ public class AmpStageExecutorImpl extends RampartExecutorImpl implements AmpStag
         // Initialise the proc
         ampProc.initialise();
 
+        // Create execution context
+        ExecutionContext executionContextCopy = executionContext.copy();
+        executionContextCopy.setContext(
+                jobName,
+                true,
+                new File(ampProc.getAmpArgs().getOutputDir(), jobName + ".log"));
+
         // Run the amp proc.
-        ampProc.execute(this.executionContext);
+        ampProc.execute(executionContextCopy);
     }
 
 }

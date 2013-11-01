@@ -65,9 +65,7 @@ public class AmpPipeline extends AbstractConanPipeline {
 
         for(AmpStageArgs ampStageArgs : this.args.getStageArgsList()) {
 
-            AmpStageProcess proc = new AmpStageProcess(ampStageArgs);
-            proc.setConanProcessService(this.getConanProcessService());
-            this.addProcess(proc);
+            this.addProcess(new AmpStageProcess(ampStageArgs));
         }
     }
 

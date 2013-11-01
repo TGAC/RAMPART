@@ -30,7 +30,7 @@ import java.io.File;
  */
 public interface AmpStageExecutor extends RampartExecutor {
 
-    void executeAmpStage(AbstractAssemblyIOProcess ampProc)
+    void executeAmpStage(AbstractAssemblyIOProcess ampProc, String jobName)
             throws InterruptedException, ProcessExecutionException;
 
 }
