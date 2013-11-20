@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mecq;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -25,7 +26,12 @@ import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
+import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
+import uk.ac.tgac.conan.process.ec.ErrorCorrectorFactory;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -74,6 +80,7 @@ public class MecqProcess extends AbstractConanProcess {
         }
 
         List<Integer> jobIds = new ArrayList<>();
+        List<ErrorCorrector> errorCorrectors = new ArrayList<>();
 
         // For each ecq process all libraries
         for(EcqArgs ecqArgs : args.getEqcArgList()) {
@@ -93,7 +100,10 @@ public class MecqProcess extends AbstractConanProcess {
                 String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
 
                 // Create the actual error corrector from the user provided EcqArgs
-                ErrorCorrector ec = this.mecqExecutor.makeErrorCorrector(ecqArgs, lib, args.getOutputDir());
+                ErrorCorrector ec = this.makeErrorCorrector(ecqArgs, lib, args.getOutputDir());
+
+                // Add this to the list in case we need it later
+                errorCorrectors.add(ec);
 
                 // Create symbolic links between file paths specified by the library and the working directory for this ECQ
                 this.mecqExecutor.createInputLinks(lib, ec.getArgs());
@@ -133,12 +143,48 @@ public class MecqProcess extends AbstractConanProcess {
                     args.getOutputDir());
         }
 
-        log.info("MECQ complete");
+        log.info("MECQ Finished");
 
         return true;
     }
 
 
+
+    /**
+     * Using a set of ECQ specific args, creates an ErrorCorrector object for execution
+     * @param ecqArgs
+     * @param inputLib
+     * @param mecqDir
+     * @return
+     */
+    public ErrorCorrector makeErrorCorrector(EcqArgs ecqArgs, Library inputLib, File mecqDir) {
+
+        File ecDir = new File(mecqDir, ecqArgs.getName());
+        File ecqLibDir = new File(ecDir, inputLib.getName());
+
+        ErrorCorrector ec = ErrorCorrectorFactory.valueOf(ecqArgs.getTool()).create();
+        ErrorCorrectorArgs ecArgs = ec.getArgs();
+
+        ecArgs.setMinLength(ecqArgs.getMinLen());
+        ecArgs.setQualityThreshold(ecqArgs.getMinQual());
+        ecArgs.setKmer(ecqArgs.getKmer());
+        ecArgs.setThreads(ecqArgs.getThreads());
+        ecArgs.setMemoryGb(ecqArgs.getMemory());
+        ecArgs.setOutputDir(ecqLibDir);
+
+        // Add files to ec (assumes ECQ tool and reads libraries are compatible with regards to Paired / Single End)
+        List<File> altInputFiles = new ArrayList<>();
+        if (inputLib.isPairedEnd()) {
+            altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
+            altInputFiles.add(new File(ecqLibDir, inputLib.getFile2().getName()));
+        }
+        else {
+            altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
+        }
+        ec.getArgs().setFromLibrary(inputLib, altInputFiles);
+
+        return ec;
+    }
 
 
     @Override

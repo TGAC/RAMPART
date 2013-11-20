@@ -85,7 +85,7 @@ public class AmpProcess extends AbstractConanProcess {
             // Make sure the output directory exists
             args.getAssembliesDir().mkdirs();
 
-            // Create link for the input file
+            // Create link for the reads file
             this.conanProcessService.createLocalSymbolicLink(
                     args.getInputAssembly(),
                     new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
@@ -111,6 +111,11 @@ public class AmpProcess extends AbstractConanProcess {
             catch (TaskExecutionException e) {
                 throw new ProcessExecutionException(-1, e);
             }
+
+            // Create a symbolic link for the final assembly from the final stage
+            this.conanProcessService.createLocalSymbolicLink(
+                    new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
+                    args.getFinalAssembly());
         }
 
         // Process assemblies and generate stats for each stage after pipeline has completed

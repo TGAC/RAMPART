@@ -68,6 +68,7 @@ public class RampartPipeline extends AbstractConanPipeline {
         addProcessIfRequested(RampartStage.MECQ, this.args.getMecqArgs());
         addProcessIfRequested(RampartStage.MASS, this.args.getMassArgs());
         addProcessIfRequested(RampartStage.AMP, this.args.getAmpArgs());
+        addProcessIfRequested(RampartStage.FINALISE, this.args.getFinaliseArgs());
     }
 
     private void addProcessIfRequested(RampartStage stage, ProcessArgs stageArgs) {

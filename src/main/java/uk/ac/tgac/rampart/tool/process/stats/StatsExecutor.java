@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.tool.process.stats;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
 import java.io.File;
@@ -32,8 +33,9 @@ import java.util.List;
  */
 public interface StatsExecutor extends RampartExecutor {
 
-    List<Integer> dispatchAnalyserJobs(List<StatsLevel> statsLevels, File inputDir, int threadsPerProcess, int estGenomeSize,
-                              boolean scaffolds, boolean runParallel, String waitCondition, String jobName)
+    List<Integer> dispatchAnalyserJobs(List<StatsLevel> statsLevels, File inputDir, List<File> readKmerCounts,
+                                       int threadsPerProcess, int memoryPerProcess, Organism organism,
+                                       boolean scaffolds, boolean runParallel, String waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException;
 
 }

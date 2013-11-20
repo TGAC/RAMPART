@@ -5,7 +5,7 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.6.0</version>
+	<version>0.7.0</version>
 	<packaging>jar</packaging>
 
 	<name>Rampart</name>
@@ -36,7 +36,7 @@
 			<organization>TGAC</organization>
 			<organizationUrl>http://www.tgac.ac.uk</organizationUrl>
 			<roles>
-				<role>Scientific Programmer</role>
+				<role>Analysis Pipelines Project Leader</role>
 			</roles>
 			<timezone>0</timezone>
 			<properties />
@@ -233,7 +233,7 @@
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
             <artifactId>tgac-conan</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.2</version>
         </dependency>
 
 

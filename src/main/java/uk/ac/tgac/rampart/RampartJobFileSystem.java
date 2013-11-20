@@ -33,12 +33,14 @@ public class RampartJobFileSystem {
 
     // Directories
     private File meqcDir;
+    private File readsKmersDir;
     private File massDir;
     private File massStatsDir;
     private File ampDir;
     private File ampAssembliesDir;
     private File reportDir;
     private File reportImagesDir;
+    private File finalDir;
 
     // Important Files
     private File qtLogFile;
@@ -60,12 +62,14 @@ public class RampartJobFileSystem {
 
         // Record all important directories and make sure they exist
         this.meqcDir = new File(jobDir, "mecq");
+        this.readsKmersDir = new File(jobDir, "kmers-reads");
         this.massDir = new File(jobDir, "mass");
         this.massStatsDir = new File(massDir, "stats");
         this.ampDir = new File(jobDir, "amp");
         this.ampAssembliesDir = new File(ampDir, "assemblies");
         this.reportDir = new File(jobDir, "report");
         this.reportImagesDir = new File(reportDir, "images");
+        this.finalDir = new File(jobDir, "final");
 
         this.qtLogFile = new File(this.meqcDir + "/qt.log");
         this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
@@ -87,6 +91,10 @@ public class RampartJobFileSystem {
 
     public File getMeqcDir() {
         return meqcDir;
+    }
+
+    public File getReadsKmersDir() {
+        return readsKmersDir;
     }
 
     public File getMassDir() {
@@ -111,6 +119,10 @@ public class RampartJobFileSystem {
 
     public File getReportImagesDir() {
         return reportImagesDir;
+    }
+
+    public File getFinalDir() {
+        return finalDir;
     }
 
 

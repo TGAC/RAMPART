@@ -146,9 +146,17 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         }
 
         // Execute the jobs
-        List<Integer> jobIds = this.statsExecutor.dispatchAnalyserJobs(args.getStatsLevels(), inputDir, args.getThreads(),
-                args.getOrganism() == null ? 0 : args.getOrganism().getEstGenomeSize(),
-                assembler.makesScaffolds(), args.isRunParallel(), waitCondition, jobName);
+        List<Integer> jobIds = this.statsExecutor.dispatchAnalyserJobs(
+                args.getStatsLevels(),
+                inputDir,
+                args.getInputKmers(),
+                args.getThreads(),
+                args.getMemory(),
+                args.getOrganism() == null ? null : args.getOrganism(),
+                assembler.makesScaffolds(),
+                args.isRunParallel(),
+                waitCondition,
+                jobName);
 
         // Add these jobs to the list of running jobs
         this.jobIds.addAll(jobIds);

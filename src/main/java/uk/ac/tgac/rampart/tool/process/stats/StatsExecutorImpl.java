@@ -25,10 +25,17 @@ import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11Args;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11Process;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV1Args;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV1Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 
 import java.io.File;
@@ -46,8 +53,9 @@ import java.util.List;
 public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecutor {
 
     @Override
-    public List<Integer> dispatchAnalyserJobs(List<StatsLevel> statsLevels, File inputDir, int threadsPerProcess, int estGenomeSize,
-                                     boolean scaffolds, boolean runParallel, String waitCondition, String jobName)
+    public List<Integer> dispatchAnalyserJobs(List<StatsLevel> statsLevels, File inputDir, List<File> readKmerCounts,
+                                              int threadsPerProcess, int memoryPerProcess, Organism organism,
+                                              boolean scaffolds, boolean runParallel, String waitCondition, String jobName)
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         // Make a copy of the execution context so we can make modifications
@@ -69,12 +77,128 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
 
         // Kick off the quast jobs if requested
         if (statsLevels.contains(StatsLevel.CONTIGUITY)) {
-            jobIds.addAll(this.executeQuastJob(inputDir, threadsPerProcess, estGenomeSize, jobName + "-quast", executionContextCopy, scaffolds));
+            jobIds.addAll(this.executeQuastJob(inputDir, threadsPerProcess, organism.getEstGenomeSize(), jobName + "-quast",
+                    executionContextCopy, scaffolds));
         }
 
         // Kick off the cegma jobs if requested
         if (statsLevels.contains(StatsLevel.COMPLETENESS)) {
             jobIds.addAll(this.executeCegmaJobs(inputDir, threadsPerProcess, jobName + "-cegma", executionContextCopy));
+        }
+
+        if (statsLevels.contains(StatsLevel.KMER)) {
+            jobIds.addAll(this.executeKmerJobs(inputDir, readKmerCounts, threadsPerProcess, memoryPerProcess, organism, jobName + "-kmer",
+                    executionContextCopy));
+        }
+
+        return jobIds;
+    }
+
+    private List<Integer> executeKmerJobs(File inputDir, List<File> readKmerCounts, int threadsPerProcess, int memoryPerProcess,
+                                          Organism organism, String jobName, ExecutionContext executionContext)
+            throws IOException, ProcessExecutionException, InterruptedException {
+
+        List<Integer> jobIds = new ArrayList<>();
+
+        List<File> files = filesFromDir(inputDir);
+
+        File rootOutputDir = new File(inputDir, "kmer");
+        if (rootOutputDir.exists()) {
+            FileUtils.deleteDirectory(rootOutputDir);
+        }
+        rootOutputDir.mkdir();
+
+        File mergedReadKmerCounts = new File(rootOutputDir, "merged_reads.jf31_0");
+
+        String kmerWait = null;
+
+        if (readKmerCounts.size() > 1) {
+
+            // Setup jellyfish for merging all the reads for this mass run
+            JellyfishMergeV11Args mergeArgs = new JellyfishMergeV11Args();
+            mergeArgs.setBufferSize(20000000);
+            mergeArgs.setOutputFile(mergedReadKmerCounts);
+            mergeArgs.setInputFiles(readKmerCounts);
+
+            JellyfishMergeV11Process jellyfishMerge = new JellyfishMergeV11Process(mergeArgs);
+
+            String mergeJobName = jobName + "-merging_read_kmers";
+
+            ExecutionContext executionContextMerge = executionContext.copy();
+            executionContextMerge.setContext(mergeJobName, executionContext.isForegroundJob(),
+                    new File(inputDir, mergeJobName + ".log"));
+
+            ExecutionResult result = this.conanProcessService.execute(jellyfishMerge, executionContextMerge);
+
+            List<Integer> mergeId = new ArrayList<>();
+            jobIds.add(result.getJobId());
+
+            // If using a scheduler create a wait condition that will be observed by the stats job if running in parallel
+            kmerWait = executionContext.usingScheduler() ?
+                    executionContext.getScheduler().generatesJobIdFromOutput() ?
+                            executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, mergeId) :
+                            executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, mergeJobName) :
+                    null;
+        }
+        else if (readKmerCounts.size() == 1) {
+            // If there's only one library just create a symbolic link
+            this.conanProcessService.createLocalSymbolicLink(readKmerCounts.get(0), mergedReadKmerCounts);
+        }
+        else {
+            throw new IOException("Kmer analysis for the assembly was requested but no kmer counts for the reads could be found.");
+        }
+
+        int i = 1;
+        for(File f : files) {
+
+            String kmerJobName = jobName + "-" + i++;
+
+            ExecutionContext executionContextCopy = executionContext.copy();
+            executionContextCopy.setContext(kmerJobName, executionContext.isForegroundJob(), new File(inputDir, kmerJobName + ".log"));
+
+            if (executionContextCopy.usingScheduler()) {
+                executionContextCopy.getScheduler().getArgs().setWaitCondition(kmerWait);
+            }
+
+            File outputDir = new File(rootOutputDir, f.getName());
+            if (outputDir.exists()) {
+                FileUtils.deleteDirectory(outputDir);
+            }
+            outputDir.mkdir();
+
+            // Setup Jellyfish for counting the assembly
+            JellyfishCountV11Args jellyfishArgs = new JellyfishCountV11Args();
+            jellyfishArgs.setOutputPrefix(outputDir.getAbsolutePath() + "/" + jobName);
+            jellyfishArgs.setLowerCount(0);
+            jellyfishArgs.setHashSize(organism.getEstGenomeSize() * organism.getPloidy() * 2);
+            jellyfishArgs.setMerLength(31);       // 31 should be sufficient for all organisms
+            jellyfishArgs.setBothStrands(true);
+            jellyfishArgs.setThreads(threadsPerProcess);
+            jellyfishArgs.setMemoryMb(memoryPerProcess);
+            jellyfishArgs.setCounterLength(32); // This is probably overkill... consider changing this later (or using jellyfish
+                                                // 2 which auto adjusts this figure)
+            jellyfishArgs.setInputFile(f.getAbsolutePath());
+
+            JellyfishCountV11Process jellyfishProcess = new JellyfishCountV11Process(jellyfishArgs);
+
+            // Setup kat comp
+            KatCompV1Args katCompArgs = new KatCompV1Args();
+            katCompArgs.setJellyfishHash1(mergedReadKmerCounts);
+            katCompArgs.setJellyfishHash2(new File(outputDir.getAbsolutePath() + "/" + jobName + "_0"));
+            katCompArgs.setOutputPrefix(outputDir.getAbsolutePath() + "/" + jobName + "-kat-comp");
+            katCompArgs.setThreads(threadsPerProcess);
+            katCompArgs.setMemoryMb(memoryPerProcess);
+
+            KatCompV1Process katCompProcess = new KatCompV1Process(katCompArgs);
+
+            // Combine the commands so they run in sequence
+            String compoundCommand = jellyfishProcess.getCommand() + "; " + katCompProcess.getCommand();
+
+            // Execute kmer count and comparison
+            ExecutionResult resultCount = this.conanProcessService.execute(compoundCommand, executionContextCopy);
+
+            // Add job id to list
+            jobIds.add(resultCount.getJobId());
         }
 
         return jobIds;

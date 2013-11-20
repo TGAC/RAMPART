@@ -33,10 +33,12 @@ import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
-import uk.ac.tgac.rampart.tool.process.mass.MassInput;
+import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
+import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqExecutorImpl;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
@@ -312,11 +314,11 @@ public class SingleMassProcess extends AbstractConanProcess {
         return asm;
     }
 
-    protected List<Library> validateInputs(String massName, List<MassInput> inputs, List<Library> allLibraries, List<EcqArgs> allMecqs, File mecqDir) throws IOException {
+    protected List<Library> validateInputs(String massName, List<ReadsInput> inputs, List<Library> allLibraries, List<EcqArgs> allMecqs, File mecqDir) throws IOException {
 
         List<Library> selectedLibs = new ArrayList<>();
 
-        for(MassInput mi : inputs) {
+        for(ReadsInput mi : inputs) {
             Library lib = mi.findLibrary(allLibraries);
             EcqArgs ecqArgs = mi.findMecq(allMecqs);
 
@@ -335,7 +337,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             else {
                 Library modLib = lib.copy();
 
-                ErrorCorrector ec = new MecqExecutorImpl().makeErrorCorrector(ecqArgs, modLib, mecqDir);
+                ErrorCorrector ec = new MecqProcess().makeErrorCorrector(ecqArgs, modLib, mecqDir);
                 List<File> files = ec.getArgs().getCorrectedFiles();
 
                 if (modLib.isPairedEnd()) {

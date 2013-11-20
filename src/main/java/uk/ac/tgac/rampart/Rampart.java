@@ -100,7 +100,7 @@ public class Rampart extends AbstractConanCLI {
         // Initialise logging and load conan properties
         this.init();
 
-        // Create RnaSeqEvalArgs based on input from the command line
+        // Create RnaSeqEvalArgs based on reads from the command line
         this.args = new RampartArgs(
                 this.jobConfig,
                 this.getOutputDir(),

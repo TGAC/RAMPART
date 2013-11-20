@@ -29,7 +29,8 @@ import java.util.List;
 public enum StatsLevel {
 
     CONTIGUITY,
-    COMPLETENESS;
+    COMPLETENESS,
+    KMER;
 
 
     public static List<StatsLevel> parseList(String statsLevelsString) {

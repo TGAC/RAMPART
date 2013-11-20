@@ -23,6 +23,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpParams;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
+import uk.ac.tgac.rampart.tool.process.finalise.FinaliseParams;
 import uk.ac.tgac.rampart.tool.process.mass.MassParams;
 import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqParams;
@@ -133,6 +134,22 @@ public enum RampartStage {
         @Override
         public List<ConanParameter> getParameters() {
             return new ReportParams().getConanParameters();
+        }
+
+        @Override
+        public AbstractConanProcess create(ProcessArgs processArgs) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+    },
+    FINALISE {
+        @Override
+        public String translateFilenameToKey(String filename) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new FinaliseParams().getConanParameters();
         }
 
         @Override

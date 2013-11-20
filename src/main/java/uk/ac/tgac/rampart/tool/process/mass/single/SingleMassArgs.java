@@ -24,8 +24,10 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
-import uk.ac.tgac.rampart.tool.process.mass.MassInput;
+import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
+import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
@@ -77,7 +79,7 @@ public class SingleMassArgs implements ProcessArgs {
 
     // Inputs
     private File mecqDir;
-    private List<MassInput> inputs;
+    private List<ReadsInput> inputs;
     private List<Library> allLibraries;
     private List<EcqArgs> allMecqs;
 
@@ -132,7 +134,7 @@ public class SingleMassArgs implements ProcessArgs {
         Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
         NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
         for(int i = 0; i < actualInputs.getLength(); i++) {
-            this.inputs.add(new MassInput((Element) actualInputs.item(i)));
+            this.inputs.add(new ReadsInput((Element) actualInputs.item(i)));
         }
 
         // Optional
@@ -234,11 +236,11 @@ public class SingleMassArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
-    public List<MassInput> getInputs() {
+    public List<ReadsInput> getInputs() {
         return inputs;
     }
 
-    public void setInputs(List<MassInput> inputs) {
+    public void setInputs(List<ReadsInput> inputs) {
         this.inputs = inputs;
     }
 
@@ -318,6 +320,19 @@ public class SingleMassArgs implements ProcessArgs {
         return new File(this.getOutputDir(), "scaffolds");
     }
 
+
+    public List<File> getInputKmers() {
+
+        RampartJobFileSystem fs = new RampartJobFileSystem(this.getMecqDir().getParentFile());
+
+        List<File> inputKmers = new ArrayList<>();
+
+        for(ReadsInput ri : this.inputs) {
+            inputKmers.add(new File(fs.getReadsKmersDir(), "jellyfish_" + ri.getEcq() + "_" + ri.getLib() + "_0"));
+        }
+
+        return inputKmers;
+    }
 
     public File getStatsFile(MassArgs.OutputLevel outputLevel) {
 

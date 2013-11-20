@@ -293,4 +293,8 @@ public class AmpArgs implements ProcessArgs {
             }
         }
     }
+
+    public File getFinalAssembly() {
+        return new File(this.getOutputDir(), "final.fa");
+    }
 }

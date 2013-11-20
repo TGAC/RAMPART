@@ -30,7 +30,7 @@ import java.util.List;
  * Date: 15/08/13
  * Time: 11:47
  */
-public class MassInput {
+public class ReadsInput {
 
     public static final String KEY_ATTR_ECQ = "ecq";
     public static final String KEY_ATTR_LIB = "lib";
@@ -38,12 +38,12 @@ public class MassInput {
     private String ecq;
     private String lib;
 
-    public MassInput(String ecq, String lib) {
+    public ReadsInput(String ecq, String lib) {
         this.ecq = ecq;
         this.lib = lib;
     }
 
-    public MassInput(Element ele) throws IOException {
+    public ReadsInput(Element ele) throws IOException {
 
         if (!ele.hasAttribute(KEY_ATTR_ECQ))
             throw new IOException("Could not find " + KEY_ATTR_ECQ + " attribute in MASS Input element");
@@ -97,6 +97,11 @@ public class MassInput {
         }
 
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return this.ecq + "-" + this.lib;
     }
 
     /*public boolean isPairedEndLib(List<Library> allLibraries) {

@@ -70,7 +70,7 @@ public class AmpStageProcess extends AbstractConanProcess {
 
             log.info("Starting AMP stage " + args.getIndex());
 
-            // Make sure input file exists
+            // Make sure reads file exists
             if (args.getInput() == null || !args.getInput().exists()) {
                 throw new IOException("Input file for stage: " + args.getIndex() + " does not exist: " +
                         (args.getInput() == null ? "null" : args.getInput().getAbsolutePath()));

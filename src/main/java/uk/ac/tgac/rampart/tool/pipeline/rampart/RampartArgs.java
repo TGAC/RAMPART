@@ -29,6 +29,8 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
+import uk.ac.tgac.rampart.tool.process.finalise.FinaliseArgs;
+import uk.ac.tgac.rampart.tool.process.kmercount.reads.KmerCountReadsArgs;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
 
@@ -50,8 +52,10 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     public static final String KEY_ELEM_LIBRARY         = "library";
     public static final String KEY_ELEM_PIPELINE        = "pipeline";
     public static final String KEY_ELEM_MECQ            = "mecq";
+    public static final String KEY_ELEM_KMER_READS      = "kmer-reads";
     public static final String KEY_ELEM_MASS            = "mass";
     public static final String KEY_ELEM_AMP             = "amp";
+    public static final String KEY_ELEM_FINALISE        = "finalise";
 
 
     private RampartParams params = new RampartParams();
@@ -59,8 +63,10 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private List<RampartStage> stages;
     private List<Library> libs;
     private MecqArgs mecqArgs;
+    private KmerCountReadsArgs kmerCountReadsArgs;
     private MassArgs massArgs;
     private AmpArgs ampArgs;
+    private FinaliseArgs finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
 
 
@@ -72,8 +78,10 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.stages = stages;
         this.libs = new ArrayList<>();
         this.mecqArgs = null;
+        this.kmerCountReadsArgs = null;
         this.massArgs = null;
         this.ampArgs = null;
+        this.finaliseArgs = null;
         this.rampartJobFileSystem = new RampartJobFileSystem(outputDir);
     }
 
@@ -101,6 +109,18 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.getJobPrefix() + "-mecq",
                         this.libs);
 
+        // Kmer counting reads
+        Element kmerReadsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_KMER_READS);
+        this.kmerCountReadsArgs = kmerReadsElement == null ? null :
+                new KmerCountReadsArgs(
+                        kmerReadsElement,
+                        this.libs,
+                        this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
+                        this.getJobPrefix() + "-kmer_reads",
+                        this.rampartJobFileSystem.getMeqcDir(),
+                        this.rampartJobFileSystem.getReadsKmersDir(),
+                        this.getOrganism());
+
         // MASS
         Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
         this.massArgs = massElement == null ? null :
@@ -125,6 +145,14 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
+        Element finaliseElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_FINALISE);
+        this.finaliseArgs = finaliseElement == null ? null :
+                new FinaliseArgs(
+                        finaliseElement,
+                        this.ampArgs.getFinalAssembly(),
+                        this.rampartJobFileSystem.getFinalDir(),
+                        this.getOrganism(),
+                        this.getInstitution());
     }
 
     public List<RampartStage> getStages() {
@@ -220,6 +248,14 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     public void setMassArgs(MassArgs massArgs) {
         this.massArgs = massArgs;
+    }
+
+    public FinaliseArgs getFinaliseArgs() {
+        return finaliseArgs;
+    }
+
+    public void setFinaliseArgs(FinaliseArgs finaliseArgs) {
+        this.finaliseArgs = finaliseArgs;
     }
 
     public List<Library> getLibs() {
