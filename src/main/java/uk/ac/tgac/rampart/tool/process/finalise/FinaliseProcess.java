@@ -1,8 +1,12 @@
 package uk.ac.tgac.rampart.tool.process.finalise;
 
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOArgs;
 import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
+
+import java.io.*;
 
 /**
  * This is derived from Richard's FastA-to-AGP script in TGAC tools, which is in turn derived form Shaun Jackman's
@@ -12,12 +16,34 @@ public class FinaliseProcess extends AbstractConanProcess {
 
     public static final String NAME = "Finalise";
 
+    private BufferedReader reader;
+    private PrintWriter contigWriter;
+    private PrintWriter scaffoldWriter;
+    private PrintWriter agpWriter;
+    private PrintWriter translationWriter;
+
+    private FinaliseArgs args;
+
+    private int scaffoldId;
+    private int contigId;
+
     public FinaliseProcess() {
         this(new FinaliseArgs());
     }
 
     public FinaliseProcess(FinaliseArgs args) {
         super("", args, new FinaliseParams());
+
+        this.reader = null;
+        this.contigWriter = null;
+        this.scaffoldWriter = null;
+        this.agpWriter = null;
+        this.translationWriter = null;
+
+        this.scaffoldId = 0;
+        this.contigId = 0;
+
+        this.args = args;
     }
 
     @Override
@@ -30,80 +56,101 @@ public class FinaliseProcess extends AbstractConanProcess {
         return NAME;
     }
 
-    public void doStuff() {
-        /*open(INPUTFILE, $input_file) or die "Can't open reads file $input_file\n";
-        open(CONTIGFILE, ">".$contig_file) or die "Can't open output file $contig_file\n";
-        open(SCAFFOLDFILE, ">".$scaffold_file) or die "Can't open output file $scaffold_file\n";
-        open(AGPFILE, ">".$agp_file) or die "Can't open output file $agp_file\n";
-        open(TRANSLATIONFILE, ">".$translation_file) if defined $translation_file;
+    @Override
+    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
-        my $current_id = "";
-        my $current_contig = "";
+        this.scaffoldId = 0;
+        this.contigId = 0;
 
-        while (<INPUTFILE>) {
-            chomp(my $line = $_);
-            if ($_ =~ /^>(\S+)/) {
-                if ($current_contig ne "") {
-                    process_object($current_id, $current_contig);
+        try {
+
+            this.reader = new BufferedReader(new FileReader(args.getInputFile()));
+            this.contigWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".contigs.fa"))));
+            this.scaffoldWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".scaffolds.fa"))));
+            this.agpWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".agp"))));
+            this.translationWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".translation"))));
+
+            String currentId = "";
+            StringBuilder currentContig = new StringBuilder();
+
+            String line = null;
+            while((line = this.reader.readLine()) != null) {
+
+                line = line.trim();
+
+                if (line.startsWith(">")) {
+                    if (currentContig.length() > 0) {
+                        processObject(currentId, currentContig.toString());
+                    }
+                    currentContig = new StringBuilder();
+                    currentId = line.substring(1);
                 }
-                $current_contig = "";
-                $current_id = $1;
-            } else {
-                $current_contig .= $line;
+                else {
+                    currentContig.append(line);
+                }
+            }
+
+            if (currentContig.length() > 0) {
+                processObject(currentId, currentContig.toString());
+            }
+
+        }
+        catch(IOException ioe) {
+            throw new ProcessExecutionException(3, ioe);
+        }
+        finally {
+            try {
+                if (this.reader != null) this.reader.close();
+                if (this.contigWriter != null) this.contigWriter.close();
+                if (this.scaffoldWriter != null) this.scaffoldWriter.close();
+                if (this.agpWriter != null) this.agpWriter.close();
+                if (this.translationWriter != null) this.translationWriter.close();
+            }
+            catch (IOException ioe) {
+                throw new ProcessExecutionException(4, ioe);
             }
         }
 
-        if ($current_contig ne "") {
-            process_object($current_id, $current_contig);
-        }
+        return true;
+    }
 
-        close(AGPFILE);
-        close(SCAFFOLDFILE);
-        close(CONTIGFILE);
-        close(INPUTFILE);
-        close(TRANSLATIONFILE) if defined $translation_file;
+    private void processObject(String currentHeader, String currentContig) {
 
-        print "DONE.\n";
+        int scaffoldLen = currentContig.length();
+        String scaffoldHeader = args.getOutputPrefix() + "_scaffold_" + (++scaffoldId);
 
-        sub process_object
-        {
-            my $id = $_[0];
-            my $scaf_seq = $_[1];
-            my $scaf_len = length($scaf_seq);
-            my $scaf_id = $stem."_scaffold_".++$scaffold_n;
+        this.scaffoldWriter.println(">" + scaffoldHeader);
+        this.scaffoldWriter.println(currentContig);
 
-            print "Got ID $id\n";
+        this.translationWriter.println(scaffoldHeader + "\t" + currentHeader);
 
-            print SCAFFOLDFILE ">$scaf_id\n";
-            print SCAFFOLDFILE $scaf_seq, "\n";
+        String[] contigSeqs = currentContig.split("[Nn]{" + args.getMinN() + ",}");
 
-            print TRANSLATIONFILE "$scaf_id\t$id\n" if defined $translation_file;
+        int lineNum = 1;
+        int pos = 1;
+        for(String contig : contigSeqs) {
 
-            my @contig_seqs = split /([Nn]{$min_n,})/, $scaf_seq;
-            my $line_number = 1;
-            my $position = 1;
-            for my $contig_seq (@contig_seqs) {
-                my $len = length($contig_seq);
-            # object object_beg object_end part_number
-            print AGPFILE $scaf_id, "\t", $position, "\t", $position + $len - 1, "\t", $line_number, "\t";
+            if (!contig.isEmpty()) {
+                int contigLen = contig.length();
 
-            if ($contig_seq =~ /^[nN]/) {
-            # component_type gap_length gap_type linkage
-            print AGPFILE "N\t", $len, "\tscaffold\tyes\tpaired-ends\n";
-        } else {
-            my $contig_id = $stem."_contig_".++$contig_n;
+                int end = pos + contigLen - 1;
+                this.agpWriter.print(scaffoldHeader + "\t" + pos + "\t" + end + "\t" + lineNum + "\t");
 
-            # component_type component_id component_beg component_end orientation
-            print AGPFILE "W\t", $contig_id, "\t1\t", $len, "\t+\n";
-            print CONTIGFILE '>', $contig_id, "\n", $contig_seq, "\n";
-            print TRANSLATIONFILE $contig_id, "\t", $id, "\n" if defined $translation_file;
-        }
+                if (contig.startsWith("N") || contig.startsWith("n")) {
+                    this.agpWriter.print("N\t" + contigLen + "\tscaffold\tyes\tpaired-ends\n");
+                }
+                else {
+                    String contigHeader = args.getOutputPrefix() + "_contig_" + (++contigId);
 
-            $line_number++;
-            $position += $len;
+                    this.agpWriter.print("W\t" + contigHeader + "\t1\t" + contigLen + "\t+\n");
+                    this.contigWriter.print(">" + contigHeader + "\n" + contig + "\n");
+                    this.translationWriter.print(contigHeader + "\t" + currentHeader + "\n");
+                }
+                lineNum++;
+                pos += contigLen;
             }
         }
-                    */
 
     }
+
 }
