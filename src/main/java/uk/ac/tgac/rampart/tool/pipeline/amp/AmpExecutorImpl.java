@@ -52,9 +52,17 @@ public class AmpExecutorImpl extends RampartExecutorImpl implements AmpExecutor 
             throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
         if (args.getStatsLevels() != null) {
-            this.statsExecutor.dispatchAnalyserJobs(args.getStatsLevels(), args.getAssembliesDir(), 1,
-                    args.getOrganism() != null ? args.getOrganism().getEstGenomeSize() : 0,
-                    true, args.isRunParallel(), null, args.getJobPrefix() + "-stats");
+            this.statsExecutor.dispatchAnalyserJobs(
+                    args.getStatsLevels(),
+                    args.getAssembliesDir(),
+                    null,
+                    1,
+                    0,
+                    args.getOrganism(),
+                    true,
+                    args.isRunParallel(),
+                    null,
+                    args.getJobPrefix() + "-stats");
         }
     }
 }

@@ -29,7 +29,7 @@ public class EcqArgsTest {
         Library lib = new Library();
         lib.setFiles(new File("file1.fl"), new File("file2.fl"));
 
-        ErrorCorrector ec = new MecqExecutorImpl().makeErrorCorrector(args, lib, new File("."));
+        ErrorCorrector ec = new MecqProcess().makeErrorCorrector(args, lib, new File("."));
 
         List<File> files = args.getOutputFiles(ec);
 
