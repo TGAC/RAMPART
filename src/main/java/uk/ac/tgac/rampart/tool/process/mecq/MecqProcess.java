@@ -17,7 +17,6 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mecq;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -26,12 +25,9 @@ import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorFactory;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 
 import java.io.File;
 import java.util.ArrayList;

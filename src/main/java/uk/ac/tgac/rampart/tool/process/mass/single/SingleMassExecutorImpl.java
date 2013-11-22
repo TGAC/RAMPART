@@ -131,7 +131,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
         File inputDir = null;
 
-        // We only do one level of Cegma jobs (the highest), technically there shouldn't be much / any different between different levels
+        // We current only do one level of stats jobs (the highest), technically there shouldn't be much / any different between different levels
         if (assembler.makesScaffolds()) {
             inputDir = args.getScaffoldsDir();
         }

@@ -1,10 +1,12 @@
 package uk.ac.tgac.rampart.tool.process.finalise;
 
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOArgs;
-import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
 
 import java.io.*;
 
@@ -13,6 +15,8 @@ import java.io.*;
  * FastA-to-AGP script in Abyss.
  */
 public class FinaliseProcess extends AbstractConanProcess {
+
+    private static Logger log = LoggerFactory.getLogger(FinaliseProcess.class);
 
     public static final String NAME = "Finalise";
 
@@ -31,7 +35,7 @@ public class FinaliseProcess extends AbstractConanProcess {
         this(new FinaliseArgs());
     }
 
-    public FinaliseProcess(FinaliseArgs args) {
+    public FinaliseProcess(ProcessArgs args) {
         super("", args, new FinaliseParams());
 
         this.reader = null;
@@ -43,7 +47,7 @@ public class FinaliseProcess extends AbstractConanProcess {
         this.scaffoldId = 0;
         this.contigId = 0;
 
-        this.args = args;
+        this.args = (FinaliseArgs)args;
     }
 
     @Override
@@ -63,6 +67,14 @@ public class FinaliseProcess extends AbstractConanProcess {
         this.contigId = 0;
 
         try {
+
+            log.info("Starting finalising process to standardise assembly names.  Note that finaliser does not call out to external processes.");
+
+            // Create the output directory
+            if (args.getOutputDir().exists()) {
+                FileUtils.deleteDirectory(args.getOutputDir());
+            }
+            args.getOutputDir().mkdir();
 
             this.reader = new BufferedReader(new FileReader(args.getInputFile()));
             this.contigWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".contigs.fa"))));
@@ -94,6 +106,7 @@ public class FinaliseProcess extends AbstractConanProcess {
                 processObject(currentId, currentContig.toString());
             }
 
+            log.info("Finishing finalising assembly successfully.");
         }
         catch(IOException ioe) {
             throw new ProcessExecutionException(3, ioe);
@@ -117,7 +130,7 @@ public class FinaliseProcess extends AbstractConanProcess {
     private void processObject(String currentHeader, String currentContig) {
 
         int scaffoldLen = currentContig.length();
-        String scaffoldHeader = args.getOutputPrefix() + "_scaffold_" + (++scaffoldId);
+        String scaffoldHeader = args.getOutputPrefix() + "_scaffold_" + (++scaffoldId) + "-size_" + scaffoldLen;
 
         this.scaffoldWriter.println(">" + scaffoldHeader);
         this.scaffoldWriter.println(currentContig);
@@ -140,7 +153,7 @@ public class FinaliseProcess extends AbstractConanProcess {
                     this.agpWriter.print("N\t" + contigLen + "\tscaffold\tyes\tpaired-ends\n");
                 }
                 else {
-                    String contigHeader = args.getOutputPrefix() + "_contig_" + (++contigId);
+                    String contigHeader = args.getOutputPrefix() + "_contig_" + (++contigId) + "-size_" + contigLen;
 
                     this.agpWriter.print("W\t" + contigHeader + "\t1\t" + contigLen + "\t+\n");
                     this.contigWriter.print(">" + contigHeader + "\n" + contig + "\n");

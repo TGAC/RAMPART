@@ -97,21 +97,31 @@ public class Rampart extends AbstractConanCLI {
         // Parses the command line using a posix parser and sets all the variables
         this.parse(new PosixParser().parse(createOptions(), args, true));
 
-        // Initialise logging and load conan properties
-        this.init();
+        // Only bother doing more if help is not requested
+        if (!this.isHelp()) {
 
-        // Create RnaSeqEvalArgs based on reads from the command line
-        this.args = new RampartArgs(
-                this.jobConfig,
-                this.getOutputDir(),
-                this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
-                this.stages);
+            // Initialise logging and load conan properties
+            this.init();
 
-        // Parse the job config file and set internal variables in RampartArgs
-        this.args.parseXml();
+            // Create RnaSeqEvalArgs based on reads from the command line
+            this.args = new RampartArgs(
+                    this.jobConfig,
+                    this.getOutputDir(),
+                    this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
+                    this.stages);
 
-        // Prep resources
-        this.configureSystem();
+            // Parse the job config file and set internal variables in RampartArgs
+            this.args.parseXml();
+
+            // Prep resources
+            this.configureSystem();
+
+            // Log setup
+            log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
+            log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
+
+        }
+
     }
 
 

@@ -15,7 +15,6 @@ import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 
 import java.io.File;
@@ -51,8 +50,14 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
 
         log.info("Starting Kmer Counting on all Reads");
 
+        // Initialise the object that makes system calls
+        this.kmerCountReadsExecutor.initialise(this.conanProcessService, executionContext);
+
         // Create shortcut to args for convienience
         KmerCountReadsArgs args = (KmerCountReadsArgs) this.getProcessArgs();
+
+        // Create the output directory
+        args.getOutputDir().mkdirs();
 
         List<Integer> jobIds = new ArrayList<>();
 
@@ -64,14 +69,16 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
         }
 
         // Also start jellyfish on all the prep-processed libraries from MECQ
-        for(EcqArgs ecqArgs : args.getAllMecqs()) {
-            for(Library lib : ecqArgs.getLibraries()) {
+        if (args.getAllMecqs() != null) {
+            for(EcqArgs ecqArgs : args.getAllMecqs()) {
+                for(Library lib : ecqArgs.getLibraries()) {
 
-                // Check the library and make sure we can create a modified library containing the output from this ECQ.
-                Library modifiedLib = validateLib(lib, ecqArgs, args.getMecqDir());
+                    // Check the library and make sure we can create a modified library containing the output from this ECQ.
+                    Library modifiedLib = validateLib(lib, ecqArgs, args.getMecqDir());
 
-                // Add jellyfish id to list of job ids
-                jobIds.add(this.executeJellyfish(args, ecqArgs.getName(), modifiedLib));
+                    // Add jellyfish id to list of job ids
+                    jobIds.add(this.executeJellyfish(args, ecqArgs.getName(), modifiedLib));
+                }
             }
         }
 
@@ -100,7 +107,7 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
         // Create the process
         JellyfishCountV11Process jellyfishProcess = this.makeJellyfish(
                 this.makeInputStringFromLib(lib),
-                args.getOutputDir().getAbsolutePath() + suffix,
+                args.getOutputDir().getAbsolutePath() + "/" + suffix,
                 args.getOrganism(),
                 args.getThreadsPerProcess());
 
@@ -108,10 +115,7 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
         String jobName = args.getJobPrefix() + "-" + suffix;
 
         // Start jellyfish
-        this.kmerCountReadsExecutor.executeKmerCount(jellyfishProcess, args.getOutputDir(), jobName, args.isRunParallel());
-
-        // Add jellyfish id to list of job ids
-        return jellyfishProcess.getJobId();
+        return this.kmerCountReadsExecutor.executeKmerCount(jellyfishProcess, args.getOutputDir(), jobName, args.isRunParallel());
     }
 
     protected JellyfishCountV11Process makeJellyfish(String inputFilesStr, String outputPrefix, Organism organism, int threads) throws ProcessExecutionException {
@@ -143,6 +147,8 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
             StringUtils.join(file.getAbsolutePath(), " ");
         }
 
+        inputFilesStr = inputFilesStr.trim();
+
         // Check we have something plausible to work with
         if (inputFilesStr.isEmpty())
             throw new ProcessExecutionException(2, "Couldn't locate output files for at: " +
@@ -160,8 +166,10 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
                 throw new ProcessExecutionException(2, "Couldn't locate: " + file.getAbsolutePath() + "; for kmer counting.");
             }
 
-            StringUtils.join(file.getAbsolutePath(), " ");
+            inputFilesStr = StringUtils.join(file.getAbsolutePath(), " ");
         }
+
+        inputFilesStr = inputFilesStr.trim();
 
         // Check we have something plausible to work with
         if (inputFilesStr.isEmpty())

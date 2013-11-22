@@ -86,6 +86,7 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
             jobIds.addAll(this.executeCegmaJobs(inputDir, threadsPerProcess, jobName + "-cegma", executionContextCopy));
         }
 
+        // Kick off jellyfish and KAT if requested
         if (statsLevels.contains(StatsLevel.KMER)) {
             jobIds.addAll(this.executeKmerJobs(inputDir, readKmerCounts, threadsPerProcess, memoryPerProcess, organism, jobName + "-kmer",
                     executionContextCopy));
@@ -156,11 +157,19 @@ public class StatsExecutorImpl extends RampartExecutorImpl implements StatsExecu
             ExecutionContext executionContextCopy = executionContext.copy();
             executionContextCopy.setContext(kmerJobName, executionContext.isForegroundJob(), new File(inputDir, kmerJobName + ".log"));
 
-            if (executionContextCopy.usingScheduler()) {
-                executionContextCopy.getScheduler().getArgs().setWaitCondition(kmerWait);
+            if (executionContextCopy.usingScheduler() && kmerWait != null) {
+
+                if (executionContextCopy.getScheduler().getArgs().getWaitCondition().isEmpty()) {
+                    executionContextCopy.getScheduler().getArgs().setWaitCondition(kmerWait);
+                }
+                else {
+                    executionContextCopy.getScheduler().getArgs().setWaitCondition(
+                            executionContextCopy.getScheduler().getArgs().getWaitCondition() + " " + kmerWait
+                    );
+                }
             }
 
-            File outputDir = new File(rootOutputDir, f.getName());
+            File outputDir = new File(rootOutputDir, f.getName().substring(0, f.getName().length() - 3));
             if (outputDir.exists()) {
                 FileUtils.deleteDirectory(outputDir);
             }

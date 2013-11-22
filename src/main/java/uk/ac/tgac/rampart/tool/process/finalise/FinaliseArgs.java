@@ -1,6 +1,5 @@
 package uk.ac.tgac.rampart.tool.process.finalise;
 
-import org.apache.commons.lang.time.DateUtils;
 import org.w3c.dom.Element;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
@@ -10,7 +9,6 @@ import uk.ac.tgac.rampart.RampartCLI;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -128,6 +126,14 @@ public class FinaliseArgs implements ProcessArgs {
 
     @Override
     public void setFromArgMap(Map<ConanParameter, String> pvp) throws IOException {
+        for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            }
+
+            String param = entry.getKey().getName();
+
+        }
     }
 }

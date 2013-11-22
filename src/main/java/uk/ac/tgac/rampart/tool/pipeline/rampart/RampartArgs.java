@@ -32,6 +32,7 @@ import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.tool.process.finalise.FinaliseArgs;
 import uk.ac.tgac.rampart.tool.process.kmercount.reads.KmerCountReadsArgs;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
+import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
 
 import java.io.File;
@@ -82,7 +83,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.massArgs = null;
         this.ampArgs = null;
         this.finaliseArgs = null;
-        this.rampartJobFileSystem = new RampartJobFileSystem(outputDir);
+        this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
     }
 
 
@@ -95,7 +96,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         NodeList libraries = librariesElement.getElementsByTagName(KEY_ELEM_LIBRARY);
         this.libs = new ArrayList<>();
         for(int i = 0; i < libraries.getLength(); i++) {
-            this.libs.add(new Library((Element)libraries.item(i)));
+            this.libs.add(new Library((Element)libraries.item(i), this.getOutputDir().getAbsoluteFile()));
         }
 
         Element pipelineElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_PIPELINE);
@@ -115,7 +116,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                 new KmerCountReadsArgs(
                         kmerReadsElement,
                         this.libs,
-                        this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getJobPrefix() + "-kmer_reads",
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.rampartJobFileSystem.getReadsKmersDir(),
@@ -130,7 +131,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.getJobPrefix() + "-mass",
                         this.libs,
-                        this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
         // AMP
@@ -142,14 +143,16 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.getJobPrefix() + "-amp",
                         this.rampartJobFileSystem.getMassOutFile(),
                         this.libs,
-                        this.mecqArgs == null ? null : this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
+
+        File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getMassOutFile(): this.ampArgs.getFinalAssembly();
 
         Element finaliseElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_FINALISE);
         this.finaliseArgs = finaliseElement == null ? null :
                 new FinaliseArgs(
                         finaliseElement,
-                        this.ampArgs.getFinalAssembly(),
+                        finalAssembly,
                         this.rampartJobFileSystem.getFinalDir(),
                         this.getOrganism(),
                         this.getInstitution());
@@ -240,6 +243,14 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     public void setMecqArgs(MecqArgs mecqArgs) {
         this.mecqArgs = mecqArgs;
+    }
+
+    public KmerCountReadsArgs getKmerCountReadsArgs() {
+        return kmerCountReadsArgs;
+    }
+
+    public void setKmerCountReadsArgs(KmerCountReadsArgs kmerCountReadsArgs) {
+        this.kmerCountReadsArgs = kmerCountReadsArgs;
     }
 
     public MassArgs getMassArgs() {

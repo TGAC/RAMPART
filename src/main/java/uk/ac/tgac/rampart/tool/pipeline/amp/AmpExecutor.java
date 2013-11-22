@@ -21,7 +21,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
-import java.io.File;
 import java.io.IOException;
 
 /**

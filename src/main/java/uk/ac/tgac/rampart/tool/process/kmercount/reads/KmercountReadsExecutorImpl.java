@@ -1,16 +1,14 @@
 package uk.ac.tgac.rampart.tool.process.kmercount.reads;
 
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,7 +21,7 @@ public class KmercountReadsExecutorImpl extends RampartExecutorImpl implements K
 
 
     @Override
-    public void executeKmerCount(JellyfishCountV11Process jellyfishProcess, File outputDir, String jobName, boolean runInParallel)
+    public int executeKmerCount(JellyfishCountV11Process jellyfishProcess, File outputDir, String jobName, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException {
 
         // Duplicate the execution context so we don't modify the original accidentally.
@@ -39,10 +37,12 @@ public class KmercountReadsExecutorImpl extends RampartExecutorImpl implements K
             JellyfishCountV11Args jellyfishArgs = jellyfishProcess.getArgs();
 
             schedulerArgs.setThreads(jellyfishArgs.getThreads());
-            //schedulerArgs.setMemoryMB(jellyfishArgs.getMemoryGb() * 1000);
+            schedulerArgs.setMemoryMB(jellyfishArgs.getMemoryMb());
         }
 
-        this.conanProcessService.execute(jellyfishProcess, executionContextCopy);
+        ExecutionResult result = this.conanProcessService.execute(jellyfishProcess, executionContextCopy);
+
+        return result.getJobId();
     }
 
 }

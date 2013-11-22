@@ -28,8 +28,6 @@ import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorPairedEndArgs;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorSingleEndArgs;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 
 import java.io.File;

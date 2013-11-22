@@ -24,8 +24,6 @@ import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
 import uk.ac.tgac.rampart.tool.process.MockedConanProcess;

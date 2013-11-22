@@ -34,10 +34,8 @@ import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
-import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
 import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 

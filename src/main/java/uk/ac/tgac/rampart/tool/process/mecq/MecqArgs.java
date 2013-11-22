@@ -22,7 +22,6 @@ import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 
 import java.io.File;

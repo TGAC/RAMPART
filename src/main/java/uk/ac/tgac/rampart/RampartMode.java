@@ -42,7 +42,14 @@ public enum RampartMode {
         @Override
         public void execute(String[] args)
                 throws IOException, ParseException, InterruptedException, TaskExecutionException {
-            new Rampart(args).execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH);
+            Rampart rampart = new Rampart(args);
+
+            if (rampart.isHelp()) {
+                rampart.printHelp();
+            }
+            else {
+                rampart.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH);
+            }
         }
 
         @Override

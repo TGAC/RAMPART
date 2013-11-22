@@ -15,6 +15,6 @@ import java.io.File;
  */
 public interface KmerCountReadsExecutor extends RampartExecutor {
 
-    void executeKmerCount(JellyfishCountV11Process jellyfishProcess, File outputDir, String jobName, boolean runInParallel)
+    int executeKmerCount(JellyfishCountV11Process jellyfishProcess, File outputDir, String jobName, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException;
 }

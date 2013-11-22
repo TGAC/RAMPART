@@ -18,15 +18,10 @@
 package uk.ac.tgac.rampart.tool.process.mass.selector;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.rampart.tool.process.MockedConanProcess;

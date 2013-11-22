@@ -21,8 +21,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
-import java.io.File;
-
 /**
  * User: maplesod
  * Date: 25/03/13

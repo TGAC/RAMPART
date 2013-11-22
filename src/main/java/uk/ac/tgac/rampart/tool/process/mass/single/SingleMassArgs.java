@@ -27,7 +27,6 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
-import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 

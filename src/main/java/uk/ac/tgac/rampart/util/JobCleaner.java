@@ -96,9 +96,11 @@ public class JobCleaner {
         RampartJobFileSystem jobFs = new RampartJobFileSystem(jobDir);
 
         FileUtils.deleteDirectory(jobFs.getMeqcDir());
+        FileUtils.deleteDirectory(jobFs.getReadsKmersDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());
         FileUtils.deleteDirectory(jobFs.getAmpDir());
         FileUtils.deleteDirectory(jobFs.getReportDir());
+        FileUtils.deleteDirectory(jobFs.getFinalDir());
 
         if (this.verbose) {
             System.out.println(" done.");

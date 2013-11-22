@@ -17,11 +17,8 @@
  **/
 package uk.ac.tgac.rampart.tool;
 
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.Scheduler;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 

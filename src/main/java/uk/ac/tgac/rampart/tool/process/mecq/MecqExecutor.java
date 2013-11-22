@@ -21,7 +21,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.ErrorCorrector;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
 
 import java.io.File;

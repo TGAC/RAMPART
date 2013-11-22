@@ -164,6 +164,14 @@ public class KmerCountReadsArgs implements ProcessArgs {
 
     @Override
     public void setFromArgMap(Map<ConanParameter, String> pvp) throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+            if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+            }
+
+            String param = entry.getKey().getName();
+
+        }
     }
 }

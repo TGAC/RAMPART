@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
 import org.springframework.stereotype.Service;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -27,7 +26,6 @@ import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 import uk.ac.tgac.rampart.tool.process.stats.StatsExecutor;
 import uk.ac.tgac.rampart.tool.process.stats.StatsExecutorImpl;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
