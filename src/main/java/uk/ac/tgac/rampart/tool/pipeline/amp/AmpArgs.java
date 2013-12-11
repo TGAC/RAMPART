@@ -19,11 +19,13 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
@@ -40,7 +42,7 @@ import java.util.Map;
  * Date: 12/02/13
  * Time: 16:55
  */
-public class AmpArgs implements ProcessArgs {
+public class AmpArgs implements RampartStageArgs {
 
     private static final String INPUT_ASSEMBLY = "input";
     private static final String KEY_ELEM_AMP_STAGE = "stage";
@@ -71,6 +73,7 @@ public class AmpArgs implements ProcessArgs {
     private int threads;
     private int memory;
     private boolean runParallel;
+    private ExecutionContext executionContext;
 
 
     public AmpArgs() {
@@ -251,6 +254,14 @@ public class AmpArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
+    public ExecutionContext getExecutionContext() {
+        return executionContext;
+    }
+
+    public void setExecutionContext(ExecutionContext executionContext) {
+        this.executionContext = executionContext;
+    }
+
     @Override
     public void parse(String args) {
         //To change body of implemented methods use File | Settings | File Templates.
@@ -296,5 +307,10 @@ public class AmpArgs implements ProcessArgs {
 
     public File getFinalAssembly() {
         return new File(this.getOutputDir(), "final.fa");
+    }
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

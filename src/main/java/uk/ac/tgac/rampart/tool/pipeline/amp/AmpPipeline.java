@@ -17,12 +17,17 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageProcess;
+
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,11 +46,12 @@ public class AmpPipeline extends AbstractConanPipeline {
 
     private AmpArgs args;
 
-    public AmpPipeline(AmpArgs ampArgs, ConanProcessService conanProcessService) {
+    public AmpPipeline(AmpArgs ampArgs, ConanProcessService conanProcessService, ExecutionContext executionContext) {
 
         super(NAME, USER, false, false, conanProcessService);
 
         this.args = ampArgs;
+        this.args.setExecutionContext(executionContext);
 
         this.init();
     }
@@ -65,7 +71,16 @@ public class AmpPipeline extends AbstractConanPipeline {
 
         for(AmpStageArgs ampStageArgs : this.args.getStageArgsList()) {
 
-            this.addProcess(new AmpStageProcess(ampStageArgs));
+            AmpStageProcess proc = new AmpStageProcess(ampStageArgs);
+            proc.setConanProcessService(getConanProcessService());
+            this.addProcess(proc);
+        }
+
+        // Check all processes in the pipeline are operational, modify execution context to execute unscheduled locally
+        if (!this.isOperational(new DefaultExecutionContext(new Local(), null,
+                this.args.getExecutionContext().getExternalProcessConfiguration()))) {
+            throw new UnsupportedOperationException("AMP pipeline contains one or more processes that are not currently operational.  " +
+                    "Please fix before restarting pipeline.");
         }
     }
 

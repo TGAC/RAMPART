@@ -48,7 +48,7 @@ public enum RampartMode {
                 rampart.printHelp();
             }
             else {
-                rampart.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH);
+                rampart.execute();
             }
         }
 

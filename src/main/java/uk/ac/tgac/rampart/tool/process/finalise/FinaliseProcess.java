@@ -61,6 +61,13 @@ public class FinaliseProcess extends AbstractConanProcess {
     }
 
     @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        log.info("Finaliser stage is operational.");
+        return true;
+    }
+
+    @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         this.scaffoldId = 0;

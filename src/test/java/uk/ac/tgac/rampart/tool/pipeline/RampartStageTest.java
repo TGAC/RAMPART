@@ -36,7 +36,7 @@ public class RampartStageTest {
 
         String test = "ALL";
 
-        List<RampartStage> stageList = RampartStage.parse(test);
+        List<RampartStage> stageList = RampartStageList.parse(test);
 
         assertTrue(stageList.size() == RampartStage.values().length);
     }
@@ -46,7 +46,7 @@ public class RampartStageTest {
 
         String test = "MASS";
 
-        List<RampartStage> stageList = RampartStage.parse(test);
+        List<RampartStage> stageList = RampartStageList.parse(test);
 
         assertTrue(stageList.size() == 1);
         assertTrue(stageList.get(0) == RampartStage.MASS);

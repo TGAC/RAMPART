@@ -19,10 +19,11 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ import java.util.*;
  * Date: 16/01/13
  * Time: 13:37
  */
-public class MecqArgs implements ProcessArgs {
+public class MecqArgs implements RampartStageArgs {
 
     // Xml Config Keys
     public static final String KEY_ATTR_PARALLEL    = "parallel";
@@ -170,4 +171,8 @@ public class MecqArgs implements ProcessArgs {
         }
     }
 
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return new ArrayList<>();
+    }
 }

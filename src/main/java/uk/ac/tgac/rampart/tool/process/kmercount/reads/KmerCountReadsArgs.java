@@ -1,11 +1,12 @@
 package uk.ac.tgac.rampart.tool.process.kmercount.reads;
 
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
@@ -21,7 +22,7 @@ import java.util.Map;
  * Time: 13:11
  * To change this template use File | Settings | File Templates.
  */
-public class KmerCountReadsArgs implements ProcessArgs {
+public class KmerCountReadsArgs implements RampartStageArgs {
 
     private static final String KEY_ATTR_PARALLEL = "parallel";
     private static final String KEY_ATTR_THREADS = "threads";
@@ -173,5 +174,10 @@ public class KmerCountReadsArgs implements ProcessArgs {
             String param = entry.getKey().getName();
 
         }
+    }
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

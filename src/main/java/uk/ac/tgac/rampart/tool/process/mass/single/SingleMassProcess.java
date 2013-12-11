@@ -25,14 +25,14 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
@@ -54,12 +54,13 @@ public class SingleMassProcess extends AbstractConanProcess {
 
 
     public SingleMassProcess() {
-        this(new SingleMassArgs());
+        this(new SingleMassArgs(), null);
     }
 
-    public SingleMassProcess(SingleMassArgs args) {
+    public SingleMassProcess(SingleMassArgs args, ConanProcessService conanProcessService) {
         super("", args, new SingleMassParams());
         this.singleMassExecutor = new SingleMassExecutorImpl();
+        this.conanProcessService = conanProcessService;
     }
 
 
@@ -85,7 +86,10 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             // Create an assembly object used for other stages in the MASS pipeline.. note this does not include
             // specific kmer settings
-            Assembler genericAssembler = AssemblerFactory.createAssembler(args.getTool());
+            Assembler genericAssembler = AssemblerFactory.create(args.getTool());
+
+            if (genericAssembler == null)
+                throw new ProcessExecutionException(-3, "Could not find assembler: " + args.getTool());
 
             log.info("Starting Single MASS run for \"" + args.getName() + "\"");
 
@@ -131,7 +135,16 @@ public class SingleMassProcess extends AbstractConanProcess {
                         log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
                         // Create the actual assembler for these settings
-                        Assembler assembler = this.makeAssembler(args, k, cvg, subsampledLibs, outputDir);
+                        Assembler assembler = AssemblerFactory.create(
+                                args.getTool(),
+                                k,
+                                subsampledLibs,
+                                outputDir,
+                                args.getThreads(),
+                                args.getMemory(),
+                                cvg,
+                                args.getOrganism(),
+                                this.conanProcessService);
 
                         // Make the output directory for this child job (delete the directory if it already exists)
                         if (outputDir.exists()) {
@@ -287,31 +300,6 @@ public class SingleMassProcess extends AbstractConanProcess {
         }
     }
 
-    /**
-     * Create an Assembler from the Mass args and details of the current context
-     * @param massArgs
-     * @param k
-     * @param cvg
-     * @param selectedLibs
-     * @param outputDir
-     * @return An assembler built using a combination of single mass args and user specified args
-     */
-    protected Assembler makeAssembler(SingleMassArgs massArgs, int k, int cvg, List<Library> selectedLibs, File outputDir) {
-
-        Assembler asm = AssemblerFactory.valueOf(massArgs.getTool()).create();
-        AssemblerArgs asmArgs = asm.getArgs();
-
-        asmArgs.setLibraries(selectedLibs);
-        asmArgs.setDesiredCoverage(cvg);
-        asmArgs.setKmer(k);
-        asmArgs.setThreads(massArgs.getThreads());
-        asmArgs.setMemory(massArgs.getMemory());
-        asmArgs.setOrganism(massArgs.getOrganism());
-        asmArgs.setOutputDir(outputDir);
-
-        return asm;
-    }
-
     protected List<Library> validateInputs(String massName, List<ReadsInput> inputs, List<Library> allLibraries, List<EcqArgs> allMecqs, File mecqDir) throws IOException {
 
         List<Library> selectedLibs = new ArrayList<>();
@@ -335,7 +323,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             else {
                 Library modLib = lib.copy();
 
-                ErrorCorrector ec = new MecqProcess().makeErrorCorrector(ecqArgs, modLib, mecqDir);
+                AbstractErrorCorrector ec = new MecqProcess().makeErrorCorrector(ecqArgs, modLib, mecqDir);
                 List<File> files = ec.getArgs().getCorrectedFiles();
 
                 if (modLib.isPairedEnd()) {
@@ -497,6 +485,40 @@ public class SingleMassProcess extends AbstractConanProcess {
     @Override
     public String getName() {
         return "MASS";
+    }
+
+    @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
+
+        Assembler asm = null;
+        try {
+            asm = AssemblerFactory.create(args.getTool(), this.conanProcessService);
+        } catch (IOException e) {
+            throw new NullPointerException("Unidentified tool requested for single MASS run: " + args.getTool());
+        }
+
+        if (asm == null) {
+            throw new NullPointerException("Unidentified tool requested for single MASS run: " + args.getTool());
+        }
+
+        if (!asm.isOperational(executionContext)) {
+
+            log.warn("Assembler \"" + args.getTool() + "\" used in single MASS process \"" + args.getName() + "\" is NOT operational.");
+            return false;
+        }
+
+        for(StatsLevel statsLevel : args.getStatsLevels()) {
+            if (!statsLevel.isOperational(executionContext, this.conanProcessService)) {
+                log.warn("Stats Level \"" + statsLevel.toString() + "\" is NOT operational");
+                return false;
+            }
+        }
+
+        log.info("Single MASS process \"" + args.getName() + "\" is operational.");
+
+        return true;
     }
 
     @Override

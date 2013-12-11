@@ -20,6 +20,8 @@ package uk.ac.tgac.rampart.tool.pipeline.rampart;
 import org.apache.commons.lang.ArrayUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
@@ -28,6 +30,7 @@ import uk.ac.tgac.conan.core.util.AbstractXmlJobConfiguration;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageList;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.tool.process.finalise.FinaliseArgs;
 import uk.ac.tgac.rampart.tool.process.kmercount.reads.KmerCountReadsArgs;
@@ -61,7 +64,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     private RampartParams params = new RampartParams();
 
-    private List<RampartStage> stages;
+    private RampartStageList stages;
     private List<Library> libs;
     private MecqArgs mecqArgs;
     private KmerCountReadsArgs kmerCountReadsArgs;
@@ -69,10 +72,12 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private AmpArgs ampArgs;
     private FinaliseArgs finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
+    private ExecutionContext executionContext;
 
 
 
-    public RampartArgs(File configFile, File outputDir, String jobPrefix, List<RampartStage> stages) throws IOException {
+    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages)
+            throws IOException {
 
         super(configFile, outputDir, jobPrefix);
 
@@ -110,6 +115,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.getJobPrefix() + "-mecq",
                         this.libs);
 
+        this.stages.setArgsIfPresent(RampartStage.MECQ, this.mecqArgs);
+
+
         // Kmer counting reads
         Element kmerReadsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_KMER_READS);
         this.kmerCountReadsArgs = kmerReadsElement == null ? null :
@@ -121,6 +129,8 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.rampartJobFileSystem.getReadsKmersDir(),
                         this.getOrganism());
+
+        this.stages.setArgsIfPresent(RampartStage.KMER_READS, this.kmerCountReadsArgs);
 
         // MASS
         Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
@@ -134,6 +144,8 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
+        this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
+
         // AMP
         Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
         this.ampArgs = ampElement == null ? null :
@@ -146,6 +158,8 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
+        this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
+
         File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getMassOutFile(): this.ampArgs.getFinalAssembly();
 
         Element finaliseElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_FINALISE);
@@ -156,13 +170,15 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.rampartJobFileSystem.getFinalDir(),
                         this.getOrganism(),
                         this.getInstitution());
+
+        this.stages.setArgsIfPresent(RampartStage.FINALISE, this.finaliseArgs);
     }
 
-    public List<RampartStage> getStages() {
+    public RampartStageList getStages() {
         return stages;
     }
 
-    public void setStages(List<RampartStage> stages) {
+    public void setStages(RampartStageList stages) {
         this.stages = stages;
     }
 
@@ -185,7 +201,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         }
 
         if (this.stages != null && this.stages.size() > 0) {
-            pvp.put(params.getStageList(), RampartStage.toString(this.stages));
+            pvp.put(params.getStageList(), this.stages.toString());
         }
 
         return pvp;
@@ -208,7 +224,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                 this.setOutputDir(new File(entry.getValue()));
             }
             else if (param.equals(this.params.getStageList().getName())) {
-                this.stages = RampartStage.parse(entry.getValue());
+                this.stages = RampartStageList.parse(entry.getValue());
             }
         }
 
@@ -277,6 +293,15 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.libs = libs;
     }
 
+    public List<ConanProcess> getRequestedTools() {
+        return this.stages.getExternalTools();
+    }
 
+    public ExecutionContext getExecutionContext() {
+        return executionContext;
+    }
 
+    public void setExecutionContext(ExecutionContext executionContext) {
+        this.executionContext = executionContext;
+    }
 }

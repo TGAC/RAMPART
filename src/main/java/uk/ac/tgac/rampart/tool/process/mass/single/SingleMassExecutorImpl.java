@@ -26,8 +26,8 @@ import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.conan.process.asm.AbstractAssemblerArgs;
 import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Args;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
@@ -82,7 +82,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
             SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
 
-            AssemblerArgs asmArgs = assembler.getArgs();
+            AbstractAssemblerArgs asmArgs = assembler.getArgs();
 
             schArgs.setThreads(asmArgs.getThreads());
             schArgs.setMemoryMB(asmArgs.getMemory());

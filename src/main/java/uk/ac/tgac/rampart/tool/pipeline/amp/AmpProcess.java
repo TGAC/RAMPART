@@ -62,6 +62,21 @@ public class AmpProcess extends AbstractConanProcess {
     }
 
     @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        // Create AMP Pipeline
+        AmpPipeline ampPipeline = new AmpPipeline((AmpArgs)this.getProcessArgs(), this.getConanProcessService(), executionContext);
+
+        if (!ampPipeline.isOperational(executionContext)) {
+            log.warn("AMP stage is NOT operational.");
+            return false;
+        }
+
+        log.info("AMP stage is operational.");
+        return true;
+    }
+
+    @Override
     public String getCommand() {
         return null;
     }
@@ -78,7 +93,7 @@ public class AmpProcess extends AbstractConanProcess {
         if (!args.isStatsOnly()) {
 
             // Create AMP Pipeline
-            AmpPipeline ampPipeline = new AmpPipeline(args, this.getConanProcessService());
+            AmpPipeline ampPipeline = new AmpPipeline(args, this.getConanProcessService(), executionContext);
 
             log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
 

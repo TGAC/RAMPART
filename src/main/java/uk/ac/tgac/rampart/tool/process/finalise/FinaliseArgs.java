@@ -1,16 +1,18 @@
 package uk.ac.tgac.rampart.tool.process.finalise;
 
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartCLI;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,7 +22,7 @@ import java.util.Map;
  * Time: 16:02
  * To change this template use File | Settings | File Templates.
  */
-public class FinaliseArgs implements ProcessArgs {
+public class FinaliseArgs implements RampartStageArgs {
 
 
     public static final String KEY_ATTR_PREFIX = "prefix";
@@ -135,5 +137,10 @@ public class FinaliseArgs implements ProcessArgs {
             String param = entry.getKey().getName();
 
         }
+    }
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

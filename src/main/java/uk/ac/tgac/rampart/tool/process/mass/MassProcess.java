@@ -26,9 +26,11 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
+import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorProcess;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,6 +66,29 @@ public class MassProcess extends AbstractConanProcess {
     @Override
     public Collection<ConanParameter> getParameters() {
         return new MassParams().getConanParameters();
+    }
+
+    @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        MassArgs args = (MassArgs) this.getProcessArgs();
+
+        for(SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
+            if (!new SingleMassProcess(singleMassArgs, this.conanProcessService).isOperational(executionContext)) {
+                log.warn("MASS stage is NOT operational.");
+                return false;
+            }
+        }
+
+        if (!new MassSelectorProcess(this.conanProcessService).isOperational(executionContext)) {
+
+            log.warn("MASS stage is NOT operational.");
+            return false;
+        }
+
+        log.info("MASS stage is operational.");
+
+        return true;
     }
 
     @Override

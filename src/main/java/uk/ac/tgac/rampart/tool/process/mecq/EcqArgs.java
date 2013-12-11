@@ -20,7 +20,7 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 
 import java.io.File;
 import java.io.IOException;
@@ -229,7 +229,7 @@ public class EcqArgs {
         return null;
     }
 
-    public List<File> getOutputFiles(ErrorCorrector ec) {
+    public List<File> getOutputFiles(AbstractErrorCorrector ec) {
 
         return ec.getArgs().getCorrectedFiles();
     }

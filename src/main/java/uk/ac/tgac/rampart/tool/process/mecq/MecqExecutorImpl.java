@@ -24,10 +24,10 @@ import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorPairedEndArgs;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorSingleEndArgs;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrectorArgs;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrectorPairedEndArgs;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrectorSingleEndArgs;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
 
 import java.io.File;
@@ -40,7 +40,7 @@ import java.io.File;
 public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecutor {
 
     @Override
-    public void executeEcq(ErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
+    public void executeEcq(AbstractErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException {
 
         // Ensure downstream process has access to the process service
@@ -56,7 +56,7 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
         if (this.executionContext.usingScheduler()) {
 
             SchedulerArgs schedulerArgs = executionContextCopy.getScheduler().getArgs();
-            ErrorCorrectorArgs ecArgs = errorCorrector.getArgs();
+            AbstractErrorCorrectorArgs ecArgs = errorCorrector.getArgs();
 
             schedulerArgs.setThreads(ecArgs.getThreads());
             schedulerArgs.setMemoryMB(ecArgs.getMemoryGb() * 1000);
@@ -66,7 +66,7 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
     }
 
     @Override
-    public void createInputLinks(Library library, ErrorCorrectorArgs args)
+    public void createInputLinks(Library library, AbstractErrorCorrectorArgs args)
             throws ProcessExecutionException, InterruptedException {
 
         // Modify execution context so we execute these instructions straight away (i.e. no scheduling)
@@ -74,7 +74,7 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
 
         if (library.isPairedEnd()) {
 
-            FilePair pairedEndFiles = ((ErrorCorrectorPairedEndArgs)args).getPairedEndInputFiles();
+            FilePair pairedEndFiles = ((AbstractErrorCorrectorPairedEndArgs)args).getPairedEndInputFiles();
 
             StringJoiner compoundLinkCmdLine = new StringJoiner(";");
 
@@ -85,7 +85,7 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
         }
         else {
             conanProcessService.execute(this.conanProcessService.makeLinkCommand(library.getFile1(),
-                    ((ErrorCorrectorSingleEndArgs)args).getSingleEndInputFile()), linkingExecutionContext);
+                    ((AbstractErrorCorrectorSingleEndArgs)args).getSingleEndInputFile()), linkingExecutionContext);
         }
     }
 

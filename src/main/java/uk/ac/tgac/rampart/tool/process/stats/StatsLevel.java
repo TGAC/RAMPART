@@ -17,6 +17,13 @@
  **/
 package uk.ac.tgac.rampart.tool.process.stats;
 
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
+import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV1Process;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,9 +35,39 @@ import java.util.List;
  */
 public enum StatsLevel {
 
-    CONTIGUITY,
-    COMPLETENESS,
-    KMER;
+    CONTIGUITY {
+        @Override
+        public boolean isOperational(ExecutionContext executionContext, ConanProcessService conanProcessService) {
+
+            QuastV2_2Process proc = new QuastV2_2Process();
+            proc.setConanProcessService(conanProcessService);
+            return proc.isOperational(executionContext);
+        }
+    },
+    COMPLETENESS {
+        @Override
+        public boolean isOperational(ExecutionContext executionContext, ConanProcessService conanProcessService) {
+            CegmaV2_4Process proc = new CegmaV2_4Process();
+            proc.setConanProcessService(conanProcessService);
+            return proc.isOperational(executionContext);
+        }
+    },
+    KMER {
+        @Override
+        public boolean isOperational(ExecutionContext executionContext, ConanProcessService conanProcessService) {
+            JellyfishCountV11Process proc = new JellyfishCountV11Process();
+            proc.setConanProcessService(conanProcessService);
+            boolean jellyfish = proc.isOperational(executionContext);
+
+            KatCompV1Process katProc = new KatCompV1Process();
+            katProc.setConanProcessService(conanProcessService);
+            boolean kat = katProc.isOperational(executionContext);
+
+            return jellyfish && kat;
+        }
+    };
+
+    public abstract boolean isOperational(ExecutionContext executionContext, ConanProcessService conanProcessService);
 
 
     public static List<StatsLevel> parseList(String statsLevelsString) {

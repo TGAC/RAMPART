@@ -21,12 +21,16 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
+import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
 import uk.ac.tgac.conan.core.util.JarUtils;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageList;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
@@ -59,12 +63,12 @@ public class Rampart extends AbstractConanCLI {
 
     // **** Defaults ****
     public static final File    DEFAULT_WEIGHTINGS_FILE = new File(DATA_DIR, "weightings.tab");
-    public static final List<RampartStage>  DEFAULT_STAGES = RampartStage.parse("ALL");
+    public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
 
 
     // **** Options ****
     private File weightingsFile;
-    private List<RampartStage> stages;
+    private RampartStageList stages;
     private File jobConfig;
 
 
@@ -116,12 +120,12 @@ public class Rampart extends AbstractConanCLI {
             // Prep resources
             this.configureSystem();
 
+            this.args.setExecutionContext(this.buildExecutionContext());
+
             // Log setup
             log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
             log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
-
         }
-
     }
 
 
@@ -133,7 +137,7 @@ public class Rampart extends AbstractConanCLI {
                 DEFAULT_WEIGHTINGS_FILE;
 
         this.stages = commandLine.hasOption(OPT_STAGES) ?
-                RampartStage.parse(commandLine.getOptionValue(OPT_STAGES)) :
+                RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
                 DEFAULT_STAGES;
 
         // Check for a single arg left on the command line
@@ -224,7 +228,13 @@ public class Rampart extends AbstractConanCLI {
 
     @Override
     protected ConanPipeline createPipeline() throws IOException {
+
         return new RampartPipeline(this.args, new DefaultProcessService());
+    }
+
+    public void execute() throws InterruptedException, TaskExecutionException, IOException {
+
+        super.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH, this.args.getExecutionContext());
     }
 
 }

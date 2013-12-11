@@ -25,8 +25,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 import uk.ac.tgac.conan.process.ec.ErrorCorrectorFactory;
 
 import java.io.File;
@@ -76,7 +75,7 @@ public class MecqProcess extends AbstractConanProcess {
         }
 
         List<Integer> jobIds = new ArrayList<>();
-        List<ErrorCorrector> errorCorrectors = new ArrayList<>();
+        List<AbstractErrorCorrector> errorCorrectors = new ArrayList<>();
 
         // For each ecq process all libraries
         for(EcqArgs ecqArgs : args.getEqcArgList()) {
@@ -96,7 +95,7 @@ public class MecqProcess extends AbstractConanProcess {
                 String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
 
                 // Create the actual error corrector from the user provided EcqArgs
-                ErrorCorrector ec = this.makeErrorCorrector(ecqArgs, lib, args.getOutputDir());
+                AbstractErrorCorrector ec = this.makeErrorCorrector(ecqArgs, lib, args.getOutputDir());
 
                 // Add this to the list in case we need it later
                 errorCorrectors.add(ec);
@@ -153,20 +152,24 @@ public class MecqProcess extends AbstractConanProcess {
      * @param mecqDir
      * @return
      */
-    public ErrorCorrector makeErrorCorrector(EcqArgs ecqArgs, Library inputLib, File mecqDir) {
+    public AbstractErrorCorrector makeErrorCorrector(EcqArgs ecqArgs, Library inputLib, File mecqDir) {
 
         File ecDir = new File(mecqDir, ecqArgs.getName());
         File ecqLibDir = new File(ecDir, inputLib.getName());
 
-        ErrorCorrector ec = ErrorCorrectorFactory.valueOf(ecqArgs.getTool()).create();
-        ErrorCorrectorArgs ecArgs = ec.getArgs();
 
-        ecArgs.setMinLength(ecqArgs.getMinLen());
-        ecArgs.setQualityThreshold(ecqArgs.getMinQual());
-        ecArgs.setKmer(ecqArgs.getKmer());
-        ecArgs.setThreads(ecqArgs.getThreads());
-        ecArgs.setMemoryGb(ecqArgs.getMemory());
-        ecArgs.setOutputDir(ecqLibDir);
+        AbstractErrorCorrector ec = ErrorCorrectorFactory.create(
+                ecqArgs.getTool(),
+                ecqLibDir,
+                inputLib,
+                ecqArgs.getThreads(),
+                ecqArgs.getMemory(),
+                ecqArgs.getKmer(),
+                ecqArgs.getMinLen(),
+                ecqArgs.getMinQual(),
+                this.getConanProcessService());
+
+
 
         // Add files to ec (assumes ECQ tool and reads libraries are compatible with regards to Paired / Single End)
         List<File> altInputFiles = new ArrayList<>();
@@ -186,6 +189,30 @@ public class MecqProcess extends AbstractConanProcess {
     @Override
     public String getName() {
         return "MECQ";
+    }
+
+    @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        MecqArgs args = (MecqArgs) this.getProcessArgs();
+
+        for(EcqArgs ecqArgs : args.getEqcArgList()) {
+
+            AbstractErrorCorrector ec = ErrorCorrectorFactory.create(ecqArgs.getTool(), this.getConanProcessService());
+
+            if (ec == null) {
+                throw new NullPointerException("Unidentified tool requested for MECQ run: " + ecqArgs.getTool());
+            }
+
+            if (!ec.isOperational(executionContext)) {
+                log.warn("MECQ stage is NOT operational.");
+                return false;
+            }
+        }
+
+        log.info("MECQ stage is operational.");
+
+        return true;
     }
 
     @Override

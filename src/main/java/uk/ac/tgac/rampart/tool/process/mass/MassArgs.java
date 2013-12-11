@@ -20,12 +20,13 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.Rampart;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
@@ -42,7 +43,7 @@ import java.util.Map;
  * Date: 10/01/13
  * Time: 17:04
  */
-public class MassArgs implements ProcessArgs {
+public class MassArgs implements RampartStageArgs {
 
     // Keys for config file
     private static final String KEY_ATTR_PARALLEL = "parallel";
@@ -74,6 +75,11 @@ public class MassArgs implements ProcessArgs {
 
 
     private OutputLevel outputLevel;
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
 
     public enum OutputLevel {

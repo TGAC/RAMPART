@@ -59,12 +59,12 @@ public class SingleMassProcessTest extends MockedConanProcess {
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         SingleMassArgs args = new SingleMassArgs();
-        args.setTool("ABYSS_V1_3_4");
+        args.setTool("ABYSS_V1.3.4");
         args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(args);
+        SingleMassProcess singleMassProcess = new SingleMassProcess(args, conanProcessService);
         AbstractConanProcess smParent = singleMassProcess;
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));

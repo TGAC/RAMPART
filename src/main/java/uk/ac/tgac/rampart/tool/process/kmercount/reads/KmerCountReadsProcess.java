@@ -10,8 +10,8 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
-import uk.ac.tgac.conan.process.ec.ErrorCorrectorArgs;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrectorArgs;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Args;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11Process;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
@@ -134,7 +134,7 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
         return new JellyfishCountV11Process(jellyfishArgs);
     }
 
-    protected String makeInputStringFromEcq(ErrorCorrectorArgs args) throws ProcessExecutionException {
+    protected String makeInputStringFromEcq(AbstractErrorCorrectorArgs args) throws ProcessExecutionException {
 
         String inputFilesStr = "";
 
@@ -183,7 +183,7 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
 
         Library modLib = lib.copy();
 
-        ErrorCorrector ec = new MecqProcess().makeErrorCorrector(ecqArgs, modLib, mecqDir);
+        AbstractErrorCorrector ec = new MecqProcess().makeErrorCorrector(ecqArgs, modLib, mecqDir);
         List<File> files = ec.getArgs().getCorrectedFiles();
 
         try {
@@ -218,5 +218,21 @@ public class KmerCountReadsProcess extends AbstractConanProcess {
     @Override
     public String getName() {
         return "KmerCountReads";
+    }
+
+    @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        JellyfishCountV11Process proc = new JellyfishCountV11Process();
+        proc.setConanProcessService(this.conanProcessService);
+
+        if (!proc.isOperational(executionContext)) {
+            log.warn("Read Kmer counting stage is NOT operational.");
+            return false;
+        }
+
+        log.info("Read Kmer counting stage is operational.");
+
+        return true;
     }
 }

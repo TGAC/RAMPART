@@ -89,7 +89,8 @@ public class RampartCLI {
                 "automated comparison and analysis of any generated assemblies.\n\n" +
                 "The first argument must describe the mode in which you wish to run RAMPART.  Each mode contains its own " +
                 "command line help, which can be accessed by entering the mode then adding \"--help\".  Available modes:\n\n" +
-                RampartMode.description() + "\n\n",
+                RampartMode.description() + "\n\n" +
+                "Options:\n",
                 createOptions());
     }
 

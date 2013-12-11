@@ -48,8 +48,7 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
     public void executeSingleMass(SingleMassArgs singleMassArgs)
             throws InterruptedException, ProcessExecutionException {
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
-        singleMassProcess.setConanProcessService(this.conanProcessService);
+        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs, this.conanProcessService);
         singleMassProcess.execute(this.executionContext);
         this.jobIds = singleMassProcess.getJobIds();
     }
@@ -58,7 +57,7 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
     public AssemblyStatsTable compileSingleMassResults(SingleMassArgs singleMassArgs)
             throws IOException {
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
+        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs, this.conanProcessService);
         return singleMassProcess.compileResults(singleMassArgs);
     }
 
@@ -71,8 +70,7 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
     public void executeMassSelector(MassSelectorArgs massSelectorArgs)
             throws InterruptedException, ProcessExecutionException {
 
-        MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
-        massSelectorProcess.setConanProcessService(this.conanProcessService);
+        MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs, this.conanProcessService);
         massSelectorProcess.execute(this.executionContext);
     }
 }

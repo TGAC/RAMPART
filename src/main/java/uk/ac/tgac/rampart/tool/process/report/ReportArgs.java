@@ -17,11 +17,14 @@
  **/
 package uk.ac.tgac.rampart.tool.process.report;
 
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,7 +32,7 @@ import java.util.Map;
  * Date: 08/03/13
  * Time: 10:00
  */
-public class ReportArgs implements ProcessArgs {
+public class ReportArgs implements RampartStageArgs {
 
     // Need access to these
     private ReportParams params = new ReportParams();
@@ -79,5 +82,10 @@ public class ReportArgs implements ProcessArgs {
                 this.jobDir = new File(entry.getValue());
             }
         }
+    }
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return new ArrayList<>();
     }
 }

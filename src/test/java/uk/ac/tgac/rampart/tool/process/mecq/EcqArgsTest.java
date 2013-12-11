@@ -2,7 +2,7 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.junit.Test;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.process.ec.ErrorCorrector;
+import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 
 import java.io.File;
 import java.util.List;
@@ -23,13 +23,13 @@ public class EcqArgsTest {
 
         EcqArgs args = new EcqArgs();
 
-        args.setTool("SICKLE_V1_1");
+        args.setTool("SICKLE_V1.1");
         args.setOutputDir(new File("test/"));
 
         Library lib = new Library();
         lib.setFiles(new File("file1.fl"), new File("file2.fl"));
 
-        ErrorCorrector ec = new MecqProcess().makeErrorCorrector(args, lib, new File("."));
+        AbstractErrorCorrector ec = new MecqProcess().makeErrorCorrector(args, lib, new File("."));
 
         List<File> files = args.getOutputFiles(ec);
 

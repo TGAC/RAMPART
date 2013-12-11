@@ -123,4 +123,28 @@ public class AmpStageProcess extends AbstractConanProcess {
 
         return args != null ? "AMP-" + args.getIndex() + " - " + args.getTool() : "Undefined-AMP-stage";
     }
+
+    @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        AmpStageArgs args = (AmpStageArgs)this.getProcessArgs();
+
+        AbstractAssemblyIOProcess proc = null;
+
+        try {
+            proc = this.makeStage(args);
+        } catch (IOException e) {
+            log.warn("Could not create AMP stage");
+            return false;
+        }
+
+        if (proc == null) {
+            log.warn("Could not create AMP stage for tool: " + args.getTool() + "; check tool exists.");
+            return false;
+        }
+
+        proc.setConanProcessService(this.conanProcessService);
+
+        return proc.isOperational(executionContext);
+    }
 }

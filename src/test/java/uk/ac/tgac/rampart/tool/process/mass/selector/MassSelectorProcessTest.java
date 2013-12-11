@@ -64,7 +64,7 @@ public class MassSelectorProcessTest extends MockedConanProcess {
         args.setWeightings(weightingsFile);
         args.setOrganism(new Organism("test", 1, 400000000, 52.0));
 
-        MassSelectorProcess process = new MassSelectorProcess(args);
+        MassSelectorProcess process = new MassSelectorProcess(args, conanProcessService);
         process.setConanProcessService(conanProcessService);
 
         when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
@@ -88,8 +88,7 @@ public class MassSelectorProcessTest extends MockedConanProcess {
         args.setMergedFile(statsMerged);
         args.setWeightings(weightingsFile);
 
-        MassSelectorProcess process = new MassSelectorProcess(args);
-        process.setConanProcessService(conanProcessService);
+        MassSelectorProcess process = new MassSelectorProcess(args, conanProcessService);
 
         when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
