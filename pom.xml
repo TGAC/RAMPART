@@ -5,7 +5,7 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.7.1</version>
+	<version>0.8.0</version>
 	<packaging>jar</packaging>
 
 	<name>Rampart</name>
@@ -166,6 +166,31 @@
                     </execution>
                 </executions>
             </plugin> -->
+
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.6</version>
+                <configuration>
+
+                    <!-- set alternative assemble directory -->
+                    <assembleDirectory>${project.basedir}/build</assembleDirectory>
+
+                    <!-- Extra JVM arguments that will be included in the bin scripts -->
+                    <extraJvmArguments>-Xms128m</extraJvmArguments>
+                    <!-- Generate bin scripts for windows and unix pr default -->
+                    <platforms>
+                        <platform>unix</platform>
+                    </platforms>
+                    <programs>
+                        <program>
+                            <mainClass>uk.ac.tgac.rampart.RampartCLI</mainClass>
+                            <id>rampart</id>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
 
         </plugins>
         <extensions>
