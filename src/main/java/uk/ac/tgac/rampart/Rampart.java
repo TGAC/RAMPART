@@ -25,6 +25,7 @@ import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
@@ -49,25 +50,52 @@ public class Rampart extends AbstractConanCLI {
 
     private static Logger log = LoggerFactory.getLogger(Rampart.class);
 
-    // Environment specific configuration options and resource files are set in the user's home directory
-    public static final File SETTINGS_DIR = new File(System.getProperty("user.home") + "/.tgac/rampart/");
+    /**
+     * Environment specific configuration options and resource files are set in the user's home directory
+     */
+    public static final File USER_DIR = new File(System.getProperty("user.home") + "/.tgac/rampart");
+
+    /**
+     * Gets the application config directory.  This is really messy way to do it... try to think of a better way later
+     */
+    public static final File APP_DIR = JarUtils.jarForClass(Rampart.class, null) == null ? new File(".") :
+            new File(Rampart.class.getProtectionDomain().getCodeSource().getLocation().getPath())
+                    .getParentFile()
+                    .getParentFile()
+                    .getParentFile()
+                    .getParentFile()
+                    .getParentFile()
+                    .getParentFile()
+                    .getParentFile()
+                    .getParentFile();
+
     public static final String APP_NAME = "RAMPART";
 
-    public static final File DATA_DIR = new File(SETTINGS_DIR, "data");
-    public static final File REPORT_DIR = new File(DATA_DIR, "report");
-    public static final File SCRIPTS_DIR = new File(SETTINGS_DIR, "scripts");
+    public static final File ETC_DIR = new File(APP_DIR, "etc");
+    //public static final File REPORT_DIR = new File(DATA_DIR, "report");
 
     // **** Option parameter names ****
     public static final String OPT_WEIGHTINGS = "weightings";
     public static final String OPT_STAGES = "stages";
 
     // **** Defaults ****
-    public static final File    DEFAULT_WEIGHTINGS_FILE = new File(DATA_DIR, "weightings.tab");
+
+    public static final File    DEFAULT_SYSTEM_CONAN_FILE = new File(ETC_DIR, "conan.properties");
+    public static final File    DEFAULT_USER_CONAN_FILE = new File(USER_DIR, "conan.properties");
+    public static final File    DEFAULT_CONAN_FILE = DEFAULT_USER_CONAN_FILE.exists() ?
+            DEFAULT_USER_CONAN_FILE : DEFAULT_SYSTEM_CONAN_FILE;
+
+    public static final File    DEFAULT_SYSTEM_LOG_FILE = new File(ETC_DIR, "log4j.properties");
+    public static final File    DEFAULT_USER_LOG_FILE = new File(USER_DIR, "log4j.properties");
+    public static final File    DEFAULT_LOG_FILE = DEFAULT_USER_LOG_FILE.exists() ?
+            DEFAULT_USER_LOG_FILE : DEFAULT_SYSTEM_LOG_FILE;
+
+
+
     public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
 
 
     // **** Options ****
-    private File weightingsFile;
     private RampartStageList stages;
     private File jobConfig;
 
@@ -79,9 +107,11 @@ public class Rampart extends AbstractConanCLI {
      */
     public Rampart() throws IOException {
 
-        super(APP_NAME, SETTINGS_DIR);
+        super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
+                APP_NAME + createTimestamp(),
+                false,
+                false);
 
-        this.weightingsFile     = DEFAULT_WEIGHTINGS_FILE;
         this.stages             = DEFAULT_STAGES;
         this.jobConfig          = null;
 
@@ -96,7 +126,10 @@ public class Rampart extends AbstractConanCLI {
     public Rampart(String[] args) throws ParseException, IOException {
 
         // Creates the instance and parses the command line, setting the class variables
-        super(APP_NAME, SETTINGS_DIR);
+        super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
+                APP_NAME + createTimestamp(),
+                false,
+                false);
 
         // Parses the command line using a posix parser and sets all the variables
         this.parse(new PosixParser().parse(createOptions(), args, true));
@@ -117,24 +150,23 @@ public class Rampart extends AbstractConanCLI {
             // Parse the job config file and set internal variables in RampartArgs
             this.args.parseXml();
 
-            // Prep resources
-            this.configureSystem();
-
+            // Create an execution context based on environment information detected or provide by the user
             this.args.setExecutionContext(this.buildExecutionContext());
 
             // Log setup
             log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
             log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
+            log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
+            log.info("Job Prefix: " + this.args.getJobPrefix());
+            if (ConanProperties.containsKey("externalProcessConfigFile")) {
+                log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
+            }
         }
     }
 
 
     @Override
     protected void parseExtra(CommandLine commandLine) throws ParseException {
-
-        this.weightingsFile = commandLine.hasOption(OPT_WEIGHTINGS) ?
-                new File(commandLine.getOptionValue(OPT_WEIGHTINGS)) :
-                DEFAULT_WEIGHTINGS_FILE;
 
         this.stages = commandLine.hasOption(OPT_STAGES) ?
                 RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
@@ -150,57 +182,15 @@ public class Rampart extends AbstractConanCLI {
     }
 
 
-    /**
-     * Configures the RAMPART system.  Specifically, this means initialising logging, initialising conan, and copying any
-     * required resources to a known location if they are not there already.
-     * @throws IOException Thrown if there are any issues dealing with the environment or logging configuration files,
-     * or if resources couldn't be copied to a suitable location
-     */
-    private void configureSystem() throws IOException {
-
-        // Copy resources to external system
-        File internalScripts = FileUtils.toFile(RampartCLI.class.getResource("/scripts"));
-        File internalData = FileUtils.toFile(RampartCLI.class.getResource("/data"));
-        File internalConfig = FileUtils.toFile(RampartCLI.class.getResource("/config"));
-
-        File externalScriptsDir = new File(SETTINGS_DIR, "scripts");
-        File externalDataDir = new File(SETTINGS_DIR, "data");
-        File externalConfigDir = new File(SETTINGS_DIR, "config");
-
-        JarFile thisJar = JarUtils.jarForClass(RampartCLI.class, null);
-
-        if (thisJar == null) {
-
-            log.debug("Executing from project.  Copying resources to settings directory: \"" +
-                    SETTINGS_DIR.getAbsolutePath() + "\"");
-            FileUtils.copyDirectory(internalScripts, externalScriptsDir);
-            FileUtils.copyDirectory(internalData, externalDataDir);
-            FileUtils.copyDirectory(internalConfig, externalConfigDir);
-        }
-        else {
-
-            log.debug("Executing from jar: " + thisJar.getName() + "; Copying jar resources to settings directory: \"" +
-                    SETTINGS_DIR.getAbsolutePath() + "\"");
-            JarUtils.copyResourcesToDirectory(thisJar, "scripts", externalScriptsDir.getAbsolutePath());
-            JarUtils.copyResourcesToDirectory(thisJar, "data", externalDataDir.getAbsolutePath());
-            JarUtils.copyResourcesToDirectory(thisJar, "config", externalConfigDir.getAbsolutePath());
-        }
-    }
-
 
     @Override
     protected void printHelp() {
         CommandLineHelper.printHelp(
                 System.err,
-                RampartCLI.START_COMMAND_LINE + " run <job_config_file>",
+                "rampart run <job_config_file>",
                 "RAMPART pipeline runner\n\n" +
                 "This tool executes the RAMPART pipeline according to the rules and requests described by the job configuration " +
-                "file, which should be the last argument provided on the command line.\n\n" +
-                "The pipeline can be loosely described in 4 separate steps.  The first step involves error correction and " +
-                "or quality trimming.  The second involves assembling the input data, multiple assemblies can be created " +
-                "using different assemblers and settings.  Each assembly can be compared and analysed in order to determine " +
-                "the best candidate.  The third stage involves trying to improve the selected assembly further by using " +
-                "tools such as scaffolders and gap closers.\n\n",
+                "file, which should be the last argument provided on the command line.\n\n",
                 createOptions()
         );
     }
@@ -210,10 +200,6 @@ public class Rampart extends AbstractConanCLI {
 
         // create Options object
         List<Option> options = new ArrayList<>();
-
-        options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_WEIGHTINGS).hasArg()
-                .withDescription("The rampart logging configuration file.  Default: " +
-                        Rampart.DEFAULT_WEIGHTINGS_FILE.getAbsolutePath()).create("l"));
 
         options.add(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
                 .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));

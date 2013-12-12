@@ -36,21 +36,8 @@ public class RampartCLI {
     private static final String OPT_HELP = "help";
 
     // **** Jar details ****
-    public static final String DEFAULT_JAR_NAME = "rampart-<version>.jar";
-
-    public static final String START_COMMAND_LINE = "java -jar " + getJarName();
-    public static final String COMMAND_LINE = START_COMMAND_LINE + " <mode> [MODE_ARGS...]";
+    public static final String COMMAND_LINE = "rampart <mode> [MODE_ARGS...]";
     public static final File CWD = currentWorkingDir();
-
-    /**
-     * Returns the name of the Jar file that this code is being executed from
-     * @return The name of this Jar.
-     */
-    private static String getJarName() {
-        JarFile jarFile = JarUtils.jarForClass(RampartCLI.class, null);
-        return jarFile != null ? jarFile.getName() : DEFAULT_JAR_NAME;
-    }
-
 
     /**
      * Returns the current working directory as an absolute file

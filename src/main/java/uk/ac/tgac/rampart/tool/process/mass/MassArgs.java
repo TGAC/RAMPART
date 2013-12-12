@@ -58,6 +58,11 @@ public class MassArgs implements RampartStageArgs {
     public static final boolean DEFAULT_STATS_ONLY = false;
 
 
+    public static final File    DEFAULT_SYSTEM_WEIGHTINGS_FILE = new File(Rampart.ETC_DIR, "weightings.tab");
+    public static final File    DEFAULT_USER_WEIGHTINGS_FILE = new File(Rampart.USER_DIR, "weightings.tab");
+    public static final File    DEFAULT_WEIGHTINGS_FILE = DEFAULT_USER_WEIGHTINGS_FILE.exists() ?
+            DEFAULT_USER_WEIGHTINGS_FILE : DEFAULT_SYSTEM_WEIGHTINGS_FILE;
+
     // Need access to these
     private SingleMassParams params = new SingleMassParams();
 
@@ -108,7 +113,7 @@ public class MassArgs implements RampartStageArgs {
         this.mecqDir = null;
 
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
-        this.weightings = Rampart.DEFAULT_WEIGHTINGS_FILE;
+        this.weightings = DEFAULT_WEIGHTINGS_FILE;
 
         this.organism = null;
         this.runParallel = DEFAULT_RUN_PARALLEL;
@@ -138,7 +143,7 @@ public class MassArgs implements RampartStageArgs {
 
         this.weightings = ele.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
                 new File(XmlHelper.getTextValue(ele, KEY_ATTR_WEIGHTINGS)) :
-                Rampart.DEFAULT_WEIGHTINGS_FILE;
+                DEFAULT_WEIGHTINGS_FILE;
 
         this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
                 XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :

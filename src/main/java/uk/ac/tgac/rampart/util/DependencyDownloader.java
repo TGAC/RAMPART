@@ -69,7 +69,7 @@ public class DependencyDownloader {
 
         CommandLineHelper.printHelp(
                 System.err,
-                RampartCLI.START_COMMAND_LINE + " download [<target_dir>]",
+                "rampart download [<target_dir>]",
                 "RAMPART dependency downloader tool\n\n" +
                 "This tool downloads source code packages for RAMPART dependencies.  Note: that this tool does not try " +
                 "to install the downloaded file, it only downloads them to save the user having to do this manually.\n\n" +

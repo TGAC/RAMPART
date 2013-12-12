@@ -62,7 +62,7 @@ public class JobCleaner {
 
         CommandLineHelper.printHelp(
                 System.err,
-                RampartCLI.START_COMMAND_LINE + " download [<target_dir>]",
+                "rampart download [<target_dir>]",
                 "RAMPART job cleaning tool\n\n" +
                 "This tool removes temporary data produced by RAMPART within a given output directory.  This tools saves " +
                 "some trouble to manually delete data.\n\n" +

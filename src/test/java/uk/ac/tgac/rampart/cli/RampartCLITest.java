@@ -70,7 +70,7 @@ public class RampartCLITest {
 
 
 
-    @Test
+    /*@Test
     public void testAccessInternalResources() throws IOException {
 
         File resDir = temp.newFolder("rampartResources");
@@ -91,7 +91,7 @@ public class RampartCLITest {
         assertTrue(externalScriptsDir.exists());
         assertTrue(externalDataDir.exists());
         assertTrue(externalReportDir.exists());
-    }
+    }   */
 
     @Test
     public void testFile() {
