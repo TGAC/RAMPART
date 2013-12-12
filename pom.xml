@@ -16,6 +16,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java-version>1.7</java-version>
 		<slf4j-version>1.6.1</slf4j-version>
+        <dist-name>${project.artifactId}-${project.version}</dist-name>
+        <build-dir>${project.basedir}/build/${dist-name}</build-dir>
 	</properties>
 
 	<!-- Licensing -->
@@ -49,6 +51,84 @@
         <testSourceDirectory>src/test/java</testSourceDirectory>
         <plugins>
 
+            <!-- Clean phase -->
+
+            <!-- On top of the target dir, this also deletes the build dir and dist dir if present. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/build</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/dist</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+
+
+
+            <!-- Compilation phase -->
+
+            <!-- Compiler settings -->
+            <plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>${java-version}</source>
+					<target>${java-version}</target>
+					<showDeprecation>true</showDeprecation>
+					<showWarnings>true</showWarnings>
+				</configuration>
+			</plugin>
+
+
+            <!-- Testing phase -->
+
+            <!-- Unit testing setup (ignores integration tests) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.13</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.13</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.13</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.13</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>failsafe-integration-tests</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+
+            <!-- Package phase -->
+
             <!-- Creates an executable jar with all dependencies built in -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -65,7 +145,6 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>uk.ac.tgac.rampart.RampartCLI</Main-Class>
-                                        <Build-Number>1</Build-Number>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -74,115 +153,32 @@
                 </executions>
             </plugin>
 
-
-            <!-- Unit testing setup (ignores integration tests) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.13</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-junit47</artifactId>
-                        <version>2.13</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <includes>
-                        <include>**/*.class</include>
-                    </includes>
-                    <excludedGroups>uk.ac.tgac.rampart.cli.IntegrationTest</excludedGroups>
-                </configuration>
-            </plugin>
-
-            <!-- Compiler settings -->
-            <plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>${java-version}</source>
-					<target>${java-version}</target>
-					<showDeprecation>true</showDeprecation>
-					<showWarnings>true</showWarnings>
-				</configuration>
-			</plugin>
-
-            <!-- Creates a jar file containing the sources -->
-            <!--<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.2.1</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>-->
-
-
-            <!-- Creates javadoc -->
-            <!--<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.13</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-junit47</artifactId>
-                        <version>2.13</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <groups>uk.ac.tgac.pipeline.cli.IntegrationTest</groups>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>failsafe-integration-tests</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/*IT.class</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin> -->
-
-
+            <!-- Creates script to run program -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
                 <version>1.6</version>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>assemble</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
                 <configuration>
 
                     <!-- set alternative assemble directory -->
-                    <assembleDirectory>${project.basedir}/build</assembleDirectory>
+                    <assembleDirectory>${build-dir}</assembleDirectory>
 
-                    <!-- Extra JVM arguments that will be included in the bin scripts -->
-                    <extraJvmArguments>-Xms128m</extraJvmArguments>
-                    <!-- Generate bin scripts for windows and unix pr default -->
+                    <!-- Generate bin scripts for only unix -->
                     <platforms>
                         <platform>unix</platform>
                     </platforms>
+
+                    <!-- Create a single bin script for rampart -->
                     <programs>
                         <program>
                             <mainClass>uk.ac.tgac.rampart.RampartCLI</mainClass>
@@ -191,6 +187,132 @@
                     </programs>
                 </configuration>
             </plugin>
+
+
+
+            <!-- Install phase -->
+
+            <!-- Creates a jar file containing the sources -->
+            <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>create-sources-jar</id>
+						<phase>install</phase>
+                        <goals>
+							<goal>jar</goal>
+						</goals>
+                        <configuration>
+                            <outputDirectory>${build-dir}/support_jars</outputDirectory>
+                        </configuration>
+
+					</execution>
+				</executions>
+			</plugin>
+
+
+            <!-- Creates javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>create-javadoc-jar</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <jarOutputDirectory>${build-dir}/support_jars</jarOutputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+
+            <!-- Various phases -->
+
+            <!-- Adds execute permission to scripts and copies resources to install folder during the package phase.
+                 Also creates and installs manual if possible in the install phase. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>add-exeperms-and-res</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <chmod file="${build-dir}/bin/rampart" perm="755"/>
+                                <mkdir dir="${build-dir}/etc"/>
+                                <copy todir="${build-dir}/etc">
+                                    <fileset dir="${project.basedir}/etc"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-manual</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+
+                                <!-- Create the documentation -->
+                                <exec
+                                        dir="${project.basedir}/doc"
+                                        executable="make"
+                                        failonerror="false">
+                                    <arg line="html latexpdf" />
+                                </exec>
+
+                                <!-- copy the documentation in to the build dir -->
+                                <mkdir dir="${build-dir}/doc/html"/>
+                                <copy todir="${build-dir}/doc/html">
+                                    <fileset dir="${project.basedir}/doc/build/html"/>
+                                </copy>
+                                <copy file="${project.basedir}/doc/build/latex/RAMPART.pdf" todir="${build-dir}/doc"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>create-distributable</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.basedir}/dist"/>
+                                <tar longfile="gnu"
+                                     destfile="${project.basedir}/dist/${dist-name}.tar.gz"
+                                     compression="gzip">
+
+                                    <tarfileset dir="${project.basedir}/build" filemode="755">
+                                        <include name="${dist-name}/bin/*"/>
+                                    </tarfileset>
+
+                                    <tarfileset dir="${project.basedir}/build">
+                                        <include name="${dist-name}/**"/>
+                                        <exclude name="${dist-name}/bin/*"/>
+                                    </tarfileset>
+                                </tar>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
         </plugins>
         <extensions>

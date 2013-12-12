@@ -103,14 +103,14 @@ public enum RampartMode {
 
     /**
      * Returns a short description describing what this mode does.
-     * @return
+     * @return A description of this mode.
      */
     public abstract String getDescription();
 
 
     /**
      * List all the available modes, represented as a String.
-     * @return
+     * @return A string representation of all the available modes.
      */
     public static String listModes() {
 

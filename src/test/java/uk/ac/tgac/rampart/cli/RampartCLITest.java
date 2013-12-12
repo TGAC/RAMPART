@@ -18,13 +18,18 @@
 package uk.ac.tgac.rampart.cli;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.tgac.rampart.RampartCLI;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -35,9 +40,33 @@ import static org.junit.Assert.assertTrue;
  */
 public class RampartCLITest {
 
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
+
+    @Before
+    public void setUpStreams() {
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
+    }
+
+    @After
+    public void cleanUpStreams() {
+        System.setOut(null);
+        System.setErr(null);
+    }
+
+
+    @Test
+    public void testHelp() throws URISyntaxException {
+
+        RampartCLI.main(new String[]{
+                "--help"
+        });
+    }
 
 
 

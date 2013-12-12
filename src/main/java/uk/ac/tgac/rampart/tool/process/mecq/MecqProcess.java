@@ -150,7 +150,7 @@ public class MecqProcess extends AbstractConanProcess {
      * @param ecqArgs
      * @param inputLib
      * @param mecqDir
-     * @return
+     * @return An error corrector build from the provided arguments.
      */
     public AbstractErrorCorrector makeErrorCorrector(EcqArgs ecqArgs, Library inputLib, File mecqDir) {
 

@@ -20,15 +20,13 @@ package uk.ac.tgac.rampart.tool.process.mass.single;
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.cli.IntegrationTest;
 
 /**
  * User: maplesod
  * Date: 11/02/13
  * Time: 12:12
  */
-@Category(IntegrationTest.class)
-public class SingleMassProcessIT {
+public class SingleMassProcessITCase {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();

@@ -62,8 +62,8 @@ public class RampartCLI {
 
 
     /**
-     * Options for RAMPART
-     * @return
+     * Creates command line options for RAMPART
+     * @return RAMPART's command line options
      */
     private static Options createOptions() {
 
@@ -107,7 +107,7 @@ public class RampartCLI {
 
             if (args.length == 0 || args[0].equals("--" + OPT_HELP)) {
                 printHelp();
-                System.exit(0);
+                return;
             }
 
             RampartMode mode = RampartMode.valueOf(args[0].toUpperCase());

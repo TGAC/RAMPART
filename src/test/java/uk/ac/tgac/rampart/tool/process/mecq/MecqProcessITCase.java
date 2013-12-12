@@ -25,7 +25,6 @@ import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.RampartCLI;
-import uk.ac.tgac.rampart.cli.IntegrationTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,8 +37,7 @@ import static org.junit.Assert.assertTrue;
  * Date: 12/02/13
  * Time: 12:31
  */
-@Category(IntegrationTest.class)
-public class MecqProcessIT {
+public class MecqProcessITCase {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -49,7 +47,7 @@ public class MecqProcessIT {
 
         File outputDir = temp.newFolder("qtTest");
 
-        File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
+        File cfgFile = FileUtils.toFile(this.getClass().getResource("/config/test_rampart_config.xml"));
 
         MecqArgs mecqArgs = new MecqArgs();
         mecqArgs.setOutputDir(outputDir);
@@ -62,7 +60,7 @@ public class MecqProcessIT {
     }
 
 
-    @Test
+    /*@Test
     public void testQTViaCLI() throws InterruptedException, ProcessExecutionException, URISyntaxException, IOException {
 
         File outputDir = temp.newFolder("qtTestCLI");
@@ -78,7 +76,7 @@ public class MecqProcessIT {
                 "--stages",
                 "QT"
         });
-    }
+    }*/
 
 
 }
