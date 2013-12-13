@@ -188,9 +188,9 @@ public class Rampart extends AbstractConanCLI {
         CommandLineHelper.printHelp(
                 System.err,
                 "rampart run <job_config_file>",
-                "RAMPART pipeline runner\n\n" +
-                "This tool executes the RAMPART pipeline according to the rules and requests described by the job configuration " +
-                "file, which should be the last argument provided on the command line.\n\n",
+                "RAMPART is a de novo assembly pipeline that makes use of third party-tools and High Performance Computing " +
+                "resources.  It can be used as a single interface to several popular assemblers, and can perform " +
+                "automated comparison and analysis of any generated assemblies.\n\n",
                 createOptions()
         );
     }

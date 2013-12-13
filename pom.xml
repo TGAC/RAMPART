@@ -17,6 +17,7 @@
 		<java-version>1.7</java-version>
 		<slf4j-version>1.6.1</slf4j-version>
         <dist-name>${project.artifactId}-${project.version}</dist-name>
+        <dist-dir>${project.basedir}/build/dist</dist-dir>
         <build-dir>${project.basedir}/build/${dist-name}</build-dir>
 	</properties>
 
@@ -53,7 +54,7 @@
 
             <!-- Clean phase -->
 
-            <!-- On top of the target dir, this also deletes the build dir and dist dir if present. -->
+            <!-- On top of the target dir, this also deletes the build dir. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -62,9 +63,6 @@
                     <filesets>
                         <fileset>
                             <directory>${project.basedir}/build</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>${project.basedir}/dist</directory>
                         </fileset>
                     </filesets>
                 </configuration>
@@ -84,6 +82,7 @@
 					<target>${java-version}</target>
 					<showDeprecation>true</showDeprecation>
 					<showWarnings>true</showWarnings>
+                    <compilerArgument>-Xlint:unchecked</compilerArgument>
 				</configuration>
 			</plugin>
 
@@ -183,6 +182,14 @@
                         <program>
                             <mainClass>uk.ac.tgac.rampart.RampartCLI</mainClass>
                             <id>rampart</id>
+                        </program>
+                        <program>
+                            <mainClass>uk.ac.tgac.rampart.util.DependencyDownloader</mainClass>
+                            <id>rampart-download-deps</id>
+                        </program>
+                        <program>
+                            <mainClass>uk.ac.tgac.rampart.util.JobCleaner</mainClass>
+                            <id>rampart-clean</id>
                         </program>
                     </programs>
                 </configuration>
@@ -293,9 +300,9 @@
                         </goals>
                         <configuration>
                             <target>
-                                <mkdir dir="${project.basedir}/dist"/>
+                                <mkdir dir="${dist-dir}"/>
                                 <tar longfile="gnu"
-                                     destfile="${project.basedir}/dist/${dist-name}.tar.gz"
+                                     destfile="${dist-dir}/${dist-name}.tar.gz"
                                      compression="gzip">
 
                                     <tarfileset dir="${project.basedir}/build" filemode="755">

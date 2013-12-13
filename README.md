@@ -56,7 +56,7 @@ Quick Start
 ===========
 
 1. Create a job configuration file (details below) in a clean directory.
-2. Then make this directory the working directory and type: "java -jar rampart-<version>.jar run <name of config file>"
+2. Then make this directory the working directory and type: "rampart run <name of config file>"
 
 This will run RAMPART with its default settings on the data you've provided in the config file.  Details on how to construct a config file are described in the next section.
 

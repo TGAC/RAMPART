@@ -97,8 +97,14 @@ public class RampartCLI {
                 return;
             }
 
-            RampartMode mode = RampartMode.valueOf(args[0].toUpperCase());
-            mode.execute((String[])ArrayUtils.subarray(args, 1, args.length));
+            Rampart rampart = new Rampart(args);
+
+            if (rampart.isHelp()) {
+                rampart.printHelp();
+            }
+            else {
+                rampart.execute();
+            }
         }
         catch (IllegalArgumentException | ParseException e) {
             System.err.println(e.getMessage());

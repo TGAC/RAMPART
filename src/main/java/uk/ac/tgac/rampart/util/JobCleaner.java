@@ -2,8 +2,11 @@ package uk.ac.tgac.rampart.util;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
+import uk.ac.tgac.rampart.RampartMode;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +19,9 @@ import java.io.IOException;
  * To change this template use File | Settings | File Templates.
  */
 public class JobCleaner {
+
+    // **** Constants ****
+    public static final String DESC = "Cleans a RAMPART job directory of any temporary information created by RAMPART.";
 
     // **** Option parameter names ****
     public static final String OPT_VERBOSE = "verbose";
@@ -46,7 +52,7 @@ public class JobCleaner {
         this.targetDir = cmdLine.getArgList().isEmpty() ? new File("").getAbsoluteFile() : new File((String)cmdLine.getArgList().get(0));
     }
 
-    private Options createOptions() {
+    private static Options createOptions() {
 
         // create Options object
         Options options = new Options();
@@ -58,11 +64,11 @@ public class JobCleaner {
         return options;
     }
 
-    private void printHelp() {
+    private static void printHelp() {
 
         CommandLineHelper.printHelp(
                 System.err,
-                "rampart download [<target_dir>]",
+                "rampart-clean [<target_dir>]",
                 "RAMPART job cleaning tool\n\n" +
                 "This tool removes temporary data produced by RAMPART within a given output directory.  This tools saves " +
                 "some trouble to manually delete data.\n\n" +
@@ -104,6 +110,34 @@ public class JobCleaner {
 
         if (this.verbose) {
             System.out.println(" done.");
+        }
+    }
+
+    /**
+     * The main entry point for RAMPART's job cleaner.
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+
+        // Process the command line
+        try {
+
+            if (args.length == 0 || args[0].equals("--" + OPT_HELP)) {
+                printHelp();
+                return;
+            }
+
+            new JobCleaner(args).execute();
+        }
+        catch (IllegalArgumentException | ParseException e) {
+            System.err.println(e.getMessage());
+            printHelp();
+            System.exit(1);
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
+            System.exit(2);
         }
     }
 
