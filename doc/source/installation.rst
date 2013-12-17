@@ -35,7 +35,7 @@ RAMPART is a java 1.7 / maven project.  Before compiling the source code, please
 * JDK v1.7+
 * Sphinx (If you would like to compile this documentation)
 
-You also need to make sure that the system to are compiling on has internet access, as it will try to automatically incorperate any required java dependecies via maven.  Now type the following::
+You also need to make sure that the system to are compiling on has internet access, as it will try to automatically incorporate any required java dependencies via maven.  Now type the following::
 
         git clone https://github.com/TGAC/RAMPART.git
         cd RAMPART
