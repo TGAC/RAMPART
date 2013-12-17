@@ -91,6 +91,6 @@ For more details on each section see the following:
    finalise
 
 
-Controlling the pipeline... definition in the config file.  Via the command line.
+Controlling the pipeline... definition in the config file.  Via the command line.  I'm going to make some changes.
 
 

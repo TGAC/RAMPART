@@ -35,9 +35,9 @@ Miscellaneous Tools:
 * TGAC Subsampler V1.0
 * Jellyfish V1.1.10
 
-To save time finding all these tools on the internet RAMPART offers an option to download them all to a directory of your choice.  The one exception to this is SSPACE, which requires you to fill out a form prior to download.  To do this, after the core RAMPART pipeline is compiled, type: ``rampart download <dir>``.  Executing this command does not try to install the tools, as this is a complex process and you may wish to run a custom installation in order to compile and configure the tools in a way that is optimal for your particularly environment.
+To save time finding all these tools on the internet RAMPART offers an option to download them all to a directory of your choice.  The one exception to this is SSPACE, which requires you to fill out a form prior to download.  To do this, after the core RAMPART pipeline is compiled, type: ``rampart-download-deps <dir>``.  Executing this command does not try to install the tools, as this is a complex process and you may wish to run a custom installation in order to compile and configure the tools in a way that is optimal for your particularly environment.
 
-In case the specific tool versions requested are no longer available to download the project URLs are specified below.  It's possible alternative (preferably newer) versions of the software may still work if the interfaces have not changed significantly.  If you find that a tool does not work in the RAMPART pipeline please contact daniel.mapleson@tgac.ac.uk, or raise a job ticket via [TODO URL HERE].  Project URLs:
+In case the specific tool versions requested are no longer available to download the project URLs are specified below.  It's possible alternative (preferably newer) versions of the software may still work if the interfaces have not changed significantly.  If you find that a tool does not work in the RAMPART pipeline please contact daniel.mapleson@tgac.ac.uk, or raise a job ticket via the github issues page: https://github.com/TGAC/RAMPART/issues.  Project URLs:
 
 * Abyss           - http://www.bcgsc.ca/platform/bioinfo/software/abyss
 * AllpathsLg      - http://www.broadinstitute.org/software/allpaths-lg/blog/?page_id=12
