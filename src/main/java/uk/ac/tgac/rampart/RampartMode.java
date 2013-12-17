@@ -20,8 +20,6 @@ package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
-import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.tgac.rampart.util.DependencyDownloader;
 import uk.ac.tgac.rampart.util.JobCleaner;

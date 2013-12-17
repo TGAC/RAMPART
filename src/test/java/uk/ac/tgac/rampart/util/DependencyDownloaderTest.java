@@ -4,11 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created with IntelliJ IDEA.

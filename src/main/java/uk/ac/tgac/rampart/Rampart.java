@@ -18,7 +18,9 @@
 package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
@@ -41,7 +43,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.JarFile;
 
 /**
  * This class handles execution of Rampart in run mode.
@@ -49,6 +50,8 @@ import java.util.jar.JarFile;
 public class Rampart extends AbstractConanCLI {
 
     private static Logger log = LoggerFactory.getLogger(Rampart.class);
+
+    public static final File CWD = currentWorkingDir();
 
     /**
      * Environment specific configuration options and resource files are set in the user's home directory
@@ -154,6 +157,11 @@ public class Rampart extends AbstractConanCLI {
             this.args.setExecutionContext(this.buildExecutionContext());
 
             // Log setup
+
+            // Override log level to debug if the verbose flag is set
+            if (this.isVerbose()) {
+                LogManager.getRootLogger().setLevel(Level.DEBUG);
+            }
             log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
             log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
             log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
@@ -184,7 +192,7 @@ public class Rampart extends AbstractConanCLI {
 
 
     @Override
-    protected void printHelp() {
+    public void printHelp() {
         CommandLineHelper.printHelp(
                 System.err,
                 "rampart run <job_config_file>",
@@ -221,6 +229,39 @@ public class Rampart extends AbstractConanCLI {
     public void execute() throws InterruptedException, TaskExecutionException, IOException {
 
         super.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH, this.args.getExecutionContext());
+    }
+
+
+    /**
+     * The main entry point for RAMPART.  Looks at the first argument to decide which mode to run in.  Execution of each
+     * mode is handled by RampartMode.
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+
+        try {
+
+            Rampart rampart = new Rampart(args);
+
+            if (rampart == null)
+                throw new IllegalArgumentException("Invalid arguments, could not create a valid rampart object.");
+
+            if (rampart.isHelp()) {
+                rampart.printHelp();
+            }
+            else {
+                rampart.execute();
+            }
+        }
+        catch (IllegalArgumentException | ParseException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
+            System.exit(2);
+        }
     }
 
 }

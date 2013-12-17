@@ -5,7 +5,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.RampartCLI;
+import uk.ac.tgac.rampart.Rampart;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 
 import java.io.File;
@@ -39,7 +39,7 @@ public class FinaliseArgs implements RampartStageArgs {
     public FinaliseArgs() {
         this.outputPrefix = "rampart";
         this.inputFile = null;
-        this.outputDir = RampartCLI.CWD;
+        this.outputDir = Rampart.CWD;
         this.minN = DEFAULT_MIN_N;
     }
 

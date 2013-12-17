@@ -17,21 +17,6 @@
  **/
 package uk.ac.tgac.rampart.cli;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.RampartCLI;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.URISyntaxException;
-
 public class RampartCLIITCase {
 
     /*private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();

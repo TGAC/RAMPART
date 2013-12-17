@@ -74,14 +74,6 @@ The pipeline
 
 The RAMPART pipeline can loosely be separated into the following stages, all of which are optional customisable:
 
-* MECQ - Multiple Error Correction and Quality Trimming Stage
-* KMER_COUNT - Kmer Counting Reads
-* MASS - Multiple Assembly Creation
-* AMP - Assembly Improvement
-* FINALISE - Standardise filename and header names in the final assembly
-
-For more details on each section see the following:
-
 .. toctree::
    
    mecq
@@ -91,6 +83,5 @@ For more details on each section see the following:
    finalise
 
 
-Controlling the pipeline... definition in the config file.  Via the command line.  I'm going to make some changes.
-
+The pipeline can be controlled in two ways.  The first way is by definition in the job configuration file.  If a pipeline stage is not defined it will not be executed. The second way is via a command line option: ``-s``.  By specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.  For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you cannot run the AMP stage, without a selected assembly to work with.
 

@@ -17,4 +17,6 @@ Each stage in the AMP pipeline must necessarily run linearly as each stage requi
       <stage tool="GapCloser_V1.12"/>
    </amp>
 
+Output from amp will be placed in a directory called ``amp`` within the job's output directory.  Output from each stage will be placed in a sub-directory within this and a link will be created to the final assembly produced at the end of the amp pipeline.  This assembly will be used in the next stage.
+
 

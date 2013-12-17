@@ -1,10 +1,7 @@
 package uk.ac.tgac.rampart.util;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import uk.ac.tgac.rampart.RampartCLI;
-import uk.ac.tgac.rampart.RampartMode;
 
 import java.io.File;
 import java.io.FileOutputStream;

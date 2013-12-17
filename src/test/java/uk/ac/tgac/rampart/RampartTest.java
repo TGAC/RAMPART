@@ -1,11 +1,5 @@
 package uk.ac.tgac.rampart;
 
-import org.junit.Test;
-
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
-
 /**
  * Created with IntelliJ IDEA.
  * User: maplesod

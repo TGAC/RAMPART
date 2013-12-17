@@ -20,15 +20,12 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.rampart.RampartCLI;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertTrue;
 

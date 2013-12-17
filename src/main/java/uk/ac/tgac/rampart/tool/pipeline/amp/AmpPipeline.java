@@ -27,8 +27,6 @@ import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageProcess;
 
-import java.io.IOException;
-
 /**
  * Created with IntelliJ IDEA.
  * User: maplesod

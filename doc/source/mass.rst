@@ -156,12 +156,42 @@ Selecting the best assembly
 
 Assuming at least one analysis option is selected, MASS will produce a table listing each assembly as a row, with each column representing an assembly metric.  The user can specify a weighting file when running RAMPART to assign the weights to each metric.  Each assembly is then assigned a score, based on the weighted mean of the metrics, and the assembly with the highest score is then automatically selected as the **best** assembly to be used downstream.
 
-TODO: Specifying a weighting file.
-Where to find the output
+Should the user wish to override the default weights that are assigned to each assembly metric, they can do so by setting the ``weightings_file`` attribute in the ``mass`` element.  For example, using an absolute path to a custom weightings file the XML snippet may look like this::
+
+   <mass parallel="false" weightings_file="~/.tgac/rampart/custom_weightings.tab">
+      ...
+   </mass>
+
+The format of the weightings file is a pipe separated table as follows::
+
+   nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness
+   0.05|0.1|0.05|0.05|0.05|0.2|0.05|0.05|0.1|0.3
+
+All the metrics are derived from Quast results, except for the last one.  
+
+TODO: Currently the kmer metric, is not included.  In the future this will offer an alternate means of assessing the assembly completeness.
 
 
 Navigating the directory structure
 ----------------------------------
 
+MASS will take input from the MECQ and KMER stages, and is controlled via the job configuration file.  Once it has been executed it will create a directory within the job's output directory called ``mass``.  Inside this directory
 
+As an example, you might expect to see something like this::
+
+  - <Job output directory>
+  -- mass
+  --- <single_mass_id>
+  ---- <assembly> (contains output from the assembler for this assembly)
+  ---- ...
+  ---- unitigs (contains links to unitigs for each assembly and analysis of unitigs)
+  ---- contigs (contains links to contigs for each assembly and analysis of contigs)
+  ---- scaffolds (contains links to scaffolds for each assembly and analysis of scaffolds)
+  ---- stats.txt (raw statistics measured for assemblies in this single mass run)
+  --- ...
+  --- stats
+  ---- best.fa (the best assembly selected by mass - the next stage, AMP, looks here for input.)
+  ---- scores.tac (scores assigned to each assembly)
+
+The file best.fa is particularly important as this is the assembly that will be taken forward to the AMP / FINALISE stage.  If you are not happy with RAMPART's choice of assembly you should replace best.fa with your selection and re-run the rampart pipeline from the AMP stage: ``rampart -s AMP,FINALISE job.cfg``.
 

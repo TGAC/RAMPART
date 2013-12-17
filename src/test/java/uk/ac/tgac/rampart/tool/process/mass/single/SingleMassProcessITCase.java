@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
 import org.junit.Rule;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 /**

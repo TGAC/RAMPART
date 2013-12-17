@@ -25,4 +25,5 @@ An example XML snippet demonstrating how to run two different tools in parallel,
            threads="4" memory="2000"/>
    </mecq>
 
+MECQ produces output in the ``mecq`` directory produced in the specified job output directory.  The directory will contain sub-directories relating to each ``ecq`` element described in the XML snippet, then further sub-directories relating to the specified libraries used for that ``ecq``.  The next steps in the pipeline (KMER and MASS) know how to read this directory structure to get their input automatically.
 

@@ -35,7 +35,6 @@ import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqParams;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
-import uk.ac.tgac.rampart.tool.process.report.ReportParams;
 
 import java.util.ArrayList;
 import java.util.List;
