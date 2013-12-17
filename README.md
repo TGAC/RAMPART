@@ -2,7 +2,7 @@ RAMPART
 =======
 
 RAMPART is a configurable pipeline for *de novo* assembly of DNA sequence data. RAMPART is not a *de novo* assembler.
-There are already many very good freely available assembly tools, however, very will produce a good assembly first time
+There are already many very good freely available assembly tools, however, few will always produce a good assembly first time
 using the default settings. Sometimes one particular assembler may perform well on your data and genome, but in other
 cases another performs better. Sometimes an assembly will be better if the reads are error corrected, other times not.
 Also depending on the data aviailable, it maybe possible to improve the assembly with additional scaffolding or gap
@@ -73,7 +73,10 @@ Contact
 
 Daniel Mapleson - Analysis Pipelines Project Leader at The Genome Analysis Centre (TGAC)
 
-Website: http://www.tgac.ac.uk/bioinformatics/genome-ana
+Website: http://www.tgac.ac.uk/bioinformatics/genome-analysis/daniel-mapleson/
+
+Email: daniel.mapleson@tgac.ac.uk
+
 
 
 
