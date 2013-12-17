@@ -13,7 +13,7 @@ In order to use a scheduled environment for executing RAMPART child jobs, some d
 * installation directory - ``<installation dir>/etc/conan.properties``
 
 
-Conan - Scheduler configuration
+Conan - scheduler configuration
 -------------------------------
 
 RAMPART's execution context is specified by default in a file called "conan.properties".  In this file it is possible to describe the type of scheduling system to use and if so, what queue to run on.  Valid properties:

@@ -13,7 +13,7 @@ Before installing RAMPART please ensure any dependencies listed above are instal
 RAMPART can be installed either from a distributable tarball, or from source via a git clone.  These steps are described below.  Before that however, here are a few things to keep in mind during the installation process:
 
 
-From Tarball
+From tarball
 ------------
 
 RAMPART is available as a distributable tarball.  The installation process is simply involves unpacking the compressed tarball to a directory of your choice: ``tar -xvf <name_of_tarball>``.  In addition, should you want to run the tools without referring to their paths, you should ensure the 'bin' directory is on your PATH environment variable.

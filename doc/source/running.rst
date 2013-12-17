@@ -23,7 +23,8 @@ We recommend the user enters these properties for the genome if known:
 
 Any example XML snippet containing this information is shown below::
 
-   <organism name="Bacterius maximus" ploidy="1" est_genome_size="2000000" est_gc_percentage="43.0"/>
+   <organism name="Escherichia coli" ploidy="1" est_genome_size="4600000" 
+             est_gc_percentage="50.0"/>
 
 
 Defining datasets
@@ -44,25 +45,29 @@ Each dataset description should contain the following information:
 An example XML snippet of a set of NGS datasets for an assembly project are shown below::
 
     <libraries>
-        <library name="pe1" read_length="101" avg_insert_size="500" insert_err_tolerance="0.3" orientation="FR" type="PE">
+        <library name="pe1" read_length="101" avg_insert_size="500" insert_err_tolerance="0.3" 
+                 orientation="FR" type="PE">
             <files>
                 <path>lib1_R1.fastq</path>
                 <path>lib1_R2.fastq</path>
             </files>
         </library>
-        <library name="mp1" read_length="150" avg_insert_size="4000" insert_err_tolerance="0.3" orientation="RF" uniform="false" type="MP">
+        <library name="mp1" read_length="150" avg_insert_size="4000" insert_err_tolerance="0.3" 
+                 orientation="RF" type="MP">
             <files>
                 <path>lib2_R1.fastq</path>
                 <path>lib2_R2.fastq</path>
             </files>
         </library>
-        <library name="ope1" read_length="101" avg_insert_size="180" insert_err_tolerance="0.3" orientation="FR" type="OPE">
+        <library name="ope1" read_length="101" avg_insert_size="180" insert_err_tolerance="0.3" 
+                orientation="FR" type="OPE">
             <files>
                 <path>lib3_R1.fastq</path>
                 <path>lib3_R2.fastq</path>
             </files>
         </library>
     </libraries>
+
 
 The pipeline
 ------------
@@ -77,26 +82,13 @@ The RAMPART pipeline can loosely be separated into the following stages, all of 
 
 For more details on each section see the following:
 
-....
-
-
-MECQ - Multiple Error Correction and Quality Trimming - The purpose of this step is to try to improve the input datasets.  A number of seperate tools can be executed on one or more of the input datasets provided.  The user can also request whether or not the tools should be run linearly or in parallel.
-
-An example XML snippet demonstrating how to run two different tools in parallel, one on two datasets, the other on a single dataset::
-
-   <mecq parallel="false">
-      <ecq name="sickle_agressive" tool="SICKLE_V1.1" min_len="70" min_qual="20" libs="lib1896-pe,lib1897-mp"/>
-      <ecq name="quake" tool="QUAKE_V0.3.4" min_len="70" kmer="25" libs="lib1896-pe1" threads="4" memory="2000"/>
-   </mecq>
-
-
-KMER_COUNT - Does K-mer counting on all datasets, both the RAW and those, if any, which have been produced by the MECQ stage.
-
-MASS - Multiple Assembly Creation.  Enables the user to try out different assemblers with different settings and automatically evaluates the quality.  Can select an assembly out of the set that scores highest.  Scoring depends on the kinds of evaulation that are performed and how the user wants to weight specific metrics.
-
-AMP - Assembly Improver.  Takes the selected assembly and tries to improve it.  For example, additional scaffolding and gap filling can be performed at this stage.
-
-FINALISE - Creates standardised names for the final output assembly.
+.. toctree::
+   
+   mecq
+   kmer
+   mass
+   amp
+   finalise
 
 
 Controlling the pipeline... definition in the config file.  Via the command line.
