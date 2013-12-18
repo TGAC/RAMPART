@@ -26,4 +26,10 @@ The intention is that RAMPART gives the user the possibility of producing a dece
 * genome ploidy
 * genome repetitiveness
 
-RAMPART enables a bioinformatician to get a reasonable assembly given the constraints just mentioned with minimal effort.  In many cases, particularly for organisms with haploid genomes or relatively simple (i.e. not too heterozygous and not too repeaty) diploid genomes, where appropriate sequenceing has been c
+RAMPART enables a bioinformatician to get a reasonable assembly given the constraints just mentioned with minimal effort.  In many cases, particularly for organisms with haploid genomes or relatively simple (i.e. not too heterozygous and not too repeaty) diploid genomes, where appropriate sequenceing has been conducted, RAMPART can produce an assembly that suitable for annotation and downstream analysis.
+
+RAMPART is designed with High Performance Computing (HPC) resources in mind.  Currently, LSF and PBS schedulers are supported and RAMPART can execute jobs in parallel over many nodes if requested.  Having said this RAMPART can be told to run all parts of the pipeline in sequence on a regular server provided enough memory is available for the job in question.
+
+This documentation is designed to help end users install, configure and run the RAMPART.
+
+
