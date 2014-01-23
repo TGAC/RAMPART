@@ -20,10 +20,13 @@ package uk.ac.tgac.rampart.tool.pipeline.rampart;
 import org.apache.commons.lang.ArrayUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.AbstractXmlJobConfiguration;
@@ -32,8 +35,9 @@ import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStageList;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
+import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReadsArgs;
 import uk.ac.tgac.rampart.tool.process.finalise.FinaliseArgs;
-import uk.ac.tgac.rampart.tool.process.kmercount.reads.KmerCountReadsArgs;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
@@ -41,7 +45,6 @@ import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,8 +59,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     public static final String KEY_ELEM_LIBRARY         = "library";
     public static final String KEY_ELEM_PIPELINE        = "pipeline";
     public static final String KEY_ELEM_MECQ            = "mecq";
-    public static final String KEY_ELEM_KMER_READS      = "kmer-reads";
+    public static final String KEY_ELEM_ANALYSE_READS   = "analyse-reads";
     public static final String KEY_ELEM_MASS            = "mass";
+    public static final String KEY_ELEM_ANALYSE_ASMS    = "analyse-asms";
     public static final String KEY_ELEM_AMP             = "amp";
     public static final String KEY_ELEM_FINALISE        = "finalise";
 
@@ -67,8 +71,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private RampartStageList stages;
     private List<Library> libs;
     private MecqArgs mecqArgs;
-    private KmerCountReadsArgs kmerCountReadsArgs;
+    private AnalyseReadsArgs analyseReadsArgs;
     private MassArgs massArgs;
+    private AnalyseAsmsArgs analyseAsmsArgs;
     private AmpArgs ampArgs;
     private FinaliseArgs finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
@@ -84,8 +89,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.stages = stages;
         this.libs = new ArrayList<>();
         this.mecqArgs = null;
-        this.kmerCountReadsArgs = null;
+        this.analyseReadsArgs = null;
         this.massArgs = null;
+        this.analyseAsmsArgs = null;
         this.ampArgs = null;
         this.finaliseArgs = null;
         this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
@@ -118,19 +124,19 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.stages.setArgsIfPresent(RampartStage.MECQ, this.mecqArgs);
 
 
-        // Kmer counting reads
-        Element kmerReadsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_KMER_READS);
-        this.kmerCountReadsArgs = kmerReadsElement == null ? null :
-                new KmerCountReadsArgs(
-                        kmerReadsElement,
+        // Analyse reads
+        Element analyseReadsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_READS);
+        this.analyseReadsArgs = analyseReadsElement == null ? null :
+                new AnalyseReadsArgs(
+                        analyseReadsElement,
                         this.libs,
                         this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
-                        this.getJobPrefix() + "-kmer_reads",
+                        this.getJobPrefix() + "-analyse_reads",
                         this.rampartJobFileSystem.getMeqcDir(),
-                        this.rampartJobFileSystem.getReadsKmersDir(),
+                        this.rampartJobFileSystem.getAnalyseReadsDir(),
                         this.getOrganism());
 
-        this.stages.setArgsIfPresent(RampartStage.KMER_READS, this.kmerCountReadsArgs);
+        this.stages.setArgsIfPresent(RampartStage.ANALYSE_READS, this.analyseReadsArgs);
 
         // MASS
         Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
@@ -146,6 +152,20 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
 
+        // Analyse assemblies
+        Element analyseAsmsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_ASMS);
+        this.analyseAsmsArgs = analyseAsmsElement == null ? null :
+                new AnalyseAsmsArgs(
+                        analyseAsmsElement,
+                        this.rampartJobFileSystem.getMassDir(),
+                        this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
+                        this.rampartJobFileSystem.getAnalyseAssembliesDir(),
+                        this.massArgs == null ? null : this.massArgs.getSingleMassArgsList(),
+                        this.getOrganism(),
+                        this.getJobPrefix() + "-analyse_asms");
+
+        this.stages.setArgsIfPresent(RampartStage.ANALYSE_ASSEMBLIES, this.analyseAsmsArgs);
+
         // AMP
         Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
         this.ampArgs = ampElement == null ? null :
@@ -153,14 +173,14 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         ampElement,
                         this.rampartJobFileSystem.getAmpDir(),
                         this.getJobPrefix() + "-amp",
-                        this.rampartJobFileSystem.getMassOutFile(),
+                        this.rampartJobFileSystem.getSelectedAssemblyFile(),
                         this.libs,
                         this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
         this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
 
-        File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getMassOutFile(): this.ampArgs.getFinalAssembly();
+        File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getSelectedAssemblyFile(): this.ampArgs.getFinalAssembly();
 
         Element finaliseElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_FINALISE);
         this.finaliseArgs = finaliseElement == null ? null :
@@ -188,9 +208,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<>();
+        ParamMap pvp = new DefaultParamMap();
 
         if (this.getConfigFile() != null) {
             pvp.put(params.getConfig(), this.getConfigFile().getAbsolutePath());
@@ -208,22 +228,22 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) throws IOException {
+    public void setFromArgMap(ParamMap pvp) throws IOException, ConanParameterException {
         for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
             }
 
-            String param = entry.getKey().getName();
+            ConanParameter param = entry.getKey();
 
-            if (param.equals(this.params.getConfig().getName())) {
+            if (param.equals(this.params.getConfig())) {
                 this.setConfigFile(new File(entry.getValue()));
             }
-            else if (param.equals(this.params.getOutputDir().getName())) {
+            else if (param.equals(this.params.getOutputDir())) {
                 this.setOutputDir(new File(entry.getValue()));
             }
-            else if (param.equals(this.params.getStageList().getName())) {
+            else if (param.equals(this.params.getStageList())) {
                 this.stages = RampartStageList.parse(entry.getValue());
             }
         }
@@ -261,12 +281,12 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.mecqArgs = mecqArgs;
     }
 
-    public KmerCountReadsArgs getKmerCountReadsArgs() {
-        return kmerCountReadsArgs;
+    public AnalyseReadsArgs getAnalyseReadsArgs() {
+        return analyseReadsArgs;
     }
 
-    public void setKmerCountReadsArgs(KmerCountReadsArgs kmerCountReadsArgs) {
-        this.kmerCountReadsArgs = kmerCountReadsArgs;
+    public void setAnalyseReadsArgs(AnalyseReadsArgs analyseReadsArgs) {
+        this.analyseReadsArgs = analyseReadsArgs;
     }
 
     public MassArgs getMassArgs() {
@@ -275,6 +295,14 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     public void setMassArgs(MassArgs massArgs) {
         this.massArgs = massArgs;
+    }
+
+    public AnalyseAsmsArgs getAnalyseAsmsArgs() {
+        return analyseAsmsArgs;
+    }
+
+    public void setAnalyseAsmsArgs(AnalyseAsmsArgs analyseAsmsArgs) {
+        this.analyseAsmsArgs = analyseAsmsArgs;
     }
 
     public FinaliseArgs getFinaliseArgs() {

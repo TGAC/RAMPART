@@ -26,6 +26,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
@@ -133,13 +134,6 @@ public class AmpProcess extends AbstractConanProcess {
                     args.getFinalAssembly());
         }
 
-        // Process assemblies and generate stats for each stage after pipeline has completed
-        try {
-            this.ampExecutor.executeAnalysisJob(args);
-        }
-        catch(IOException |CommandExecutionException e) {
-            throw new ProcessExecutionException(-2, e);
-        }
 
         return true;
     }

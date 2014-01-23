@@ -17,7 +17,8 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
-import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.tgac.rampart.tool.process.mass.MassParams;
@@ -45,24 +46,22 @@ public class SingleMassParams extends MassParams {
                 "The rampart configuration file containing the libraries to assemble",
                 true);
 
-        this.jobName = new DefaultConanParameter(
-                "job_name",
-                "The job name that distinguishes this MASS run from other mass runs that might be running in parallel.",
-                false,
-                true,
-                false);
+        this.jobName = new ParameterBuilder()
+                .longName("job_name")
+                .description("The job name that distinguishes this MASS run from other mass runs that might be running in parallel.")
+                .argValidator(ArgValidator.DEFAULT)
+                .create();
 
         this.outputDir = new PathParameter(
                 "output",
                 "The output directory",
                 true);
 
-        this.jobPrefix = new DefaultConanParameter(
-                "job_prefix",
-                "The job_prefix to be assigned to all sub processes in MASS.  Useful if executing with a scheduler.",
-                false,
-                true,
-                false);
+        this.jobPrefix = new ParameterBuilder()
+                .longName("job_prefix")
+                .description("The job_prefix to be assigned to all sub processes in MASS.  Useful if executing with a scheduler.")
+                .argValidator(ArgValidator.DEFAULT)
+                .create();
     }
 
     public ConanParameter getConfig() {

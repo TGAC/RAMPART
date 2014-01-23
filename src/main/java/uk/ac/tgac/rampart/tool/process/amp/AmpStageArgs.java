@@ -18,8 +18,10 @@
 package uk.ac.tgac.rampart.tool.process.amp;
 
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
@@ -27,21 +29,20 @@ import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: maplesod
  * Date: 16/08/13
  * Time: 15:05
  */
-public class AmpStageArgs implements ProcessArgs {
+public class AmpStageArgs extends AbstractProcessArgs {
 
     private static final String KEY_ELEM_TOOL = "tool";
     private static final String KEY_ATTR_THREADS = "threads";
     private static final String KEY_ATTR_MEMORY = "memory";
     private static final String KEY_ELEM_OTHER_ARGS = "args";
+    private static final String KEY_ATTR_SELECTED_ASSEMBLY = "selected_assembly";
 
 
     // Defaults
@@ -66,11 +67,10 @@ public class AmpStageArgs implements ProcessArgs {
     private int memory;
     private String otherArgs;
 
-    // Need access to these
-    private AmpStageParams params = new AmpStageParams();
-
 
     public AmpStageArgs() {
+
+        super(new AmpStageParams());
 
         this.tool = "";
         this.input = null;
@@ -97,6 +97,9 @@ public class AmpStageArgs implements ProcessArgs {
             throw new IOException("Could not find " + KEY_ELEM_TOOL + " attribute in AMP stage element");
 
         this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
+        this.input = ele.hasAttribute(KEY_ATTR_SELECTED_ASSEMBLY) ?
+                new File(XmlHelper.getTextValue(ele, KEY_ATTR_SELECTED_ASSEMBLY)) :
+                input;
 
         // Optional
         this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
@@ -110,8 +113,11 @@ public class AmpStageArgs implements ProcessArgs {
         this.allLibraries = allLibraries;
         this.allMecqs = allMecqs;
         this.organism = organism;
-        this.input = input;
         this.index = index;
+    }
+
+    public AmpStageParams getParams() {
+        return (AmpStageParams)this.params;
     }
 
     public File getOutputDir() {
@@ -221,9 +227,11 @@ public class AmpStageArgs implements ProcessArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<>();
+        AmpStageParams params = this.getParams();
+
+        ParamMap pvp = new DefaultParamMap();
 
         if (this.input != null)
             pvp.put(params.getInput(), this.input.getAbsolutePath());
@@ -244,29 +252,27 @@ public class AmpStageArgs implements ProcessArgs {
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+    protected void setOptionFromMapEntry(ConanParameter param, String value) {
 
-        for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+        AmpStageParams params = this.getParams();
 
-            if (!entry.getKey().validateParameterValue(entry.getValue())) {
-                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            }
-
-            String param = entry.getKey().getName();
-
-            if (param.equals(this.params.getInput().getName())) {
-                this.input = new File(entry.getValue());
-            } else if (param.equals(this.params.getOutputDir().getName())) {
-                this.outputDir = new File(entry.getValue());
-            } else if (param.equals(this.params.getJobPrefix().getName())) {
-                this.jobPrefix = entry.getValue();
-            } else if (param.equals(this.params.getThreads().getName())) {
-                this.threads = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getMemory().getName())) {
-                this.memory = Integer.parseInt(entry.getValue());
-            } else if (param.equals(this.params.getOtherArgs().getName())) {
-                this.otherArgs = entry.getValue();
-            }
+        if (param.equals(params.getInput())) {
+            this.input = new File(value);
+        } else if (param.equals(params.getOutputDir())) {
+            this.outputDir = new File(value);
+        } else if (param.equals(params.getJobPrefix())) {
+            this.jobPrefix = value;
+        } else if (param.equals(params.getThreads())) {
+            this.threads = Integer.parseInt(value);
+        } else if (param.equals(params.getMemory())) {
+            this.memory = Integer.parseInt(value);
+        } else if (param.equals(params.getOtherArgs())) {
+            this.otherArgs = value;
         }
+    }
+
+    @Override
+    protected void setArgFromMapEntry(ConanParameter param, String value) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

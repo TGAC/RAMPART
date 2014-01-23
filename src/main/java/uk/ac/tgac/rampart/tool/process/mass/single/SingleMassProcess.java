@@ -26,6 +26,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
@@ -33,11 +34,9 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
-import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
-import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,70 +110,62 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             String assemblerWait = null;
 
-            // Execute assemblies only if user doesn't just want the statistics from existing assemblies.
-            if (!args.isStatsOnly()) {
+            List<Integer> assemblyJobIds = new ArrayList<>();
 
-                List<Integer> assemblyJobIds = new ArrayList<>();
+            // Iterate over coverage range
+            for (Integer cvg : validatedCoverageRange) {
 
-                // Iterate over coverage range
-                for (Integer cvg : validatedCoverageRange) {
+                // Do subsampling for this coverage level if required
+                List<Library> subsampledLibs = doSubsampling(args, genericAssembler.doesSubsampling(), cvg, selectedLibs);
 
-                    // Do subsampling for this coverage level if required
-                    List<Library> subsampledLibs = doSubsampling(args, genericAssembler.doesSubsampling(), cvg, selectedLibs);
+                // Iterate over kmer range
+                for (Integer k : validatedKmerRange) {
 
-                    // Iterate over kmer range
-                    for (Integer k : validatedKmerRange) {
+                    // Generate a directory name for this assembly
+                    String cvgString = CoverageRange.toString(cvg);
+                    String dirName = genericAssembler.hasKParam() ? ("cvg-" + cvgString + "_k-" + k) : "cvg-" + cvgString;
 
-                        // Generate a directory name for this assembly
-                        String cvgString = CoverageRange.toString(cvg);
-                        String dirName = genericAssembler.hasKParam() ? ("cvg-" + cvgString + "_k-" + k) : "cvg-" + cvgString;
+                    // This is the output directory for this particular assembly
+                    File outputDir = new File(args.getOutputDir(), dirName);
 
-                        // This is the output directory for this particular assembly
-                        File outputDir = new File(args.getOutputDir(), dirName);
+                    log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
-                        log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
+                    // Create the actual assembler for these settings
+                    Assembler assembler = AssemblerFactory.create(
+                            args.getTool(),
+                            k,
+                            subsampledLibs,
+                            outputDir,
+                            args.getThreads(),
+                            args.getMemory(),
+                            cvg,
+                            args.getOrganism(),
+                            this.conanProcessService);
 
-                        // Create the actual assembler for these settings
-                        Assembler assembler = AssemblerFactory.create(
-                                args.getTool(),
-                                k,
-                                subsampledLibs,
-                                outputDir,
-                                args.getThreads(),
-                                args.getMemory(),
-                                cvg,
-                                args.getOrganism(),
-                                this.conanProcessService);
-
-                        // Make the output directory for this child job (delete the directory if it already exists)
-                        if (outputDir.exists()) {
-                            FileUtils.deleteDirectory(outputDir);
-                        }
-                        outputDir.mkdirs();
-
-                        // Execute the assembler
-                        ExecutionResult result = this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
-
-                        // Add assembler id to list
-                        assemblyJobIds.add(result.getJobId());
-
-                        // Create links for outputs from this assembler to known locations
-                        this.singleMassExecutor.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
+                    // Make the output directory for this child job (delete the directory if it already exists)
+                    if (outputDir.exists()) {
+                        FileUtils.deleteDirectory(outputDir);
                     }
-                }
+                    outputDir.mkdirs();
 
-                // If using a scheduler create a wait condition that will be observed by the stats job if running in parallel
-                assemblerWait = executionContext.usingScheduler() && args.isRunParallel() ?
-                        executionContext.getScheduler().generatesJobIdFromOutput() ?
-                                executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, assemblyJobIds) :
-                                executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-assembly*") :
-                        null;
+                    // Execute the assembler
+                    ExecutionResult result = this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
+
+                    // Add assembler id to list
+                    assemblyJobIds.add(result.getJobId());
+
+                    // Create links for outputs from this assembler to known locations
+                    this.singleMassExecutor.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
+                }
             }
 
-            // Run analyser job using the original execution context (single MASS executor stores running job ids, in case
-            // we need to wait for these to finish later).
-            log.info("Analysing and comparing assemblies for MASS group: \"" + args.getName() + "\"");
-            this.singleMassExecutor.dispatchAnalyserJobs(genericAssembler, args, assemblerWait, args.getJobPrefix() + "-analyser");
+            // If using a scheduler create a wait condition that will be observed by the stats job if running in parallel
+            assemblerWait = executionContext.usingScheduler() && args.isRunParallel() ?
+                    executionContext.getScheduler().generatesJobIdFromOutput() ?
+                            executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, assemblyJobIds) :
+                            executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-assembly*") :
+                    null;
+
 
             // Finish
             log.info("Finished MASS group: \"" + args.getName() + "\"");
@@ -183,6 +174,8 @@ public class SingleMassProcess extends AbstractConanProcess {
             throw new ProcessExecutionException(-1, ioe);
         } catch (CommandExecutionException cee) {
             throw new ProcessExecutionException(-2, cee);
+        } catch (ConanParameterException cee) {
+            throw new ProcessExecutionException(-3, cee);
         }
 
         return true;
@@ -193,7 +186,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
     private List<Library> doSubsampling(SingleMassArgs args, boolean assemblerDoesSubsampling, int coverage, List<Library> libraries)
-            throws IOException, InterruptedException, ProcessExecutionException {
+            throws IOException, InterruptedException, ProcessExecutionException, ConanParameterException {
 
 
         // Check to see if we even need to do subsampling.  If not just return the current libraries.
@@ -323,7 +316,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             else {
                 Library modLib = lib.copy();
 
-                AbstractErrorCorrector ec = new MecqProcess().makeErrorCorrector(ecqArgs, modLib, mecqDir);
+                AbstractErrorCorrector ec = ecqArgs.makeErrorCorrector(modLib);
                 List<File> files = ec.getArgs().getCorrectedFiles();
 
                 if (modLib.isPairedEnd()) {
@@ -408,56 +401,6 @@ public class SingleMassProcess extends AbstractConanProcess {
         return null;
     }
 
-    public AssemblyStatsTable compileResults(SingleMassArgs args) throws IOException {
-
-        AssemblyStatsTable results = new AssemblyStatsTable();
-
-        File statsDir = this.getHighestStatsLevelDir(args);
-
-        if (statsDir == null) {
-            return results;
-        }
-
-        if (args.getStatsLevels().contains(StatsLevel.CONTIGUITY)) {
-
-            File quastFile = new File(statsDir, "quast/report.txt");
-
-            if (!quastFile.exists()) {
-                throw new IOException("Contiguity analysis (Quast) did not complete successfully for: " + args.getName() +
-                    "; Could not find: " + quastFile.getAbsolutePath());
-            }
-
-            results.mergeWithQuastResults(quastFile, statsDir, args.getName());
-        }
-
-        if (args.getStatsLevels().contains(StatsLevel.COMPLETENESS)) {
-
-            List<File> cegmaFiles = this.getCegmaFiles(new File(statsDir, "cegma"));
-
-            for(File cegmaFile : cegmaFiles) {
-
-                if (!cegmaFile.exists()) {
-                    throw new IOException("Completeness analysis (CEGMA) did not complete successfully for: " +
-                            args.getName() + "; Could not find: " + cegmaFile.getAbsolutePath());
-                }
-
-                String assemblyName = FilenameUtils.getBaseName(cegmaFile.getName());
-
-                results.mergeWithCegmaResults(cegmaFile,
-                        new File(statsDir, assemblyName + ".fa"),
-                        assemblyName,
-                        args.getName());
-            }
-        }
-
-        // Save results to output directory so we have a record
-        results.save(new File(args.getOutputDir(), "stats.txt"));
-
-        // Return results
-        return results;
-    }
-
-
     /**
      * Gets all the CEGMA files in the directory specified by the user.
      * @param cegmaDir
@@ -507,13 +450,6 @@ public class SingleMassProcess extends AbstractConanProcess {
 
             log.warn("Assembler \"" + args.getTool() + "\" used in single MASS process \"" + args.getName() + "\" is NOT operational.");
             return false;
-        }
-
-        for(StatsLevel statsLevel : args.getStatsLevels()) {
-            if (!statsLevel.isOperational(executionContext, this.conanProcessService)) {
-                log.warn("Stats Level \"" + statsLevel.toString() + "\" is NOT operational");
-                return false;
-            }
         }
 
         log.info("Single MASS process \"" + args.getName() + "\" is operational.");

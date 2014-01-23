@@ -23,6 +23,7 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
@@ -60,130 +61,106 @@ public class MecqProcess extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
-        log.info("Starting MECQ Process");
+        try {
+            log.info("Starting MECQ Process");
 
-        // Create shortcut to args for convienience
-        MecqArgs args = (MecqArgs) this.getProcessArgs();
+            // Create shortcut to args for convienience
+            MecqArgs args = (MecqArgs) this.getProcessArgs();
 
-        // Initialise executor
-        this.mecqExecutor.initialise(this.conanProcessService, executionContext);
+            // Initialise executor
+            this.mecqExecutor.initialise(this.conanProcessService, executionContext);
 
-        // If the output directory doesn't exist then make it
-        if (!args.getOutputDir().exists()) {
-            log.debug("Creating output directory");
-            args.getOutputDir().mkdirs();
-        }
-
-        List<Integer> jobIds = new ArrayList<>();
-        List<AbstractErrorCorrector> errorCorrectors = new ArrayList<>();
-
-        // For each ecq process all libraries
-        for(EcqArgs ecqArgs : args.getEqcArgList()) {
-
-            // Create an output dir for this error corrector
-            File ecDir = new File(args.getOutputDir(), ecqArgs.getName());
-            ecDir.mkdirs();
-
-            // Process each lib
-            for(Library lib : ecqArgs.getLibraries()) {
-
-                // Create the output directory
-                File ecqLibDir = new File(ecDir, lib.getName());
-                ecqLibDir.mkdirs();
-
-                // Create a job name
-                String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
-
-                // Create the actual error corrector from the user provided EcqArgs
-                AbstractErrorCorrector ec = this.makeErrorCorrector(ecqArgs, lib, args.getOutputDir());
-
-                // Add this to the list in case we need it later
-                errorCorrectors.add(ec);
-
-                // Create symbolic links between file paths specified by the library and the working directory for this ECQ
-                this.mecqExecutor.createInputLinks(lib, ec.getArgs());
-
-                // Execute this error corrector
-                this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel());
-
-                // The job id should be stored in the process if we are using a scheduler, add to the list regardless
-                // in case we need it later
-                jobIds.add(ec.getJobId());
+            // If the output directory doesn't exist then make it
+            if (!args.getMecqDir().exists()) {
+                log.debug("Creating MECQ directory");
+                args.getMecqDir().mkdirs();
+                args.getOutputDir().mkdirs();
             }
 
-            // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
-            // each library processed by this ECQ, then wait here.
-            if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
-                log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
+            // Passthrough links for raw libraries to output
+            for(Library lib : args.getLibraries()) {
+                this.mecqExecutor.createOutputLinks(new File(args.getOutputDir(), "raw"), null, null, lib);
+            }
+
+            List<Integer> jobIds = new ArrayList<>();
+            List<AbstractErrorCorrector> errorCorrectors = new ArrayList<>();
+
+            // For each ecq process all libraries
+            for(EcqArgs ecqArgs : args.getEqcArgList()) {
+
+                // Create an output dir for this error corrector
+                File ecDir = new File(args.getMecqDir(), ecqArgs.getName());
+                ecDir.mkdirs();
+
+                // Process each lib
+                for(Library lib : ecqArgs.getLibraries()) {
+
+                    // Create the output directory
+                    File ecqLibDir = new File(ecDir, lib.getName());
+                    ecqLibDir.mkdirs();
+
+                    // Create a job name
+                    String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
+
+                    // Create the actual error corrector from the user provided EcqArgs
+                    AbstractErrorCorrector ec = ecqArgs.makeErrorCorrector(lib);
+
+                    // Add this to the list in case we need it later
+                    errorCorrectors.add(ec);
+
+                    // Create symbolic links between file paths specified by the library and the working directory for this ECQ
+                    this.mecqExecutor.createInputLinks(lib, ec.getArgs());
+
+                    // Execute this error corrector
+                    this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel());
+
+                    // The job id should be stored in the process if we are using a scheduler, add to the list regardless
+                    // in case we need it later
+                    jobIds.add(ec.getJobId());
+
+                    // Create links for outputs from this assembler to known locations
+                    this.mecqExecutor.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), ec, ecqArgs, lib);
+                }
+
+                // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
+                // each library processed by this ECQ, then wait here.
+                if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
+                    log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
+                    this.mecqExecutor.executeScheduledWait(
+                            jobIds,
+                            ecqArgs.getJobPrefix() + "*",
+                            ExitStatus.Type.COMPLETED_SUCCESS,
+                            args.getJobPrefix() + "-wait",
+                            ecDir);
+
+                    jobIds.clear();
+                }
+            }
+
+            // If we're using a scheduler and we have been asked to run each MECQ group for each library
+            // in parallel, then we should wait for all those to complete before continueing.
+            if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
+                log.debug("Running all ECQ groups in parallel, waiting for completion");
                 this.mecqExecutor.executeScheduledWait(
                         jobIds,
-                        ecqArgs.getJobPrefix() + "*",
+                        args.getJobPrefix() + "-ecq*",
                         ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
-                        ecDir);
-
-                jobIds.clear();
+                        args.getMecqDir());
             }
-        }
 
-        // If we're using a scheduler and we have been asked to run each MECQ group for each library
-        // in parallel, then we should wait for all those to complete before continueing.
-        if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
-            log.debug("Running all ECQ groups in parallel, waiting for completion");
-            this.mecqExecutor.executeScheduledWait(
-                    jobIds,
-                    args.getJobPrefix() + "-ecq*",
-                    ExitStatus.Type.COMPLETED_SUCCESS,
-                    args.getJobPrefix() + "-wait",
-                    args.getOutputDir());
+            log.info("MECQ Finished");
         }
-
-        log.info("MECQ Finished");
+        catch(ConanParameterException e) {
+            throw new ProcessExecutionException(-1, e);
+        }
 
         return true;
     }
 
 
 
-    /**
-     * Using a set of ECQ specific args, creates an ErrorCorrector object for execution
-     * @param ecqArgs
-     * @param inputLib
-     * @param mecqDir
-     * @return An error corrector build from the provided arguments.
-     */
-    public AbstractErrorCorrector makeErrorCorrector(EcqArgs ecqArgs, Library inputLib, File mecqDir) {
 
-        File ecDir = new File(mecqDir, ecqArgs.getName());
-        File ecqLibDir = new File(ecDir, inputLib.getName());
-
-
-        AbstractErrorCorrector ec = ErrorCorrectorFactory.create(
-                ecqArgs.getTool(),
-                ecqLibDir,
-                inputLib,
-                ecqArgs.getThreads(),
-                ecqArgs.getMemory(),
-                ecqArgs.getKmer(),
-                ecqArgs.getMinLen(),
-                ecqArgs.getMinQual(),
-                this.getConanProcessService());
-
-
-
-        // Add files to ec (assumes ECQ tool and reads libraries are compatible with regards to Paired / Single End)
-        List<File> altInputFiles = new ArrayList<>();
-        if (inputLib.isPairedEnd()) {
-            altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
-            altInputFiles.add(new File(ecqLibDir, inputLib.getFile2().getName()));
-        }
-        else {
-            altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
-        }
-        ec.getArgs().setFromLibrary(inputLib, altInputFiles);
-
-        return ec;
-    }
 
 
     @Override

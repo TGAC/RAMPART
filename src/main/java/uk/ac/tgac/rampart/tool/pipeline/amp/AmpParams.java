@@ -17,21 +17,18 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
-import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * User: maplesod
  * Date: 12/02/13
  * Time: 16:56
  */
-public class AmpParams implements ProcessParams {
+public class AmpParams extends AbstractProcessParams {
 
     private ConanParameter inputAssembly;
     private ConanParameter outputDir;
@@ -50,20 +47,21 @@ public class AmpParams implements ProcessParams {
                 "The output directory which should contain the enhancement steps",
                 true);
 
-        this.processes = new DefaultConanParameter(
-                "processes",
-                "The processes to execute to enhance the assembly",
-                false,
-                true,
-                false);
+        this.processes = new ParameterBuilder()
+                .longName("processes")
+                .description("The processes to execute to enhance the assembly")
+                .isOptional(false)
+                .argValidator(ArgValidator.OFF)
+                .create();
 
-        this.jobPrefix = new DefaultConanParameter(
-                "jobPrefix",
-                "Describes the jobs that will be executed as part of this pipeline",
-                false,
-                true,
-                false);
+        this.jobPrefix = new ParameterBuilder()
+                .longName("jobPrefix")
+                .description("Describes the jobs that will be executed as part of this pipeline")
+                .argValidator(ArgValidator.DEFAULT)
+                .create();
     }
+
+
 
     public ConanParameter getInputAssembly() {
         return inputAssembly;
@@ -82,12 +80,13 @@ public class AmpParams implements ProcessParams {
     }
 
     @Override
-    public List<ConanParameter> getConanParameters() {
-        return new ArrayList<>(Arrays.asList(
-                new ConanParameter[]{
-                        this.inputAssembly,
-                        this.outputDir,
-                        this.processes,
-                        this.jobPrefix}));
+    public ConanParameter[] getConanParametersAsArray() {
+        return new ConanParameter[]{
+                this.inputAssembly,
+                this.outputDir,
+                this.processes,
+                this.jobPrefix
+        };
     }
+
 }

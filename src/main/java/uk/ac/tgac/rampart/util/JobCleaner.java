@@ -99,7 +99,7 @@ public class JobCleaner {
         RampartJobFileSystem jobFs = new RampartJobFileSystem(jobDir);
 
         FileUtils.deleteDirectory(jobFs.getMeqcDir());
-        FileUtils.deleteDirectory(jobFs.getReadsKmersDir());
+        FileUtils.deleteDirectory(jobFs.getAnalyseReadsDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());
         FileUtils.deleteDirectory(jobFs.getAmpDir());
         FileUtils.deleteDirectory(jobFs.getReportDir());
@@ -118,12 +118,6 @@ public class JobCleaner {
 
         // Process the command line
         try {
-
-            if (args.length == 0 || args[0].equals("--" + OPT_HELP)) {
-                printHelp();
-                return;
-            }
-
             new JobCleaner(args).execute();
         }
         catch (IllegalArgumentException | ParseException e) {

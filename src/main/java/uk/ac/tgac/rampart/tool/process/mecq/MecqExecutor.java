@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mecq;
 
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
@@ -33,10 +34,11 @@ import java.io.File;
 public interface MecqExecutor extends RampartExecutor {
 
     void executeEcq(AbstractErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
-            throws InterruptedException, ProcessExecutionException;
+            throws InterruptedException, ProcessExecutionException, ConanParameterException;
 
     void createInputLinks(Library library, AbstractErrorCorrectorArgs args)
             throws ProcessExecutionException, InterruptedException;
 
-
+    void createOutputLinks(File outputDir, AbstractErrorCorrector ec, EcqArgs ecqArgs, Library libraries)
+            throws ProcessExecutionException, InterruptedException;
 }

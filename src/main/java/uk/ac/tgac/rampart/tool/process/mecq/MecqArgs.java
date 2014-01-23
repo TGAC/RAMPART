@@ -19,8 +19,10 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
@@ -29,7 +31,10 @@ import java.io.File;
 import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * User: maplesod
@@ -47,7 +52,7 @@ public class MecqArgs implements RampartStageArgs {
 
     private MecqParams params = new MecqParams();
 
-    private File outputDir;
+    private File mecqDir;
     private String jobPrefix;
     private List<Library> libraries;
     private boolean runParallel;
@@ -58,7 +63,7 @@ public class MecqArgs implements RampartStageArgs {
      * Set defaults
      */
     public MecqArgs() {
-        this.outputDir = new File("");
+        this.mecqDir = new File("");
         this.eqcArgList = new ArrayList<>();
         this.libraries = new ArrayList<>();
         this.runParallel = DEFAULT_RUN_PARALLEL;
@@ -72,13 +77,13 @@ public class MecqArgs implements RampartStageArgs {
      * Set from element and
      * @param ele
      */
-    public MecqArgs(Element ele, File outputDir, String jobPrefix, List<Library> libraries) throws IOException {
+    public MecqArgs(Element ele, File mecqDir, String jobPrefix, List<Library> libraries) throws IOException {
 
         // Set defaults first
         this();
 
         // Set from parameters
-        this.outputDir = outputDir;
+        this.mecqDir = mecqDir;
         this.jobPrefix = jobPrefix;
         this.libraries = libraries;
 
@@ -88,18 +93,28 @@ public class MecqArgs implements RampartStageArgs {
         // All libraries
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
         for(int i = 0; i < nodes.getLength(); i++) {
-            this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, outputDir, jobPrefix + "-ecq", this.runParallel));
+            this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, mecqDir, jobPrefix + "-ecq", this.runParallel));
         }
     }
 
-
-
     public File getOutputDir() {
-        return outputDir;
+        return new File(this.mecqDir, "output");
     }
 
-    public void setOutputDir(File outputDir) {
-        this.outputDir = outputDir;
+    public File getMecqDir() {
+        return mecqDir;
+    }
+
+    public void setMecqDir(File mecqDir) {
+        this.mecqDir = mecqDir;
+    }
+
+    public List<Library> getLibraries() {
+        return libraries;
+    }
+
+    public void setLibraries(List<Library> libraries) {
+        this.libraries = libraries;
     }
 
     public String getJobPrefix() {
@@ -132,12 +147,12 @@ public class MecqArgs implements RampartStageArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<>();
+        ParamMap pvp = new DefaultParamMap();
 
-        if (this.outputDir != null)
-            pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
+        if (this.mecqDir != null)
+            pvp.put(params.getOutputDir(), this.mecqDir.getAbsolutePath());
 
         pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
 
@@ -149,7 +164,7 @@ public class MecqArgs implements RampartStageArgs {
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+    public void setFromArgMap(ParamMap pvp) {
 
         for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
@@ -157,13 +172,13 @@ public class MecqArgs implements RampartStageArgs {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
             }
 
-            String param = entry.getKey().getName();
+            ConanParameter param = entry.getKey();
 
-            if (param.equals(this.params.getOutputDir().getName())) {
-                this.outputDir = new File(entry.getValue());
-            } else if (param.equals(this.params.getJobPrefix().getName())) {
+            if (param.equals(this.params.getOutputDir())) {
+                this.mecqDir = new File(entry.getValue());
+            } else if (param.equals(this.params.getJobPrefix())) {
                 this.jobPrefix = entry.getValue();
-            } else if (param.equals(this.params.getRunParallel().getName())) {
+            } else if (param.equals(this.params.getRunParallel())) {
                 this.runParallel = Boolean.parseBoolean(entry.getValue());
             } else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
@@ -175,4 +190,7 @@ public class MecqArgs implements RampartStageArgs {
     public List<ConanProcess> getExternalProcesses() {
         return new ArrayList<>();
     }
+
+
+
 }

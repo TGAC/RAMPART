@@ -24,6 +24,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.ec.sickle.SickleV11Process;
@@ -49,14 +50,14 @@ public class MecqProcessTest extends MockedConanProcess {
     private SickleV11Process sickle;
 
     @Test
-    public void testQT() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
+    public void testQT() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException, ConanParameterException {
 
         File outputDir = temp.newFolder("qtTest");
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         MecqArgs mecqArgs = new MecqArgs();
-        mecqArgs.setOutputDir(outputDir);
+        mecqArgs.setMecqDir(outputDir);
 
         MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 

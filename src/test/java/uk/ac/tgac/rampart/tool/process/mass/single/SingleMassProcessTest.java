@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
@@ -52,7 +53,7 @@ public class SingleMassProcessTest extends MockedConanProcess {
     private SingleMassExecutor singleMassExecutor;
 
     @Test
-    public void testExecute() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException {
+    public void testExecute() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException, ConanParameterException {
 
         File outputDir = temp.newFolder("singleMASSTest");
 
@@ -69,7 +70,6 @@ public class SingleMassProcessTest extends MockedConanProcess {
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
         when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean())).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        doNothing().when(singleMassExecutor).dispatchAnalyserJobs((Assembler) any(), (SingleMassArgs) any(), anyString(), anyString());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 

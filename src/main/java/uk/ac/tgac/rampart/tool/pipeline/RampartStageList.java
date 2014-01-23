@@ -56,9 +56,11 @@ public class RampartStageList extends ArrayList<RampartStage> {
 
         for(RampartStage stage : this) {
 
-            AbstractConanProcess proc = stage.create();
-            proc.setConanProcessService(conanProcessService);
-            processes.add(proc);
+            if(stage.getArgs() != null) {
+                AbstractConanProcess proc = stage.create();
+                proc.setConanProcessService(conanProcessService);
+                processes.add(proc);
+            }
         }
 
         return processes;
@@ -113,9 +115,11 @@ public class RampartStageList extends ArrayList<RampartStage> {
 
     public void setArgsIfPresent(RampartStage stage, RampartStageArgs args) {
 
-        for(RampartStage rs : this) {
-            if (rs == stage) {
-                rs.setArgs(args);
+        if (args != null) {
+            for(RampartStage rs : this) {
+                if (rs == stage) {
+                    rs.setArgs(args);
+                }
             }
         }
     }

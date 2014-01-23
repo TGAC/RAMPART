@@ -14,6 +14,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.report.sourceEncoding>UTF-8</project.report.sourceEncoding>
 		<java-version>1.7</java-version>
 		<slf4j-version>1.6.1</slf4j-version>
         <dist-name>${project.artifactId}-${project.version}</dist-name>
@@ -387,7 +388,7 @@
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
             <artifactId>tgac-conan</artifactId>
-            <version>0.6.3</version>
+            <version>0.7.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-cli</groupId>

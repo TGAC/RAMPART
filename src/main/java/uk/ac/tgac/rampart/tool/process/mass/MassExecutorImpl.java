@@ -20,9 +20,7 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorProcess;
-import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
 
@@ -54,23 +52,7 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
     }
 
     @Override
-    public AssemblyStatsTable compileSingleMassResults(SingleMassArgs singleMassArgs)
-            throws IOException {
-
-        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs, this.conanProcessService);
-        return singleMassProcess.compileResults(singleMassArgs);
-    }
-
-    @Override
     public List<Integer> getJobIds() {
         return this.jobIds;
-    }
-
-    @Override
-    public void executeMassSelector(MassSelectorArgs massSelectorArgs)
-            throws InterruptedException, ProcessExecutionException {
-
-        MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs, this.conanProcessService);
-        massSelectorProcess.execute(this.executionContext);
     }
 }

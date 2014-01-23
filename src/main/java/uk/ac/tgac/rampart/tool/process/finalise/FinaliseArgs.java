@@ -2,7 +2,8 @@ package uk.ac.tgac.rampart.tool.process.finalise;
 
 import org.w3c.dom.Element;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.Rampart;
@@ -13,7 +14,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -122,22 +122,15 @@ public class FinaliseArgs implements RampartStageArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
         return null;
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) throws IOException {
-        for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
-
-            if (!entry.getKey().validateParameterValue(entry.getValue())) {
-                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            }
-
-            String param = entry.getKey().getName();
-
-        }
+    public void setFromArgMap(ParamMap pvp) throws IOException, ConanParameterException {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
+
 
     @Override
     public List<ConanProcess> getExternalProcesses() {

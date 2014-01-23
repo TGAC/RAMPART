@@ -17,22 +17,19 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
-import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * User: maplesod
  * Date: 07/02/13
  * Time: 19:27
  */
-public class RampartParams implements ProcessParams {
+public class RampartParams extends AbstractProcessParams {
 
     private ConanParameter config;
     private ConanParameter outputDir;
@@ -50,13 +47,14 @@ public class RampartParams implements ProcessParams {
                 "The path to the folder where all RAMPART output should be stored",
                 true);
 
-        this.stageList = new DefaultConanParameter(
-                "stages",
-                "The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.",
-                false,
-                true,
-                false);
+        this.stageList = new ParameterBuilder()
+                .longName("stages")
+                .description("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.")
+                .argValidator(ArgValidator.OFF)
+                .create();
     }
+
+
 
     public ConanParameter getConfig() {
         return config;
@@ -71,12 +69,11 @@ public class RampartParams implements ProcessParams {
     }
 
     @Override
-    public List<ConanParameter> getConanParameters() {
-
-        return new ArrayList<>(Arrays.asList(
-                new ConanParameter[]{
-                        this.config,
-                        this.outputDir,
-                        this.stageList}));
+    public ConanParameter[] getConanParametersAsArray() {
+        return new ConanParameter[]{
+                this.config,
+                this.outputDir,
+                this.stageList
+        };
     }
 }

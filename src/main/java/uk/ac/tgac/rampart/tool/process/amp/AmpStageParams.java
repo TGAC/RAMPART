@@ -17,22 +17,19 @@
  **/
 package uk.ac.tgac.rampart.tool.process.amp;
 
-import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * User: maplesod
  * Date: 16/08/13
  * Time: 15:55
  */
-public class AmpStageParams implements ProcessParams {
+public class AmpStageParams extends AbstractProcessParams {
 
     private ConanParameter input;
     private ConanParameter outputDir;
@@ -55,13 +52,10 @@ public class AmpStageParams implements ProcessParams {
                 true
         );
 
-        this.jobPrefix = new DefaultConanParameter(
-                "job_prefix",
-                "Describes the jobs that will be executed as part of this pipeline",
-                false,
-                true,
-                false
-        );
+        this.jobPrefix = new ParameterBuilder()
+                .longName("job_prefix")
+                .description("Describes the jobs that will be executed as part of this pipeline")
+                .create();
 
         this.threads = new NumericParameter(
                 "threads",
@@ -75,13 +69,11 @@ public class AmpStageParams implements ProcessParams {
                 true
         );
 
-        this.otherArgs = new DefaultConanParameter(
-                "other_args",
-                "Any additional arguments to provide to this specific process",
-                false,
-                true,
-                false
-        );
+        this.otherArgs = new ParameterBuilder()
+                .longName("other_args")
+                .description("Any additional arguments to provide to this specific process")
+                .argValidator(ArgValidator.OFF)
+                .create();
     }
 
     public ConanParameter getInput() {
@@ -109,15 +101,15 @@ public class AmpStageParams implements ProcessParams {
     }
 
     @Override
-    public List<ConanParameter> getConanParameters() {
-        return new ArrayList<>(Arrays.asList(
-                new ConanParameter[]{
-                        this.input,
-                        this.outputDir,
-                        this.jobPrefix,
-                        this.threads,
-                        this.memory,
-                        this.otherArgs
-                }));
+    public ConanParameter[] getConanParametersAsArray() {
+        return new ConanParameter[]{
+                this.input,
+                this.outputDir,
+                this.jobPrefix,
+                this.threads,
+                this.memory,
+                this.otherArgs
+        };
     }
+
 }

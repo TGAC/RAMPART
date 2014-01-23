@@ -47,7 +47,7 @@ public class MecqProcessITCase {
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/config/test_rampart_config.xml"));
 
         MecqArgs mecqArgs = new MecqArgs();
-        mecqArgs.setOutputDir(outputDir);
+        mecqArgs.setMecqDir(outputDir);
 
         MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 

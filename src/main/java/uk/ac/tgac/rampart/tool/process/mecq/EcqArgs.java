@@ -21,6 +21,7 @@ import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
+import uk.ac.tgac.conan.process.ec.ErrorCorrectorFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -232,5 +233,52 @@ public class EcqArgs {
     public List<File> getOutputFiles(AbstractErrorCorrector ec) {
 
         return ec.getArgs().getCorrectedFiles();
+    }
+
+    public List<Library> getOutputLibraries() {
+
+        List<Library> modLibs = new ArrayList<>();
+
+        for(Library lib : this.getLibraries()) {
+            modLibs.add(this.makeErrorCorrector(lib).getArgs().getOutputLibrary(lib));
+        }
+
+        return modLibs;
+    }
+
+
+    /**
+     * Using a set of ECQ specific args, creates an ErrorCorrector object for execution
+     * @param inputLib
+     * @return An error corrector build from the provided arguments.
+     */
+    public AbstractErrorCorrector makeErrorCorrector(Library inputLib) {
+
+        File ecqLibDir = new File(this.outputDir, inputLib.getName());
+
+
+        AbstractErrorCorrector ec = ErrorCorrectorFactory.create(
+                this.getTool(),
+                ecqLibDir,
+                inputLib,
+                this.getThreads(),
+                this.getMemory(),
+                this.getKmer(),
+                this.getMinLen(),
+                this.getMinQual(),
+                null);
+
+        // Add files to ec (assumes ECQ tool and reads libraries are compatible with regards to Paired / Single End)
+        List<File> altInputFiles = new ArrayList<>();
+        if (inputLib.isPairedEnd()) {
+            altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
+            altInputFiles.add(new File(ecqLibDir, inputLib.getFile2().getName()));
+        }
+        else {
+            altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
+        }
+        ec.getArgs().setFromLibrary(inputLib, altInputFiles);
+
+        return ec;
     }
 }
