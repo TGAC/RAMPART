@@ -74,6 +74,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private AnalyseReadsArgs analyseReadsArgs;
     private MassArgs massArgs;
     private AnalyseAsmsArgs analyseAsmsArgs;
+    private File ampInput;
     private AmpArgs ampArgs;
     private FinaliseArgs finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
@@ -81,7 +82,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
 
 
-    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages)
+    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages, File ampInput)
             throws IOException {
 
         super(configFile, outputDir, jobPrefix);
@@ -92,6 +93,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.analyseReadsArgs = null;
         this.massArgs = null;
         this.analyseAsmsArgs = null;
+        this.ampInput = ampInput;
         this.ampArgs = null;
         this.finaliseArgs = null;
         this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
@@ -173,7 +175,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         ampElement,
                         this.rampartJobFileSystem.getAmpDir(),
                         this.getJobPrefix() + "-amp",
-                        this.rampartJobFileSystem.getSelectedAssemblyFile(),
+                        ampInput != null ? ampInput : this.rampartJobFileSystem.getSelectedAssemblyFile(),
                         this.libs,
                         this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());

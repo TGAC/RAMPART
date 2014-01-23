@@ -49,7 +49,7 @@ public class RampartArgsTest {
         File outDir = temp.newFolder("configTest");
         String jobPrefix = "configTestJob";
 
-        RampartArgs args = new RampartArgs(cfgFile, outDir, jobPrefix, RampartStageList.parse("ALL"));
+        RampartArgs args = new RampartArgs(cfgFile, outDir, jobPrefix, RampartStageList.parse("ALL"), null);
 
         assertTrue(true);
     }

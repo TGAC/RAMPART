@@ -78,8 +78,10 @@ public class Rampart extends AbstractConanCLI {
     //public static final File REPORT_DIR = new File(DATA_DIR, "report");
 
     // **** Option parameter names ****
-    public static final String OPT_WEIGHTINGS = "weightings";
     public static final String OPT_STAGES = "stages";
+    public static final String OPT_RUN_FIRST_HALF = "run_first_half";
+    public static final String OPT_RUN_SECOND_HALF = "run_second_half";
+    public static final String OPT_AMP_INPUT = "amp_input";
 
     // **** Defaults ****
 
@@ -100,6 +102,7 @@ public class Rampart extends AbstractConanCLI {
 
     // **** Options ****
     private RampartStageList stages;
+    private File ampInput;
     private File jobConfig;
 
 
@@ -116,6 +119,7 @@ public class Rampart extends AbstractConanCLI {
                 false);
 
         this.stages             = DEFAULT_STAGES;
+        this.ampInput           = null;
         this.jobConfig          = null;
 
         this.args               = null;
@@ -148,7 +152,8 @@ public class Rampart extends AbstractConanCLI {
                     this.jobConfig,
                     this.getOutputDir(),
                     this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
-                    this.stages);
+                    this.stages,
+                    this.ampInput);
 
             // Parse the job config file and set internal variables in RampartArgs
             this.args.parseXml();
@@ -179,6 +184,34 @@ public class Rampart extends AbstractConanCLI {
         this.stages = commandLine.hasOption(OPT_STAGES) ?
                 RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
                 DEFAULT_STAGES;
+
+        // If the user hasn't modified the stages then check to see if they've requested any predefined profiles
+        if (stages == DEFAULT_STAGES) {
+
+            if (commandLine.hasOption(OPT_RUN_FIRST_HALF)) {
+
+                RampartStageList firstHalf = new RampartStageList();
+                firstHalf.add(RampartStage.MECQ);
+                firstHalf.add(RampartStage.ANALYSE_READS);
+                firstHalf.add(RampartStage.MASS);
+                firstHalf.add(RampartStage.ANALYSE_ASSEMBLIES);
+                this.stages = firstHalf;
+
+                log.info("Running first half of the RAMPART pipeline only");
+            }
+            else if (commandLine.hasOption(OPT_RUN_SECOND_HALF)) {
+                RampartStageList secondHalf = new RampartStageList();
+                secondHalf.add(RampartStage.AMP);
+                secondHalf.add(RampartStage.FINALISE);
+                this.stages = secondHalf;
+
+                log.info("Running second half of the RAMPART pipeline only");
+
+                if (commandLine.hasOption(OPT_AMP_INPUT)) {
+                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT));
+                }
+            }
+        }
 
         // Check for a single arg left on the command line
         if (commandLine.getArgs().length != 1)
@@ -211,6 +244,18 @@ public class Rampart extends AbstractConanCLI {
 
         options.add(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
                 .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));
+
+        options.add(OptionBuilder.withLongOpt(OPT_RUN_FIRST_HALF)
+                .withDescription("Run the first half of the RAMPART pipeline.  This involves running MECQ and MASS and doing any requested analyses.")
+                .create("1"));
+
+        options.add(OptionBuilder.withLongOpt(OPT_RUN_SECOND_HALF)
+                .withDescription("Run the second half of the RAMPART pipeline.  This involves enhancing the selected assembly and doing any requested analyses on the final assembly and finalising the assembly so that it's suitable for distribution.")
+                .create("2"));
+
+        options.add(OptionBuilder.withLongOpt(OPT_AMP_INPUT).hasArg()
+                .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate assembly to process.  By default the automatically selected assembly is used.")
+                .create("a"));
 
         return options;
     }
