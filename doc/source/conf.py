@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'RAMPART'
-copyright = u'2013, Daniel Mapleson'
+copyright = u'2014, The Genome Analysis Centre'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -199,7 +199,9 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'RAMPART.tex', u'RAMPART Documentation',
-   u'Daniel Mapleson', 'manual'),
+   u'Daniel Mapleson', 'manual',
+   u'Nizar Drou', 'manual',
+   u'David Swarbreck', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -229,7 +231,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'rampart', u'RAMPART Documentation',
-     [u'Daniel Mapleson'], 1)
+     [u'Daniel Mapleson', u'Nizar Drou', u'David Swarbreck'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -243,7 +245,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'RAMPART', u'RAMPART Documentation',
-   u'Daniel Mapleson', 'RAMPART', 'One line description of project.',
+   u'Daniel Mapleson', u'Nizar Drou', u'David Swarbreck', 'RAMPART', 'A de novo assembly pipeline.',
    'Miscellaneous'),
 ]
 
@@ -264,9 +266,9 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = u'RAMPART'
-epub_author = u'Daniel Mapleson'
+epub_author = u'Daniel Mapleson', u'Nizar Drou', u'David Swarbreck'
 epub_publisher = u'Daniel Mapleson'
-epub_copyright = u'2013, Daniel Mapleson'
+epub_copyright = u'2013, The Genome Analysis Centre'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = u'RAMPART'

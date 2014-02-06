@@ -4,11 +4,22 @@
 Running RAMPART
 ===============
 
-Running RAMPART itself from the command line is relatively straight forward.  The syntax is simply: ``rampart [options] <path_to_job_configuration_file>``.  To get a list and description of available options type: ``rampart --help``.  Upon starting RAMPART will search for a environment configuration file, a logging configuration file and a job configuration file.  RAMPART will configure the execution environment as appropriate and then execute the steps specified in the job configuration file.
+Running RAMPART itself from the command line is relatively straight forward.  The syntax is simply:
+``rampart [options] <path_to_job_configuration_file>``.  To get a list and description of available options type:
+``rampart --help``.  Upon starting RAMPART will search for a environment configuration file, a logging configuration
+file and a job configuration file.  RAMPART will configure the execution environment as appropriate and then execute
+the steps specified in the job configuration file.
 
-Setting up a suitable configuration file for your assembly project is more complex however, and we expect a suitable level of understanding and experience of *de novo* genome assembly, NGS and genome analysis.  From a high level the definition of a job involves supplying information about 3 topics: the organism's genome; the input data; and how the pipeline should execute.  In addition, we recommend the user specifies some metadata about this job for posterity and for reporting reasons.
+Setting up a suitable configuration file for your assembly project is more complex however, and we expect a suitable
+level of understanding and experience of *de novo* genome assembly, NGS and genome analysis.  From a high level the
+definition of a job involves supplying information about 3 topics: the organism's genome; the input data; and how the
+pipeline should execute.  In addition, we recommend the user specifies some metadata about this job for posterity and
+for reporting reasons.
 
-The job configuration file must be specifed in XML format.  Creating a configuration file from scratch can be daunting, particularly if the user isn't familier with XML or other markup languages, so to make this process easier for the user we provide a number of example configuration files which can be modified and extended as appropriate.  These can be found in the ``etc/example_job_configs`` directory.
+The job configuration file must be specifed in XML format.  Creating a configuration file from scratch can be daunting,
+particularly if the user isn't familier with XML or other markup languages, so to make this process easier for the user
+we provide a number of example configuration files which can be modified and extended as appropriate.  These can be
+found in the ``etc/example_job_configs`` directory.
 
 
 The genome to assemble
@@ -30,7 +41,10 @@ Any example XML snippet containing this information is shown below::
 Defining datasets
 -----------------
 
-Before an assembly can be made some sequencing data is required.  Sometimes an modern assembly project might involve a single set of sequencing data, othertimes it can involve a number of sequencing projects using different protocols and different data types.  In order to instruct the assemblers and other tools to use the data in the right way, the user must describe each dataset and how to interpret it.
+Before an assembly can be made some sequencing data is required.  Sometimes an modern assembly project might involve a
+single set of sequencing data, othertimes it can involve a number of sequencing projects using different protocols and
+different data types.  In order to instruct the assemblers and other tools to use the data in the right way, the user
+must describe each dataset and how to interpret it.
 
 Each dataset description should contain the following information:
 
@@ -77,11 +91,18 @@ The RAMPART pipeline can loosely be separated into the following stages, all of 
 .. toctree::
    
    mecq
-   kmer
+   analyse_reads
    mass
+   analyse_assemblies
    amp
    finalise
 
 
-The pipeline can be controlled in two ways.  The first way is by definition in the job configuration file.  If a pipeline stage is not defined it will not be executed. The second way is via a command line option: ``-s``.  By specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.  For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you cannot run the AMP stage, without a selected assembly to work with.
+The pipeline can be controlled in two ways.  The first way is by definition in the job configuration file.  If a
+pipeline stage is not defined it will not be executed. The second way is via a command line option: ``-s``.  By
+specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.
+For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages
+described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does
+not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you
+cannot run the AMP stage, without a selected assembly to work with.
 

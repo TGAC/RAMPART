@@ -42,7 +42,7 @@ In case the specific tool versions requested are no longer available to download
 Project URLs:
 
 * Abyss           - http://www.bcgsc.ca/platform/bioinfo/software/abyss
-* ALLPATHS-LG      - http://www.broadinstitute.org/software/allpaths-lg/blog/?page_id=12
+* ALLPATHS-LG     - http://www.broadinstitute.org/software/allpaths-lg/blog/?page_id=12
 * SoapDeNovo      - http://soap.genomics.org.cn/soapdenovo.html
 * Sickle          - https://github.com/najoshi/sickle
 * Quake           - http://www.cbcb.umd.edu/software/quake/
@@ -51,7 +51,7 @@ Project URLs:
 * SOAP_GapCloser  - http://soap.genomics.org.cn/soapdenovo.html
 * Quast           - http://bioinf.spbau.ru/quast
 * Cegma           - http://korflab.ucdavis.edu/datasets/cegma/
-* KAT                           - http://www.tgac.ac.uk/kat/
+* KAT             - http://www.tgac.ac.uk/kat/
 * Subsampler      - https://github.com/homonecloco/subsampler
-* Jellyfish             - http://www.cbcb.umd.edu/software/jellyfish/
+* Jellyfish       - http://www.cbcb.umd.edu/software/jellyfish/
 

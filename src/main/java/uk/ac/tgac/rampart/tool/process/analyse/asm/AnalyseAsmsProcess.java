@@ -1,7 +1,6 @@
 package uk.ac.tgac.rampart.tool.process.analyse.asm;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -12,9 +11,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.AssemblySelector;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.DefaultAssemblySelector;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsMatrix;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsMatrixRow;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.analyse.reads.kmer.KmerAnalysisReadsArgs;
 import uk.ac.tgac.rampart.util.SpiFactory;

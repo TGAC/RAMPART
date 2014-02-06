@@ -20,11 +20,9 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

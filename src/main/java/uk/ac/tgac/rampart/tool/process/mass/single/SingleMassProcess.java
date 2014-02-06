@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.tool.process.mass.single;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
@@ -34,7 +33,6 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 

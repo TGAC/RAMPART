@@ -19,10 +19,8 @@ package uk.ac.tgac.rampart.tool.process.mass;
 
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 
-import java.io.IOException;
 import java.util.List;
 
 /**

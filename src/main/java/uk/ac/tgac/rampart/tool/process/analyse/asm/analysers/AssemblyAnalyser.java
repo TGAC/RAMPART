@@ -5,7 +5,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.util.Service;
 

@@ -7,8 +7,7 @@ Acknowledgements
 * Robert Davey (TGAC)
 * Tony Burdett (EBI)
 * Ricardo Ramirez (TGAC)
-* Nizar Drou (Formerly TGAC)
-* David Swarbreck (TGAC)
+* Purnima Pachori (TGAC)
 * And everyone who contributed to making the tools RAMPART depends on!
 
 

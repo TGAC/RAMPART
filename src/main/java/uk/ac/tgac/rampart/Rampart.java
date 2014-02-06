@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
-import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This class handles execution of Rampart in run mode.
@@ -228,7 +227,7 @@ public class Rampart extends AbstractConanCLI {
     public void printHelp() {
         CommandLineHelper.printHelp(
                 System.err,
-                "rampart run <job_config_file>",
+                "rampart [options] <job_config_file>\nOptions: ",
                 "RAMPART is a de novo assembly pipeline that makes use of third party-tools and High Performance Computing " +
                 "resources.  It can be used as a single interface to several popular assemblers, and can perform " +
                 "automated comparison and analysis of any generated assemblies.\n\n",
@@ -253,7 +252,7 @@ public class Rampart extends AbstractConanCLI {
                 .withDescription("Run the second half of the RAMPART pipeline.  This involves enhancing the selected assembly and doing any requested analyses on the final assembly and finalising the assembly so that it's suitable for distribution.")
                 .create("2"));
 
-        options.add(OptionBuilder.withLongOpt(OPT_AMP_INPUT).hasArg()
+        options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_AMP_INPUT).hasArg()
                 .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate assembly to process.  By default the automatically selected assembly is used.")
                 .create("a"));
 
@@ -261,7 +260,7 @@ public class Rampart extends AbstractConanCLI {
     }
 
     @Override
-    protected Map<ConanParameter, String> createArgMap() {
+    protected ParamMap createArgMap() {
         return this.args.getArgMap();
     }
 

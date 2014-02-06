@@ -35,6 +35,7 @@
                                     <xs:attribute type="xs:string" name="orientation" use="optional"/>
                                     <xs:attribute type="xs:string" name="type" use="required"/>
                                     <xs:attribute type="xs:string" name="uniform" use="optional"/>
+                                    <xs:attribute type="xs:string" name="phred" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
@@ -43,7 +44,7 @@
                 <xs:element name="pipeline">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="ecq" maxOccurs="1" minOccurs="0">
+                            <xs:element name="mecq" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="ecq" maxOccurs="unbounded" minOccurs="0">
@@ -64,6 +65,13 @@
                                             </xs:complexType>
                                         </xs:element>
                                     </xs:sequence>
+                                    <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="analyse-reads" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:attribute type="xs:string" name="kmer" use="optional"/>
+                                    <xs:attribute type="xs:byte" name="threads" use="optional"/>
                                     <xs:attribute type="xs:string" name="parallel" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
@@ -127,6 +135,13 @@
                                     <xs:attribute type="xs:string" name="stats_only" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
+                            <xs:element name="analyse-asms" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:attribute type="xs:string" name="types" use="required"/>
+                                    <xs:attribute type="xs:byte" name="threads" use="optional"/>
+                                    <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="amp" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
@@ -141,6 +156,11 @@
                                             </xs:complexType>
                                         </xs:element>
                                     </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="finalise" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:attribute type="xs:string" name="prefix" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>

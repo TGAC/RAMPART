@@ -16,7 +16,6 @@ import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsProcess;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.util.JobOutput;

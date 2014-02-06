@@ -17,7 +17,10 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
-import uk.ac.ebi.fgpt.conan.core.param.*;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
+import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 

@@ -14,9 +14,7 @@
          assemblers and other tools require that you specify the ploidy and estimated genome size.  For example an estimated
          genome size is required to subsample data to a particular level of coverage.  This organism information is also
          useful for logging and producing helpfully named scaffolds and contigs later. -->
-    <organism ploidy="1" est_genome_size="500000">
-        <name>Bacterius maximus</name>
-    </organism>
+    <organism name="Bacterius maximus" ploidy="1" est_genome_size="500000"/>
 
     <!-- Describes the input data going into the RAMPART pipeline.  Typically, this is any whole genome shotgun DNA sequencing
          data, in FastQ format, produced for a specific organism. A number of different datasets can be specified here as
@@ -42,16 +40,16 @@
              tools can be specified here, and each tool can be applied to a subset, or all the datasets provided.  -->
         <mecq parallel="false">
 
-            <!-- Creates a new dataset called "sickle_agressive" by running sickle over the raw data for lib1896-pe, using
+            <!-- Creates a new dataset called "sickle_aggressive" by running sickle over the raw data for lib1896-pe, using
                  the specified settings. -->
-            <ecq name="sickle_agressive" tool="SICKLE_V1.1" min_len="70" min_qual="20" libs="lib1896-pe"/>
+            <ecq name="sickle_aggressive" tool="SICKLE_V1.1" min_len="70" min_qual="20" libs="lib1896-pe"/>
 
         </mecq>
 
         <!-- Counts Kmers for each dataset produced, using jellyfish.  Each dataset is counted in parallel, using 16
              threads and requesting 4GB from the scheduler for each process. This step is required if you want to compare
              against kmers found in the assemblies in the MASS step below -->
-        <kmer-reads parallel="true" threads="16" memory="4000"/>
+        <analyse-reads kmer="true" parallel="true" threads="16" memory="4000"/>
 
         <!-- The main assembly work is done in this section.  A list of single mass runs are described here.  You can
              specify whether each single mass run should be executed in parallel, or one after the other. Each single mass
@@ -63,8 +61,8 @@
             <!-- This single mass run tells RAMPART to execute several ABYSS assemblies on the raw input data, using a
                  kmer range of between 61 and 75, using a medium step, this means an increment of 5 in kmer value between
                  assemblies.  These assemblies are set to all run in parallel using 16 threads, requesting 4GB from the
-                 scheduler.  The assemblies are then compared by contiguity (using Quast) and Kmers (using KAT). -->
-            <single_mass name="abyss-raw-kmer" tool="ABYSS_V1.3.4" memory="4000" threads="16" parallel="true" stats_levels="CONTIGUITY,KMER">
+                 scheduler. -->
+            <single_mass name="abyss-raw-kmer" tool="ABYSS_V1.3.4" memory="4000" threads="16" parallel="true">
                 <kmer min="61" max="75" step="MEDIUM"/>
                 <inputs>
                     <input ecq="raw" lib="lib1896-pe"/>
@@ -75,15 +73,25 @@
                  abyss assemblies can be executed, but this time with alternate coverage levels.  Specifically, this block
                  says run abyss with a Kmer value of 81, but run two assemblies, one where the sickle trimmed input has
                  been subsampled to an approximate coverage level of 75X, and another using all sickle trimmed input -->
-            <single_mass name="abyss-sickle_agressive-cvg" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true" stats_levels="CONTIGUITY">
+            <single_mass name="abyss-sickle_agressive-cvg" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true">
                 <kmer list="81"/>
                 <coverage list="75,ALL"/>
                 <inputs>
-                    <input mecq="sickle_agressive" lib="lib1896-pe"/>
+                    <input ecq="sickle_aggressive" lib="lib1896-pe"/>
                 </inputs>
             </single_mass>
 
         </mass>
+
+
+        <!-- All assemblies produced by MASS are analysed with the specified types.  In this case we do a contiguity
+             analysis with Quast and a Kmer Analysis using KAT.  Each analysis process uses 8 threads and will be executed
+             in parallel. This step also produces a score for each assembly, which is based on the normalised and weighted
+             statistics calculated from the specified types.  RAMPART has its own weighting matrix for weighting each
+             statistic but the user can specify a custom set of weights here if they prefer.  RAMPART considers the
+             assembly with the highest score the best assembly, and by default this selected assembly is used as input to
+             the next step.-->
+        <analyse-asms types="QUAST,KAT" threads="8" parallel="true" weightings_file="path_to_custom_weights"/>
 
         <!-- Stages in this section are applied to the selected assembly from the MASS step, in an attempt to improve
              the selected assembly further.  Each stage specified below will be executed in sequence. -->
@@ -94,7 +102,8 @@
 
         </amp>
 
-        <!-- Renames the final assembly and fasta headers in that assembly with the prefix below -->
+        <!-- Renames the final assembly and fasta headers in that assembly with the prefix below.  It's generally a good
+             idea to avoid names with dots and pipes, as these can confuse some downstream applications. -->
         <finalise prefix="TGAC_Bm_Sample1_V1"/>
 
     </pipeline>

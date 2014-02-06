@@ -17,12 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
-import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
-
-import java.io.IOException;
 
 /**
  * User: maplesod
