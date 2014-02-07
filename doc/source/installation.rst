@@ -23,6 +23,7 @@ tarball to a directory of your choice: ``tar -xvf <name_of_tarball>``.  This wil
 * bin - contains the main rampart script and other utility scripts
 * doc - a html and pdf copy of this manual
 * etc - contains default environment configuration files, and some example job configuration files
+* man - contains a copy of the manual in man form
 * repo - contains the java classes used to program the pipeline
 * support_jars - contains source and javadocs for the main rampart codebase
 
@@ -39,7 +40,7 @@ installed:
 * GIT
 * Maven 3
 * JDK v1.7+
-* Sphinx (If you would like to compile this documentation)
+* Sphinx and texlive (If you would like to compile this documentation.  If these are not installed you must comment out the create-manual execution element from the pom.xml file.)
 
 You also need to make sure that the system to are compiling on has internet access, as it will try to automatically
 incorporate any required java dependencies via maven.  Now type the following::

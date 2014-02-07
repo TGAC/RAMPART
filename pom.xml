@@ -289,6 +289,9 @@
                                 <copy todir="${build-dir}/doc/html">
                                     <fileset dir="${project.basedir}/doc/build/html"/>
                                 </copy>
+                                <copy todir="${build-dir}/man">
+                                    <fileset dir="${project.basedir}/doc/build/man"/>
+                                </copy>
                                 <copy file="${project.basedir}/doc/build/latex/RAMPART.pdf" todir="${build-dir}/doc"/>
                             </target>
                         </configuration>

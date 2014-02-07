@@ -5,7 +5,7 @@ RAMPART is a configurable pipeline for *de novo* assembly of DNA sequence data. 
 There are already many very good freely available assembly tools, however, few will always produce a good assembly first time
 using the default settings. Sometimes one particular assembler may perform well on your data and genome, but in other
 cases another performs better. Sometimes an assembly will be better if the reads are error corrected, other times not.
-Also depending on the data aviailable, it maybe possible to improve the assembly with additional scaffolding or gap
+Also depending on the data available, it maybe possible to improve the assembly with additional scaffolding or gap
 filling steps. There are many combinations of tools that could be tried and no clear way of knowing *a priori*, which will
 work best. RAMPART can be though of as a framework for these kinds of assembly projects. It is pipeline makes use of
 tried and tested tools for read pre-processing, assembly and assembly improvement, that allows the user to configure
@@ -31,7 +31,7 @@ From source, you will first need the following dependencies installed:
 * GIT
 * Maven 3
 * JDK v1.7+
-* Sphinx (If you would like to compile the manual)
+* Sphinx and texlive (If you would like to compile the manual.  If these are not installed you must comment out the create-manual execution element from the pom.xml file.))
 
 You also need to make sure that the system to are compiling on has internet access, as it will try to automatically
 incorporate any required java dependencies via maven. Now type the following::
