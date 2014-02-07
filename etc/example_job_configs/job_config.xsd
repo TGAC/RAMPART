@@ -68,7 +68,7 @@
                                     <xs:attribute type="xs:string" name="parallel" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="analyse-reads" maxOccurs="1" minOccurs="0">
+                            <xs:element name="analyse_reads" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:attribute type="xs:string" name="kmer" use="optional"/>
                                     <xs:attribute type="xs:byte" name="threads" use="optional"/>
@@ -135,7 +135,7 @@
                                     <xs:attribute type="xs:string" name="stats_only" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="analyse-asms" maxOccurs="1" minOccurs="0">
+                            <xs:element name="analyse_asms" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:attribute type="xs:string" name="types" use="required"/>
                                     <xs:attribute type="xs:byte" name="threads" use="optional"/>

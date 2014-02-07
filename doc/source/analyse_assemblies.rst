@@ -11,13 +11,13 @@ RAMPART currently offers 3 assembly analysis options in MASS:
 * Completeness
 
 These can be identified using the following comma separated values in an attribute called ``types`` in the
-``analyse_asms`` pipeline element.  The available options for the list are: QUAST,KMER,CEGMA.
+``analyse_asms`` pipeline element.  The available options for the list are: QUAST,KAT,CEGMA.
 
 QUAST, compares the assemblies from a contuiguity perspective.  This tool runs really fast, and produces statistics such
 as the N50, assembly size, max sequence length.  It also produces a nice html report showing cumulative length
 distribution curves for each assembly and GC content curves.
 
-KMER, performs a kmer count on the assembly using Jellyfish, and, assuming kmer counting was requested on the reads
+KAT, performs a kmer count on the assembly using Jellyfish, and, assuming kmer counting was requested on the reads
 previously, will use the Kmer Analysis Toolkit (KAT) to create a comparison matrix comparing kmer counts in the reads to
 the assembly.  This can be visualised later using KAT to show how much of the content in the reads has been assembled
 and how repetitive the assembly is.  Repetition could be due to heterozygosity in the diploid genomes so please read the
@@ -42,7 +42,7 @@ Should the user wish to override the default weights that are assigned to each a
 setting the ``weightings_file`` attribute in the ``mass`` element.  For example, using an absolute path to a custom
 weightings file the XML snippet may look like this::
 
-   <analyse_asms types="QUAST,KMER,CEGMA" parallel="false" threads="16"
+   <analyse_asms types="QUAST,KAT,CEGMA" parallel="false" threads="16"
                  weightings_file="~/.tgac/rampart/custom_weightings.tab"/>
 
 The format of the weightings file is a pipe separated table as follows::

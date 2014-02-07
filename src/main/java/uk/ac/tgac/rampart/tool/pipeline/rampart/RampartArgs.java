@@ -59,9 +59,9 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     public static final String KEY_ELEM_LIBRARY         = "library";
     public static final String KEY_ELEM_PIPELINE        = "pipeline";
     public static final String KEY_ELEM_MECQ            = "mecq";
-    public static final String KEY_ELEM_ANALYSE_READS   = "analyse-reads";
+    public static final String KEY_ELEM_ANALYSE_READS   = "analyse_reads";
     public static final String KEY_ELEM_MASS            = "mass";
-    public static final String KEY_ELEM_ANALYSE_ASMS    = "analyse-asms";
+    public static final String KEY_ELEM_ANALYSE_ASMS    = "analyse_asms";
     public static final String KEY_ELEM_AMP             = "amp";
     public static final String KEY_ELEM_FINALISE        = "finalise";
 

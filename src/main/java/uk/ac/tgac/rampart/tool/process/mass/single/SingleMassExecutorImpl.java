@@ -46,11 +46,9 @@ import java.util.List;
  */
 public class SingleMassExecutorImpl extends RampartExecutorImpl implements SingleMassExecutor {
 
-    private List<Integer> jobIds;
     private AnalyseAsmsExecutor analyseAsmsExecutor;
 
     public SingleMassExecutorImpl() {
-        this.jobIds = new ArrayList<>();
         this.analyseAsmsExecutor = new AnalyseAsmsExecutorImpl();
     }
 
@@ -58,7 +56,6 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext) {
         super.initialise(conanProcessService, executionContext);
 
-        this.jobIds.clear();
         this.analyseAsmsExecutor.initialise(conanProcessService, executionContext);
     }
 
@@ -155,11 +152,6 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException {
 
         return getCount(seqFile, outputDir, jobName, false);
-    }
-
-    @Override
-    public List<Integer> getJobIds() {
-        return this.jobIds;
     }
 
     protected long getCount(File seqFile, File outputDir, String jobName, boolean linesOnly) throws ProcessExecutionException, InterruptedException, IOException {

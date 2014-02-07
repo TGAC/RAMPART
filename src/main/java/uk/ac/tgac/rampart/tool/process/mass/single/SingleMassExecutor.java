@@ -46,6 +46,4 @@ public interface SingleMassExecutor extends RampartExecutor {
     long getNbEntries(File seqFile, File outputDir, String jobName) throws ProcessExecutionException, InterruptedException, IOException;
 
     long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException;
-
-    List<Integer> getJobIds();
 }

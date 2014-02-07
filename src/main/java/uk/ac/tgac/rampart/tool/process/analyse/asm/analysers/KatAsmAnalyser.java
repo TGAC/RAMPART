@@ -173,7 +173,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
                 for(File readCount : readCounts) {
 
                     String outputPrefix = "kat-comp-" + readCount.getName();
-                    String jobName = args.getJobPrefix() + "kmer-compare-" + outputPrefix;
+                    String jobName = args.getJobPrefix() + "-kmer-compare-" + outputPrefix;
 
                     // Setup kat comp
                     KatCompV1.Args katCompArgs = new KatCompV1.Args();
@@ -216,7 +216,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             KatPlotSpectraCnV1 katPlotSpectraCnProcess = new KatPlotSpectraCnV1(katPlotSpectraCnArgs);
 
             ExecutionResult result = analyseAsmsExecutor.executeKatPlotSpectraCn(katPlotSpectraCnProcess,
-                    executionContext, (args.getJobPrefix() + "kmer-plot-spectra-cn-" + i++), args.isRunParallel());
+                    executionContext, (args.getJobPrefix() + "-kmer-plot-spectra-cn-" + i++), args.isRunParallel());
         }
 
         // Just let these run.  They shouldn't take long and no processes are dependent on them downstream

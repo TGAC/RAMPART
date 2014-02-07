@@ -46,7 +46,7 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
 
         SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs, this.conanProcessService);
         singleMassProcess.execute(this.executionContext);
-        this.jobIds = singleMassProcess.getJobIds();
+        this.jobIds.addAll(singleMassProcess.getJobIds());
     }
 
     @Override

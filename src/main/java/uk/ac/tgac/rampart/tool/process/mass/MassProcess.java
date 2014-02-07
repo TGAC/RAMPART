@@ -112,19 +112,6 @@ public class MassProcess extends AbstractConanProcess {
 
                 // Collect job ids
                 jobIds.addAll(this.massExecutor.getJobIds());
-
-                // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
-                if (executionContext.usingScheduler() && !args.isRunParallel()) {
-                    log.debug("Waiting for completion of: " + singleMassArgs.getName());
-                    this.massExecutor.executeScheduledWait(
-                            jobIds,
-                            singleMassArgs.getJobPrefix() + "-analyser-*",
-                            ExitStatus.Type.COMPLETED_ANY,
-                            args.getJobPrefix() + "-wait",
-                            singleMassArgs.getOutputDir());
-
-                    jobIds.clear();
-                }
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
@@ -132,12 +119,10 @@ public class MassProcess extends AbstractConanProcess {
                 log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
                 this.massExecutor.executeScheduledWait(
                         jobIds,
-                        args.getJobPrefix() + "-group*",
+                        args.getJobPrefix() + "-mass-*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
                         args.getOutputDir());
-
-                jobIds.clear();
             }
 
             log.info("MASS complete");

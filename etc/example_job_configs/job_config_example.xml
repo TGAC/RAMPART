@@ -27,7 +27,7 @@
             <ecq name="sickle_lite" tool="SICKLE_PE_V1_1" min_len="90" min_qual="50" libs="pe1,ope1" parallel="false"/>
             <ecq name="quake" tool="QUAKE_V0_3_4" min_len="70" kmer="25" libs="pe1" threads="4" memory="2000"/>
         </mecq>
-        <analyse-reads kmer="true" parallel="true" threads="4"/>
+        <analyse_reads kmer="true" parallel="true" threads="4"/>
         <mass parallel="true">
             <single_mass name="abyss-raw-kmer" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true">
                 <kmer min="61" max="75" step="MEDIUM"/>
@@ -51,7 +51,7 @@
                 </inputs>
             </single_mass>
         </mass>
-        <analyse-asms types="QUAST,KAT" threads="8" parallel="true"/>
+        <analyse_asms types="QUAST,KAT" threads="8" parallel="true"/>
         <amp>
             <stage tool="SSPACE_V2.0"/>
             <stage tool="DEDUP_V1.0"/>

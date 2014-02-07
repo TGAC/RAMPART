@@ -49,7 +49,7 @@
         <!-- Counts Kmers for each dataset produced, using jellyfish.  Each dataset is counted in parallel, using 16
              threads and requesting 4GB from the scheduler for each process. This step is required if you want to compare
              against kmers found in the assemblies in the MASS step below -->
-        <analyse-reads kmer="true" parallel="true" threads="16" memory="4000"/>
+        <analyse_reads kmer="true" parallel="true" threads="16" memory="4000"/>
 
         <!-- The main assembly work is done in this section.  A list of single mass runs are described here.  You can
              specify whether each single mass run should be executed in parallel, or one after the other. Each single mass
@@ -91,7 +91,7 @@
              statistic but the user can specify a custom set of weights here if they prefer.  RAMPART considers the
              assembly with the highest score the best assembly, and by default this selected assembly is used as input to
              the next step.-->
-        <analyse-asms types="QUAST,KAT" threads="8" parallel="true" weightings_file="path_to_custom_weights"/>
+        <analyse_asms types="QUAST,KAT" threads="8" parallel="true" weightings_file="path_to_custom_weights"/>
 
         <!-- Stages in this section are applied to the selected assembly from the MASS step, in an attempt to improve
              the selected assembly further.  Each stage specified below will be executed in sequence. -->

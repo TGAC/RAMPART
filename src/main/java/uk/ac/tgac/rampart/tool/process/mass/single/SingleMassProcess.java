@@ -48,6 +48,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     private static Logger log = LoggerFactory.getLogger(SingleMassProcess.class);
 
     private SingleMassExecutor singleMassExecutor;
+    private List<Integer> jobIds;
 
 
     public SingleMassProcess() {
@@ -58,6 +59,7 @@ public class SingleMassProcess extends AbstractConanProcess {
         super("", args, new SingleMassParams());
         this.singleMassExecutor = new SingleMassExecutorImpl();
         this.conanProcessService = conanProcessService;
+        this.jobIds = new ArrayList<>();
     }
 
 
@@ -106,9 +108,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             this.createSupportDirectories(genericAssembler, args);
             log.debug("Created directories in: \"" + args.getOutputDir() + "\"");
 
-            String assemblerWait = null;
-
-            List<Integer> assemblyJobIds = new ArrayList<>();
+            jobIds.clear();
 
             // Iterate over coverage range
             for (Integer cvg : validatedCoverageRange) {
@@ -150,19 +150,23 @@ public class SingleMassProcess extends AbstractConanProcess {
                     ExecutionResult result = this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
 
                     // Add assembler id to list
-                    assemblyJobIds.add(result.getJobId());
+                    jobIds.add(result.getJobId());
 
                     // Create links for outputs from this assembler to known locations
                     this.singleMassExecutor.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
                 }
             }
 
-            // If using a scheduler create a wait condition that will be observed by the stats job if running in parallel
-            assemblerWait = executionContext.usingScheduler() && args.isRunParallel() ?
-                    executionContext.getScheduler().generatesJobIdFromOutput() ?
-                            executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, assemblyJobIds) :
-                            executionContext.getScheduler().createWaitCondition(ExitStatus.Type.COMPLETED_SUCCESS, args.getJobPrefix() + "-assembly*") :
-                    null;
+            // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
+            if (executionContext.usingScheduler() && args.isRunParallel()) {
+                log.debug("Waiting for completion of: " + args.getName());
+                this.singleMassExecutor.executeScheduledWait(
+                        jobIds,
+                        args.getJobPrefix() + "-mass-*",
+                        ExitStatus.Type.COMPLETED_ANY,
+                        args.getJobPrefix() + "-wait",
+                        args.getOutputDir());
+            }
 
 
             // Finish
@@ -180,7 +184,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     }
 
     public List<Integer> getJobIds() {
-        return this.singleMassExecutor.getJobIds();
+        return this.jobIds;
     }
 
     private List<Library> doSubsampling(SingleMassArgs args, boolean assemblerDoesSubsampling, int coverage, List<Library> libraries)
