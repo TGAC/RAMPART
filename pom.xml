@@ -281,7 +281,7 @@
                                         dir="${project.basedir}/doc"
                                         executable="make"
                                         failonerror="false">
-                                    <arg line="html latexpdf text" />
+                                    <arg line="html man latexpdf text" />
                                 </exec>
 
                                 <!-- copy the documentation in to the build dir -->
