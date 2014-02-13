@@ -21,8 +21,8 @@ set to 10.  An example, that applies a prefix and breaks to contigs only on gaps
 The input from this stage will either be the best assembly selected from MASS, or the final assembly produced by AMP
 depending on how you've setup your job.  The output from this stage will be as follows:
 
-* <prefix>.scaffolds.fa (the final assembly which can be used for annotation and downstream analysis)
-* <prefix>.contigs.fa (the final set of scaffolds are broken up where stretches of N's exceed a certain limit)
-* <prefix>.agp (a description of where the contigs fit into the scaffolds)
-* <prefix>.translate (how the fasta header names translate back to the input assembly)
+* ``<prefix>.scaffolds.fa`` (the final assembly which can be used for annotation and downstream analysis)
+* ``<prefix>.contigs.fa`` (the final set of scaffolds are broken up where stretches of N's exceed a certain limit)
+* ``<prefix>.agp`` (a description of where the contigs fit into the scaffolds)
+* ``<prefix>.translate`` (how the fasta header names translate back to the input assembly)
 

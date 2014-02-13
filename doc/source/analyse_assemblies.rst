@@ -25,9 +25,9 @@ KAT manual and walkthrough guide to get a better understanding of how to interpr
 
 CEGMA aligns highly conserved eukaryotic genes to the assembly.  CEGMA produces a statistic which represents an estimate
 of gene completeness in the assembly.  i.e. if we see CEGMA maps 95% of the conserved genes to the assembly we can
-assume that the assembly is very approximately 95% complete.  This is a very rough guide and shouldn't be taken
+assume that the assembly is approximately 95% complete.  This is a very rough guide and shouldn't be taken
 literally, but can be useful when comparing other assemblies made from the same data.  CEGMA has a couple of other
-disadvantages however, first it is quite slow, second it only works on eukayortic organisms so is useless for bacteria.
+disadvantages however, first it is quite slow, second it only works on eukaryotic organisms so is useless for bacteria.
 
 
 Selecting the best assembly
