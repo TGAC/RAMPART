@@ -17,10 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mecq;
 
-import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
-import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
-import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
-import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
 
@@ -36,7 +33,7 @@ import java.util.List;
 public class MecqParams implements ProcessParams {
 
     private ConanParameter rampartConfig;
-    private ConanParameter qualityTrimmer;
+    private ConanParameter tool;
     private ConanParameter libs;
     private ConanParameter outputDir;
     private ConanParameter minLength;
@@ -56,17 +53,18 @@ public class MecqParams implements ProcessParams {
                 "The rampart configuration file describing the libraries to quality trim",
                 true);
 
-        this.qualityTrimmer = new DefaultConanParameter(
-                "qualityTrimmer",
-                "The quality trimming tool to be used",
-                false,
-                true);
+        this.tool = new ParameterBuilder()
+                .longName("tool")
+                .description("The quality trimming tool to be used")
+                .isOptional(false)
+                .create();
 
-        this.libs = new DefaultConanParameter(
-                "libs",
-                "The libraries to be quality trimmed",
-                false,
-                true);
+        this.libs = new ParameterBuilder()
+                .longName("libs")
+                .description("The libraries to be quality trimmed")
+                .isOptional(false)
+                .argValidator(ArgValidator.OFF)
+                .create();
 
         this.outputDir = new PathParameter(
                 "qtOutput",
@@ -102,11 +100,10 @@ public class MecqParams implements ProcessParams {
                 "createConfigs",
                 "Whether or not to create separate RAMPART configuration files for RAW and QT datasets in the output directory");
 
-        this.jobPrefix = new DefaultConanParameter(
-                "jobPrefix",
-                "If using a scheduler this prefix is applied to the job names of all child QT processes",
-                false,
-                true);
+        this.jobPrefix = new ParameterBuilder()
+                .longName("jobPrefix")
+                .description("If using a scheduler this prefix is applied to the job names of all child QT processes")
+                .create();
 
         this.runParallel = new FlagParameter(
                 "runParallel",
@@ -124,8 +121,8 @@ public class MecqParams implements ProcessParams {
         return rampartConfig;
     }
 
-    public ConanParameter getQualityTrimmer() {
-        return qualityTrimmer;
+    public ConanParameter getTool() {
+        return tool;
     }
 
     public ConanParameter getLibs() {
@@ -177,7 +174,7 @@ public class MecqParams implements ProcessParams {
         return new ArrayList<>(Arrays.asList(
                 new ConanParameter[]{
                         this.rampartConfig,
-                        this.qualityTrimmer,
+                        this.tool,
                         this.libs,
                         this.minLength,
                         this.minQuality,

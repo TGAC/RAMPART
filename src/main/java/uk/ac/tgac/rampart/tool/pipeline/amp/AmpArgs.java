@@ -19,19 +19,21 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
-import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +42,7 @@ import java.util.Map;
  * Date: 12/02/13
  * Time: 16:55
  */
-public class AmpArgs implements ProcessArgs {
+public class AmpArgs implements RampartStageArgs {
 
     private static final String INPUT_ASSEMBLY = "input";
     private static final String KEY_ELEM_AMP_STAGE = "stage";
@@ -66,11 +68,11 @@ public class AmpArgs implements ProcessArgs {
     private List<AmpStageArgs> stageArgsList;
     private String jobPrefix;
     private Organism organism;
-    private List<StatsLevel> statsLevels;
     private boolean statsOnly;
     private int threads;
     private int memory;
     private boolean runParallel;
+    private ExecutionContext executionContext;
 
 
     public AmpArgs() {
@@ -80,7 +82,6 @@ public class AmpArgs implements ProcessArgs {
         this.allMecqs = new ArrayList<>();
         this.stageArgsList = new ArrayList<>();
         this.jobPrefix = "amp";
-        this.statsLevels = new ArrayList<>();
         this.statsOnly = DEFAULT_STATS_ONLY;
         this.threads = DEFAULT_THREADS;
         this.memory = DEFAULT_MEMORY;
@@ -120,14 +121,6 @@ public class AmpArgs implements ProcessArgs {
         }
 
         // Optional
-
-        this.statsLevels = ele.hasAttribute(KEY_ATTR_STATS_LEVELS) ?
-                StatsLevel.parseList(XmlHelper.getTextValue(ele, KEY_ATTR_STATS_LEVELS)) :
-                new ArrayList<StatsLevel>();
-
-        this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
-                XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
-                DEFAULT_STATS_ONLY;
 
         this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ?
                 XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) :
@@ -211,14 +204,6 @@ public class AmpArgs implements ProcessArgs {
         return new File(this.getOutputDir(), "assemblies");
     }
 
-    public List<StatsLevel> getStatsLevels() {
-        return statsLevels;
-    }
-
-    public void setStatsLevels(List<StatsLevel> statsLevels) {
-        this.statsLevels = statsLevels;
-    }
-
     public boolean isStatsOnly() {
         return statsOnly;
     }
@@ -251,15 +236,23 @@ public class AmpArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
+    public ExecutionContext getExecutionContext() {
+        return executionContext;
+    }
+
+    public void setExecutionContext(ExecutionContext executionContext) {
+        this.executionContext = executionContext;
+    }
+
     @Override
     public void parse(String args) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<>();
+        ParamMap pvp = new DefaultParamMap();
 
         if (this.inputAssembly != null)
             pvp.put(params.getInputAssembly(), this.inputAssembly.getAbsolutePath());
@@ -274,7 +267,7 @@ public class AmpArgs implements ProcessArgs {
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+    public void setFromArgMap(ParamMap pvp) {
 
         for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
@@ -282,13 +275,13 @@ public class AmpArgs implements ProcessArgs {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
             }
 
-            String param = entry.getKey().getName();
+            ConanParameter param = entry.getKey();
 
-            if (param.equals(this.params.getInputAssembly().getName())) {
+            if (param.equals(this.params.getInputAssembly())) {
                 this.inputAssembly = new File(entry.getValue());
-            } else if (param.equals(this.params.getOutputDir().getName())) {
+            } else if (param.equals(this.params.getOutputDir())) {
                 this.outputDir = new File(entry.getValue());
-            } else if (param.equals(this.params.getJobPrefix().getName())) {
+            } else if (param.equals(this.params.getJobPrefix())) {
                 this.jobPrefix = entry.getValue();
             }
         }
@@ -296,5 +289,10 @@ public class AmpArgs implements ProcessArgs {
 
     public File getFinalAssembly() {
         return new File(this.getOutputDir(), "final.fa");
+    }
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

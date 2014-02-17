@@ -20,12 +20,14 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.Rampart;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassParams;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
@@ -33,7 +35,6 @@ import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,19 +43,16 @@ import java.util.Map;
  * Date: 10/01/13
  * Time: 17:04
  */
-public class MassArgs implements ProcessArgs {
+public class MassArgs implements RampartStageArgs {
 
     // Keys for config file
     private static final String KEY_ATTR_PARALLEL = "parallel";
-    private static final String KEY_ATTR_WEIGHTINGS = "weightings_file";
     private static final String KEY_ELEM_SINGLE_MASS = "single_mass";
-    private static final String KEY_ATTR_STATS_ONLY = "stats_only";
 
     // Constants
     public static final int DEFAULT_CVG_CUTOFF = -1;
     public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
     public static final boolean DEFAULT_RUN_PARALLEL = false;
-    public static final boolean DEFAULT_STATS_ONLY = false;
 
 
     // Need access to these
@@ -68,12 +66,15 @@ public class MassArgs implements ProcessArgs {
     private List<EcqArgs> allMecqs;                 // All mecq configurations
     private File mecqDir;
     private boolean runParallel;                // Whether to run MASS groups in parallel
-    private File weightings;
     private Organism organism;
-    private boolean statsOnly;
 
 
     private OutputLevel outputLevel;
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
 
     public enum OutputLevel {
@@ -102,11 +103,9 @@ public class MassArgs implements ProcessArgs {
         this.mecqDir = null;
 
         this.outputLevel = DEFAULT_OUTPUT_LEVEL;
-        this.weightings = Rampart.DEFAULT_WEIGHTINGS_FILE;
 
         this.organism = null;
         this.runParallel = DEFAULT_RUN_PARALLEL;
-        this.statsOnly = DEFAULT_STATS_ONLY;
         this.singleMassArgsList = new ArrayList<>();
     }
 
@@ -130,21 +129,13 @@ public class MassArgs implements ProcessArgs {
                 XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                 DEFAULT_RUN_PARALLEL;
 
-        this.weightings = ele.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
-                new File(XmlHelper.getTextValue(ele, KEY_ATTR_WEIGHTINGS)) :
-                Rampart.DEFAULT_WEIGHTINGS_FILE;
-
-        this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
-                XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
-                DEFAULT_STATS_ONLY;
-
         // All single mass args
         NodeList nodes = ele.getElementsByTagName(KEY_ELEM_SINGLE_MASS);
         for(int i = 0; i < nodes.getLength(); i++) {
             this.singleMassArgsList.add(
                     new SingleMassArgs(
                             (Element)nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                            this.allLibraries, this.allMecqs, this.organism));
+                            this.allLibraries, this.allMecqs, this.organism, this.runParallel));
         }
     }
 
@@ -181,14 +172,6 @@ public class MassArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
-    public File getWeightings() {
-        return weightings;
-    }
-
-    public void setWeightings(File weightings) {
-        this.weightings = weightings;
-    }
-
     public Organism getOrganism() {
         return organism;
     }
@@ -221,14 +204,6 @@ public class MassArgs implements ProcessArgs {
         this.allMecqs = allMecqs;
     }
 
-    public boolean isStatsOnly() {
-        return statsOnly;
-    }
-
-    public void setStatsOnly(boolean statsOnly) {
-        this.statsOnly = statsOnly;
-    }
-
     public File getMecqDir() {
         return mecqDir;
     }
@@ -243,9 +218,9 @@ public class MassArgs implements ProcessArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<>();
+        ParamMap pvp = new DefaultParamMap();
 
 
         if (this.outputLevel != null) {
@@ -263,20 +238,20 @@ public class MassArgs implements ProcessArgs {
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+    public void setFromArgMap(ParamMap pvp) {
         for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
             }
 
-            String param = entry.getKey().getName();
+            ConanParameter param = entry.getKey();
 
-            if (param.equals(this.params.getJobPrefix().getName())) {
+            if (param.equals(this.params.getJobPrefix())) {
                 this.jobPrefix = entry.getValue();
-            } else if (param.equals(this.params.getOutputDir().getName())) {
+            } else if (param.equals(this.params.getOutputDir())) {
                 this.outputDir = new File(entry.getValue());
-            } else if (param.equalsIgnoreCase(this.params.getOutputLevel().getName())) {
+            } else if (param.equals(this.params.getOutputLevel())) {
                 this.outputLevel = OutputLevel.valueOf(entry.getValue());
             }
         }

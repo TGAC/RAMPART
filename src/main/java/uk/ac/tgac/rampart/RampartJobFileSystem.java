@@ -33,8 +33,9 @@ public class RampartJobFileSystem {
 
     // Directories
     private File meqcDir;
-    private File readsKmersDir;
+    private File analyseReadsDir;
     private File massDir;
+    private File analyseAssembliesDir;
     private File massStatsDir;
     private File ampDir;
     private File ampAssembliesDir;
@@ -47,7 +48,7 @@ public class RampartJobFileSystem {
     private File massPlotsFile;
     private File massStatsFile;
     private File massLogFile;
-    private File massOutFile;
+    private File selectedAssemblyFile;
     private File ampPlotsFile;
     private File ampStatsFile;
     private File ampLogFile;
@@ -62,8 +63,9 @@ public class RampartJobFileSystem {
 
         // Record all important directories and make sure they exist
         this.meqcDir = new File(jobDir, "mecq");
-        this.readsKmersDir = new File(jobDir, "kmers-reads");
+        this.analyseReadsDir = new File(jobDir, "reads-analyses");
         this.massDir = new File(jobDir, "mass");
+        this.analyseAssembliesDir = new File(jobDir, "assembly-analyses");
         this.massStatsDir = new File(massDir, "stats");
         this.ampDir = new File(jobDir, "amp");
         this.ampAssembliesDir = new File(ampDir, "assemblies");
@@ -75,7 +77,7 @@ public class RampartJobFileSystem {
         this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
         this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
         this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
-        this.massOutFile = new File(this.massStatsDir.getPath() + "/best.fa");
+        this.selectedAssemblyFile = new File(this.analyseAssembliesDir.getPath() + "/best.fa");
         this.ampPlotsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.pdf");
         this.ampStatsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.txt");
         this.ampLogFile = new File(this.ampDir.getPath() + "/amp.log");
@@ -93,29 +95,29 @@ public class RampartJobFileSystem {
         return meqcDir;
     }
 
-    public File getReadsKmersDir() {
-        return readsKmersDir;
+    public File getAnalyseReadsDir() {
+        return analyseReadsDir;
     }
 
     public File getMassDir() {
         return massDir;
     }
 
+    public File getAnalyseAssembliesDir() {
+        return analyseAssembliesDir;
+    }
 
     public File getMassStatsDir() {
         return massStatsDir;
     }
 
-
     public File getAmpDir() {
         return ampDir;
     }
 
-
     public File getReportDir() {
         return reportDir;
     }
-
 
     public File getReportImagesDir() {
         return reportImagesDir;
@@ -144,8 +146,8 @@ public class RampartJobFileSystem {
         return massLogFile;
     }
 
-    public File getMassOutFile() {
-        return massOutFile;
+    public File getSelectedAssemblyFile() {
+        return selectedAssemblyFile;
     }
 
     public File getReportTemplateFile() {

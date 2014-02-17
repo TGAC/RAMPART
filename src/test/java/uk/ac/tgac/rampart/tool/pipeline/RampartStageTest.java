@@ -36,7 +36,7 @@ public class RampartStageTest {
 
         String test = "ALL";
 
-        List<RampartStage> stageList = RampartStage.parse(test);
+        List<RampartStage> stageList = RampartStageList.parse(test);
 
         assertTrue(stageList.size() == RampartStage.values().length);
     }
@@ -46,25 +46,9 @@ public class RampartStageTest {
 
         String test = "MASS";
 
-        List<RampartStage> stageList = RampartStage.parse(test);
+        List<RampartStage> stageList = RampartStageList.parse(test);
 
         assertTrue(stageList.size() == 1);
         assertTrue(stageList.get(0) == RampartStage.MASS);
-    }
-
-    @Test
-    public void testMassTranslateFilename() {
-
-        String key = RampartStage.MASS.translateFilenameToKey("MASS-k51.fa");
-
-        assertTrue(key.equals("51"));
-    }
-
-    @Test
-    public void testAmpTranslateFilename() {
-
-        String key = RampartStage.AMP.translateFilenameToKey("AMP-1.fa");
-
-        assertTrue(key.equals("1"));
     }
 }

@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 import uk.ac.tgac.rampart.tool.process.mass.single.KmerRange;
@@ -52,7 +53,7 @@ public class MassProcessTest extends MockedConanProcess {
     private MassExecutor massExecutor;
 
     @Test
-    public void testExecute() throws InterruptedException, ProcessExecutionException, IOException {
+    public void testExecute() throws InterruptedException, ProcessExecutionException, IOException, ConanParameterException {
 
         File outputDir = temp.newFolder("testMass");
 
@@ -69,7 +70,6 @@ public class MassProcessTest extends MockedConanProcess {
         MassArgs args = new MassArgs();
         args.setJobPrefix("testMass");
         args.setOutputDir(outputDir);
-        args.setWeightings(weightingsFile);
         args.setSingleMassArgsList(singleMassArgsList);
 
         assertTrue(args.getSingleMassArgsList().get(0).getKmerRange().getFirstKmer() == 31);

@@ -20,13 +20,9 @@ package uk.ac.tgac.rampart.tool.process.mass;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorArgs;
-import uk.ac.tgac.rampart.tool.process.mass.selector.MassSelectorProcess;
-import uk.ac.tgac.rampart.tool.process.mass.selector.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassProcess;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,31 +44,13 @@ public class MassExecutorImpl extends RampartExecutorImpl implements MassExecuto
     public void executeSingleMass(SingleMassArgs singleMassArgs)
             throws InterruptedException, ProcessExecutionException {
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
-        singleMassProcess.setConanProcessService(this.conanProcessService);
+        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs, this.conanProcessService);
         singleMassProcess.execute(this.executionContext);
-        this.jobIds = singleMassProcess.getJobIds();
-    }
-
-    @Override
-    public AssemblyStatsTable compileSingleMassResults(SingleMassArgs singleMassArgs)
-            throws IOException {
-
-        SingleMassProcess singleMassProcess = new SingleMassProcess(singleMassArgs);
-        return singleMassProcess.compileResults(singleMassArgs);
+        this.jobIds.addAll(singleMassProcess.getJobIds());
     }
 
     @Override
     public List<Integer> getJobIds() {
         return this.jobIds;
-    }
-
-    @Override
-    public void executeMassSelector(MassSelectorArgs massSelectorArgs)
-            throws InterruptedException, ProcessExecutionException {
-
-        MassSelectorProcess massSelectorProcess = new MassSelectorProcess(massSelectorArgs);
-        massSelectorProcess.setConanProcessService(this.conanProcessService);
-        massSelectorProcess.execute(this.executionContext);
     }
 }

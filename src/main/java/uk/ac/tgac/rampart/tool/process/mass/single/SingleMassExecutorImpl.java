@@ -21,19 +21,19 @@ import org.apache.commons.io.FileUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
+import uk.ac.tgac.conan.process.asm.AbstractAssemblerArgs;
 import uk.ac.tgac.conan.process.asm.Assembler;
-import uk.ac.tgac.conan.process.asm.AssemblerArgs;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Args;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Process;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
-import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
-import uk.ac.tgac.rampart.tool.process.stats.StatsExecutor;
-import uk.ac.tgac.rampart.tool.process.stats.StatsExecutorImpl;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutorImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,25 +47,22 @@ import java.util.List;
  */
 public class SingleMassExecutorImpl extends RampartExecutorImpl implements SingleMassExecutor {
 
-    private List<Integer> jobIds;
-    private StatsExecutor statsExecutor;
+    private AnalyseAsmsExecutor analyseAsmsExecutor;
 
     public SingleMassExecutorImpl() {
-        this.jobIds = new ArrayList<>();
-        this.statsExecutor = new StatsExecutorImpl();
+        this.analyseAsmsExecutor = new AnalyseAsmsExecutorImpl();
     }
 
     @Override
     public void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext) {
         super.initialise(conanProcessService, executionContext);
 
-        this.jobIds.clear();
-        this.statsExecutor.initialise(conanProcessService, executionContext);
+        this.analyseAsmsExecutor.initialise(conanProcessService, executionContext);
     }
 
     @Override
-    public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel)
-            throws ProcessExecutionException, InterruptedException, IOException {
+    public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel, List<Integer> jobIds)
+            throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         // Important that this happens after directory cleaning.
         assembler.initialise();
@@ -82,10 +79,16 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
             SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
 
-            AssemblerArgs asmArgs = assembler.getArgs();
+            AbstractAssemblerArgs asmArgs = assembler.getArgs();
 
             schArgs.setThreads(asmArgs.getThreads());
             schArgs.setMemoryMB(asmArgs.getMemory());
+
+            // Add wait condition for subsampling jobs (or any other jobs that must finish first), assuming there are any
+            if (jobIds != null && !jobIds.isEmpty()) {
+                schArgs.setWaitCondition(executionContextCopy.getScheduler().createWaitCondition(
+                        ExitStatus.Type.COMPLETED_ANY, jobIds));
+            }
 
             if (assembler.usesOpenMpi() && asmArgs.getThreads() > 1) {
                 schArgs.setOpenmpi(true);
@@ -125,49 +128,16 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         this.conanProcessService.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
     }
 
-    @Override
-    public void dispatchAnalyserJobs(Assembler assembler, SingleMassArgs args, String waitCondition, String jobName)
-            throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
-
-        File inputDir = null;
-
-        // We current only do one level of stats jobs (the highest), technically there shouldn't be much / any different between different levels
-        if (assembler.makesScaffolds()) {
-            inputDir = args.getScaffoldsDir();
-        }
-        else if (assembler.makesContigs()) {
-            inputDir = args.getContigsDir();
-        }
-        else if (assembler.makesUnitigs()) {
-            inputDir = args.getUnitigsDir();
-        }
-        else {
-            throw new IOException("Couldn't run stats jobs because assembler does not support any recognised output types: " + MassArgs.OutputLevel.getListAsString());
-        }
-
-        // Execute the jobs
-        List<Integer> jobIds = this.statsExecutor.dispatchAnalyserJobs(
-                args.getStatsLevels(),
-                inputDir,
-                args.getInputKmers(),
-                args.getThreads(),
-                args.getMemory(),
-                args.getOrganism() == null ? null : args.getOrganism(),
-                assembler.makesScaffolds(),
-                args.isRunParallel(),
-                waitCondition,
-                jobName);
-
-        // Add these jobs to the list of running jobs
-        this.jobIds.addAll(jobIds);
-    }
 
     @Override
-    public void executeSubsampler(double probability, long timestamp, File input, File output, String jobName)
-            throws ProcessExecutionException, InterruptedException, IOException {
+    public ExecutionResult executeSubsampler(double probability, long timestamp, File input, File output, String jobName,
+                                             boolean runParallel)
+            throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
-        executionContextCopy.setContext(jobName, true, new File(output.getParentFile(), jobName + ".log"));
+        executionContextCopy.setContext(jobName,
+                executionContextCopy.usingScheduler() ? !runParallel : true,
+                new File(output.getParentFile(), jobName + ".log"));
 
         SubsamplerV1_0Args ssArgs = new SubsamplerV1_0Args();
         ssArgs.setInputFile(input);
@@ -179,7 +149,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         SubsamplerV1_0Process ssProc = new SubsamplerV1_0Process(ssArgs);
 
         // Create process
-        this.conanProcessService.execute(ssProc, executionContextCopy);
+        return this.conanProcessService.execute(ssProc, executionContextCopy);
     }
 
     @Override
@@ -192,11 +162,6 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     public long getNbBases(File seqFile, File outputDir, String jobName) throws IOException, ProcessExecutionException, InterruptedException {
 
         return getCount(seqFile, outputDir, jobName, false);
-    }
-
-    @Override
-    public List<Integer> getJobIds() {
-        return this.jobIds;
     }
 
     protected long getCount(File seqFile, File outputDir, String jobName, boolean linesOnly) throws ProcessExecutionException, InterruptedException, IOException {

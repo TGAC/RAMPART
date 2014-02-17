@@ -20,7 +20,7 @@ public class CommandLineHelper {
         final HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp(
                 writer,
-                120,
+                100,
                 title,
                 description,
                 options,

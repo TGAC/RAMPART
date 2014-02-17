@@ -1,7 +1,7 @@
 package uk.ac.tgac.rampart.util;
 
 import org.apache.commons.cli.*;
-import uk.ac.tgac.rampart.RampartCLI;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,6 +21,8 @@ public class DependencyDownloader {
 
     // Constants
     public static final String SUBDIR = "rampart_dependencies";
+
+    public static final String DESC = "Downloads source code packages for RAMPART dependencies.";
 
     // **** Option parameter names ****
     public static final String OPT_VERBOSE = "verbose";
@@ -52,7 +54,7 @@ public class DependencyDownloader {
     }
 
 
-    private Options createOptions() {
+    private static Options createOptions() {
 
         // create Options object
         Options options = new Options();
@@ -65,15 +67,15 @@ public class DependencyDownloader {
     }
 
 
-    private void printHelp() {
+    private static void printHelp() {
 
         CommandLineHelper.printHelp(
                 System.err,
-                RampartCLI.START_COMMAND_LINE + " download [<target_dir>]",
+                "rampart-download-deps [<target_dir>]",
                 "RAMPART dependency downloader tool\n\n" +
                 "This tool downloads source code packages for RAMPART dependencies.  Note: that this tool does not try " +
                 "to install the downloaded file, it only downloads them to save the user having to do this manually.\n\n" +
-                "If no final argument is specified then the packages are downloaded into a sub-directory called \"" + SUBDIR + "\"" +
+                "If no final argument is specified then the packages are downloaded into a sub-directory called \"" + SUBDIR + "\" " +
                 "within the current working directory, otherwise the dependencies will be downloaded into a directory " +
                 "specified by this final argument.\n\n",
                 createOptions());
@@ -91,9 +93,7 @@ public class DependencyDownloader {
 
     public void run(File targetDir) throws IOException {
 
-        if (this.verbose) {
-            System.out.println("Downloading RAMPART dependencies into: " + targetDir.getAbsolutePath());
-        }
+        System.out.println("Downloading RAMPART dependencies into: " + targetDir.getAbsolutePath());
 
         File dependencyDir = new File(targetDir, SUBDIR);
 
@@ -102,6 +102,7 @@ public class DependencyDownloader {
         File massDir = new File(dependencyDir, "mass");
         File ampDir = new File(dependencyDir, "amp");
         File statsDir = new File(dependencyDir, "stats");
+        File kmerDir = new File(dependencyDir, "kmer");
 
 
         // Download source packages
@@ -199,11 +200,25 @@ public class DependencyDownloader {
                 new File(ampDir, "GapCloser-src-v1.12-r6.tgz"));
 
 
+        // Kmer
+        createDir(kmerDir);
+
+        downloadFromUrl(
+                new URL("https://github.com/TGAC/KAT/releases/download/V1.0.3/kat-1.0.3.tar.gz"),
+                new File(kmerDir, "kat-1.0.3.tar.gz"));
+
+        downloadFromUrl(
+                new URL("http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.10.tar.gz"),
+                new File(kmerDir, "jellyfish-1.1.10.tar.gz"));
+
+        downloadFromUrl(
+                new URL("http://packages.seqan.de/seqan-src/seqan-src-1.4.1.tar.gz"),
+                new File(kmerDir, "seqan-src-1.4.1.tar.gz"));
+
+
         //TODO Can't do this because of users must fill in a form on the SSPACE website: SSPACE Basic v2.0
 
-        if (this.verbose) {
-            System.out.println("Finished downloading.");
-        }
+        System.out.println("Finished downloading.");
     }
 
     private void createDir(File dir) throws IOException {
@@ -217,9 +232,7 @@ public class DependencyDownloader {
 
     public void downloadFromUrl(URL url, File localFile) throws IOException {
 
-        if (this.verbose) {
-            System.out.print("Downloading: " + url.toString() + " ... ");
-        }
+        System.out.print("Downloading: " + url.toString() + " ... ");
 
         ReadableByteChannel rbc = Channels.newChannel(url.openStream());
         FileOutputStream fos = new FileOutputStream(localFile);
@@ -228,8 +241,29 @@ public class DependencyDownloader {
         if (!localFile.exists()) {
             System.err.println("Could not download: " + url.toString() + "; URL may have changed.");
         }
-        else if (this.verbose) {
-            System.out.println("done.");
+
+        System.out.println("done.");
+    }
+
+    /**
+     * The main entry point for RAMPART's dependency downloader.
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+
+        // Process the command line
+        try {
+            new DependencyDownloader(args).execute();
+        }
+        catch (IllegalArgumentException | ParseException e) {
+            System.err.println(e.getMessage());
+            printHelp();
+            System.exit(1);
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
+            System.exit(2);
         }
     }
 }

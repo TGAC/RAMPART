@@ -17,12 +17,12 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.rampart;
 
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
 
 import java.io.IOException;
 
@@ -65,16 +65,14 @@ public class RampartPipeline extends AbstractConanPipeline {
         // Configure pipeline
         this.clearProcessList();
 
-        addProcessIfRequested(RampartStage.MECQ, this.args.getMecqArgs());
-        addProcessIfRequested(RampartStage.KMER_READS, this.args.getKmerCountReadsArgs());
-        addProcessIfRequested(RampartStage.MASS, this.args.getMassArgs());
-        addProcessIfRequested(RampartStage.AMP, this.args.getAmpArgs());
-        addProcessIfRequested(RampartStage.FINALISE, this.args.getFinaliseArgs());
-    }
+        // Create all the processes
+        this.addProcesses(this.args.getStages().createProcesses(this.getConanProcessService()));
 
-    private void addProcessIfRequested(RampartStage stage, ProcessArgs stageArgs) {
-        if (this.args.getStages().contains(stage) && stageArgs != null) {
-            this.addProcess(stage.create(stageArgs));
+        // Check all processes in the pipeline are operational, modify execution context to execute unscheduled locally
+        if (!this.isOperational(new DefaultExecutionContext(new Local(), null,
+                this.args.getExecutionContext().getExternalProcessConfiguration()))) {
+            throw new IOException("RAMPART pipeline contains one or more processes that are not currently operational.  " +
+                    "Please fix before restarting pipeline.");
         }
     }
 

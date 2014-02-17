@@ -4,3 +4,7 @@
 /.idea/
 /target/
 /*.iml
+/lib/
+/build/
+/*.~lock.README#
+/dist/

@@ -20,36 +20,35 @@ package uk.ac.tgac.rampart.tool.pipeline;
 import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpParams;
 import uk.ac.tgac.rampart.tool.pipeline.amp.AmpProcess;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsParams;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsProcess;
+import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReadsArgs;
+import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReadsParams;
+import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReadsProcess;
+import uk.ac.tgac.rampart.tool.process.finalise.FinaliseArgs;
 import uk.ac.tgac.rampart.tool.process.finalise.FinaliseParams;
 import uk.ac.tgac.rampart.tool.process.finalise.FinaliseProcess;
-import uk.ac.tgac.rampart.tool.process.kmercount.reads.KmerCountReadsParams;
-import uk.ac.tgac.rampart.tool.process.kmercount.reads.KmerCountReadsProcess;
+import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.MassParams;
 import uk.ac.tgac.rampart.tool.process.mass.MassProcess;
+import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqParams;
 import uk.ac.tgac.rampart.tool.process.mecq.MecqProcess;
-import uk.ac.tgac.rampart.tool.process.report.ReportParams;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * User: maplesod
- * Date: 30/01/13
- * Time: 16:45
+ * This enum describes each possible stage within the RAMPART pipeline.  It is important that each stage is specified in
+ * the order that it should be executed within the pipeline.
  */
 public enum RampartStage {
 
     MECQ {
-        @Override
-        public String translateFilenameToKey(String filename) {
-            return null;
-        }
 
         @Override
         public List<ConanParameter> getParameters() {
@@ -57,40 +56,34 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return new MecqProcess(processArgs);
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), MecqArgs.class);
         }
-    },
-    KMER_READS {
+
         @Override
-        public String translateFilenameToKey(String filename) {
-            return null;
+        public AbstractConanProcess create() {
+            return new MecqProcess(this.getArgs());
         }
+
+    },
+    ANALYSE_READS {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new KmerCountReadsParams().getConanParameters();
+            return new AnalyseReadsParams().getConanParameters();
         }
 
         @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return new KmerCountReadsProcess(processArgs);
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), AnalyseReadsArgs.class);
+        }
+
+        @Override
+        public AbstractConanProcess create() {
+            return new AnalyseReadsProcess(this.getArgs());
         }
     },
     MASS {
-        @Override
-        public String translateFilenameToKey(String filename) {
-
-            Pattern pattern = Pattern.compile("^.*k(\\d+).*$");
-            Matcher matcher = pattern.matcher(filename);
-
-            if (matcher.matches()) {
-
-                return matcher.group(1);
-            } else {
-                return null;
-            }
-        }
 
         @Override
         public List<ConanParameter> getParameters() {
@@ -98,23 +91,33 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return new MassProcess(processArgs);
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), MassArgs.class);
+        }
+
+        @Override
+        public AbstractConanProcess create() {
+            return new MassProcess(this.getArgs());
+        }
+    },
+    ANALYSE_ASSEMBLIES {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new AnalyseAsmsParams().getConanParameters();
+        }
+
+        @Override
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), AnalyseAsmsArgs.class);
+        }
+
+        @Override
+        public AbstractConanProcess create() {
+            return new AnalyseAsmsProcess(this.getArgs());
         }
     },
     AMP {
-        @Override
-        public String translateFilenameToKey(String filename) {
-
-            Pattern pattern = Pattern.compile("^.*-(\\d+).*$");
-            Matcher matcher = pattern.matcher(filename);
-
-            if (matcher.matches()) {
-                return matcher.group(1);
-            } else {
-                return null;
-            }
-        }
 
         @Override
         public List<ConanParameter> getParameters() {
@@ -122,49 +125,16 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return new AmpProcess(processArgs);
-        }
-    },
-    ANALYSE {
-
-        @Override
-        public String translateFilenameToKey(String filename) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), AmpArgs.class);
         }
 
         @Override
-        public List<ConanParameter> getParameters() {
-            return null;
-        }
-
-        @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-    },
-    REPORT {
-
-        @Override
-        public String translateFilenameToKey(String filename) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        @Override
-        public List<ConanParameter> getParameters() {
-            return new ReportParams().getConanParameters();
-        }
-
-        @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        public AbstractConanProcess create() {
+            return new AmpProcess(this.getArgs());
         }
     },
     FINALISE {
-        @Override
-        public String translateFilenameToKey(String filename) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
 
         @Override
         public List<ConanParameter> getParameters() {
@@ -172,16 +142,64 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ProcessArgs processArgs) {
-            return new FinaliseProcess(processArgs);
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), FinaliseArgs.class);
         }
-    };
 
-    public abstract String translateFilenameToKey(String filename);
+        @Override
+        public AbstractConanProcess create() {
+            return new FinaliseProcess(this.getArgs());
+        }
+    },
+    /*REPORT {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new ReportParams().getConanParameters();
+        }
+
+        @Override
+        public boolean checkArgs(RampartStageArgs args) {
+            return false;
+        }
+
+        @Override
+        public AbstractConanProcess create() {
+            return null;
+        }
+    }*/
+    ;
 
     public abstract List<ConanParameter> getParameters();
 
-    public abstract AbstractConanProcess create(ProcessArgs processArgs);
+    public abstract boolean checkArgs(RampartStageArgs args);
+
+    public abstract AbstractConanProcess create();
+
+
+    private RampartStageArgs args;
+
+
+
+    protected static boolean classContains(Class query, Class target) {
+
+        return query.getSimpleName().equals(target.getSimpleName());
+    }
+
+    public RampartStageArgs getArgs() {
+        return this.args;
+    }
+
+    public void setArgs(RampartStageArgs args) {
+
+        boolean validArgsType = this.checkArgs(args);
+
+        if (!validArgsType)
+            throw new IllegalArgumentException("Cannot assign args to this stage.  Invalid args type: " + args.getClass().getSimpleName());
+
+        this.args = args;
+    }
+
 
     public static String getFullListAsString() {
 
@@ -194,27 +212,4 @@ public enum RampartStage {
         return StringUtils.join(stageNames, ",");
     }
 
-    public static List<RampartStage> parse(String stages) {
-
-        if (stages.trim().equalsIgnoreCase("ALL")) {
-            stages = getFullListAsString();
-        }
-
-        String[] stageArray = stages.split(",");
-
-        List<RampartStage> stageList = new ArrayList<>();
-
-        if (stageArray != null && stageArray.length != 0) {
-            for(String stage : stageArray) {
-                stageList.add(RampartStage.valueOf(stage.trim().toUpperCase()));
-            }
-        }
-
-        return stageList;
-    }
-
-    public static String toString(List<RampartStage> rampartStages) {
-
-        return StringUtils.join(rampartStages, ",");
-    }
 }

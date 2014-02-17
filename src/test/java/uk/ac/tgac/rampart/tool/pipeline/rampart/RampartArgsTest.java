@@ -22,7 +22,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageList;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class RampartArgsTest {
         File outDir = temp.newFolder("configTest");
         String jobPrefix = "configTestJob";
 
-        RampartArgs args = new RampartArgs(cfgFile, outDir, jobPrefix, RampartStage.parse("ALL"));
+        RampartArgs args = new RampartArgs(cfgFile, outDir, jobPrefix, RampartStageList.parse("ALL"), null);
 
         assertTrue(true);
     }

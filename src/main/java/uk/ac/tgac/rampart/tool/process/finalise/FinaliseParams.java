@@ -1,7 +1,8 @@
 package uk.ac.tgac.rampart.tool.process.finalise;
 
-import uk.ac.ebi.fgpt.conan.core.param.DefaultConanParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
@@ -37,12 +38,11 @@ public class FinaliseParams implements ProcessParams {
                 "The output directory",
                 false);
 
-        this.jobPrefix = new DefaultConanParameter(
-                "job_prefix",
-                "All libraries to process",
-                false,
-                true,
-                true);
+        this.jobPrefix = new ParameterBuilder()
+                .longName("job_prefix")
+                .description("The job prefix to apply to all child jobs")
+                .argValidator(ArgValidator.DEFAULT)
+                .create();
 
         this.minN = new NumericParameter(
                 "min_n",

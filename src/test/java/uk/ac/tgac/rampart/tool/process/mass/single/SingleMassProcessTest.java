@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
@@ -32,10 +33,10 @@ import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,24 +53,24 @@ public class SingleMassProcessTest extends MockedConanProcess {
     private SingleMassExecutor singleMassExecutor;
 
     @Test
-    public void testExecute() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException {
+    public void testExecute() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException, ConanParameterException {
 
         File outputDir = temp.newFolder("singleMASSTest");
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         SingleMassArgs args = new SingleMassArgs();
-        args.setTool("ABYSS_V1_3_4");
+        args.setTool("ABYSS_V1.3.4");
         args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(args);
+        SingleMassProcess singleMassProcess = new SingleMassProcess(args, conanProcessService);
         AbstractConanProcess smParent = singleMassProcess;
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean())).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        doNothing().when(singleMassExecutor).dispatchAnalyserJobs((Assembler) any(), (SingleMassArgs) any(), anyString(), anyString());
+        when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>)any()))
+                .thenReturn(new DefaultExecutionResult(0, null, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 

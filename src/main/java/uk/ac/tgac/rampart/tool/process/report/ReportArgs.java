@@ -17,11 +17,15 @@
  **/
 package uk.ac.tgac.rampart.tool.process.report;
 
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
+import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,7 +33,7 @@ import java.util.Map;
  * Date: 08/03/13
  * Time: 10:00
  */
-public class ReportArgs implements ProcessArgs {
+public class ReportArgs implements RampartStageArgs {
 
     // Need access to these
     private ReportParams params = new ReportParams();
@@ -55,9 +59,9 @@ public class ReportArgs implements ProcessArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
-        Map<ConanParameter, String> pvp = new HashMap<>();
+        ParamMap pvp = new DefaultParamMap();
 
         if (this.jobDir != null)
             pvp.put(params.getJobDir(), this.getJobDir().getAbsolutePath());
@@ -66,18 +70,23 @@ public class ReportArgs implements ProcessArgs {
     }
 
     @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) {
+    public void setFromArgMap(ParamMap pvp) {
         for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
 
             if (!entry.getKey().validateParameterValue(entry.getValue())) {
                 throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
             }
 
-            String param = entry.getKey().getName();
+            ConanParameter param = entry.getKey();
 
-            if (param.equals(this.params.getJobDir().getName())) {
+            if (param.equals(this.params.getJobDir())) {
                 this.jobDir = new File(entry.getValue());
             }
         }
+    }
+
+    @Override
+    public List<ConanProcess> getExternalProcesses() {
+        return new ArrayList<>();
     }
 }

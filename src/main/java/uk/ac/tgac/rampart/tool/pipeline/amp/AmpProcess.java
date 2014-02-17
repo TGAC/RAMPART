@@ -28,10 +28,8 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * This class wraps a Pipeline to manage each AMP stage
@@ -62,6 +60,21 @@ public class AmpProcess extends AbstractConanProcess {
     }
 
     @Override
+    public boolean isOperational(ExecutionContext executionContext) {
+
+        // Create AMP Pipeline
+        AmpPipeline ampPipeline = new AmpPipeline((AmpArgs)this.getProcessArgs(), this.getConanProcessService(), executionContext);
+
+        if (!ampPipeline.isOperational(executionContext)) {
+            log.warn("AMP stage is NOT operational.");
+            return false;
+        }
+
+        log.info("AMP stage is operational.");
+        return true;
+    }
+
+    @Override
     public String getCommand() {
         return null;
     }
@@ -78,7 +91,7 @@ public class AmpProcess extends AbstractConanProcess {
         if (!args.isStatsOnly()) {
 
             // Create AMP Pipeline
-            AmpPipeline ampPipeline = new AmpPipeline(args, this.getConanProcessService());
+            AmpPipeline ampPipeline = new AmpPipeline(args, this.getConanProcessService(), executionContext);
 
             log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
 
@@ -118,13 +131,6 @@ public class AmpProcess extends AbstractConanProcess {
                     args.getFinalAssembly());
         }
 
-        // Process assemblies and generate stats for each stage after pipeline has completed
-        try {
-            this.ampExecutor.executeAnalysisJob(args);
-        }
-        catch(IOException |CommandExecutionException e) {
-            throw new ProcessExecutionException(-2, e);
-        }
 
         return true;
     }

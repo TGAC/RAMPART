@@ -19,8 +19,9 @@ package uk.ac.tgac.rampart.tool.process.mass.single;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
-import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
@@ -28,20 +29,18 @@ import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
 import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
-import uk.ac.tgac.rampart.tool.process.stats.StatsLevel;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: maplesod
  * Date: 10/01/13
  * Time: 17:04
  */
-public class SingleMassArgs implements ProcessArgs {
+public class SingleMassArgs extends AbstractProcessArgs {
 
     private static final String KEY_ELEM_INPUTS = "inputs";
     private static final String KEY_ELEM_SINGLE_INPUT = "input";
@@ -53,17 +52,13 @@ public class SingleMassArgs implements ProcessArgs {
     private static final String KEY_ATTR_THREADS = "threads";
     private static final String KEY_ATTR_MEMORY = "memory";
     private static final String KEY_ATTR_PARALLEL = "parallel";
-    private static final String KEY_ATTR_STATS_ONLY = "stats_only";
-    private static final String KEY_ATTR_STATS_LEVELS = "stats_levels";
 
     public static final boolean DEFAULT_STATS_ONLY = false;
     public static final boolean DEFAULT_RUN_PARALLEL = false;
+    public static final boolean DEFAULT_MASS_PARALLEL = false;
     public static final int DEFAULT_THREADS = 1;
     public static final int DEFAULT_MEMORY = 0;
 
-
-    // Need access to these
-    private SingleMassParams params = new SingleMassParams();
 
     // Class vars
     private File outputDir;
@@ -86,12 +81,13 @@ public class SingleMassArgs implements ProcessArgs {
     private int threads;
     private int memory;
     private boolean runParallel;
-    private boolean statsOnly;
-    private List<StatsLevel> statsLevels;
-
+    private boolean massParallel;
 
 
     public SingleMassArgs() {
+
+        super(new SingleMassParams());
+
         this.outputDir = null;
         this.jobPrefix = "";
 
@@ -109,12 +105,13 @@ public class SingleMassArgs implements ProcessArgs {
         this.threads = 1;
         this.memory = 0;
         this.runParallel = DEFAULT_RUN_PARALLEL;
-        this.statsOnly = DEFAULT_STATS_ONLY;
-        this.statsLevels = new ArrayList<>();
+        this.massParallel = DEFAULT_MASS_PARALLEL;
     }
 
+
+
     public SingleMassArgs(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                          List<EcqArgs> allMecqs, Organism organism) throws IOException {
+                          List<EcqArgs> allMecqs, Organism organism, boolean massParallel) throws IOException {
 
         // Set defaults
         this();
@@ -149,17 +146,10 @@ public class SingleMassArgs implements ProcessArgs {
                 XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                 DEFAULT_RUN_PARALLEL;
 
-        this.statsOnly = ele.hasAttribute(KEY_ATTR_STATS_ONLY) ?
-                XmlHelper.getBooleanValue(ele, KEY_ATTR_STATS_ONLY) :
-                DEFAULT_STATS_ONLY;
-
         Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
         Element cvgElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_CVG_RANGE);
         this.kmerRange = kmerElement != null ? new KmerRange(kmerElement) : new KmerRange();
         this.coverageRange = cvgElement != null ? new CoverageRange(cvgElement) : new CoverageRange();
-        this.statsLevels = ele.hasAttribute(KEY_ATTR_STATS_LEVELS) ?
-                StatsLevel.parseList(XmlHelper.getTextValue(ele, KEY_ATTR_STATS_LEVELS)) :
-                new ArrayList<StatsLevel>();
 
         // Other args
         this.allLibraries = allLibraries;
@@ -168,6 +158,7 @@ public class SingleMassArgs implements ProcessArgs {
         this.jobPrefix = parentJobPrefix + "-" + name;
         this.organism = organism;
         this.mecqDir = mecqDir;
+        this.massParallel = massParallel;
     }
 
 
@@ -235,6 +226,14 @@ public class SingleMassArgs implements ProcessArgs {
         this.runParallel = runParallel;
     }
 
+    public boolean isMassParallel() {
+        return massParallel;
+    }
+
+    public void setMassParallel(boolean massParallel) {
+        this.massParallel = massParallel;
+    }
+
     public List<ReadsInput> getInputs() {
         return inputs;
     }
@@ -257,22 +256,6 @@ public class SingleMassArgs implements ProcessArgs {
 
     public void setMemory(int memory) {
         this.memory = memory;
-    }
-
-    public boolean isStatsOnly() {
-        return statsOnly;
-    }
-
-    public void setStatsOnly(boolean statsOnly) {
-        this.statsOnly = statsOnly;
-    }
-
-    public List<StatsLevel> getStatsLevels() {
-        return statsLevels;
-    }
-
-    public void setStatsLevels(List<StatsLevel> statsLevels) {
-        this.statsLevels = statsLevels;
     }
 
     public Organism getOrganism() {
@@ -327,7 +310,7 @@ public class SingleMassArgs implements ProcessArgs {
         List<File> inputKmers = new ArrayList<>();
 
         for(ReadsInput ri : this.inputs) {
-            inputKmers.add(new File(fs.getReadsKmersDir(), "jellyfish_" + ri.getEcq() + "_" + ri.getLib() + "_0"));
+            inputKmers.add(new File(fs.getAnalyseReadsDir(), "jellyfish_" + ri.getEcq() + "_" + ri.getLib() + "_0"));
         }
 
         return inputKmers;
@@ -350,6 +333,15 @@ public class SingleMassArgs implements ProcessArgs {
         return new File(outputLevelStatsDir, "stats.txt");
     }
 
+    @Override
+    protected void setOptionFromMapEntry(ConanParameter param, String value) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    protected void setArgFromMapEntry(ConanParameter param, String value) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 
     @Override
     public void parse(String args) {
@@ -357,22 +349,9 @@ public class SingleMassArgs implements ProcessArgs {
     }
 
     @Override
-    public Map<ConanParameter, String> getArgMap() {
+    public ParamMap getArgMap() {
 
         return null;
     }
 
-    @Override
-    public void setFromArgMap(Map<ConanParameter, String> pvp) {
-
-        for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
-
-            if (!entry.getKey().validateParameterValue(entry.getValue())) {
-                throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-            }
-
-            String param = entry.getKey().getName();
-
-        }
-    }
 }

@@ -20,13 +20,9 @@ package uk.ac.tgac.rampart.tool.pipeline.amp;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.rampart.tool.RampartExecutorImpl;
-import uk.ac.tgac.rampart.tool.process.stats.StatsExecutor;
-import uk.ac.tgac.rampart.tool.process.stats.StatsExecutorImpl;
-
-import java.io.IOException;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutorImpl;
 
 /**
  * User: maplesod
@@ -36,31 +32,14 @@ import java.io.IOException;
 @Service
 public class AmpExecutorImpl extends RampartExecutorImpl implements AmpExecutor {
 
-    private StatsExecutor statsExecutor = new StatsExecutorImpl();
+    private AnalyseAsmsExecutor analyseAsmsExecutor = new AnalyseAsmsExecutorImpl();
 
     @Override
     public void initialise(ConanProcessService conanProcessService, ExecutionContext executionContext) {
         super.initialise(conanProcessService, executionContext);
 
-        statsExecutor.initialise(conanProcessService, executionContext);
+        analyseAsmsExecutor.initialise(conanProcessService, executionContext);
     }
 
-    @Override
-    public void executeAnalysisJob(AmpArgs args)
-            throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException {
 
-        if (args.getStatsLevels() != null) {
-            this.statsExecutor.dispatchAnalyserJobs(
-                    args.getStatsLevels(),
-                    args.getAssembliesDir(),
-                    null,
-                    1,
-                    0,
-                    args.getOrganism(),
-                    true,
-                    args.isRunParallel(),
-                    null,
-                    args.getJobPrefix() + "-stats");
-        }
-    }
 }
