@@ -55,6 +55,7 @@ public class SingleMassArgs extends AbstractProcessArgs {
 
     public static final boolean DEFAULT_STATS_ONLY = false;
     public static final boolean DEFAULT_RUN_PARALLEL = false;
+    public static final boolean DEFAULT_MASS_PARALLEL = false;
     public static final int DEFAULT_THREADS = 1;
     public static final int DEFAULT_MEMORY = 0;
 
@@ -80,6 +81,7 @@ public class SingleMassArgs extends AbstractProcessArgs {
     private int threads;
     private int memory;
     private boolean runParallel;
+    private boolean massParallel;
 
 
     public SingleMassArgs() {
@@ -103,12 +105,13 @@ public class SingleMassArgs extends AbstractProcessArgs {
         this.threads = 1;
         this.memory = 0;
         this.runParallel = DEFAULT_RUN_PARALLEL;
+        this.massParallel = DEFAULT_MASS_PARALLEL;
     }
 
 
 
     public SingleMassArgs(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                          List<EcqArgs> allMecqs, Organism organism) throws IOException {
+                          List<EcqArgs> allMecqs, Organism organism, boolean massParallel) throws IOException {
 
         // Set defaults
         this();
@@ -155,6 +158,7 @@ public class SingleMassArgs extends AbstractProcessArgs {
         this.jobPrefix = parentJobPrefix + "-" + name;
         this.organism = organism;
         this.mecqDir = mecqDir;
+        this.massParallel = massParallel;
     }
 
 
@@ -220,6 +224,14 @@ public class SingleMassArgs extends AbstractProcessArgs {
 
     public void setRunParallel(boolean runParallel) {
         this.runParallel = runParallel;
+    }
+
+    public boolean isMassParallel() {
+        return massParallel;
+    }
+
+    public void setMassParallel(boolean massParallel) {
+        this.massParallel = massParallel;
     }
 
     public List<ReadsInput> getInputs() {

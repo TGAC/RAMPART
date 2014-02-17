@@ -93,13 +93,16 @@ public class SingleMassProcess extends AbstractConanProcess {
             log.info("Starting Single MASS run for \"" + args.getName() + "\"");
 
             // Make sure the kmer range is reasonable (if it's not already)
-            KmerRange validatedKmerRange = this.validateKmerRange(args.getName(), genericAssembler.hasKParam(), args.getKmerRange());
+            KmerRange validatedKmerRange = this.validateKmerRange(args.getName(), genericAssembler.hasKParam(),
+                    args.getKmerRange());
 
             // Make sure the coverage range reasonable (if it's not already)
-            CoverageRange validatedCoverageRange = this.validateCoverageRange(args.getName(), args.getOrganism(), args.getCoverageRange());
+            CoverageRange validatedCoverageRange = this.validateCoverageRange(args.getName(), args.getOrganism(),
+                    args.getCoverageRange());
 
             // Make sure the inputs are reasonable
-            List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(), args.getAllMecqs(), args.getMecqDir());
+            List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(),
+                    args.getAllMecqs(), args.getMecqDir());
 
             // Add libs to generic assembler so we know what kind of output to expect
             genericAssembler.getArgs().setLibraries(selectedLibs);
@@ -114,7 +117,8 @@ public class SingleMassProcess extends AbstractConanProcess {
             for (Integer cvg : validatedCoverageRange) {
 
                 // Do subsampling for this coverage level if required
-                List<Library> subsampledLibs = doSubsampling(args, genericAssembler.doesSubsampling(), cvg, selectedLibs);
+                SubsamplingResult subsamplingResult = doSubsampling(args, genericAssembler.doesSubsampling(), cvg, selectedLibs,
+                        args.isRunParallel());
 
                 // Iterate over kmer range
                 for (Integer k : validatedKmerRange) {
@@ -132,7 +136,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                     Assembler assembler = AssemblerFactory.create(
                             args.getTool(),
                             k,
-                            subsampledLibs,
+                            subsamplingResult.getLibraries(),
                             outputDir,
                             args.getThreads(),
                             args.getMemory(),
@@ -147,7 +151,8 @@ public class SingleMassProcess extends AbstractConanProcess {
                     outputDir.mkdirs();
 
                     // Execute the assembler
-                    ExecutionResult result = this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() + "-assembly-" + dirName, args.isRunParallel());
+                    ExecutionResult result = this.singleMassExecutor.executeAssembler(assembler, args.getJobPrefix() +
+                            "-assembly-" + dirName, args.isRunParallel(), subsamplingResult.getJobIds());
 
                     // Add assembler id to list
                     jobIds.add(result.getJobId());
@@ -158,7 +163,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             }
 
             // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
-            if (executionContext.usingScheduler() && args.isRunParallel()) {
+            if (executionContext.usingScheduler() && !args.isMassParallel() && args.isRunParallel()) {
                 log.debug("Waiting for completion of: " + args.getName());
                 this.singleMassExecutor.executeScheduledWait(
                         jobIds,
@@ -187,13 +192,33 @@ public class SingleMassProcess extends AbstractConanProcess {
         return this.jobIds;
     }
 
-    private List<Library> doSubsampling(SingleMassArgs args, boolean assemblerDoesSubsampling, int coverage, List<Library> libraries)
+    private class SubsamplingResult {
+        private List<Library> libraries;
+        private List<Integer> jobIds;
+
+        private SubsamplingResult(List<Library> libraries, List<Integer> jobIds) {
+            this.libraries = libraries;
+            this.jobIds = jobIds;
+        }
+
+        public List<Library> getLibraries() {
+            return libraries;
+        }
+
+        public List<Integer> getJobIds() {
+            return jobIds;
+        }
+    }
+
+
+    private SubsamplingResult doSubsampling(SingleMassArgs args, boolean assemblerDoesSubsampling, int coverage,
+                                        List<Library> libraries, boolean runParallel)
             throws IOException, InterruptedException, ProcessExecutionException, ConanParameterException {
 
 
         // Check to see if we even need to do subsampling.  If not just return the current libraries.
         if (assemblerDoesSubsampling || coverage == CoverageRange.ALL) {
-            return libraries;
+            return new SubsamplingResult(libraries, new ArrayList<Integer>());
         }
 
         // Try to create directory to contain subsampled libraries
@@ -207,6 +232,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         // Subsample each library
         List<Library> subsampledLibs = new ArrayList<>();
+        List<Integer> jobIds = new ArrayList<>();
 
         for(Library lib : libraries) {
 
@@ -241,8 +267,14 @@ public class SingleMassProcess extends AbstractConanProcess {
                         new File(subsamplingDir, lib.getFile2().getName() + fileSuffix)
                 );
 
-                this.singleMassExecutor.executeSubsampler(probability, timestamp, lib.getFile1(), subsampledLib.getFile1(), jobPrefix + "-file1");
-                this.singleMassExecutor.executeSubsampler(probability, timestamp, lib.getFile2(), subsampledLib.getFile2(), jobPrefix + "-file2");
+                ExecutionResult f1Result = this.singleMassExecutor.executeSubsampler(probability, timestamp,
+                        lib.getFile1(), subsampledLib.getFile1(), jobPrefix + "-file1", runParallel);
+
+                ExecutionResult f2Result = this.singleMassExecutor.executeSubsampler(probability, timestamp,
+                        lib.getFile2(), subsampledLib.getFile2(), jobPrefix + "-file2", runParallel);
+
+                jobIds.add(f1Result.getJobId());
+                jobIds.add(f2Result.getJobId());
             }
             else {
 
@@ -263,13 +295,17 @@ public class SingleMassProcess extends AbstractConanProcess {
                         new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
                         null
                 );
-                this.singleMassExecutor.executeSubsampler(probability, timestamp, lib.getFile1(), subsampledLib.getFile1(), jobPrefix);
+
+                ExecutionResult result = this.singleMassExecutor.executeSubsampler(probability, timestamp,
+                        lib.getFile1(), subsampledLib.getFile1(), jobPrefix, runParallel);
+
+                jobIds.add(result.getJobId());
             }
 
             subsampledLibs.add(subsampledLib);
         }
 
-        return subsampledLibs;
+        return new SubsamplingResult(subsampledLibs, jobIds);
     }
 
     /**

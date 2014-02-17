@@ -21,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
@@ -60,7 +61,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
     }
 
     @Override
-    public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel)
+    public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel, List<Integer> jobIds)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         // Important that this happens after directory cleaning.
@@ -82,6 +83,12 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
             schArgs.setThreads(asmArgs.getThreads());
             schArgs.setMemoryMB(asmArgs.getMemory());
+
+            // Add wait condition for subsampling jobs (or any other jobs that must finish first), assuming there are any
+            if (jobIds != null && !jobIds.isEmpty()) {
+                schArgs.setWaitCondition(executionContextCopy.getScheduler().createWaitCondition(
+                        ExitStatus.Type.COMPLETED_ANY, jobIds));
+            }
 
             if (assembler.usesOpenMpi() && asmArgs.getThreads() > 1) {
                 schArgs.setOpenmpi(true);
@@ -123,11 +130,14 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
 
 
     @Override
-    public void executeSubsampler(double probability, long timestamp, File input, File output, String jobName)
+    public ExecutionResult executeSubsampler(double probability, long timestamp, File input, File output, String jobName,
+                                             boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         ExecutionContext executionContextCopy = executionContext.copy();
-        executionContextCopy.setContext(jobName, true, new File(output.getParentFile(), jobName + ".log"));
+        executionContextCopy.setContext(jobName,
+                executionContextCopy.usingScheduler() ? !runParallel : true,
+                new File(output.getParentFile(), jobName + ".log"));
 
         SubsamplerV1_0Args ssArgs = new SubsamplerV1_0Args();
         ssArgs.setInputFile(input);
@@ -139,7 +149,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
         SubsamplerV1_0Process ssProc = new SubsamplerV1_0Process(ssArgs);
 
         // Create process
-        this.conanProcessService.execute(ssProc, executionContextCopy);
+        return this.conanProcessService.execute(ssProc, executionContextCopy);
     }
 
     @Override

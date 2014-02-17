@@ -33,6 +33,7 @@ import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.*;
@@ -68,7 +69,8 @@ public class SingleMassProcessTest extends MockedConanProcess {
         AbstractConanProcess smParent = singleMassProcess;
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean())).thenReturn(new DefaultExecutionResult(0, null, null, -1));
+        when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>)any()))
+                .thenReturn(new DefaultExecutionResult(0, null, null, -1));
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
 

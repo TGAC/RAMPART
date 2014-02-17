@@ -34,13 +34,13 @@ import java.util.List;
  */
 public interface SingleMassExecutor extends RampartExecutor {
 
-    ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel)
+    ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel, List<Integer> jobIds)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException;
 
     void createAssemblyLinks(Assembler assembler, SingleMassArgs smArgs, String jobName)
             throws ProcessExecutionException, InterruptedException;
 
-    void executeSubsampler(double probability, long timestamp, File input, File output, String jobName)
+    ExecutionResult executeSubsampler(double probability, long timestamp, File input, File output, String jobName, boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException;
 
     long getNbEntries(File seqFile, File outputDir, String jobName) throws ProcessExecutionException, InterruptedException, IOException;

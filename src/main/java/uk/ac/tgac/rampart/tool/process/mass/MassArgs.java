@@ -135,7 +135,7 @@ public class MassArgs implements RampartStageArgs {
             this.singleMassArgsList.add(
                     new SingleMassArgs(
                             (Element)nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                            this.allLibraries, this.allMecqs, this.organism));
+                            this.allLibraries, this.allMecqs, this.organism, this.runParallel));
         }
     }
 
