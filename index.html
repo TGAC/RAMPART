@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Rampart : A configurable de novo assembly pipeline" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Rampart</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/TGAC/RAMPART">View on GitHub</a>
+
+          <h1 id="project_title">Rampart</h1>
+          <h2 id="project_tagline">A configurable de novo assembly pipeline</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/TGAC/RAMPART/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/TGAC/RAMPART/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="rampart" class="anchor" href="#rampart"><span class="octicon octicon-link"></span></a>RAMPART</h1>
+
+<p>RAMPART is a configurable pipeline for <em>de novo</em> assembly of DNA sequence data. RAMPART is not a <em>de novo</em> assembler.
+There are already many very good freely available assembly tools, however, few will always produce a good assembly first time
+using the default settings. Sometimes one particular assembler may perform well on your data and genome, but in other
+cases another performs better. Sometimes an assembly will be better if the reads are error corrected, other times not.
+Also depending on the data available, it maybe possible to improve the assembly with additional scaffolding or gap
+filling steps. There are many combinations of tools that could be tried and no clear way of knowing <em>a priori</em>, which will
+work best. RAMPART can be though of as a framework for these kinds of assembly projects. It is pipeline makes use of
+tried and tested tools for read pre-processing, assembly and assembly improvement, that allows the user to configure
+these tools and specify how they should be executed in a single configuration file. RAMPART also provides options for
+comparing and analysing sequence data and assemblies.</p>
+
+<p>This README file contains some brief information about how to install and get up and running with RAMPART.  For MUCH more
+information please read the manual, which can be found in the doc subdirectory, or online at::</p>
+
+<p><a href="http://rampart.readthedocs.org/en/latest/index.html">http://rampart.readthedocs.org/en/latest/index.html</a></p>
+
+<h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>There are two ways to install RAMPART, the easiest and quickest way is from a distribute tarball.  The other is from
+source.</p>
+
+<p>From tarball it is simply a matter of extracting to a directory of your choice: <code>tar -xvf &lt;name_of_tarball&gt;</code>.</p>
+
+<p>From source, you will first need the following dependencies installed:</p>
+
+<ul>
+<li>GIT</li>
+<li>Maven 3</li>
+<li>JDK v1.7+</li>
+<li>Sphinx and texlive (If you would like to compile the manual.  If these are not installed you must comment out the create-manual execution element from the pom.xml file.))</li>
+</ul><p>You also need to make sure that the system to are compiling on has internet access, as it will try to automatically
+incorporate any required java dependencies via maven. Now type the following::</p>
+
+<pre><code>git clone https://github.com/TGAC/RAMPART.git
+cd RAMPART
+mvn clean install
+</code></pre>
+
+<p>Note: If you cannot clone the git repositories using "https", please try "ssh" instead. Consult github to obtain the
+specific URLs.</p>
+
+<p>Assuming there were no compilation errors. The build can be found in ./build/rampart-. There should also be a
+dist sub directory which will contain a tarball suitable for installing RAMPART on other systems.</p>
+
+<p>Next RAMPART's dependencies must be installed. To assist with this RAMPART provides a dependency downloader tool.
+To use this, after the core RAMPART pipeline is compiled and configured (see below for more information on that, then
+type): <code>rampart-download-deps &lt;dir&gt;</code></p>
+
+<h1>
+<a name="more-information" class="anchor" href="#more-information"><span class="octicon octicon-link"></span></a>More Information</h1>
+
+<p>Now that RAMPART is installed you can consult the full manual for details on how to install dependencies, configure
+RAMPART and start running jobs.  This manual can be found in the <code>doc</code> directory in the build, or online at::</p>
+
+<p><a href="http://rampart.readthedocs.org/en/latest/index.html">http://rampart.readthedocs.org/en/latest/index.html</a></p>
+
+<h1>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h1>
+
+<p>RAMPART is available under GNU GLP V3: <a href="http://www.gnu.org/licenses/gpl.txt">http://www.gnu.org/licenses/gpl.txt</a></p>
+
+<p>For licensing details of other RAMPART dependencies please consult their own documentation.</p>
+
+<h1>
+<a name="contact" class="anchor" href="#contact"><span class="octicon octicon-link"></span></a>Contact</h1>
+
+<p>Daniel Mapleson - Analysis Pipelines Project Leader at The Genome Analysis Centre (TGAC)</p>
+
+<p>Website: <a href="http://www.tgac.ac.uk/bioinformatics/genome-analysis/daniel-mapleson/">http://www.tgac.ac.uk/bioinformatics/genome-analysis/daniel-mapleson/</a></p>
+
+<p>Email: <a href="mailto:daniel.mapleson@tgac.ac.uk">daniel.mapleson@tgac.ac.uk</a></p>
+
+<h1>
+<a name="acknowledgements" class="anchor" href="#acknowledgements"><span class="octicon octicon-link"></span></a>Acknowledgements</h1>
+
+<ul>
+<li>Bernardo Clavijo (TGAC)</li>
+<li>Robert Davey (TGAC)</li>
+<li>Tony Burdett (EBI)</li>
+<li>Ricardo Ramirez (TGAC)</li>
+<li>Nizar Drou (Formerly TGAC)</li>
+<li>David Swarbreck (TGAC)</li>
+<li>And everyone who contributed to making the tools RAMPART depends on!</li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Rampart maintained by <a href="https://github.com/TGAC">TGAC</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-48144168-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
