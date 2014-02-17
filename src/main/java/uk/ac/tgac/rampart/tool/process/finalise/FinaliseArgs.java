@@ -63,6 +63,11 @@ public class FinaliseArgs implements RampartStageArgs {
         this.minN = element.hasAttribute(KEY_ATTR_MIN_N) ?
                 XmlHelper.getIntValue(element, KEY_ATTR_MIN_N) :
                 DEFAULT_MIN_N;
+
+        if (this.outputPrefix.contains(".") || this.outputPrefix.contains("|")) {
+            throw new IllegalArgumentException("Will not use dots or pipes in the assembly headers because this can cause " +
+                    "problems for downstream tools.");
+        }
     }
 
     private String getInitials(String string, String suffix) {
