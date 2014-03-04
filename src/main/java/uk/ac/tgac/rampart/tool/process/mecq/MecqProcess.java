@@ -68,7 +68,7 @@ public class MecqProcess extends AbstractConanProcess {
             MecqArgs args = (MecqArgs) this.getProcessArgs();
 
             // Initialise executor
-            this.mecqExecutor.initialise(this.conanProcessService, executionContext);
+            this.mecqExecutor.initialise(this.getConanProcessService(), executionContext);
 
             // If the output directory doesn't exist then make it
             if (!args.getMecqDir().exists()) {

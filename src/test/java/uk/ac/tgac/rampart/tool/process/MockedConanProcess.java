@@ -21,8 +21,12 @@ package uk.ac.tgac.rampart.tool.process;
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+
+import static org.mockito.Mockito.when;
 
 /**
  * Created with IntelliJ IDEA.
@@ -37,11 +41,23 @@ public class MockedConanProcess {
     protected ExecutionContext ec;
 
     @Mock
+    protected ConanExecutorService conanExecutorService;
+
+    @Mock
     protected ConanProcessService conanProcessService;
+
+    public MockedConanProcess() {
+        MockitoAnnotations.initMocks(this);
+
+        when(conanExecutorService.getConanProcessService()).thenReturn(conanProcessService);
+        when(ec.getLocality()).thenReturn(new Local());
+        when(ec.usingScheduler()).thenReturn(false);
+        when(ec.copy()).thenReturn(ec);
+    }
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+
     }
 
 

@@ -41,15 +41,15 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
         JellyfishCountV11 proc = new JellyfishCountV11();
-        proc.setConanProcessService(this.conanProcessService);
+        proc.setConanProcessService(this.getConanProcessService());
         boolean jellyfish = proc.isOperational(executionContext);
 
         KatCompV1 katCompProc = new KatCompV1();
-        katCompProc.setConanProcessService(this.conanProcessService);
+        katCompProc.setConanProcessService(this.getConanProcessService());
         boolean katComp = katCompProc.isOperational(executionContext);
 
         KatPlotSpectraCnV1 katPlotSpectraCn = new KatPlotSpectraCnV1();
-        katPlotSpectraCn.setConanProcessService(this.conanProcessService);
+        katPlotSpectraCn.setConanProcessService(this.getConanProcessService());
         boolean katPlot = katPlotSpectraCn.isOperational(executionContext);
 
         return jellyfish && katComp && katPlot;
@@ -96,11 +96,12 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             List<File> assemblies = AnalyseAsmsProcess.assembliesFromDir(seqDir);
 
             File groupOutputDir = new File(args.getOutputDir(), massGroup);
-            if (groupOutputDir.exists()) {
+            File kmerOutputDir = new File(groupOutputDir, "kmer");
+
+            if (kmerOutputDir.exists()) {
                 FileUtils.deleteDirectory(groupOutputDir);
             }
 
-            File kmerOutputDir = new File(groupOutputDir, "kmer");
             kmerOutputDir.mkdirs();
 
             int i = 1;

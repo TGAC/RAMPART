@@ -60,7 +60,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
             log.info("Starting Kmer Counting on all Reads");
 
             // Initialise the object that makes system calls
-            this.analyseReadsExecutor.initialise(this.conanProcessService, executionContext);
+            this.analyseReadsExecutor.initialise(this.getConanProcessService(), executionContext);
 
             // Create shortcut to args for convienience
             KmerAnalysisReadsArgs args = (KmerAnalysisReadsArgs) this.getProcessArgs();
@@ -116,7 +116,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
                 this.analyseReadsExecutor.executeScheduledWait(
                         jobIds,
                         args.getJobPrefix() + "-count-*",
-                        ExitStatus.Type.COMPLETED_SUCCESS,
+                        ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-kmer-count-wait",
                         args.getOutputDir());
             }
@@ -148,7 +148,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
                 this.analyseReadsExecutor.executeScheduledWait(
                         jobIds,
                         args.getJobPrefix() + "-merge-*",
-                        ExitStatus.Type.COMPLETED_SUCCESS,
+                        ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-kmer-merge-wait",
                         args.getOutputDir());
             }
@@ -168,7 +168,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
                 this.analyseReadsExecutor.executeScheduledWait(
                         katGcpFiles.getJobIds(),
                         katGcpJobPrefix + "*",
-                        ExitStatus.Type.COMPLETED_SUCCESS,
+                        ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-kat-gcp-wait",
                         args.getOutputDir());
             }
@@ -301,14 +301,14 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
      * @return
      */
     public static int guessJellyfishHashSize(Organism organism) {
-        return organism.getEstGenomeSize() * organism.getPloidy() * 100;
+        return organism.getEstGenomeSize() * organism.getPloidy() * 10;
     }
 
     protected JellyfishCountV11 makeJellyfishCount(String inputFilesStr, String outputPrefix, Organism organism, int threads) throws ProcessExecutionException {
 
         JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
         jellyfishArgs.setOutputPrefix(outputPrefix);
-        jellyfishArgs.setLowerCount(2);     // Lets save some space on disk by ignoring anything that only occurs once
+        jellyfishArgs.setLowerCount(3);     // Lets save some space on disk by ignoring anything that only occurs only a couple of times
         jellyfishArgs.setHashSize(guessJellyfishHashSize(organism));
         jellyfishArgs.setMerLength(31);     // 31 should be sufficient for all organisms
         jellyfishArgs.setBothStrands(true);
@@ -393,7 +393,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
     public boolean isOperational(ExecutionContext executionContext) {
 
         JellyfishCountV11 jfCountProc = new JellyfishCountV11();
-        jfCountProc.setConanProcessService(this.conanProcessService);
+        jfCountProc.setConanProcessService(this.getConanProcessService());
 
         if (!jfCountProc.isOperational(executionContext)) {
             log.warn("Jellyfish Count is not operational.");
@@ -401,7 +401,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
         }
 
         JellyfishMergeV11 jfMergeProc = new JellyfishMergeV11();
-        jfMergeProc.setConanProcessService(this.conanProcessService);
+        jfMergeProc.setConanProcessService(this.getConanProcessService());
 
         if (!jfMergeProc.isOperational(executionContext)) {
             log.warn("Jellyfish Merge is not operational.");
@@ -409,7 +409,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
         }
 
         KatGcpV1 katGcpProc = new KatGcpV1();
-        katGcpProc.setConanProcessService(this.conanProcessService);
+        katGcpProc.setConanProcessService(this.getConanProcessService());
 
         if (!katGcpProc.isOperational(executionContext)) {
             log.warn("KAT GCP is not operational.");
@@ -417,7 +417,7 @@ public class KmerAnalysisReadsProcess extends AbstractConanProcess {
         }
 
         KatPlotDensityV1 katPlotDensityProc = new KatPlotDensityV1();
-        katPlotDensityProc.setConanProcessService(this.conanProcessService);
+        katPlotDensityProc.setConanProcessService(this.getConanProcessService());
 
         if (!katPlotDensityProc.isOperational(executionContext)) {
             log.warn("KAT Plot Density is not operational.");

@@ -70,7 +70,7 @@ public class AnalyseAsmsProcess extends AbstractConanProcess {
                 return false;
             }
             else {
-                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanProcessService));
+                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
             }
         }
 
@@ -91,7 +91,7 @@ public class AnalyseAsmsProcess extends AbstractConanProcess {
         AnalyseAsmsArgs args = this.getArgs();
 
         // Initialise executor
-        this.analyseAsmsExecutor.initialise(this.conanProcessService, executionContext);
+        this.analyseAsmsExecutor.initialise(this.getConanProcessService(), executionContext);
 
         if (!args.getOutputDir().exists()) {
             args.getOutputDir().mkdirs();
@@ -100,7 +100,7 @@ public class AnalyseAsmsProcess extends AbstractConanProcess {
         // Create requested services
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
         for(String requestedService : this.getArgs().getAsmAnalyses()) {
-            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanProcessService));
+            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
         }
 
         // Just loop through all requested stats levels and execute each.
@@ -134,7 +134,7 @@ public class AnalyseAsmsProcess extends AbstractConanProcess {
             log.info("Best assembly path: " + selectedAssembly.getAbsolutePath());
 
             // Create link to "best" assembly in stats dir
-            this.conanProcessService.createLocalSymbolicLink(selectedAssembly, outputAssembly);
+            this.getConanProcessService().createLocalSymbolicLink(selectedAssembly, outputAssembly);
 
             // Save table to disk
             File finalFile = new File(args.getOutputDir(), "scores.tab");

@@ -64,11 +64,8 @@ public class ReportProcessTest extends MockedConanProcess {
         ReportProcess process = new ReportProcess(args);
 
         when(conanProcessService.execute(process, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(ec.getLocality()).thenReturn(new Local());
-        when(ec.usingScheduler()).thenReturn(false);
-        when(ec.copy()).thenReturn(ec);
 
-        ReflectionTestUtils.setField(process, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(process, "conanExecutorService", conanExecutorService);
         ReflectionTestUtils.setField(process, "velocityMergerService", velocityMergerService);
 
         process.execute(ec);

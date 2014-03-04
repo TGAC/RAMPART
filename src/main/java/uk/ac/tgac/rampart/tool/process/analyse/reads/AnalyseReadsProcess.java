@@ -52,7 +52,7 @@ public class AnalyseReadsProcess extends AbstractConanProcess {
         if (args.isKmerAnalysis()) {
 
             KmerAnalysisReadsProcess proc = new KmerAnalysisReadsProcess();
-            proc.setConanProcessService(this.conanProcessService);
+            proc.setConanProcessService(this.getConanProcessService());
 
             if (!proc.isOperational(executionContext)) {
                 log.warn("Read Kmer analysis is NOT operational.");
@@ -73,7 +73,7 @@ public class AnalyseReadsProcess extends AbstractConanProcess {
         log.info("Starting Read Analysis");
 
         // Initialise the object that makes system calls
-        this.analyseReadsExecutor.initialise(this.conanProcessService, executionContext);
+        this.analyseReadsExecutor.initialise(this.getConanProcessService(), executionContext);
 
         // Create shortcut to args for convenience
         AnalyseReadsArgs args = (AnalyseReadsArgs) this.getProcessArgs();
@@ -92,7 +92,7 @@ public class AnalyseReadsProcess extends AbstractConanProcess {
             kmerArgs.setRunParallel(args.isRunParallel());
 
             KmerAnalysisReadsProcess proc = new KmerAnalysisReadsProcess(kmerArgs);
-            proc.setConanProcessService(this.conanProcessService);
+            proc.setConanProcessService(this.getConanProcessService());
             proc.execute(executionContext);
         }
 

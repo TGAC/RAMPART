@@ -65,7 +65,7 @@ public class AmpStageProcess extends AbstractConanProcess {
             AmpStageArgs args = (AmpStageArgs) this.getProcessArgs();
 
             // Initialise the object that makes system calls
-            this.ampStageExecutor.initialise(this.conanProcessService, executionContext);
+            this.ampStageExecutor.initialise(this.getConanProcessService(), executionContext);
 
 
             log.info("Starting AMP stage " + args.getIndex());
@@ -88,7 +88,7 @@ public class AmpStageProcess extends AbstractConanProcess {
             this.ampStageExecutor.executeAmpStage(ampProc, "amp-" + args.getIndex());
 
             // Create links for outputs from this assembler to known locations
-            this.conanProcessService.createLocalSymbolicLink(ampProc.getAmpArgs().getOutputFile(), args.getOutputFile());
+            this.getConanProcessService().createLocalSymbolicLink(ampProc.getAmpArgs().getOutputFile(), args.getOutputFile());
 
             log.info("Finished AMP stage " + args.getIndex());
         }
@@ -143,7 +143,7 @@ public class AmpStageProcess extends AbstractConanProcess {
             return false;
         }
 
-        proc.setConanProcessService(this.conanProcessService);
+        proc.setConanProcessService(this.getConanProcessService());
 
         return proc.isOperational(executionContext);
     }

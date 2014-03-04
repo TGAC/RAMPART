@@ -58,7 +58,7 @@ public class SingleMassProcess extends AbstractConanProcess {
     public SingleMassProcess(SingleMassArgs args, ConanProcessService conanProcessService) {
         super("", args, new SingleMassParams());
         this.singleMassExecutor = new SingleMassExecutorImpl();
-        this.conanProcessService = conanProcessService;
+        this.setConanProcessService(conanProcessService);
         this.jobIds = new ArrayList<>();
     }
 
@@ -81,7 +81,7 @@ public class SingleMassProcess extends AbstractConanProcess {
             SingleMassArgs args = (SingleMassArgs) this.getProcessArgs();
 
             // Initialise the object that makes system calls
-            this.singleMassExecutor.initialise(this.conanProcessService, executionContext);
+            this.singleMassExecutor.initialise(this.getConanProcessService(), executionContext);
 
             // Create an assembly object used for other stages in the MASS pipeline.. note this does not include
             // specific kmer settings
@@ -142,7 +142,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                             args.getMemory(),
                             cvg,
                             args.getOrganism(),
-                            this.conanProcessService);
+                            this.getConanProcessService());
 
                     // Make the output directory for this child job (delete the directory if it already exists)
                     if (outputDir.exists()) {
@@ -475,7 +475,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         Assembler asm = null;
         try {
-            asm = AssemblerFactory.create(args.getTool(), this.conanProcessService);
+            asm = AssemblerFactory.create(args.getTool(), this.getConanProcessService());
         } catch (IOException e) {
             throw new NullPointerException("Unidentified tool requested for single MASS run: " + args.getTool());
         }

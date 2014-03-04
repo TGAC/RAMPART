@@ -77,11 +77,8 @@ public class MassProcessTest extends MockedConanProcess {
         MassProcess multiMass = new MassProcess(args);
 
         when(conanProcessService.execute(multiMass, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(ec.getLocality()).thenReturn(new Local());
-        when(ec.usingScheduler()).thenReturn(false);
-        when(ec.copy()).thenReturn(ec);
 
-        ReflectionTestUtils.setField(multiMass, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(multiMass, "conanExecutorService", conanExecutorService);
         ReflectionTestUtils.setField(multiMass, "massExecutor", massExecutor);
 
         multiMass.execute(ec);

@@ -42,7 +42,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
         CegmaV2_4Process proc = new CegmaV2_4Process();
-        proc.setConanProcessService(conanProcessService);
+        proc.setConanProcessService(getConanProcessService());
         return proc.isOperational(executionContext);
     }
 
@@ -114,7 +114,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
                 // Create symbolic links to completeness_reports
                 File sourceFile = new File(((CegmaV2_4Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
-                        "." + CEGMA_DIR_NAME + "_report");
+                        ".completeness_report");
                 File destFile = new File(cegmaOutputDir, f.getName() + ".cegma");
 
                 analyseAsmsExecutor.createSymbolicLink(sourceFile, destFile);
@@ -183,7 +183,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
     @Override
     public String getName() {
-        return "COMPLETENESS";
+        return "CEGMA";
     }
 
     protected CegmaV2_4Process makeCegmaProcess(File input, File outputDir, int threads) throws IOException {

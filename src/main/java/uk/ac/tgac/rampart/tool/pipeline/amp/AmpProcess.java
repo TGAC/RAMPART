@@ -86,7 +86,7 @@ public class AmpProcess extends AbstractConanProcess {
         AmpArgs args = (AmpArgs)this.getProcessArgs();
 
         // Initialise object that makes system calls
-        this.ampExecutor.initialise(this.conanProcessService, executionContext);
+        this.ampExecutor.initialise(this.getConanProcessService(), executionContext);
 
         if (!args.isStatsOnly()) {
 
@@ -99,7 +99,7 @@ public class AmpProcess extends AbstractConanProcess {
             args.getAssembliesDir().mkdirs();
 
             // Create link for the reads file
-            this.conanProcessService.createLocalSymbolicLink(
+            this.getConanProcessService().createLocalSymbolicLink(
                     args.getInputAssembly(),
                     new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
 
@@ -126,7 +126,7 @@ public class AmpProcess extends AbstractConanProcess {
             }
 
             // Create a symbolic link for the final assembly from the final stage
-            this.conanProcessService.createLocalSymbolicLink(
+            this.getConanProcessService().createLocalSymbolicLink(
                     new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
                     args.getFinalAssembly());
         }
