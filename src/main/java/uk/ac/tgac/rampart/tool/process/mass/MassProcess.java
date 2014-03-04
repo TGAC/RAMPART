@@ -70,7 +70,7 @@ public class MassProcess extends AbstractConanProcess {
         MassArgs args = (MassArgs) this.getProcessArgs();
 
         for(SingleMassArgs singleMassArgs : args.getSingleMassArgsList()) {
-            if (!new SingleMassProcess(singleMassArgs, this.conanProcessService).isOperational(executionContext)) {
+            if (!new SingleMassProcess(singleMassArgs, this.getConanProcessService()).isOperational(executionContext)) {
                 log.warn("MASS stage is NOT operational.");
                 return false;
             }
@@ -96,7 +96,7 @@ public class MassProcess extends AbstractConanProcess {
             MassArgs args = (MassArgs) this.getProcessArgs();
 
             // Initialise executor
-            this.massExecutor.initialise(this.conanProcessService, executionContext);
+            this.massExecutor.initialise(this.getConanProcessService(), executionContext);
 
             List<Integer> jobIds = new ArrayList<>();
 

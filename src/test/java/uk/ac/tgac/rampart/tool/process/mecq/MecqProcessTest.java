@@ -61,9 +61,9 @@ public class MecqProcessTest extends MockedConanProcess {
 
         MecqProcess mecqProcess = new MecqProcess(mecqArgs);
 
-        when(conanProcessService.execute(sickle, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
+        when(conanExecutorService.getConanProcessService().execute(sickle, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
 
-        ReflectionTestUtils.setField(mecqProcess, "conanProcessService", conanProcessService);
+        ReflectionTestUtils.setField(mecqProcess, "conanExecutorService", conanExecutorService);
 
         boolean success = mecqProcess.execute(ec);
 

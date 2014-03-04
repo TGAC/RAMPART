@@ -41,7 +41,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     public boolean isOperational(ExecutionContext executionContext) {
 
         QuastV2_2Process proc = new QuastV2_2Process();
-        proc.setConanProcessService(this.conanProcessService);
+        proc.setConanProcessService(this.getConanProcessService());
         return proc.isOperational(executionContext);
     }
 

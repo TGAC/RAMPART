@@ -65,16 +65,15 @@ public class SingleMassProcessTest extends MockedConanProcess {
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
 
-        SingleMassProcess singleMassProcess = new SingleMassProcess(args, conanProcessService);
+        SingleMassProcess singleMassProcess = new SingleMassProcess(args, conanExecutorService.getConanProcessService());
         AbstractConanProcess smParent = singleMassProcess;
 
         when(conanProcessService.execute(singleMassProcess, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
         when(singleMassExecutor.executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>)any()))
                 .thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        when(ec.usingScheduler()).thenReturn(false);
-        when(ec.copy()).thenReturn(ec);
 
-        ReflectionTestUtils.setField(smParent, "conanProcessService", conanProcessService);
+
+        ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);
         ReflectionTestUtils.setField(smParent, "singleMassExecutor", singleMassExecutor);
 
         singleMassProcess.execute(ec);
