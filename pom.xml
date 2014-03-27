@@ -5,7 +5,7 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.8.1</version>
+	<version>0.8.2</version>
 	<packaging>jar</packaging>
 
 	<name>Rampart</name>
@@ -390,8 +390,8 @@
 
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
-            <artifactId>tgac-conan</artifactId>
-            <version>0.8.1</version>
+            <artifactId>tgac-conan-process-wrappers</artifactId>
+            <version>0.8.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-cli</groupId>

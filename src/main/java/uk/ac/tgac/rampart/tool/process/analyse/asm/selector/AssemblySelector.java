@@ -14,6 +14,6 @@ import java.io.File;
 public interface AssemblySelector {
 
     File selectAssembly(AssemblyStatsTable table,
-                        int estimatedGenomeSize,
+                        long estimatedGenomeSize,
                         double estimatedGcPercentage);
 }
