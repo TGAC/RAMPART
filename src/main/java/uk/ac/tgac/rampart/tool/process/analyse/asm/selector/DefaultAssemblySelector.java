@@ -46,7 +46,7 @@ public class DefaultAssemblySelector implements AssemblySelector {
 
     @Override
     public File selectAssembly(AssemblyStatsTable table,
-                               int estimatedGenomeSize,
+                               long estimatedGenomeSize,
                                double estimatedGcPercentage) {
 
         // Normalise merged table

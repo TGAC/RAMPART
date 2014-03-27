@@ -172,7 +172,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
 
-    protected QuastV2_2Process makeQuast(File inputDir, File outputDir, int genomeSize, int threads, boolean scaffolds) {
+    protected QuastV2_2Process makeQuast(File inputDir, File outputDir, long genomeSize, int threads, boolean scaffolds) {
         QuastV2_2Args quastArgs = new QuastV2_2Args();
         quastArgs.setInputFiles(AnalyseAsmsProcess.assembliesFromDir(inputDir));
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
