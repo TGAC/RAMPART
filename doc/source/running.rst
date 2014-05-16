@@ -46,41 +46,50 @@ single set of sequencing data, othertimes it can involve a number of sequencing 
 different data types.  In order to instruct the assemblers and other tools to use the data in the right way, the user
 must describe each dataset and how to interpret it.
 
-Each dataset description should contain the following information:
+Each dataset description must contain the following information:
 
-* An identifier - so we can point tools to use a specific dataset later.
-* Read length - The length of each read in base pairs.
-* Average insert size - An estimate of the average insert size in base pairs used for sequencing if this is a paired end or mate pair library.
-* Insert error tolerance - How tolerant tools should be when interpreting the average insert size specified above.  This figure should be a percentage, e.g. the tool should accept inserts sizes with a 30% tolerance either side of the average insert size.
-* Orientation - If this is a paired end or mate pair library, the orientation of the reads.  For example, paired end libraries are often created using "forward reverse" orientation, and often long mate pairs use "reverse forward" orientation.  The user should specify either "FR" or "RF" for this property.
-* Type - The kind of library this is.  Valid options: "SE" - single end; "OPE" - overlapping paired end; "PE" - paired end; "MP" - mate pair.
-* File paths - File paths to the actual sequencing data.  For paired end and mate pair datasets this will involve pointers to two separate files.
+* Attribute "name" - an identifier - so we can point tools to use a specific dataset later.
+* Element "files" - Must contain one of more "path" elements containing file paths to the actual sequencing data.  For paired end and mate pair datasets this will involve pointers to two separate files.
+
+Ideally you should specify the following information as well if you want RAMPART to execute all tools with the best settings:
+
+* Attribute "read_length" -The length of each read in base pairs.
+* Attribute "avg_insert_size" - An estimate of the average insert size in base pairs used for sequencing if this is a paired end or mate pair library.
+* Attribute "insert_err_tolerance" - How tolerant tools should be when interpreting the average insert size specified above.  This figure should be a percentage, e.g. the tool should accept inserts sizes with a 30% tolerance either side of the average insert size.
+* Attribute "orientation" - If this is a paired end or mate pair library, the orientation of the reads.  For example, paired end libraries are often created using "forward reverse" orientation, and often long mate pairs use "reverse forward" orientation.  The user should specify either "FR" or "RF" for this property.
+* Attribute "type" - The kind of library this is.  Valid options: "SE" - single end; "OPE" - overlapping paired end; "PE" - paired end; "MP" - mate pair.
+* Attribute "phred" - The ascii offset to apply to the quality scores in the library.  Valid options: "PHRED_33" (Sanger / Illumina 1.8+); "PHRED_64" (Illumina 1.3 - 1.7).
+
 
 An example XML snippet of a set of NGS datasets for an assembly project are shown below::
 
     <libraries>
         <library name="pe1" read_length="101" avg_insert_size="500" insert_err_tolerance="0.3" 
-                 orientation="FR" type="PE">
+                 orientation="FR" type="PE" phred="PHRED_64">
             <files>
                 <path>lib1_R1.fastq</path>
                 <path>lib1_R2.fastq</path>
             </files>
         </library>
         <library name="mp1" read_length="150" avg_insert_size="4000" insert_err_tolerance="0.3" 
-                 orientation="RF" type="MP">
+                 orientation="RF" type="MP" phred="PHRED_64">
             <files>
                 <path>lib2_R1.fastq</path>
                 <path>lib2_R2.fastq</path>
             </files>
         </library>
         <library name="ope1" read_length="101" avg_insert_size="180" insert_err_tolerance="0.3" 
-                orientation="FR" type="OPE">
+                orientation="FR" type="OPE" phred="PHRED_33">
             <files>
                 <path>lib3_R1.fastq</path>
                 <path>lib3_R2.fastq</path>
             </files>
         </library>
     </libraries>
+
+
+In the future we plan to interrogate the libraries to work out many of the settings automatically.  However, for the time
+being we request that you enter all these details manually.
 
 
 The pipeline
