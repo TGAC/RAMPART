@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
@@ -112,11 +113,11 @@ public class MecqProcess extends AbstractConanProcess {
                     this.mecqExecutor.createInputLinks(lib, ec.getArgs());
 
                     // Execute this error corrector
-                    this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel());
+                    ExecutionResult result = this.mecqExecutor.executeEcq(ec, ecqLibDir, jobName, ecqArgs.isRunParallel() || args.isRunParallel());
 
                     // The job id should be stored in the process if we are using a scheduler, add to the list regardless
                     // in case we need it later
-                    jobIds.add(ec.getJobId());
+                    jobIds.add(result.getJobId());
 
                     // Create links for outputs from this assembler to known locations
                     this.mecqExecutor.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), ec, ecqArgs, lib);

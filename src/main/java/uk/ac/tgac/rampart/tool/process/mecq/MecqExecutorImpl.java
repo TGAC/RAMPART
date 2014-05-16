@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
@@ -43,7 +44,7 @@ import java.util.List;
 public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecutor {
 
     @Override
-    public void executeEcq(AbstractErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
+    public ExecutionResult executeEcq(AbstractErrorCorrector errorCorrector, File outputDir, String jobName, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException, ConanParameterException {
 
         // Ensure downstream process has access to the process service
@@ -65,7 +66,7 @@ public class MecqExecutorImpl extends RampartExecutorImpl implements MecqExecuto
             schedulerArgs.setMemoryMB(ecArgs.getMemoryGb() * 1000);
         }
 
-        this.conanProcessService.execute(errorCorrector, executionContextCopy);
+        return this.conanProcessService.execute(errorCorrector, executionContextCopy);
     }
 
     @Override
