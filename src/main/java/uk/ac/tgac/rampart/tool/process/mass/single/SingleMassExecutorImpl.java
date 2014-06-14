@@ -65,7 +65,7 @@ public class SingleMassExecutorImpl extends RampartExecutorImpl implements Singl
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         // Important that this happens after directory cleaning.
-        assembler.initialise();
+        assembler.setup();
 
         // Create execution context
         ExecutionContext executionContextCopy = executionContext.copy();

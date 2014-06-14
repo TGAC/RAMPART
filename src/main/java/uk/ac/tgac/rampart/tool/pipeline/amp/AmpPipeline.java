@@ -24,8 +24,7 @@ import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
-import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
-import uk.ac.tgac.rampart.tool.process.amp.AmpStageProcess;
+import uk.ac.tgac.rampart.tool.process.amp.AmpStage;
 
 /**
  * Created with IntelliJ IDEA.
@@ -67,9 +66,9 @@ public class AmpPipeline extends AbstractConanPipeline {
 
     public void init() {
 
-        for(AmpStageArgs ampStageArgs : this.args.getStageArgsList()) {
+        for(AmpStage.Args ampStageArgs : this.args.getStageArgsList()) {
 
-            AmpStageProcess proc = new AmpStageProcess(ampStageArgs);
+            AmpStage proc = new AmpStage(ampStageArgs);
             proc.setConanProcessService(getConanProcessService());
             this.addProcess(proc);
         }

@@ -28,7 +28,7 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
-import uk.ac.tgac.rampart.tool.process.amp.AmpStageArgs;
+import uk.ac.tgac.rampart.tool.process.amp.AmpStage;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
@@ -65,7 +65,7 @@ public class AmpArgs implements RampartStageArgs {
     private File outputDir;
     private List<Library> allLibraries;
     private List<EcqArgs> allMecqs;
-    private List<AmpStageArgs> stageArgsList;
+    private List<AmpStage.Args> stageArgsList;
     private String jobPrefix;
     private Organism organism;
     private boolean statsOnly;
@@ -88,7 +88,9 @@ public class AmpArgs implements RampartStageArgs {
         this.runParallel = DEFAULT_RUN_PARALLEL;
     }
 
-    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly, List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism) throws IOException {
+    public AmpArgs(Element ele, File outputDir, String jobPrefix, File inputAssembly,
+                   List<Library> allLibraries, List<EcqArgs> allMecqs, Organism organism)
+            throws IOException {
 
         // Set defaults
         this();
@@ -110,7 +112,7 @@ public class AmpArgs implements RampartStageArgs {
             String stageName = "amp-" + Integer.toString(i);
             File stageOutputDir = new File(this.getOutputDir(), stageName);
 
-            AmpStageArgs stage = new AmpStageArgs(
+            AmpStage.Args stage = new AmpStage.Args(
                     (Element)nodes.item(i-1), stageOutputDir, this.getAssembliesDir(), jobPrefix + "-" + stageName,
                     this.allLibraries, this.allMecqs, this.organism,
                     inputFile, i);
@@ -184,11 +186,11 @@ public class AmpArgs implements RampartStageArgs {
         this.allMecqs = allMecqs;
     }
 
-    public List<AmpStageArgs> getStageArgsList() {
+    public List<AmpStage.Args> getStageArgsList() {
         return stageArgsList;
     }
 
-    public void setStageArgsList(List<AmpStageArgs> stageArgsList) {
+    public void setStageArgsList(List<AmpStage.Args> stageArgsList) {
         this.stageArgsList = stageArgsList;
     }
 

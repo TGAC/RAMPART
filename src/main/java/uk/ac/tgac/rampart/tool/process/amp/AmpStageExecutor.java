@@ -17,9 +17,12 @@
  **/
 package uk.ac.tgac.rampart.tool.process.amp;
 
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asmIO.AbstractAssemblyIOProcess;
+import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancer;
 import uk.ac.tgac.rampart.tool.RampartExecutor;
+
+import java.io.IOException;
 
 /**
  * User: maplesod
@@ -28,7 +31,7 @@ import uk.ac.tgac.rampart.tool.RampartExecutor;
  */
 public interface AmpStageExecutor extends RampartExecutor {
 
-    void executeAmpStage(AbstractAssemblyIOProcess ampProc, String jobName)
-            throws InterruptedException, ProcessExecutionException;
+    void executeAmpStage(AssemblyEnhancer ampProc, String jobName)
+            throws InterruptedException, ProcessExecutionException, IOException, ConanParameterException;
 
 }

@@ -33,7 +33,7 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
-import uk.ac.tgac.rampart.tool.process.mass.ReadsInput;
+import uk.ac.tgac.rampart.tool.process.ReadsInput;
 import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
@@ -142,7 +142,7 @@ public class SingleMassProcess extends AbstractConanProcess {
                             args.getMemory(),
                             cvg,
                             args.getOrganism(),
-                            this.getConanProcessService());
+                            this.conanExecutorService);
 
                     // Make the output directory for this child job (delete the directory if it already exists)
                     if (outputDir.exists()) {
@@ -475,7 +475,7 @@ public class SingleMassProcess extends AbstractConanProcess {
 
         Assembler asm = null;
         try {
-            asm = AssemblerFactory.create(args.getTool(), this.getConanProcessService());
+            asm = AssemblerFactory.create(args.getTool(), this.conanExecutorService);
         } catch (IOException e) {
             throw new NullPointerException("Unidentified tool requested for single MASS run: " + args.getTool());
         }
