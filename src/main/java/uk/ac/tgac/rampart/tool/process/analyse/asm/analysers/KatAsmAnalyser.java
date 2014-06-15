@@ -14,7 +14,8 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
 import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.JobOutput;
@@ -55,96 +56,62 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
     }
 
     @Override
-    public boolean execute(AnalyseAssemblies.Args args, ConanExecutorService ces)
+    public List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
+
         List<Integer> jobIds = new ArrayList<>();
-        JobOutputMap assemblyCounts = new JobOutputMap();
+        List<File> jellyfishHashes = new ArrayList<>();
 
-        // Loop through MASS groups
-        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
-            String massGroup = singleMassArgs.getName();
+        if (outputDir.exists()) {
+            FileUtils.deleteDirectory(outputDir);
+        }
 
-            File inputDir = new File(args.getMassDir(), massGroup);
+        outputDir.mkdirs();
 
-            if (!inputDir.exists()) {
-                throw new ProcessExecutionException(-1, "Could not find output from mass group: " + massGroup + "; at: " + inputDir.getAbsolutePath());
+        int i = 1;
+        for(File f : assemblies) {
+
+            String jfJobName = jobPrefix + "-jfcount-" + i++;
+
+            // Should be ok to assume that the extension is .fa as we should be working with symbolic links that we
+            // generated ourselves
+            File katOutputDir = new File(outputDir, f.getName().substring(0, f.getName().length() - 3));
+
+            if (katOutputDir.exists()) {
+                FileUtils.deleteDirectory(katOutputDir);
             }
+            katOutputDir.mkdirs();
 
-            // Loop through output levels
-            File unitigsDir = new File(inputDir, "unitigs");
-            File contigsDir = new File(inputDir, "contigs");
-            File scaffoldsDir = new File(inputDir, "scaffolds");
+            String outputPrefix = katOutputDir.getAbsolutePath() + "/" + jfJobName + ".jf31";
 
-            File seqDir = null;
+            // Setup Jellyfish for counting the assembly
+            JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
+            jellyfishArgs.setOutputPrefix(outputPrefix);
+            jellyfishArgs.setLowerCount(0);  // Count everything!
+            jellyfishArgs.setHashSize(args.getOrganism().getEstGenomeSize() * args.getOrganism().getPloidy() * 10);
+            jellyfishArgs.setMerLength(31);       // 31 should be more than sufficient for all organisms (even wheat)
+            jellyfishArgs.setBothStrands(true);
+            jellyfishArgs.setThreads(args.getThreadsPerProcess());
+            jellyfishArgs.setCounterLength(32); // This is probably overkill... consider changing this later (or using jellyfish
+            // 2 which auto adjusts this figure)
+            jellyfishArgs.setInputFile(f.getAbsolutePath());
 
-            // We only do the longest sequence types... KAT will take a while to run through all permuations and
-            // we won't get any useful info by running through all sequence types
-            if (scaffoldsDir.exists()) {
-                seqDir = scaffoldsDir;
-            }
-            else if (contigsDir.exists()) {
-                seqDir = contigsDir;
-            }
-            else if (unitigsDir.exists()) {
-                seqDir = unitigsDir;
-            }
-            else {
-                throw new ProcessExecutionException(-2, "Could not find any output sequences for this mass group: " + massGroup);
-            }
+            JellyfishCountV11 jellyfishProcess = new JellyfishCountV11(jellyfishArgs);
 
-            List<File> assemblies = AnalyseAssemblies.assembliesFromDir(seqDir);
+            // Execute kmer count and comparison
+            ExecutionResult resultCount = ces.executeProcess(
+                    jellyfishProcess,
+                    new File(outputPrefix).getParentFile(),
+                    jfJobName,
+                    args.getThreadsPerProcess(),
+                    0,  //TODO Probably should work out something sensible to put here
+                    args.isRunParallel());
 
-            File groupOutputDir = new File(args.getOutputDir(), massGroup);
-            File kmerOutputDir = new File(groupOutputDir, "kmer");
+            jellyfishHashes.add(new File(outputPrefix + "_0"));
 
-            if (kmerOutputDir.exists()) {
-                FileUtils.deleteDirectory(groupOutputDir);
-            }
-
-            kmerOutputDir.mkdirs();
-
-            int i = 1;
-            for(File f : assemblies) {
-
-                String kmerJobName = args.getJobPrefix() + "-kmer-count-" + massGroup + "-" + i++;
-
-                File outputDir = new File(kmerOutputDir, f.getName().substring(0, f.getName().length() - 3));
-                if (outputDir.exists()) {
-                    FileUtils.deleteDirectory(outputDir);
-                }
-                outputDir.mkdir();
-
-                String outputPrefix = outputDir.getAbsolutePath() + "/" + kmerJobName + ".jf31";
-
-                // Setup Jellyfish for counting the assembly
-                JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
-                jellyfishArgs.setOutputPrefix(outputPrefix);
-                jellyfishArgs.setLowerCount(0);  // Count everything!
-                jellyfishArgs.setHashSize(args.getOrganism().getEstGenomeSize() * args.getOrganism().getPloidy() * 10);
-                jellyfishArgs.setMerLength(31);       // 31 should be more than sufficient for all organisms (even wheat)
-                jellyfishArgs.setBothStrands(true);
-                jellyfishArgs.setThreads(args.getThreadsPerProcess());
-                jellyfishArgs.setCounterLength(32); // This is probably overkill... consider changing this later (or using jellyfish
-                // 2 which auto adjusts this figure)
-                jellyfishArgs.setInputFile(f.getAbsolutePath());
-
-                JellyfishCountV11 jellyfishProcess = new JellyfishCountV11(jellyfishArgs);
-
-                // Execute kmer count and comparison
-                ExecutionResult resultCount = ces.executeProcess(
-                        jellyfishProcess,
-                        new File(outputPrefix).getParentFile(),
-                        kmerJobName,
-                        args.getThreadsPerProcess(),
-                        0,  //TODO Probably should work out something sensible to put here
-                        args.isRunParallel());
-
-                assemblyCounts.updateTracker(massGroup, new File(outputPrefix + "_0"));
-
-                // Add job id to list
-                jobIds.add(resultCount.getJobId());
-            }
+            // Add job id to list
+            jobIds.add(resultCount.getJobId());
         }
 
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
@@ -165,41 +132,35 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
         Collection<File> readCounts = FileUtils.listFiles(args.getAnalyseReadsDir(), new String[] {"jf31_0"}, true);
 
-        // Loop through MASS groups
-        for(Map.Entry<String,Set<File>> entry : assemblyCounts.entrySet()) {
+        // Loop through jellyfish hashes
+        i = 1;
+        for(File jfHash : jellyfishHashes) {
 
-            String massGroup = entry.getKey();
+            // Loop through each read count for this assembly
+            int j = 1;
+            for(File readCount : readCounts) {
 
-            File kmerOutputDir = new File(args.getOutputDir(), massGroup + "/kmer");
+                String outputPrefix = "katcomp-" + i + "-" + j;
+                String jobName = jobPrefix + "-" + outputPrefix;
 
-            // Loop through each assembly in this MASS group
-            for(File assemblyCount : entry.getValue()) {
+                // Setup kat comp
+                KatCompV1.Args katCompArgs = new KatCompV1.Args();
+                katCompArgs.setJellyfishHash1(readCount);
+                katCompArgs.setJellyfishHash2(jfHash);
+                katCompArgs.setOutputPrefix(new File(jfHash.getParentFile(), outputPrefix).getAbsolutePath());
+                katCompArgs.setThreads(args.getThreadsPerProcess());
 
-                // Loop through each read count for this assembly
-                for(File readCount : readCounts) {
+                KatCompV1 katCompProcess = new KatCompV1(katCompArgs);
 
-                    String outputPrefix = "kat-comp-" + readCount.getName();
-                    String jobName = args.getJobPrefix() + "-kmer-compare-" + outputPrefix;
+                ExecutionResult result = ces.executeProcess(
+                        katCompProcess,
+                        jfHash.getParentFile(),
+                        jobName,
+                        args.getThreadsPerProcess(),
+                        0,
+                        args.isRunParallel());
 
-                    // Setup kat comp
-                    KatCompV1.Args katCompArgs = new KatCompV1.Args();
-                    katCompArgs.setJellyfishHash1(readCount);
-                    katCompArgs.setJellyfishHash2(assemblyCount);
-                    katCompArgs.setOutputPrefix(new File(assemblyCount.getParentFile(), outputPrefix).getAbsolutePath());
-                    katCompArgs.setThreads(args.getThreadsPerProcess());
-
-                    KatCompV1 katCompProcess = new KatCompV1(katCompArgs);
-
-                    ExecutionResult result = ces.executeProcess(
-                            katCompProcess,
-                            assemblyCount.getParentFile(),
-                            jobName,
-                            args.getThreadsPerProcess(),
-                            0,
-                            args.isRunParallel());
-
-                    outputList.add(new JobOutput(result.getJobId(), new File(katCompArgs.getOutputPrefix() + "_main.mx")));
-                }
+                outputList.add(new JobOutput(result.getJobId(), new File(katCompArgs.getOutputPrefix() + "_main.mx")));
             }
         }
 
@@ -210,14 +171,14 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             log.debug("Analysing assemblies using kmers in parallel, waiting for completion");
             ces.executeScheduledWait(
                     outputList.getJobIds(),
-                    args.getJobPrefix() + "-kmer-compare*",
+                    args.getJobPrefix() + "-katcomp*",
                     ExitStatus.Type.COMPLETED_ANY,
-                    args.getJobPrefix() + "-k-comp-wait",
+                    args.getJobPrefix() + "-katcomp-wait",
                     args.getOutputDir());
         }
 
         // Create plots
-        int i = 1;
+        i = 1;
         for(File matrix : outputList.getFiles()) {
             // Setup kat comp
             KatPlotSpectraCnV1.Args katPlotSpectraCnArgs = new KatPlotSpectraCnV1.Args();
@@ -229,7 +190,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             ExecutionResult result = ces.executeProcess(
                     katPlotSpectraCnProcess,
                     matrix.getParentFile(),
-                    args.getJobPrefix() + "-kmer-plot-spectra-cn-" + i++,
+                    args.getJobPrefix() + "-kat-plot-spectra-cn-" + i++,
                     1,
                     0,
                     args.isRunParallel());
@@ -237,12 +198,17 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
         // Just let these run.  They shouldn't take long and no processes are dependent on them downstream
 
-        return true;
+        return new ArrayList<>();
     }
 
     @Override
-    public void getStats(AssemblyStatsTable table, AnalyseAssemblies.Args args) {
+    public void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) {
 
+    }
+
+    @Override
+    public boolean isFast() {
+        return false;
     }
 
     @Override

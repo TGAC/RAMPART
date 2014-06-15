@@ -194,7 +194,7 @@ public class RampartCLI extends AbstractConanCLI {
                 firstHalf.add(RampartStage.MECQ);
                 firstHalf.add(RampartStage.ANALYSE_READS);
                 firstHalf.add(RampartStage.MASS);
-                firstHalf.add(RampartStage.ANALYSE_ASSEMBLIES);
+                firstHalf.add(RampartStage.ANALYSE_MASS);
                 this.stages = firstHalf;
 
                 log.info("Running first half of the RAMPART pipeline only");
@@ -202,6 +202,7 @@ public class RampartCLI extends AbstractConanCLI {
             else if (commandLine.hasOption(OPT_RUN_SECOND_HALF)) {
                 RampartStageList secondHalf = new RampartStageList();
                 secondHalf.add(RampartStage.AMP);
+                secondHalf.add(RampartStage.ANALYSE_AMP);
                 secondHalf.add(RampartStage.FINALISE);
                 this.stages = secondHalf;
 

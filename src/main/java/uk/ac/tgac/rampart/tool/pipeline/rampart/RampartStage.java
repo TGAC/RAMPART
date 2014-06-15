@@ -24,7 +24,8 @@ import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.tgac.rampart.tool.pipeline.amp.Amp;
 import uk.ac.tgac.rampart.tool.process.Finalise;
 import uk.ac.tgac.rampart.tool.process.Mecq;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAmpAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReads;
 import uk.ac.tgac.rampart.tool.process.mass.Mass;
 
@@ -89,21 +90,21 @@ public enum RampartStage {
             return new Mass(ces, (Mass.Args)this.getArgs());
         }
     },
-    ANALYSE_ASSEMBLIES {
+    ANALYSE_MASS {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new AnalyseAssemblies.Params().getConanParameters();
+            return new AnalyseMassAssemblies.Params().getConanParameters();
         }
 
         @Override
         public boolean checkArgs(RampartStageArgs args) {
-            return classContains(args.getClass(), AnalyseAssemblies.Args.class);
+            return classContains(args.getClass(), AnalyseMassAssemblies.Args.class);
         }
 
         @Override
         public AbstractConanProcess create(ConanExecutorService ces) {
-            return new AnalyseAssemblies(ces, (AnalyseAssemblies.Args)this.getArgs());
+            return new AnalyseMassAssemblies(ces, (AnalyseMassAssemblies.Args)this.getArgs());
         }
     },
     AMP {
@@ -121,6 +122,23 @@ public enum RampartStage {
         @Override
         public AbstractConanProcess create(ConanExecutorService ces) {
             return new Amp(ces, (Amp.Args)this.getArgs());
+        }
+    },
+    ANALYSE_AMP {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new AnalyseAmpAssemblies.Params().getConanParameters();
+        }
+
+        @Override
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), AnalyseAmpAssemblies.Args.class);
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces) {
+            return new AnalyseAmpAssemblies(ces, (AnalyseAmpAssemblies.Args)this.getArgs());
         }
     },
     FINALISE {

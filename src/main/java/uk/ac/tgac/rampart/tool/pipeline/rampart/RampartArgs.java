@@ -35,7 +35,8 @@ import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.pipeline.amp.Amp;
 import uk.ac.tgac.rampart.tool.process.Finalise;
 import uk.ac.tgac.rampart.tool.process.Mecq;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAmpAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReads;
 import uk.ac.tgac.rampart.tool.process.mass.Mass;
 
@@ -70,9 +71,10 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private Mecq.Args mecqArgs;
     private AnalyseReads.Args analyseReadsArgs;
     private Mass.Args massArgs;
-    private AnalyseAssemblies.Args analyseAsmsArgs;
+    private AnalyseMassAssemblies.Args analyseMassArgs;
     private File ampInput;
     private Amp.Args ampArgs;
+    private AnalyseAmpAssemblies.Args analyseAmpArgs;
     private Finalise.Args finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
     private ExecutionContext executionContext;
@@ -89,9 +91,10 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.mecqArgs = null;
         this.analyseReadsArgs = null;
         this.massArgs = null;
-        this.analyseAsmsArgs = null;
+        this.analyseMassArgs = null;
         this.ampInput = ampInput;
         this.ampArgs = null;
+        this.analyseAmpArgs = null;
         this.finaliseArgs = null;
         this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
     }
@@ -152,18 +155,18 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
 
         // Analyse assemblies
-        Element analyseAsmsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_ASMS);
-        this.analyseAsmsArgs = analyseAsmsElement == null ? null :
-                new AnalyseAssemblies.Args(
-                        analyseAsmsElement,
+        Element analyseMassElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_ASMS);
+        this.analyseMassArgs = analyseMassElement == null ? null :
+                new AnalyseMassAssemblies.Args(
+                        analyseMassElement,
                         this.rampartJobFileSystem.getMassDir(),
                         this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
-                        this.rampartJobFileSystem.getAnalyseAssembliesDir(),
+                        this.rampartJobFileSystem.getAnalyseMassDir(),
                         this.massArgs == null ? null : this.massArgs.getSingleMassArgsList(),
                         this.getOrganism(),
-                        this.getJobPrefix() + "-analyse_asms");
+                        this.getJobPrefix() + "-analyse_mass");
 
-        this.stages.setArgsIfPresent(RampartStage.ANALYSE_ASSEMBLIES, this.analyseAsmsArgs);
+        this.stages.setArgsIfPresent(RampartStage.ANALYSE_MASS, this.analyseMassArgs);
 
         // AMP
         Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
@@ -178,6 +181,20 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.getOrganism());
 
         this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
+
+        // AMP
+        Element analyseAmpElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
+        this.analyseAmpArgs = analyseAmpElement == null ? null :
+                new AnalyseAmpAssemblies.Args(
+                        analyseAmpElement,
+                        this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
+                        this.rampartJobFileSystem.getAnalyseAmpDir(),
+                        this.ampArgs == null ? null : this.ampArgs.getStageArgsList(),
+                        this.getOrganism(),
+                        this.getJobPrefix() + "-analyse_amp");
+
+        this.stages.setArgsIfPresent(RampartStage.ANALYSE_AMP, this.analyseAmpArgs);
+
 
         File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getSelectedAssemblyFile(): this.ampArgs.getFinalAssembly();
 
@@ -296,12 +313,20 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.massArgs = massArgs;
     }
 
-    public AnalyseAssemblies.Args getAnalyseAsmsArgs() {
-        return analyseAsmsArgs;
+    public AnalyseMassAssemblies.Args getAnalyseMassArgs() {
+        return analyseMassArgs;
     }
 
-    public void setAnalyseAsmsArgs(AnalyseAssemblies.Args analyseAsmsArgs) {
-        this.analyseAsmsArgs = analyseAsmsArgs;
+    public void setAnalyseMassArgs(AnalyseMassAssemblies.Args analyseMassArgs) {
+        this.analyseMassArgs = analyseMassArgs;
+    }
+
+    public AnalyseAmpAssemblies.Args getAnalyseAmpArgs() {
+        return analyseAmpArgs;
+    }
+
+    public void setAnalyseAmpArgs(AnalyseAmpAssemblies.Args analyseAmpArgs) {
+        this.analyseAmpArgs = analyseAmpArgs;
     }
 
     public Finalise.Args getFinaliseArgs() {

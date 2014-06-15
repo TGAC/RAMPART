@@ -35,10 +35,11 @@ public class RampartJobFileSystem {
     private File meqcDir;
     private File analyseReadsDir;
     private File massDir;
-    private File analyseAssembliesDir;
+    private File analyseMassDir;
     private File massStatsDir;
     private File ampDir;
     private File ampAssembliesDir;
+    private File analyseAmpDir;
     private File reportDir;
     private File reportImagesDir;
     private File finalDir;
@@ -65,10 +66,11 @@ public class RampartJobFileSystem {
         this.meqcDir = new File(jobDir, "mecq");
         this.analyseReadsDir = new File(jobDir, "reads-analyses");
         this.massDir = new File(jobDir, "mass");
-        this.analyseAssembliesDir = new File(jobDir, "assembly-analyses");
+        this.analyseMassDir = new File(jobDir, "mass-analyses");
         this.massStatsDir = new File(massDir, "stats");
         this.ampDir = new File(jobDir, "amp");
         this.ampAssembliesDir = new File(ampDir, "assemblies");
+        this.analyseAmpDir = new File(jobDir, "amp-analyses");
         this.reportDir = new File(jobDir, "report");
         this.reportImagesDir = new File(reportDir, "images");
         this.finalDir = new File(jobDir, "final");
@@ -77,7 +79,7 @@ public class RampartJobFileSystem {
         this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
         this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
         this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
-        this.selectedAssemblyFile = new File(this.analyseAssembliesDir.getPath() + "/best.fa");
+        this.selectedAssemblyFile = new File(this.analyseMassDir.getPath() + "/best.fa");
         this.ampPlotsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.pdf");
         this.ampStatsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.txt");
         this.ampLogFile = new File(this.ampDir.getPath() + "/amp.log");
@@ -103,8 +105,8 @@ public class RampartJobFileSystem {
         return massDir;
     }
 
-    public File getAnalyseAssembliesDir() {
-        return analyseAssembliesDir;
+    public File getAnalyseMassDir() {
+        return analyseMassDir;
     }
 
     public File getMassStatsDir() {
@@ -113,6 +115,10 @@ public class RampartJobFileSystem {
 
     public File getAmpDir() {
         return ampDir;
+    }
+
+    public File getAnalyseAmpDir() {
+        return analyseAmpDir;
     }
 
     public File getReportDir() {

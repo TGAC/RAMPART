@@ -14,7 +14,8 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
@@ -46,144 +47,81 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public boolean execute(AnalyseAssemblies.Args args, ConanExecutorService ces)
+    public List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         // Add quast job id to list
         List<Integer> jobIds = new ArrayList<>();
 
-        // Loop through MASS groups
-        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
+        if (outputDir.exists()) {
+            FileUtils.deleteDirectory(outputDir);
+        }
+        outputDir.mkdirs();
 
-            String massGroup = singleMassArgs.getName();
+        int i = 1;
+        for(File f : assemblies) {
 
-            File inputDir = new File(args.getMassDir(), massGroup);
+            String cegmaJobName = jobPrefix + "-" + i++;
 
-            if (!inputDir.exists()) {
-                throw new ProcessExecutionException(-1, "Could not find output from mass group: " + massGroup + "; at: " + inputDir.getAbsolutePath());
+            File cegOutputDir = new File(outputDir, f.getName());
+            if (cegOutputDir.exists()) {
+                FileUtils.deleteDirectory(cegOutputDir);
             }
+            cegOutputDir.mkdirs();
 
-            // Loop through output levels
-            File unitigsDir = new File(inputDir, "unitigs");
-            File contigsDir = new File(inputDir, "contigs");
-            File scaffoldsDir = new File(inputDir, "scaffolds");
+            CegmaV2_4Process cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreadsPerProcess());
+            ExecutionResult result = ces.executeProcess(
+                    cegmaProc,
+                    cegOutputDir,
+                    cegmaJobName,
+                    args.getThreadsPerProcess(),
+                    0,
+                    args.isRunParallel());
 
-            File seqDir = null;
+            jobIds.add(result.getJobId());
 
-            // We only do the longest sequence types... CEGMA takes ages to run and we won't get any useful info by running
-            // through all sequence types
-            if (scaffoldsDir.exists()) {
-                seqDir = scaffoldsDir;
-            }
-            else if (contigsDir.exists()) {
-                seqDir = contigsDir;
-            }
-            else if (unitigsDir.exists()) {
-                seqDir = unitigsDir;
-            }
-            else {
-                throw new ProcessExecutionException(-2, "Could not find any output sequences for this mass group: " + massGroup);
-            }
+            // Create symbolic links to completeness_reports
+            File sourceFile = new File(((CegmaV2_4Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
+                    ".completeness_report");
+            File destFile = new File(cegOutputDir, f.getName() + ".cegma");
 
-            List<File> inputs = AnalyseAssemblies.assembliesFromDir(seqDir);
-
-            File groupOutputDir = new File(args.getOutputDir(), massGroup);
-
-            File cegmaOutputDir = new File(groupOutputDir, CEGMA_DIR_NAME);
-            if (cegmaOutputDir.exists()) {
-                FileUtils.deleteDirectory(cegmaOutputDir);
-            }
-            cegmaOutputDir.mkdirs();
-
-            int i = 1;
-            for(File f : inputs) {
-
-                String cegmaJobName = args.getJobPrefix() + "-" + CEGMA_DIR_NAME + "-" + massGroup + "-" + i++;
-
-                File outputDir = new File(cegmaOutputDir, f.getName());
-                if (outputDir.exists()) {
-                    FileUtils.deleteDirectory(outputDir);
-                }
-                outputDir.mkdirs();
-
-                CegmaV2_4Process cegmaProc = this.makeCegmaProcess(f, outputDir, args.getThreadsPerProcess());
-                ExecutionResult result = ces.executeProcess(
-                        cegmaProc,
-                        outputDir,
-                        cegmaJobName,
-                        args.getThreadsPerProcess(),
-                        0,
-                        args.isRunParallel());
-
-                jobIds.add(result.getJobId());
-
-                // Create symbolic links to completeness_reports
-                File sourceFile = new File(((CegmaV2_4Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
-                        ".completeness_report");
-                File destFile = new File(cegmaOutputDir, f.getName() + ".cegma");
-
-                ces.getConanProcessService().createLocalSymbolicLink(sourceFile, destFile);
-            }
-
+            ces.getConanProcessService().createLocalSymbolicLink(sourceFile, destFile);
         }
 
-        // If we're using a scheduler and we have been asked to run each MECQ group for each library
-        // in parallel, then we should wait for all those to complete before continueing.
-        if (ces.usingScheduler() && args.isRunParallel()) {
-            log.debug("Analysing assemblies for contiguity in parallel, waiting for completion");
-            ces.executeScheduledWait(
-                    jobIds,
-                    args.getJobPrefix() + "-" + CEGMA_DIR_NAME + "-*",
-                    ExitStatus.Type.COMPLETED_ANY,
-                    args.getJobPrefix() + "-comp-wait",
-                    args.getOutputDir());
-        }
-
-        return true;
+        return jobIds;
     }
 
     @Override
-    public void getStats(AssemblyStatsTable table, AnalyseAssemblies.Args args) throws IOException {
+    public void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) throws IOException {
 
-        // Loop through MASS groups
-        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
-            String massGroup = singleMassArgs.getName();
+        Collection<File> cegmaFiles = FileUtils.listFiles(reportDir, new String[]{"cegma"}, false);
 
-            File asmDirs = new File(args.getMassDir(), massGroup);
-            File aUnitigsDir = new File(asmDirs, "unitigs");
-            File aContigsDir = new File(asmDirs, "contigs");
-            File aScaffoldsDir = new File(asmDirs, "scaffolds");
+        for(File asm : assemblies) {
 
-            File asmDir = null;
-            if (aScaffoldsDir.exists()) {
-                asmDir = aScaffoldsDir;
-            }
-            else if (aContigsDir.exists()) {
-                asmDir = aContigsDir;
-            }
-            else if (aUnitigsDir.exists()) {
-                asmDir = aUnitigsDir;
-            }
-            else {
-                throw new IllegalStateException("Could not find any output sequences for this mass group: " + massGroup);
+            File c = null;
+
+            for(File cf : cegmaFiles) {
+                if (FilenameUtils.getBaseName(asm.getName()).equals(FilenameUtils.getBaseName(cf.getName()))) {
+                    c = cf;
+                    break;
+                }
             }
 
+            if (c == null || !c.exists())
+                throw new IllegalStateException("Could not find cegma output file");
 
-            File cegmaDir = new File(args.getOutputDir(), massGroup + "/" + CEGMA_DIR_NAME);
+            if (!asm.exists())
+                throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
 
-            Collection<File> cegmaFiles = FileUtils.listFiles(cegmaDir, new String[]{"cegma"}, false);
-
-            for(File c : cegmaFiles) {
-
-                File asm = new File(asmDir, FilenameUtils.getBaseName(c.getName()));
-
-                if (!asm.exists())
-                    throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
-
-                table.mergeWithCegmaResults(c, asm, FilenameUtils.getBaseName(asm.getName()), massGroup);
-            }
+            table.mergeWithCegmaResults(c, asm, FilenameUtils.getBaseName(asm.getName()), subGroup);
         }
+
+    }
+
+    @Override
+    public boolean isFast() {
+        return false;
     }
 
     @Override

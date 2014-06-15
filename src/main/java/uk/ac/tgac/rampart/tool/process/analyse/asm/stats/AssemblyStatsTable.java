@@ -158,7 +158,8 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
                 if (stats == null) {
                     stats = new AssemblyStats();
                     stats.setDesc(qStats.getName());
-                    stats.setFilePath(new File(assemblyDir, qStats.getName() + ".fa").getAbsolutePath());
+                    //stats.setFilePath(new File(assemblyDir, qStats.getName() + ".fa").getAbsolutePath());
+                    stats.setFilePath(qStats.getName() + ".fa");
                     stats.setDataset(massGroup);
                     this.add(stats);
                 }
