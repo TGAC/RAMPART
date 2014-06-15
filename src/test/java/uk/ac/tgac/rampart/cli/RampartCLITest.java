@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.tgac.rampart.Rampart;
+import uk.ac.tgac.rampart.RampartCLI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -61,7 +61,7 @@ public class RampartCLITest {
     @Test
     public void testHelp() throws URISyntaxException {
 
-        Rampart.main(new String[]{
+        RampartCLI.main(new String[]{
                 "--help"
         });
     }

@@ -2,6 +2,7 @@ package uk.ac.tgac.rampart.tool.process.amp;
 
 import org.junit.Test;
 import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancer;
+import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.IOException;
 
@@ -14,7 +15,7 @@ import static org.junit.Assert.assertTrue;
  * Time: 11:57
  * To change this template use File | Settings | File Templates.
  */
-public class AmpStageTest {
+public class AmpStageTest extends MockedConanProcess {
 
     @Test
     public void testMakeStage() throws IOException {
@@ -22,7 +23,7 @@ public class AmpStageTest {
         AmpStage.Args args = new AmpStage.Args();
         args.setTool("SSPACE_Basic_V2.0");
 
-        AssemblyEnhancer process = new AmpStage(args).makeStage(args, null);
+        AssemblyEnhancer process = new AmpStage(this.conanExecutorService, args).makeStage(args, null);
 
         assertTrue(process != null);
     }

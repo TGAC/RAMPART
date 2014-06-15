@@ -26,6 +26,12 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 
+import java.io.File;
+
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 /**
@@ -50,9 +56,11 @@ public class MockedConanProcess {
         MockitoAnnotations.initMocks(this);
 
         when(conanExecutorService.getConanProcessService()).thenReturn(conanProcessService);
+        when(conanExecutorService.getExecutionContext()).thenReturn(ec);
         when(ec.getLocality()).thenReturn(new Local());
         when(ec.usingScheduler()).thenReturn(false);
         when(ec.copy()).thenReturn(ec);
+        doNothing().when(ec).setContext(anyString(), anyBoolean(), (File) anyObject());
     }
 
     @Before

@@ -21,7 +21,7 @@ import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStageArgs;
+import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStageArgs;
 
 import java.io.File;
 import java.util.ArrayList;

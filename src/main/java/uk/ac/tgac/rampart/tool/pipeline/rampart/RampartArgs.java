@@ -32,15 +32,12 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.AbstractXmlJobConfiguration;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStageList;
-import uk.ac.tgac.rampart.tool.pipeline.amp.AmpArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReadsArgs;
-import uk.ac.tgac.rampart.tool.process.finalise.FinaliseArgs;
-import uk.ac.tgac.rampart.tool.process.mass.MassArgs;
-import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
-import uk.ac.tgac.rampart.tool.process.mecq.MecqArgs;
+import uk.ac.tgac.rampart.tool.pipeline.amp.Amp;
+import uk.ac.tgac.rampart.tool.process.Finalise;
+import uk.ac.tgac.rampart.tool.process.Mecq;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.reads.AnalyseReads;
+import uk.ac.tgac.rampart.tool.process.mass.Mass;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,13 +67,13 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     private RampartStageList stages;
     private List<Library> libs;
-    private MecqArgs mecqArgs;
-    private AnalyseReadsArgs analyseReadsArgs;
-    private MassArgs massArgs;
-    private AnalyseAsmsArgs analyseAsmsArgs;
+    private Mecq.Args mecqArgs;
+    private AnalyseReads.Args analyseReadsArgs;
+    private Mass.Args massArgs;
+    private AnalyseAssemblies.Args analyseAsmsArgs;
     private File ampInput;
-    private AmpArgs ampArgs;
-    private FinaliseArgs finaliseArgs;
+    private Amp.Args ampArgs;
+    private Finalise.Args finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
     private ExecutionContext executionContext;
 
@@ -117,7 +114,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         // MECQ
         Element mecqElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MECQ);
         this.mecqArgs = mecqElement == null ? null :
-                new MecqArgs(
+                new Mecq.Args(
                         mecqElement,
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.getJobPrefix() + "-mecq",
@@ -129,10 +126,10 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         // Analyse reads
         Element analyseReadsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_READS);
         this.analyseReadsArgs = analyseReadsElement == null ? null :
-                new AnalyseReadsArgs(
+                new AnalyseReads.Args(
                         analyseReadsElement,
                         this.libs,
-                        this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getJobPrefix() + "-analyse_reads",
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.rampartJobFileSystem.getAnalyseReadsDir(),
@@ -143,13 +140,13 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         // MASS
         Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
         this.massArgs = massElement == null ? null :
-                new MassArgs(
+                new Mass.Args(
                         massElement,
                         this.rampartJobFileSystem.getMassDir(),
                         this.rampartJobFileSystem.getMeqcDir(),
                         this.getJobPrefix() + "-mass",
                         this.libs,
-                        this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
         this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
@@ -157,7 +154,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         // Analyse assemblies
         Element analyseAsmsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_ASMS);
         this.analyseAsmsArgs = analyseAsmsElement == null ? null :
-                new AnalyseAsmsArgs(
+                new AnalyseAssemblies.Args(
                         analyseAsmsElement,
                         this.rampartJobFileSystem.getMassDir(),
                         this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
@@ -171,13 +168,13 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         // AMP
         Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
         this.ampArgs = ampElement == null ? null :
-                new AmpArgs(
+                new Amp.Args(
                         ampElement,
                         this.rampartJobFileSystem.getAmpDir(),
                         this.getJobPrefix() + "-amp",
                         ampInput != null ? ampInput : this.rampartJobFileSystem.getSelectedAssemblyFile(),
                         this.libs,
-                        this.mecqArgs == null ? new ArrayList<EcqArgs>() : this.mecqArgs.getEqcArgList(),
+                        this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());
 
         this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
@@ -186,7 +183,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         Element finaliseElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_FINALISE);
         this.finaliseArgs = finaliseElement == null ? null :
-                new FinaliseArgs(
+                new Finalise.Args(
                         finaliseElement,
                         finalAssembly,
                         this.rampartJobFileSystem.getFinalDir(),
@@ -267,51 +264,51 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         return sj.toString();
     }
 
-    public AmpArgs getAmpArgs() {
+    public Amp.Args getAmpArgs() {
         return ampArgs;
     }
 
-    public void setAmpArgs(AmpArgs ampArgs) {
+    public void setAmpArgs(Amp.Args ampArgs) {
         this.ampArgs = ampArgs;
     }
 
-    public MecqArgs getMecqArgs() {
+    public Mecq.Args getMecqArgs() {
         return mecqArgs;
     }
 
-    public void setMecqArgs(MecqArgs mecqArgs) {
+    public void setMecqArgs(Mecq.Args mecqArgs) {
         this.mecqArgs = mecqArgs;
     }
 
-    public AnalyseReadsArgs getAnalyseReadsArgs() {
+    public AnalyseReads.Args getAnalyseReadsArgs() {
         return analyseReadsArgs;
     }
 
-    public void setAnalyseReadsArgs(AnalyseReadsArgs analyseReadsArgs) {
+    public void setAnalyseReadsArgs(AnalyseReads.Args analyseReadsArgs) {
         this.analyseReadsArgs = analyseReadsArgs;
     }
 
-    public MassArgs getMassArgs() {
+    public Mass.Args getMassArgs() {
         return massArgs;
     }
 
-    public void setMassArgs(MassArgs massArgs) {
+    public void setMassArgs(Mass.Args massArgs) {
         this.massArgs = massArgs;
     }
 
-    public AnalyseAsmsArgs getAnalyseAsmsArgs() {
+    public AnalyseAssemblies.Args getAnalyseAsmsArgs() {
         return analyseAsmsArgs;
     }
 
-    public void setAnalyseAsmsArgs(AnalyseAsmsArgs analyseAsmsArgs) {
+    public void setAnalyseAsmsArgs(AnalyseAssemblies.Args analyseAsmsArgs) {
         this.analyseAsmsArgs = analyseAsmsArgs;
     }
 
-    public FinaliseArgs getFinaliseArgs() {
+    public Finalise.Args getFinaliseArgs() {
         return finaliseArgs;
     }
 
-    public void setFinaliseArgs(FinaliseArgs finaliseArgs) {
+    public void setFinaliseArgs(Finalise.Args finaliseArgs) {
         this.finaliseArgs = finaliseArgs;
     }
 

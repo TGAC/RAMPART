@@ -181,7 +181,7 @@
                     <!-- Create a single bin script for rampart -->
                     <programs>
                         <program>
-                            <mainClass>uk.ac.tgac.rampart.Rampart</mainClass>
+                            <mainClass>uk.ac.tgac.rampart.RampartCLI</mainClass>
                             <id>rampart</id>
                         </program>
                         <program>

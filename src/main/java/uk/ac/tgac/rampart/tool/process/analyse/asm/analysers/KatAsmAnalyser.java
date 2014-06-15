@@ -8,16 +8,15 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
 import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsProcess;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.JobOutput;
 import uk.ac.tgac.rampart.util.JobOutputList;
 import uk.ac.tgac.rampart.util.JobOutputMap;
@@ -56,12 +55,13 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
     }
 
     @Override
-    public boolean execute(AnalyseAsmsArgs args, ExecutionContext executionContext, AnalyseAsmsExecutor analyseAsmsExecutor) throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
+    public boolean execute(AnalyseAssemblies.Args args, ConanExecutorService ces)
+            throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
         List<Integer> jobIds = new ArrayList<>();
         JobOutputMap assemblyCounts = new JobOutputMap();
 
         // Loop through MASS groups
-        for(SingleMassArgs singleMassArgs : args.getMassGroups()) {
+        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
             String massGroup = singleMassArgs.getName();
 
@@ -93,7 +93,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
                 throw new ProcessExecutionException(-2, "Could not find any output sequences for this mass group: " + massGroup);
             }
 
-            List<File> assemblies = AnalyseAsmsProcess.assembliesFromDir(seqDir);
+            List<File> assemblies = AnalyseAssemblies.assembliesFromDir(seqDir);
 
             File groupOutputDir = new File(args.getOutputDir(), massGroup);
             File kmerOutputDir = new File(groupOutputDir, "kmer");
@@ -132,8 +132,13 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
                 JellyfishCountV11 jellyfishProcess = new JellyfishCountV11(jellyfishArgs);
 
                 // Execute kmer count and comparison
-                ExecutionResult resultCount = analyseAsmsExecutor.executeKmerCount(
-                        jellyfishProcess, executionContext, kmerJobName, args.isRunParallel());
+                ExecutionResult resultCount = ces.executeProcess(
+                        jellyfishProcess,
+                        new File(outputPrefix).getParentFile(),
+                        kmerJobName,
+                        args.getThreadsPerProcess(),
+                        0,  //TODO Probably should work out something sensible to put here
+                        args.isRunParallel());
 
                 assemblyCounts.updateTracker(massGroup, new File(outputPrefix + "_0"));
 
@@ -144,9 +149,9 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
         // in parallel, then we should wait for all those to complete before continueing.
-        if (executionContext.usingScheduler() && args.isRunParallel()) {
+        if (ces.usingScheduler() && args.isRunParallel()) {
             log.debug("Analysing assemblies using kmers in parallel, waiting for completion");
-            analyseAsmsExecutor.executeScheduledWait(
+            ces.executeScheduledWait(
                     jobIds,
                     args.getJobPrefix() + "-kmer-count-*",
                     ExitStatus.Type.COMPLETED_ANY,
@@ -185,8 +190,13 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
                     KatCompV1 katCompProcess = new KatCompV1(katCompArgs);
 
-                    ExecutionResult result = analyseAsmsExecutor.executeKatComp(
-                            katCompProcess, executionContext, jobName, args.isRunParallel());
+                    ExecutionResult result = ces.executeProcess(
+                            katCompProcess,
+                            assemblyCount.getParentFile(),
+                            jobName,
+                            args.getThreadsPerProcess(),
+                            0,
+                            args.isRunParallel());
 
                     outputList.add(new JobOutput(result.getJobId(), new File(katCompArgs.getOutputPrefix() + "_main.mx")));
                 }
@@ -196,9 +206,9 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
         // in parallel, then we should wait for all those to complete before continueing.
-        if (executionContext.usingScheduler() && args.isRunParallel()) {
+        if (ces.usingScheduler() && args.isRunParallel()) {
             log.debug("Analysing assemblies using kmers in parallel, waiting for completion");
-            analyseAsmsExecutor.executeScheduledWait(
+            ces.executeScheduledWait(
                     outputList.getJobIds(),
                     args.getJobPrefix() + "-kmer-compare*",
                     ExitStatus.Type.COMPLETED_ANY,
@@ -216,8 +226,13 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
             KatPlotSpectraCnV1 katPlotSpectraCnProcess = new KatPlotSpectraCnV1(katPlotSpectraCnArgs);
 
-            ExecutionResult result = analyseAsmsExecutor.executeKatPlotSpectraCn(katPlotSpectraCnProcess,
-                    executionContext, (args.getJobPrefix() + "-kmer-plot-spectra-cn-" + i++), args.isRunParallel());
+            ExecutionResult result = ces.executeProcess(
+                    katPlotSpectraCnProcess,
+                    matrix.getParentFile(),
+                    args.getJobPrefix() + "-kmer-plot-spectra-cn-" + i++,
+                    1,
+                    0,
+                    args.isRunParallel());
         }
 
         // Just let these run.  They shouldn't take long and no processes are dependent on them downstream
@@ -226,7 +241,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
     }
 
     @Override
-    public void getStats(AssemblyStatsTable table, AnalyseAsmsArgs args) {
+    public void getStats(AssemblyStatsTable table, AnalyseAssemblies.Args args) {
 
     }
 

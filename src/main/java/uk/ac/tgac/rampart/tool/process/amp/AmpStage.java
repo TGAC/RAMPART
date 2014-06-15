@@ -28,7 +28,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
-import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
@@ -36,8 +36,8 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancer;
 import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancerFactory;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
+import uk.ac.tgac.rampart.tool.process.Mecq;
 import uk.ac.tgac.rampart.tool.process.ReadsInput;
-import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,14 +54,19 @@ public class AmpStage extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(AmpStage.class);
 
-    private AmpStageExecutor ampStageExecutor;
-
-    public AmpStage(Args args) {
-        super("", args, new Params());
-        this.ampStageExecutor = new AmpStageExecutorImpl();
+    public AmpStage() {
+        this(null);
     }
 
-    public Args getAmpArgs() {
+    public AmpStage(ConanExecutorService ces) {
+        this(ces, new Args());
+    }
+
+    public AmpStage(ConanExecutorService ces, Args args) {
+        super("", args, new Params(), ces);
+    }
+
+    public Args getArgs() {
         return (Args)this.getProcessArgs();
     }
 
@@ -79,11 +84,7 @@ public class AmpStage extends AbstractConanProcess {
         try {
 
             // Make a shortcut to the args
-            Args args = (Args) this.getProcessArgs();
-
-            // Initialise the object that makes system calls
-            this.ampStageExecutor.initialise(this.getConanProcessService(), executionContext);
-
+            Args args = this.getArgs();
 
             log.info("Starting AMP stage " + args.getIndex());
 
@@ -106,14 +107,14 @@ public class AmpStage extends AbstractConanProcess {
             AssemblyEnhancer ampProc = this.makeStage(args, selectedLibs);
 
             // Execute the AMP stage
-            this.ampStageExecutor.executeAmpStage(ampProc, "amp-" + args.getIndex());
+            this.conanExecutorService.executeProcess(ampProc, args.getOutputDir(), "amp-" + args.getIndex(), 1, 0, false);
 
             // Create links for outputs from this assembler to known locations
             this.getConanProcessService().createLocalSymbolicLink(ampProc.getOutputFile(), args.getOutputFile());
 
             log.info("Finished AMP stage " + args.getIndex());
         }
-        catch (IOException | ConanParameterException e) {
+        catch (IOException e) {
             throw new ProcessExecutionException(-1, e);
         }
 
@@ -167,20 +168,20 @@ public class AmpStage extends AbstractConanProcess {
         return proc.isOperational(executionContext);
     }
 
-    protected List<Library> validateInputs(int ampIndex, List<ReadsInput> inputs, List<Library> allLibraries, List<EcqArgs> allMecqs) throws IOException {
+    protected List<Library> validateInputs(int ampIndex, List<ReadsInput> inputs, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs) throws IOException {
 
         List<Library> selectedLibs = new ArrayList<>();
 
         for(ReadsInput mi : inputs) {
             Library lib = mi.findLibrary(allLibraries);
-            EcqArgs ecqArgs = mi.findMecq(allMecqs);
+            Mecq.EcqArgs ecqArgs = mi.findMecq(allMecqs);
 
             if (lib == null) {
                 throw new IOException("Unrecognised library: " + mi.getLib() + "; not processing AMP stage: " + ampIndex);
             }
 
             if (ecqArgs == null) {
-                if (mi.getEcq().equalsIgnoreCase(EcqArgs.RAW)) {
+                if (mi.getEcq().equalsIgnoreCase(Mecq.EcqArgs.RAW)) {
                     selectedLibs.add(lib);
                 }
                 else {
@@ -239,7 +240,7 @@ public class AmpStage extends AbstractConanProcess {
         private File assembliesDir;
         private String jobPrefix;
         private List<Library> allLibraries;
-        private List<EcqArgs> allMecqs;
+        private List<Mecq.EcqArgs> allMecqs;
         private Organism organism;
 
         // Specifics
@@ -272,7 +273,7 @@ public class AmpStage extends AbstractConanProcess {
         }
 
         public Args(Element ele, File outputDir, File assembliesDir, String jobPrefix, List<Library> allLibraries,
-                            List<EcqArgs> allMecqs, Organism organism, File inputAssembly, int index) throws IOException {
+                            List<Mecq.EcqArgs> allMecqs, Organism organism, File inputAssembly, int index) throws IOException {
 
             // Set defaults
             this();
@@ -336,11 +337,11 @@ public class AmpStage extends AbstractConanProcess {
             this.allLibraries = allLibraries;
         }
 
-        public List<EcqArgs> getAllMecqs() {
+        public List<Mecq.EcqArgs> getAllMecqs() {
             return allMecqs;
         }
 
-        public void setAllMecqs(List<EcqArgs> allMecqs) {
+        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
             this.allMecqs = allMecqs;
         }
 

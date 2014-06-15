@@ -9,15 +9,14 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsProcess;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,14 +46,14 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public boolean execute(AnalyseAsmsArgs args, ExecutionContext executionContext, AnalyseAsmsExecutor analyseAsmsExecutor)
+    public boolean execute(AnalyseAssemblies.Args args, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         // Add quast job id to list
         List<Integer> jobIds = new ArrayList<>();
 
         // Loop through MASS groups
-        for(SingleMassArgs singleMassArgs : args.getMassGroups()) {
+        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
             String massGroup = singleMassArgs.getName();
 
@@ -86,7 +85,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 throw new ProcessExecutionException(-2, "Could not find any output sequences for this mass group: " + massGroup);
             }
 
-            List<File> inputs = AnalyseAsmsProcess.assembliesFromDir(seqDir);
+            List<File> inputs = AnalyseAssemblies.assembliesFromDir(seqDir);
 
             File groupOutputDir = new File(args.getOutputDir(), massGroup);
 
@@ -108,8 +107,14 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 outputDir.mkdirs();
 
                 CegmaV2_4Process cegmaProc = this.makeCegmaProcess(f, outputDir, args.getThreadsPerProcess());
-                ExecutionResult result = analyseAsmsExecutor.executeCegma(cegmaProc, executionContext,
-                        cegmaJobName, args.isRunParallel());
+                ExecutionResult result = ces.executeProcess(
+                        cegmaProc,
+                        outputDir,
+                        cegmaJobName,
+                        args.getThreadsPerProcess(),
+                        0,
+                        args.isRunParallel());
+
                 jobIds.add(result.getJobId());
 
                 // Create symbolic links to completeness_reports
@@ -117,16 +122,16 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                         ".completeness_report");
                 File destFile = new File(cegmaOutputDir, f.getName() + ".cegma");
 
-                analyseAsmsExecutor.createSymbolicLink(sourceFile, destFile);
+                ces.getConanProcessService().createLocalSymbolicLink(sourceFile, destFile);
             }
 
         }
 
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
         // in parallel, then we should wait for all those to complete before continueing.
-        if (executionContext.usingScheduler() && args.isRunParallel()) {
+        if (ces.usingScheduler() && args.isRunParallel()) {
             log.debug("Analysing assemblies for contiguity in parallel, waiting for completion");
-            analyseAsmsExecutor.executeScheduledWait(
+            ces.executeScheduledWait(
                     jobIds,
                     args.getJobPrefix() + "-" + CEGMA_DIR_NAME + "-*",
                     ExitStatus.Type.COMPLETED_ANY,
@@ -138,10 +143,10 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public void getStats(AssemblyStatsTable table, AnalyseAsmsArgs args) throws IOException {
+    public void getStats(AssemblyStatsTable table, AnalyseAssemblies.Args args) throws IOException {
 
         // Loop through MASS groups
-        for(SingleMassArgs singleMassArgs : args.getMassGroups()) {
+        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
             String massGroup = singleMassArgs.getName();
 

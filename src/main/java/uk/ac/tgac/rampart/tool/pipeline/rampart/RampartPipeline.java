@@ -22,6 +22,7 @@ import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 
 import java.io.IOException;
@@ -36,14 +37,17 @@ import java.io.IOException;
 public class RampartPipeline extends AbstractConanPipeline {
 
     private RampartArgs args;
+    private ConanExecutorService conanExecutorService;
 
     private static final String NAME = "rampart-pipeline";
     private static final ConanUser USER = new GuestUser("rampart@tgac.ac.uk");
 
-    public RampartPipeline(RampartArgs args, ConanProcessService conanProcessService) throws IOException {
+    public RampartPipeline(RampartArgs args, ConanExecutorService ces) throws IOException {
 
-        super(NAME, USER, false, false, conanProcessService);
+        super(NAME, USER, false, false, ces.getConanProcessService());
 
+
+        this.conanExecutorService = ces;
         this.args = args;
 
         this.init();
@@ -66,7 +70,7 @@ public class RampartPipeline extends AbstractConanPipeline {
         this.clearProcessList();
 
         // Create all the processes
-        this.addProcesses(this.args.getStages().createProcesses(this.getConanProcessService()));
+        this.addProcesses(this.args.getStages().createProcesses(this.conanExecutorService));
 
         // Check all processes in the pipeline are operational, modify execution context to execute unscheduled locally
         if (!this.isOperational(new DefaultExecutionContext(new Local(), null,

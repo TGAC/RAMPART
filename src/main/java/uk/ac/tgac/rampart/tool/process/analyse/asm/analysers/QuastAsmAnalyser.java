@@ -7,15 +7,14 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsExecutor;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAsmsProcess;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.single.SingleMassArgs;
+import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,13 +45,14 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public boolean execute(AnalyseAsmsArgs args, ExecutionContext executionContext, AnalyseAsmsExecutor analyseAsmsExecutor) throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
+    public boolean execute(AnalyseAssemblies.Args args, ConanExecutorService ces)
+            throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         // Add quast job id to list
         List<Integer> jobIds = new ArrayList<>();
 
         // Loop through MASS groups
-        for(SingleMassArgs singleMassArgs : args.getMassGroups()) {
+        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
             String massGroup = singleMassArgs.getName();
 
@@ -72,12 +72,20 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
             if (unitigsDir.exists()) {
 
-                QuastV2_2Process quastProcess = this.makeQuast(unitigsDir, new File(outputDir, "unitigs"),
+                QuastV2_2Process quastProcess = this.makeQuast(
+                        unitigsDir,
+                        new File(outputDir, "unitigs"),
                         args.getOrganism().getEstGenomeSize(),
                         args.getThreadsPerProcess(), false);
 
-                ExecutionResult result = analyseAsmsExecutor.executeQuast(quastProcess, executionContext,
-                        quastPrefix + "-unitigs", args.isRunParallel());
+                ExecutionResult result = ces.executeProcess(
+                        quastProcess,
+                        outputDir,
+                        quastPrefix + "-unitigs",
+                        args.getThreadsPerProcess(),
+                        0,
+                        args.isRunParallel());
+
                 jobIds.add(result.getJobId());
             }
 
@@ -87,8 +95,14 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                         args.getOrganism().getEstGenomeSize(),
                         args.getThreadsPerProcess(), false);
 
-                ExecutionResult result = analyseAsmsExecutor.executeQuast(quastProcess, executionContext,
-                        quastPrefix + "-contigs", args.isRunParallel());
+                ExecutionResult result = ces.executeProcess(
+                        quastProcess,
+                        outputDir,
+                        quastPrefix + "-contigs",
+                        args.getThreadsPerProcess(),
+                        0,
+                        args.isRunParallel());
+
                 jobIds.add(result.getJobId());
             }
 
@@ -98,8 +112,14 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                         args.getOrganism().getEstGenomeSize(),
                         args.getThreadsPerProcess(), true);
 
-                ExecutionResult result = analyseAsmsExecutor.executeQuast(quastProcess, executionContext,
-                        quastPrefix + "-scaffolds", args.isRunParallel());
+                ExecutionResult result = ces.executeProcess(
+                        quastProcess,
+                        outputDir,
+                        quastPrefix + "-scaffolds",
+                        args.getThreadsPerProcess(),
+                        0,
+                        args.isRunParallel());
+
                 jobIds.add(result.getJobId());
             }
 
@@ -107,9 +127,9 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
         // in parallel, then we should wait for all those to complete before continueing.
-        if (executionContext.usingScheduler() && args.isRunParallel()) {
+        if (ces.usingScheduler() && args.isRunParallel()) {
             log.debug("Analysing assemblies for contiguity in parallel, waiting for completion");
-            analyseAsmsExecutor.executeScheduledWait(
+            ces.executeScheduledWait(
                     jobIds,
                     args.getJobPrefix() + "-" + QUAST_DIR_NAME + "-*",
                     ExitStatus.Type.COMPLETED_ANY,
@@ -121,10 +141,10 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public void getStats(AssemblyStatsTable table, AnalyseAsmsArgs args) throws IOException {
+    public void getStats(AssemblyStatsTable table, AnalyseAssemblies.Args args) throws IOException {
 
         // Loop through MASS groups
-        for(SingleMassArgs singleMassArgs : args.getMassGroups()) {
+        for(MassJob.Args singleMassArgs : args.getMassGroups()) {
 
             String massGroup = singleMassArgs.getName();
 
@@ -174,7 +194,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
     protected QuastV2_2Process makeQuast(File inputDir, File outputDir, long genomeSize, int threads, boolean scaffolds) {
         QuastV2_2Args quastArgs = new QuastV2_2Args();
-        quastArgs.setInputFiles(AnalyseAsmsProcess.assembliesFromDir(inputDir));
+        quastArgs.setInputFiles(AnalyseAssemblies.assembliesFromDir(inputDir));
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
         quastArgs.setEstimatedGenomeSize(genomeSize);
         quastArgs.setThreads(threads);

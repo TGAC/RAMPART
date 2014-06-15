@@ -23,7 +23,6 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
-import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;

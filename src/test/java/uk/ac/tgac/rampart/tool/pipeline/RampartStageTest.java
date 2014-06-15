@@ -19,6 +19,8 @@
 package uk.ac.tgac.rampart.tool.pipeline;
 
 import org.junit.Test;
+import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStage;
+import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStageList;
 
 import java.util.List;
 

@@ -3,6 +3,7 @@ package uk.ac.tgac.rampart.tool.process.mecq;
 import org.junit.Test;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
+import uk.ac.tgac.rampart.tool.process.Mecq;
 
 import java.io.File;
 import java.util.List;
@@ -21,7 +22,7 @@ public class EcqArgsTest {
     @Test
     public void testGetOutputFiles() {
 
-        EcqArgs args = new EcqArgs();
+        Mecq.EcqArgs args = new Mecq.EcqArgs();
 
         args.setTool("SICKLE_V1.1");
         args.setOutputDir(new File("test/"));

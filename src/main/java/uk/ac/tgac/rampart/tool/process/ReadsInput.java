@@ -20,7 +20,6 @@ package uk.ac.tgac.rampart.tool.process;
 import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.rampart.tool.process.mecq.EcqArgs;
 
 import java.io.IOException;
 import java.util.List;
@@ -71,12 +70,12 @@ public class ReadsInput {
         this.lib = lib;
     }
 
-    public EcqArgs findMecq(List<EcqArgs> allMecqs) {
+    public Mecq.EcqArgs findMecq(List<Mecq.EcqArgs> allMecqs) {
 
         if (allMecqs == null)
             return null;
 
-        for(EcqArgs currentMecq : allMecqs) {
+        for(Mecq.EcqArgs currentMecq : allMecqs) {
             if (currentMecq.getName().equalsIgnoreCase(this.ecq.trim())) {
                 return currentMecq;
             }
