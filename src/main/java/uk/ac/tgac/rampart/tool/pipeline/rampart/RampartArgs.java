@@ -59,7 +59,8 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     public static final String KEY_ELEM_MECQ            = "mecq";
     public static final String KEY_ELEM_ANALYSE_READS   = "analyse_reads";
     public static final String KEY_ELEM_MASS            = "mass";
-    public static final String KEY_ELEM_ANALYSE_ASMS    = "analyse_asms";
+    public static final String KEY_ELEM_ANALYSE_MASS    = "analyse_mass";
+    public static final String KEY_ELEM_ANALYSE_AMP     = "analyse_amp";
     public static final String KEY_ELEM_AMP             = "amp";
     public static final String KEY_ELEM_FINALISE        = "finalise";
 
@@ -154,8 +155,8 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
 
-        // Analyse assemblies
-        Element analyseMassElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_ASMS);
+        // Analyse MASS assemblies
+        Element analyseMassElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_MASS);
         this.analyseMassArgs = analyseMassElement == null ? null :
                 new AnalyseMassAssemblies.Args(
                         analyseMassElement,
@@ -182,8 +183,8 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
         this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
 
-        // AMP
-        Element analyseAmpElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
+        // Analyse AMP assemblies
+        Element analyseAmpElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_AMP);
         this.analyseAmpArgs = analyseAmpElement == null ? null :
                 new AnalyseAmpAssemblies.Args(
                         analyseAmpElement,

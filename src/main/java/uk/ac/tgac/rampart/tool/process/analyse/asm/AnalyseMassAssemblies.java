@@ -314,6 +314,8 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
 
             this.massDir = null;
             this.massGroups = null;
+
+            this.setJobPrefix("mass-analyses");
         }
 
         public Args(Element element, File massDir, File analyseReadsDir, File outputDir, List<MassJob.Args> massGroups,

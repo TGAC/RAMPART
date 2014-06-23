@@ -4,14 +4,14 @@
 Analyse assemblies
 ==================
 
-RAMPART currently offers 3 assembly analysis options in MASS:
+RAMPART currently offers 3 assembly analysis options:
 
 * Contiguity
 * Kmer read-assembly comparison
 * Completeness
 
-These can be identified using the following comma separated values in an attribute called ``types`` in the
-``analyse_asms`` pipeline element.  The available options for the list are: QUAST,KAT,CEGMA.
+These can be identified using the following comma separated values in an attribute called ``types`` in either the
+``analyse_mass`` or ``analyse_amp`` pipeline element.  The available options for the list are: QUAST,KAT,CEGMA.
 
 QUAST, compares the assemblies from a contuiguity perspective.  This tool runs really fast, and produces statistics such
 as the N50, assembly size, max sequence length.  It also produces a nice html report showing cumulative length
@@ -39,10 +39,10 @@ weights to each metric.  Each assembly is then assigned a score, based on the we
 assembly with the highest score is then automatically selected as the **best** assembly to be used downstream.
 
 Should the user wish to override the default weights that are assigned to each assembly metric, they can do so by
-setting the ``weightings_file`` attribute in the ``mass`` element.  For example, using an absolute path to a custom
+setting the ``weightings_file`` attribute in the ``analyse_mass`` element.  For example, using an absolute path to a custom
 weightings file the XML snippet may look like this::
 
-   <analyse_asms types="QUAST,KAT,CEGMA" parallel="false" threads="16"
+   <analyse_mass types="QUAST,KAT,CEGMA" parallel="false" threads="16"
                  weightings_file="~/.tgac/rampart/custom_weightings.tab"/>
 
 The format of the weightings file is a pipe separated table as follows::
@@ -54,3 +54,12 @@ All the metrics are derived from Quast results, except for the last one.
 
 TODO: Currently the kmer metric, is not included.  In the future this will offer an alternate means of assessing the
 assembly completeness.
+
+
+Analysing assemblies produced by AMP
+------------------------------------
+
+In addition, to analysing assemblies produced by the MASS stage, the same set of anlayses can also be applied to assemblies
+produced by the AMP stage.  The same set of attributes that can be applied to ``analyse_mass`` can be applied to ``analyse_amp``.
+In addition, it is also possible to specify an additional attribute: ``analyse_all``, which instructs RAMPART to analyse
+ assemblies produced at every stage of the AMP pipeline.  By default only the final assembly is analysed.
