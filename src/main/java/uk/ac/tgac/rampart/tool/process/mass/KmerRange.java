@@ -22,6 +22,8 @@ import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * User: maplesod
@@ -40,6 +42,7 @@ public class KmerRange extends ArrayList<Integer> {
     private static final String KEY_ATTR_STEP = "step";
     private static final String KEY_ATTR_LIST = "list";
 
+    private StepSize stepSize;
 
     /**
      * Default Kmer range (just K61)
@@ -58,6 +61,8 @@ public class KmerRange extends ArrayList<Integer> {
 
         // Init arraylist
         super();
+
+        this.stepSize = stepSize;
 
         // Generate list of kmers from range properties
         this.setFromProperties(minKmer, maxKmer, stepSize);
@@ -104,6 +109,8 @@ public class KmerRange extends ArrayList<Integer> {
         for(String part : parts) {
             this.add(Integer.parseInt(part.trim()));
         }
+
+        Collections.sort(this);
     }
 
     public int getFirstKmer() {
@@ -114,6 +121,9 @@ public class KmerRange extends ArrayList<Integer> {
         return this.get(this.size() - 1);
     }
 
+    public StepSize getStepSize() {
+        return this.stepSize;
+    }
 
     public enum StepSize {
         FINE {

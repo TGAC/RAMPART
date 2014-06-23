@@ -47,6 +47,7 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.AbstractAssemblerArgs;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.AssemblerFactory;
+import uk.ac.tgac.conan.process.asm.AssemblerType;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Args;
 import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Process;
@@ -111,7 +112,9 @@ public class MassJob extends AbstractConanProcess {
             log.info("Starting Single MASS run for \"" + args.getName() + "\"");
 
             // Make sure the kmer range is reasonable (if it's not already)
-            KmerRange validatedKmerRange = this.validateKmerRange(args.getName(), genericAssembler.hasKParam(),
+            KmerRange validatedKmerRange = this.validateKmerRange(
+                    args.getName(),
+                    genericAssembler.getType() == AssemblerType.DE_BRUIJN || genericAssembler.getType() == AssemblerType.DE_BRUIJN_OPTIMISER,
                     args.getKmerRange());
 
             // Make sure the coverage range reasonable (if it's not already)
@@ -123,7 +126,7 @@ public class MassJob extends AbstractConanProcess {
                     args.getAllMecqs(), args.getMecqDir());
 
             // Add libs to generic assembler so we know what kind of output to expect
-            genericAssembler.getArgs().setLibraries(selectedLibs);
+            genericAssembler.getAssemblerArgs().setLibraries(selectedLibs);
 
             // Create any required directories for this job
             this.createSupportDirectories(genericAssembler);
@@ -138,45 +141,49 @@ public class MassJob extends AbstractConanProcess {
                 SubsamplingResult subsamplingResult = this.doSubsampling(genericAssembler.doesSubsampling(), cvg, selectedLibs,
                         args.isRunParallel());
 
-                // Iterate over kmer range
-                for (Integer k : validatedKmerRange) {
 
-                    // Generate a directory name for this assembly
-                    String cvgString = CoverageRange.toString(cvg);
-                    String dirName = genericAssembler.hasKParam() ? ("cvg-" + cvgString + "_k-" + k) : "cvg-" + cvgString;
+                if (genericAssembler.getType() == AssemblerType.DE_BRUIJN) {
 
-                    // This is the output directory for this particular assembly
-                    File outputDir = new File(args.getOutputDir(), dirName);
+                    // Iterate over kmer range
+                    for (Integer k : validatedKmerRange) {
 
-                    log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
+                        // Generate a directory name for this assembly
+                        String cvgString = CoverageRange.toString(cvg);
+                        String dirName = "cvg-" + cvgString + "_k-" + k;
 
-                    // Create the actual assembler for these settings
-                    Assembler assembler = AssemblerFactory.create(
-                            args.getTool(),
-                            k,
-                            subsamplingResult.getLibraries(),
-                            outputDir,
-                            args.getThreads(),
-                            args.getMemory(),
-                            cvg,
-                            args.getOrganism(),
-                            this.conanExecutorService);
+                        // This is the output directory for this particular assembly
+                        File outputDir = new File(args.getOutputDir(), dirName);
 
-                    // Make the output directory for this child job (delete the directory if it already exists)
-                    if (outputDir.exists()) {
-                        FileUtils.deleteDirectory(outputDir);
+                        log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
+
+                        // Create the actual assembler for these settings
+                        Assembler assembler = AssemblerFactory.create(
+                                args.getTool(),
+                                k,
+                                subsamplingResult.getLibraries(),
+                                outputDir,
+                                args.getThreads(),
+                                args.getMemory(),
+                                cvg,
+                                args.getOrganism(),
+                                this.conanExecutorService);
+
+                        // Make the output directory for this child job (delete the directory if it already exists)
+                        if (outputDir.exists()) {
+                            FileUtils.deleteDirectory(outputDir);
+                        }
+                        outputDir.mkdirs();
+
+                        // Execute the assembler
+                        ExecutionResult result = this.executeAssembler(assembler, args.getJobPrefix() +
+                                "-assembly-" + dirName, args.isRunParallel(), subsamplingResult.getJobIds());
+
+                        // Add assembler id to list
+                        jobIds.add(result.getJobId());
+
+                        // Create links for outputs from this assembler to known locations
+                        this.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
                     }
-                    outputDir.mkdirs();
-
-                    // Execute the assembler
-                    ExecutionResult result = this.executeAssembler(assembler, args.getJobPrefix() +
-                            "-assembly-" + dirName, args.isRunParallel(), subsamplingResult.getJobIds());
-
-                    // Add assembler id to list
-                    jobIds.add(result.getJobId());
-
-                    // Create links for outputs from this assembler to known locations
-                    this.createAssemblyLinks(assembler, args, args.getName() + "-" + dirName);
                 }
             }
 
@@ -495,24 +502,50 @@ public class MassJob extends AbstractConanProcess {
 
         Args args = this.getArgs();
 
+        final String toolErrMsg = "\"Unidentified assembler \"" + args.getTool() + "\" requested for MASS job: \"" + args.getName() + "\"";
+
         Assembler asm = null;
         try {
             asm = AssemblerFactory.create(args.getTool(), this.conanExecutorService);
         } catch (IOException e) {
-            throw new NullPointerException("Unidentified tool requested for single MASS run: " + args.getTool());
+            throw new NullPointerException(toolErrMsg);
         }
 
         if (asm == null) {
-            throw new NullPointerException("Unidentified tool requested for single MASS run: " + args.getTool());
+            throw new NullPointerException(toolErrMsg);
+        }
+
+        if (!validConfig(asm)) {
+            log.warn("Assembler \"" + args.getTool() + "\" does not have a compatible MASS job configuration: \"" + args.getName() + "\"");
+            return false;
         }
 
         if (!asm.isOperational(executionContext)) {
 
-            log.warn("Assembler \"" + args.getTool() + "\" used in single MASS process \"" + args.getName() + "\" is NOT operational.");
+            log.warn("Assembler \"" + args.getTool() + "\" used in MASS job \"" + args.getName() + "\" is NOT operational.");
             return false;
         }
 
         log.info("Single MASS process \"" + args.getName() + "\" is operational.");
+
+        return true;
+    }
+
+    private boolean validConfig(Assembler asm) {
+
+        Args args = this.getArgs();
+
+        if (asm.getType() == AssemblerType.DE_BRUIJN || asm.getType() == AssemblerType.DE_BRUIJN_OPTIMISER) {
+            if (args.getKmerRange() == null) {
+                throw new IllegalArgumentException("MASS job \"" + args.getName() + "\" is a De Bruijn graph assembler (or optimiser) but you have not specified a Kmer range to process in this MASS job.");
+            }
+        }
+        else if (asm.getType() == AssemblerType.DE_BRUIJN_FIXED || asm.getType() == AssemblerType.OVERLAP_LAYOUT_CONSENSUS) {
+            if (args.getKmerRange() != null) {
+                log.warn("MASS job \"" + args.getName() + "\" does not support Kmer ranges, but you have specified one.");
+                return false;
+            }
+        }
 
         return true;
     }
@@ -556,7 +589,7 @@ public class MassJob extends AbstractConanProcess {
         // Important that this happens after directory cleaning.
         assembler.setup();
 
-        AbstractAssemblerArgs asmArgs = assembler.getArgs();
+        AbstractAssemblerArgs asmArgs = assembler.getAssemblerArgs();
 
         ConanProcessService cps = this.conanExecutorService.getConanProcessService();
 
@@ -565,7 +598,7 @@ public class MassJob extends AbstractConanProcess {
         executionContextCopy.setContext(
                 jobName,
                 executionContextCopy.usingScheduler() ? !runParallel : true,
-                new File(assembler.getArgs().getOutputDir(), jobName + ".log"));
+                new File(assembler.getAssemblerArgs().getOutputDir(), jobName + ".log"));
 
         // Modify the scheduling settings if present
         if (this.conanExecutorService.usingScheduler()) {

@@ -204,8 +204,8 @@ public class DependencyDownloader {
         createDir(kmerDir);
 
         downloadFromUrl(
-                new URL("https://github.com/TGAC/KAT/releases/download/V1.0.3/kat-1.0.3.tar.gz"),
-                new File(kmerDir, "kat-1.0.3.tar.gz"));
+                new URL("https://github.com/TGAC/KAT/releases/download/V1.0.4/kat-1.0.4.tar.gz"),
+                new File(kmerDir, "kat-1.0.4.tar.gz"));
 
         downloadFromUrl(
                 new URL("http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.10.tar.gz"),
@@ -216,6 +216,14 @@ public class DependencyDownloader {
                 new File(kmerDir, "seqan-src-1.4.1.tar.gz"));
 
 
+        // Platanus
+
+        // Spades
+
+        // Velvet
+
+
+        // SSPACE
         //TODO Can't do this because of users must fill in a form on the SSPACE website: SSPACE Basic v2.0
 
         System.out.println("Finished downloading.");
