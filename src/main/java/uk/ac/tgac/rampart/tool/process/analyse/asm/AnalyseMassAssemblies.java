@@ -97,6 +97,8 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
+        log.info("Starting Analysis of MASS assemblies");
+
         Args args = this.getArgs();
 
         if (!args.getOutputDir().exists()) {

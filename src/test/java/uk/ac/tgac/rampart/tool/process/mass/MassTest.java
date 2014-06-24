@@ -17,16 +17,14 @@
  **/
 package uk.ac.tgac.rampart.tool.process.mass;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.test.util.ReflectionTestUtils;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.KmerRange;
 import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
 
 import java.io.File;
@@ -35,10 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 /**
  * User: maplesod
@@ -56,7 +53,7 @@ public class MassTest extends MockedConanProcess {
         File outputDir = temp.newFolder("testMass");
 
         MassJob.Args singleMassArgs = new MassJob.Args();
-        singleMassArgs.setTool("Abyss_V1.3.4");
+        singleMassArgs.setTool("Abyss_V1.3");
         singleMassArgs.setKmerRange(new KmerRange(31, 61, KmerRange.StepSize.COARSE));
         singleMassArgs.setOutputDir(new File(outputDir, "raw"));
 

@@ -21,7 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
@@ -30,9 +29,8 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.KmerRange;
 import uk.ac.tgac.rampart.tool.process.MockedConanProcess;
-import uk.ac.tgac.rampart.tool.process.mass.KmerRange;
-import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
 import java.io.File;
 import java.io.IOException;

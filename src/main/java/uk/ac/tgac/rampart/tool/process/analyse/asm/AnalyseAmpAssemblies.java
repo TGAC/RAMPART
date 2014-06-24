@@ -98,6 +98,8 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
+        log.info("Starting Analysis of AMP assemblies");
+
         Args args = this.getArgs();
 
         if (!args.getOutputDir().exists()) {

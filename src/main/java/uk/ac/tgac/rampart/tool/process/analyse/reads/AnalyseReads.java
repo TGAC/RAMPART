@@ -67,8 +67,7 @@ public class AnalyseReads extends AbstractConanProcess {
         // Check what analyses are requested and check if those are operational
         if (args.isKmerAnalysis()) {
 
-            KmerAnalysisReads proc = new KmerAnalysisReads();
-            proc.setConanProcessService(this.getConanProcessService());
+            KmerAnalysisReads proc = new KmerAnalysisReads(this.conanExecutorService);
 
             if (!proc.isOperational(executionContext)) {
                 log.warn("Read Kmer analysis is NOT operational.");
@@ -105,7 +104,6 @@ public class AnalyseReads extends AbstractConanProcess {
             kmerArgs.setRunParallel(args.isRunParallel());
 
             KmerAnalysisReads proc = new KmerAnalysisReads(this.conanExecutorService, kmerArgs);
-            proc.setConanProcessService(this.getConanProcessService());
             proc.execute(executionContext);
         }
 
