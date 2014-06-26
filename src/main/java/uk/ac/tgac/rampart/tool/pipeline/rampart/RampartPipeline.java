@@ -73,7 +73,7 @@ public class RampartPipeline extends AbstractConanPipeline {
         this.addProcesses(this.args.getStages().createProcesses(this.conanExecutorService));
 
         // Check all processes in the pipeline are operational, modify execution context to execute unscheduled locally
-        if (!this.isOperational(new DefaultExecutionContext(new Local(), null,
+        if (this.args.isDoInitialChecks() && !this.isOperational(new DefaultExecutionContext(new Local(), null,
                 this.args.getExecutionContext().getExternalProcessConfiguration()))) {
             throw new IOException("RAMPART pipeline contains one or more processes that are not currently operational.  " +
                     "Please fix before restarting pipeline.");

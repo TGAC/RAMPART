@@ -1,5 +1,14 @@
 package uk.ac.tgac.rampart;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
+import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+
+import java.io.File;
+import java.io.IOException;
+
+import static junit.framework.TestCase.assertTrue;
+
 /**
  * Created with IntelliJ IDEA.
  * User: maplesod
@@ -9,11 +18,18 @@ package uk.ac.tgac.rampart;
  */
 public class RampartTest {
 
-    /*@Test
-    public void testAppDir() {
+    @Test
+    public void setupTest() throws IOException, TaskExecutionException, InterruptedException {
 
-        File appDir = Rampart.APP_DIR;
+        File testFile = FileUtils.toFile(RampartTest.class.getResource("/config/rampart_config_1.xml"));
+
+        RampartCLI rampart = new RampartCLI();
+        rampart.setJobConfig(testFile);
+        rampart.setSkipChecks(true);
+        //rampart.initialise();
+
+        //rampart.execute();
 
         assertTrue(true);
-    }  */
+    }
 }

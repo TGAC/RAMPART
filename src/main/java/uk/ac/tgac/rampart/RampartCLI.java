@@ -82,6 +82,7 @@ public class RampartCLI extends AbstractConanCLI {
     public static final String OPT_RUN_FIRST_HALF = "run_first_half";
     public static final String OPT_RUN_SECOND_HALF = "run_second_half";
     public static final String OPT_AMP_INPUT = "amp_input";
+    public static final String OPT_SKIP_CHECKS = "skip_checks";
 
     // **** Defaults ****
 
@@ -104,7 +105,7 @@ public class RampartCLI extends AbstractConanCLI {
     private RampartStageList stages;
     private File ampInput;
     private File jobConfig;
-
+    private boolean skipChecks;
 
     private RampartArgs args;
 
@@ -112,7 +113,6 @@ public class RampartCLI extends AbstractConanCLI {
      * Creates a new RAMPART instance with default arguments
      */
     public RampartCLI() throws IOException {
-
         super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
                 APP_NAME + createTimestamp(),
                 false,
@@ -121,7 +121,6 @@ public class RampartCLI extends AbstractConanCLI {
         this.stages             = DEFAULT_STAGES;
         this.ampInput           = null;
         this.jobConfig          = null;
-
         this.args               = null;
     }
 
@@ -132,54 +131,72 @@ public class RampartCLI extends AbstractConanCLI {
      */
     public RampartCLI(String[] args) throws ParseException, IOException {
 
-        // Creates the instance and parses the command line, setting the class variables
-        super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
-                APP_NAME + createTimestamp(),
-                false,
-                false);
+        // Creates the instance and sets core variables
+        this();
 
         // Parses the command line using a posix parser and sets all the variables
         this.parse(new PosixParser().parse(createOptions(), args, true));
+    }
 
-        // Only bother doing more if help is not requested
-        if (!this.isHelp()) {
+    public void initialise() throws IOException {
 
-            // Initialise logging and load conan properties
-            this.init();
+        if (this.jobConfig == null || !this.jobConfig.exists()) {
+            throw new IOException("Job config file not specified or does not exist.");
+        }
 
-            // Create RnaSeqEvalArgs based on reads from the command line
-            this.args = new RampartArgs(
-                    this.jobConfig,
-                    this.getOutputDir(),
-                    this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
-                    this.stages,
-                    this.ampInput);
+        // Initialise logging and load conan properties
+        this.init();
 
-            // Parse the job config file and set internal variables in RampartArgs
-            this.args.parseXml();
+        // Create RnaSeqEvalArgs based on reads from the command line
+        this.args = new RampartArgs(
+                this.jobConfig,
+                this.getOutputDir(),
+                this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
+                this.stages,
+                this.ampInput,
+                !this.skipChecks);
 
-            // Create an execution context based on environment information detected or provide by the user
-            this.args.setExecutionContext(this.buildExecutionContext());
+        // Parse the job config file and set internal variables in RampartArgs
+        this.args.parseXml();
 
-            // Log setup
+        // Create an execution context based on environment information detected or provide by the user
+        this.args.setExecutionContext(this.buildExecutionContext());
 
-            // Override log level to debug if the verbose flag is set
-            if (this.isVerbose()) {
-                LogManager.getRootLogger().setLevel(Level.DEBUG);
-            }
-            log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
-            log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
-            log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
-            log.info("Job Prefix: " + this.args.getJobPrefix());
-            if (ConanProperties.containsKey("externalProcessConfigFile")) {
-                log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
-            }
+        // Log setup
+
+        // Override log level to debug if the verbose flag is set
+        if (this.isVerbose()) {
+            LogManager.getRootLogger().setLevel(Level.DEBUG);
+        }
+        log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
+        log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
+        log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
+        log.info("Job Prefix: " + this.args.getJobPrefix());
+        if (ConanProperties.containsKey("externalProcessConfigFile")) {
+            log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
         }
     }
 
+    public File getJobConfig() {
+        return jobConfig;
+    }
+
+    public void setJobConfig(File jobConfig) {
+        this.jobConfig = jobConfig;
+    }
+
+    public boolean isSkipChecks() {
+        return skipChecks;
+    }
+
+    public void setSkipChecks(boolean skipChecks) {
+        this.skipChecks = skipChecks;
+    }
 
     @Override
     protected void parseExtra(CommandLine commandLine) throws ParseException {
+
+        this.skipChecks = commandLine.hasOption(OPT_SKIP_CHECKS);
 
         this.stages = commandLine.hasOption(OPT_STAGES) ?
                 RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
@@ -258,6 +275,10 @@ public class RampartCLI extends AbstractConanCLI {
                 .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate assembly to process.  By default the automatically selected assembly is used.")
                 .create("a"));
 
+        options.add(OptionBuilder.withLongOpt(OPT_SKIP_CHECKS)
+                .withDescription("Skips initial checks to see if all requested tools can be found.")
+                .create("sc"));
+
         return options;
     }
 
@@ -298,6 +319,7 @@ public class RampartCLI extends AbstractConanCLI {
                 rampartCLI.printHelp();
             }
             else {
+                rampartCLI.initialise();
                 rampartCLI.execute();
             }
         }

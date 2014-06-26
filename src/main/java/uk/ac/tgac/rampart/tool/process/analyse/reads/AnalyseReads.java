@@ -44,7 +44,7 @@ public class AnalyseReads extends AbstractConanProcess {
     }
 
     public AnalyseReads(ConanExecutorService ces, Args args) {
-        super("", args, new Params());
+        super("", args, new Params(), ces);
     }
 
     public Args getArgs() {

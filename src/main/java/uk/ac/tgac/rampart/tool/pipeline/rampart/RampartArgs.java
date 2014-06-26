@@ -79,10 +79,11 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private Finalise.Args finaliseArgs;
     private RampartJobFileSystem rampartJobFileSystem;
     private ExecutionContext executionContext;
+    private boolean doInitialChecks;
 
 
 
-    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages, File ampInput)
+    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages, File ampInput, boolean doInitialChecks)
             throws IOException {
 
         super(configFile, outputDir, jobPrefix);
@@ -98,6 +99,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.analyseAmpArgs = null;
         this.finaliseArgs = null;
         this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
+        this.doInitialChecks = doInitialChecks;
     }
 
 
@@ -356,5 +358,13 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
     public void setExecutionContext(ExecutionContext executionContext) {
         this.executionContext = executionContext;
+    }
+
+    public boolean isDoInitialChecks() {
+        return doInitialChecks;
+    }
+
+    public void setDoInitialChecks(boolean doInitialChecks) {
+        this.doInitialChecks = doInitialChecks;
     }
 }

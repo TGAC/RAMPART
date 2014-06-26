@@ -45,10 +45,10 @@ public class ReadsInput {
     public ReadsInput(Element ele) throws IOException {
 
         if (!ele.hasAttribute(KEY_ATTR_ECQ))
-            throw new IOException("Could not find " + KEY_ATTR_ECQ + " attribute in MASS Input element");
+            throw new IOException("Could not find " + KEY_ATTR_ECQ + " attribute in Input element");
 
         if (!ele.hasAttribute(KEY_ATTR_LIB))
-            throw new IOException("Could not find " + KEY_ATTR_LIB + " attribute in MASS input element");
+            throw new IOException("Could not find " + KEY_ATTR_LIB + " attribute in input element");
 
         this.ecq = XmlHelper.getTextValue(ele, KEY_ATTR_ECQ);
         this.lib = XmlHelper.getTextValue(ele, KEY_ATTR_LIB);

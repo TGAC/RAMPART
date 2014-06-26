@@ -15,5 +15,6 @@ public interface AssemblySelector {
 
     File selectAssembly(AssemblyStatsTable table,
                         long estimatedGenomeSize,
-                        double estimatedGcPercentage);
+                        double estimatedGcPercentage,
+                        File massDir);
 }

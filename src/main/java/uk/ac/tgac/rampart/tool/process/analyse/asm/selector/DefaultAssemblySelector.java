@@ -47,7 +47,8 @@ public class DefaultAssemblySelector implements AssemblySelector {
     @Override
     public File selectAssembly(AssemblyStatsTable table,
                                long estimatedGenomeSize,
-                               double estimatedGcPercentage) {
+                               double estimatedGcPercentage,
+                               File massDir) {
 
         // Normalise merged table
         AssemblyStatsMatrix matrix = table.generateStatsMatrix();
@@ -66,7 +67,27 @@ public class DefaultAssemblySelector implements AssemblySelector {
         // Report best assembly stats
         log.info("Best assembly stats: " + table.getBest().toString());
 
-        return new File(table.getBest().getFilePath());
+        File massGroupDir = new File(massDir, table.getBest().getDataset());
+
+        File aUnitigsDir = new File(massGroupDir, "unitigs");
+        File aContigsDir = new File(massGroupDir, "contigs");
+        File aScaffoldsDir = new File(massGroupDir, "scaffolds");
+
+        File asmDir = null;
+        if (aScaffoldsDir.exists()) {
+            asmDir = aScaffoldsDir;
+        }
+        else if (aContigsDir.exists()) {
+            asmDir = aContigsDir;
+        }
+        else if (aUnitigsDir.exists()) {
+            asmDir = aUnitigsDir;
+        }
+        else {
+            throw new IllegalStateException("Could not find any output sequences for this mass group: " + table.getBest().getDataset());
+        }
+
+        return new File(asmDir, table.getBest().getFilePath());
     }
 
 

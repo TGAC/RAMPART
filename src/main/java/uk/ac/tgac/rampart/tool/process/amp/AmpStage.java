@@ -123,13 +123,8 @@ public class AmpStage extends AbstractConanProcess {
 
     protected AssemblyEnhancer makeStage(Args args, List<Library> libs) throws IOException {
 
-        AssemblyEnhancer proc = AssemblyEnhancerFactory.create(args.getTool(), args.getInputAssembly(), args.getOutputDir(), "amp-" + args.getIndex(),
+        return AssemblyEnhancerFactory.create(args.getTool(), args.getInputAssembly(), args.getOutputDir(), "amp-" + args.getIndex(),
                 libs, args.getThreads(), args.getMemory(), args.getOtherArgs(), this.conanExecutorService);
-
-        if (proc == null)
-            throw new IOException("Could not find requested tool: " + args.getTool());
-
-        return proc;
     }
 
 
@@ -156,12 +151,12 @@ public class AmpStage extends AbstractConanProcess {
         try {
             proc = this.makeStage(args, null);
         } catch (IOException e) {
-            log.warn("Could not create AMP stage");
+            log.warn("Could not create AMP stage " + args.getIndex() + " for tool: " + args.getTool() + "; check tool is installed and configured correctly.");
             return false;
         }
 
         if (proc == null) {
-            log.warn("Could not create AMP stage for tool: " + args.getTool() + "; check tool exists.");
+            log.warn("Could not create AMP stage " + args.getIndex() + " for tool: " + args.getTool() + "; Tool not recognised.  Check tool is supported and you have the correct spelling.");
             return false;
         }
 
@@ -212,7 +207,7 @@ public class AmpStage extends AbstractConanProcess {
                 selectedLibs.add(modLib);
             }
 
-            log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq() + "; Single MASS name: " + ampIndex);
+            log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq());
         }
 
         return selectedLibs;
@@ -266,7 +261,7 @@ public class AmpStage extends AbstractConanProcess {
 
             this.outputDir = new File("");
             this.jobPrefix = "AMP-" + this.index;
-            this.inputs = null;
+            this.inputs = new ArrayList<>();
             this.allLibraries = null;
             this.allMecqs = null;
             this.organism = null;

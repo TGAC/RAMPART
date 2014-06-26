@@ -731,7 +731,7 @@ public class MassJob extends AbstractConanProcess {
 
         // Create process
         return this.conanExecutorService.executeProcess(ssProc, output.getParentFile(), jobName, 1, 2000,
-                this.conanExecutorService.usingScheduler() ? !runParallel : true);
+                this.conanExecutorService.usingScheduler() ? runParallel : false);
     }
 
 

@@ -250,7 +250,11 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
                     File reportDir = new File(args.getOutputDir(), massGroup + "/" + analyser.getName().toLowerCase());
 
 
-                    analyser.updateTable(table, assembliesFromDir(asmDir), reportDir, massGroup);
+                    analyser.updateTable(
+                            table,
+                            assembliesFromDir(asmDir),
+                            analyser.isFast() ? new File(reportDir, asmDir.getName()) : reportDir,
+                            massGroup);
                 }
             }
 
@@ -259,7 +263,8 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
             File selectedAssembly = assemblySelector.selectAssembly(
                     table,
                     args.getOrganism().getEstGenomeSize(),
-                    args.getOrganism().getEstGcPercentage());
+                    args.getOrganism().getEstGcPercentage(),
+                    args.getMassDir());
 
             File outputAssembly = new File(args.getOutputDir(), "best.fa");
 
