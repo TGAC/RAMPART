@@ -9,6 +9,7 @@ import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
@@ -112,6 +113,8 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
             requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
         }
 
+        List<Integer> jobIds = new ArrayList<>();
+
         // Just loop through all requested stats levels and execute each.
         // Each stage is processed linearly
         try {
@@ -121,7 +124,19 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
                 File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
                 String jobPrefix = this.getArgs().getJobPrefix() + "-" + analyser.getName().toLowerCase();
 
-                analyser.execute(assemblies, outputDir, jobPrefix, args, this.conanExecutorService);
+                jobIds.addAll(analyser.execute(assemblies, outputDir, jobPrefix, args, this.conanExecutorService));
+            }
+
+            // If we're using a scheduler and we have been asked to run
+            // in parallel, then we should wait for all those to complete before continueing.
+            if (this.conanExecutorService.usingScheduler() && args.isRunParallel() && !jobIds.isEmpty()) {
+                log.debug("Analysing assemblies in parallel, waiting for completion");
+                this.conanExecutorService.executeScheduledWait(
+                        jobIds,
+                        args.getJobPrefix() + "-*",
+                        ExitStatus.Type.COMPLETED_ANY,
+                        args.getJobPrefix() + "-cont-wait",
+                        args.getOutputDir());
             }
         } catch (ConanParameterException | IOException e) {
             throw new ProcessExecutionException(4, e);
@@ -156,23 +171,15 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
         Args args = this.getArgs();
 
-        List<File> assemblies = new ArrayList<>();
+
+        if (args.getAmpStages() == null || args.getAmpStages().isEmpty()) {
+            return null;
+        }
+
+        File asmDir = args.getAmpStages().get(0).getAssembliesDir();
 
         if (analyser.isFast() || args.isAnalyseAll()) {
-
-            // Loop through AMP stages
-            for (AmpStage.Args ampStageArgs : args.getAmpStages()) {
-
-                int index = ampStageArgs.getIndex();
-
-                File assembly = ampStageArgs.getOutputFile();
-
-                if (!assembly.exists()) {
-                    throw new ProcessExecutionException(-1, "Could not find output from AMP stage: " + index + "; at: " + assembly.getAbsolutePath());
-                }
-
-                assemblies.add(assembly);
-            }
+            return assembliesFromDir(asmDir);
         }
         else {
             AmpStage.Args finalStage = args.getAmpStages().get(args.getAmpStages().size() - 1);
@@ -182,11 +189,10 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
             if (!assembly.exists()) {
                 throw new ProcessExecutionException(-1, "Could not find final output from AMP at: " + assembly.getAbsolutePath());
             }
-
+            List<File> assemblies = new ArrayList<>();
             assemblies.add(assembly);
+            return assemblies;
         }
-
-        return assemblies;
     }
 
     /**

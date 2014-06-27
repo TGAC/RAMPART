@@ -89,7 +89,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             table.mergeWithQuastResults(quastReportFile, null, subGroup);
         }
         else {
-            log.warn("Could not find Quast report file at: " + quastReportFile.getAbsolutePath() + "; possibly one of the assemblies does not contain valid contigs.  Skipping quast result integration for this MASS group.");
+            log.warn("Could not find Quast report file at: " + quastReportFile.getAbsolutePath() + "; possibly one of the assemblies does not contain valid contigs.  Skipping quast result integration for this group.");
         }
     }
 

@@ -154,6 +154,9 @@ public class MassJob extends AbstractConanProcess {
 
                         log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
+                        DeBruijnAssemblerArgs dbgArgs = new DeBruijnAssemblerArgs() {
+                        }
+
                         // Create the actual assembler for these settings
                         Assembler assembler = AssemblerFactory.createDeBruijnAssembler(
                                 args.getTool(),
@@ -789,7 +792,7 @@ public class MassJob extends AbstractConanProcess {
             this.tool = "ABYSS_V1_3_4";
             this.kmerRange = new KmerRange();
             this.coverageRange = new CoverageRange();
-            this.coverageCutoff = -1;
+            this.coverageCutoff = 0;
             this.organism = null;
 
             this.mecqDir = null;

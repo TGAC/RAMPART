@@ -147,7 +147,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
     public void mergeWithQuastResults(File quastReportFile, File assemblyDir, String massGroup) throws IOException {
 
         QuastV2_2Report quastReport = new QuastV2_2Report(quastReportFile);
-
+        int i = 0;
         for(QuastV2_2Report.QuastV2_2AssemblyStats qStats : quastReport.getStatList()) {
 
             if (!qStats.getName().endsWith("broken")) {
@@ -157,6 +157,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
                 // If not found then create a new entry
                 if (stats == null) {
                     stats = new AssemblyStats();
+                    stats.setIndex(i++);
                     stats.setDesc(qStats.getName());
                     //stats.setFilePath(new File(assemblyDir, qStats.getName() + ".fa").getAbsolutePath());
                     stats.setFilePath(qStats.getName() + ".fa");

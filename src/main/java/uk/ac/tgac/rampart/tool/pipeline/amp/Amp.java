@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.tool.pipeline.amp;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -112,47 +113,57 @@ public class Amp extends AbstractConanProcess {
         // Short cut to arguments
         Args args = this.getArgs();
 
-        if (!args.isStatsOnly()) {
+        try {
 
-            // Create AMP Pipeline
-            Pipeline ampPipeline = new Pipeline(this.conanExecutorService, args);
+            if (!args.isStatsOnly()) {
 
-            log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
+                // Create AMP Pipeline
+                Pipeline ampPipeline = new Pipeline(this.conanExecutorService, args);
 
-            // Make sure the output directory exists
-            args.getAssembliesDir().mkdirs();
+                log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
 
-            // Create link for the reads file
-            this.getConanProcessService().createLocalSymbolicLink(
-                    args.getInputAssembly(),
-                    new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
+                // Clear out anything that was here before
+                if (args.getOutputDir().exists()) {
+                    FileUtils.deleteDirectory(args.getOutputDir());
+                }
 
-            // Create a guest user
-            ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
+                // Make sure the output directory exists
+                args.getAssembliesDir().mkdirs();
 
-            // Create the AMP task
-            ConanTask<Pipeline> ampTask = new DefaultTaskFactory().createTask(
-                    ampPipeline,
-                    0,
-                    ampPipeline.getArgs().getArgMap(),
-                    ConanTask.Priority.HIGHEST,
-                    rampartUser);
+                // Create link for the reads file
+                this.getConanProcessService().createLocalSymbolicLink(
+                        args.getInputAssembly(),
+                        new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
 
-            ampTask.setId("AMP");
-            ampTask.submit();
+                // Create a guest user
+                ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
 
-            // Run the AMP pipeline
-            try {
-                ampTask.execute(executionContext);
+                // Create the AMP task
+                ConanTask<Pipeline> ampTask = new DefaultTaskFactory().createTask(
+                        ampPipeline,
+                        0,
+                        ampPipeline.getArgs().getArgMap(),
+                        ConanTask.Priority.HIGHEST,
+                        rampartUser);
+
+                ampTask.setId("AMP");
+                ampTask.submit();
+
+                // Run the AMP pipeline
+                try {
+                    ampTask.execute(executionContext);
+                } catch (TaskExecutionException e) {
+                    throw new ProcessExecutionException(-1, e);
+                }
+
+                // Create a symbolic link for the final assembly from the final stage
+                this.getConanProcessService().createLocalSymbolicLink(
+                        new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
+                        args.getFinalAssembly());
             }
-            catch (TaskExecutionException e) {
-                throw new ProcessExecutionException(-1, e);
-            }
-
-            // Create a symbolic link for the final assembly from the final stage
-            this.getConanProcessService().createLocalSymbolicLink(
-                    new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
-                    args.getFinalAssembly());
+        }
+        catch(IOException e) {
+            throw new ProcessExecutionException(-1, e);
         }
 
 

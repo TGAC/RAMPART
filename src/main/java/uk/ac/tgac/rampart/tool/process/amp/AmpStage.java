@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
@@ -106,15 +107,26 @@ public class AmpStage extends AbstractConanProcess {
             // Create the configuration for this stage
             AssemblyEnhancer ampProc = this.makeStage(args, selectedLibs);
 
+            // Set a suitable execution context
+            ExecutionContext ecCopy = executionContext.copy();
+            ecCopy.setContext("AMP-" + args.getIndex(), true, new File(args.getOutputDir(), "amp-" + args.getIndex() + ".log"));
+            if (ecCopy.usingScheduler()) {
+                ecCopy.getScheduler().getArgs().setThreads(args.getThreads());
+                ecCopy.getScheduler().getArgs().setMemoryMB(args.getMemory());
+            }
+
+            // Do any setup for this process
+            ampProc.setup();
+
             // Execute the AMP stage
-            this.conanExecutorService.executeProcess(ampProc, args.getOutputDir(), "amp-" + args.getIndex(), 1, 0, false);
+            ampProc.execute(ecCopy);
 
             // Create links for outputs from this assembler to known locations
             this.getConanProcessService().createLocalSymbolicLink(ampProc.getOutputFile(), args.getOutputFile());
 
             log.info("Finished AMP stage " + args.getIndex());
         }
-        catch (IOException e) {
+        catch (IOException | ConanParameterException e) {
             throw new ProcessExecutionException(-1, e);
         }
 
