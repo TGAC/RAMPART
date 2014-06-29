@@ -122,8 +122,10 @@ public class MassJob extends AbstractConanProcess {
             List<Library> selectedLibs = this.validateInputs(args.getName(), args.getInputs(), args.getAllLibraries(),
                     args.getAllMecqs(), args.getMecqDir());
 
-            // Add libs to generic assembler so we know what kind of output to expect
-            genericAssembler.getAssemblerArgs().setLibraries(selectedLibs);
+            Assembler.Type type = genericAssembler.getType();
+
+            // Provide libraries to assembler in case it makes a difference to what support directories to make
+            genericAssembler.setLibraries(selectedLibs);
 
             // Create any required directories for this job
             this.createSupportDirectories(genericAssembler);
@@ -138,7 +140,6 @@ public class MassJob extends AbstractConanProcess {
                 SubsamplingResult subsamplingResult = this.doSubsampling(genericAssembler.doesSubsampling(), cvg, selectedLibs,
                         args.isRunParallel());
 
-                Assembler.Type type = genericAssembler.getType();
 
                 // Generate a directory name for this assembly
                 String cvgString = CoverageRange.toString(cvg);
@@ -652,7 +653,7 @@ public class MassJob extends AbstractConanProcess {
             SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
 
             schArgs.setThreads(asmArgs.getThreads());
-            schArgs.setMemoryMB(asmArgs.getMemory());
+            schArgs.setMemoryMB(asmArgs.getMaxMemUsageMB());
 
             // Add wait condition for subsampling jobs (or any other jobs that must finish first), assuming there are any
             if (jobIds != null && !jobIds.isEmpty()) {

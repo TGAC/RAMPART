@@ -54,7 +54,7 @@ public class MassJobTest extends MockedConanProcess {
     @Test
     public void testExecute() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException, ConanParameterException {
 
-        File outputDir = temp.newFolder("singleMASSTest");
+        File outputDir = temp.newFolder("massJobTest");
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
@@ -80,7 +80,7 @@ public class MassJobTest extends MockedConanProcess {
         spy.execute(ec);
 
         assertTrue(new File(outputDir, "cvg-all_k-51").exists());
-        assertTrue(new File(outputDir, "cvg-all_k-63").exists());
+        assertTrue(new File(outputDir, "cvg-all_k-61").exists());
         assertTrue(new File(outputDir, "unitigs").exists());
     }
 }
