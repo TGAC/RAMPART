@@ -140,87 +140,71 @@ public class MassJob extends AbstractConanProcess {
 
                 Assembler.Type type = genericAssembler.getType();
 
+                // Generate a directory name for this assembly
+                String cvgString = CoverageRange.toString(cvg);
+                String cvgDirName = "cvg-" + cvgString;
+
+                // This is the output directory for this particular assembly
+                File outputDir = new File(args.getOutputDir(), cvgDirName);
+
                 if (type == Assembler.Type.DE_BRUIJN) {
 
                     // Iterate over kmer range
                     for (Integer k : validatedKmerRange) {
 
-                        // Generate a directory name for this assembly
-                        String cvgString = CoverageRange.toString(cvg);
-                        String dirName = "cvg-" + cvgString + "_k-" + k;
+                        // Override output dir name with k values
+                        File kOutputDir = new File(args.getOutputDir(), cvgDirName + "_k-" + k);
 
-                        // This is the output directory for this particular assembly
-                        File outputDir = new File(args.getOutputDir(), dirName);
+                        GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs();
+                        dbgArgs.setOutputDir(kOutputDir);
+                        dbgArgs.setLibraries(subsamplingResult.getLibraries());
+                        dbgArgs.setThreads(args.getThreads());
+                        dbgArgs.setMemory(args.getMemory());
+                        dbgArgs.setK(k);
+                        dbgArgs.setOrganism(args.getOrganism());
 
-                        log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
-
-                        DeBruijnAssemblerArgs dbgArgs = new DeBruijnAssemblerArgs() {
-                        }
+                        //TODO set other args here
 
                         // Create the actual assembler for these settings
-                        Assembler assembler = AssemblerFactory.createDeBruijnAssembler(
-                                args.getTool(),
-                                subsamplingResult.getLibraries(),
-                                outputDir,
-                                args.getThreads(),
-                                args.getMemory(),
-                                args.getOrganism(),
-                                this.conanExecutorService,
-                                k,
-                                args.getCoverageCutoff());
+                        Assembler assembler = dbgArgs.createAssembler(args.getTool(), this.conanExecutorService);
 
                         // Execute the assembler and do any other file related setup and finalisation
-                        this.run(assembler, cvg, outputDir, subsamplingResult);
+                        this.run(assembler, cvg, kOutputDir, subsamplingResult);
                     }
                 }
                 else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
 
-                    // Generate a directory name for this assembly
-                    String cvgString = CoverageRange.toString(cvg);
-                    String dirName = "cvg-" + cvgString;
-
-                    // This is the output directory for this particular assembly
-                    File outputDir = new File(args.getOutputDir(), dirName);
-
-                    log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
+                    GenericDeBruijnAutoArgs dbgAutoArgs = new GenericDeBruijnAutoArgs();
+                    dbgAutoArgs.setOutputDir(outputDir);
+                    dbgAutoArgs.setLibraries(subsamplingResult.getLibraries());
+                    dbgAutoArgs.setThreads(args.getThreads());
+                    dbgAutoArgs.setMemory(args.getMemory());
+                    dbgAutoArgs.setOrganism(args.getOrganism());
 
                     // Create the actual assembler for these settings
-                    Assembler assembler = AssemblerFactory.createDeBruijnFixedAssembler(
-                            args.getTool(),
-                            subsamplingResult.getLibraries(),
-                            outputDir,
-                            args.getThreads(),
-                            args.getMemory(),
-                            args.getOrganism(),
-                            this.conanExecutorService);
+                    Assembler assembler = dbgAutoArgs.createAssembler(args.getTool(), this.conanExecutorService);
 
                     // Execute the assembler and do any other file related setup and finalisation
                     this.run(assembler, cvg, outputDir, subsamplingResult);
                 }
                 else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
 
-                    // Generate a directory name for this assembly
-                    String cvgString = CoverageRange.toString(cvg);
-                    String dirName = "cvg-" + cvgString;
-
-                    // This is the output directory for this particular assembly
-                    File outputDir = new File(args.getOutputDir(), dirName);
-
-                    log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
+                    GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs();
+                    dbgOptArgs.setOutputDir(outputDir);
+                    dbgOptArgs.setLibraries(subsamplingResult.getLibraries());
+                    dbgOptArgs.setThreads(args.getThreads());
+                    dbgOptArgs.setMemory(args.getMemory());
+                    dbgOptArgs.setOrganism(args.getOrganism());
+                    dbgOptArgs.setKmerRange(validatedKmerRange);
 
                     // Create the actual assembler for these settings
-                    Assembler assembler = AssemblerFactory.createDeBruijnOptimiserAssembler(
-                            args.getTool(),
-                            subsamplingResult.getLibraries(),
-                            outputDir,
-                            args.getThreads(),
-                            args.getMemory(),
-                            args.getOrganism(),
-                            this.conanExecutorService,
-                            validatedKmerRange);
+                    Assembler assembler = dbgOptArgs.createAssembler(args.getTool(), this.conanExecutorService);
 
                     // Execute the assembler and do any other file related setup and finalisation
                     this.run(assembler, cvg, outputDir, subsamplingResult);
+                }
+                else {
+                    throw new ProcessExecutionException(-2, "Unknown assembly type detected: " + type);
                 }
             }
 
@@ -239,12 +223,8 @@ public class MassJob extends AbstractConanProcess {
             // Finish
             log.info("Finished MASS group: \"" + args.getName() + "\"");
 
-        } catch (IOException ioe) {
+        } catch (IOException | CommandExecutionException | ConanParameterException ioe) {
             throw new ProcessExecutionException(-1, ioe);
-        } catch (CommandExecutionException cee) {
-            throw new ProcessExecutionException(-2, cee);
-        } catch (ConanParameterException cee) {
-            throw new ProcessExecutionException(-3, cee);
         }
 
         return true;
@@ -254,6 +234,8 @@ public class MassJob extends AbstractConanProcess {
             throws IOException, InterruptedException, ProcessExecutionException, ConanParameterException {
 
         Args args = this.getArgs();
+
+        log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
         // Set the level of subsampling for the assembler to conduct... if required
         if (assembler.doesSubsampling()) {

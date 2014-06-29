@@ -169,7 +169,7 @@ public class Mass extends AbstractConanProcess {
 
         // Keys for config file
         private static final String KEY_ATTR_PARALLEL = "parallel";
-        private static final String KEY_ELEM_SINGLE_MASS = "single_mass";
+        private static final String KEY_ELEM_SINGLE_MASS = "job";
 
         // Constants
         public static final int DEFAULT_CVG_CUTOFF = -1;
