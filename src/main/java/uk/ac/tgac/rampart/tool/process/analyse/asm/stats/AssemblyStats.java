@@ -32,6 +32,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     private String desc;
     private String dataset;
     private String filePath;
+    private String bubblePath;
     private long nbSeqs;
     private long nbSeqsGt1K;
     private long nbBases;
@@ -50,6 +51,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.desc = "";
         this.dataset = "";
         this.filePath = "";
+        this.bubblePath = "";
         this.nbSeqs = 0;
         this.nbSeqsGt1K = 0;
         this.nbBases = 0L;
@@ -64,21 +66,23 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     }
 
     public AssemblyStats(String[] stats) {
-        this.index = Integer.parseInt(stats[0]);
-        this.desc = stats[1];
-        this.dataset = stats[2];
-        this.filePath = stats[3];
-        this.nbSeqs = Long.parseLong(stats[4]);
-        this.nbSeqsGt1K = Long.parseLong(stats[5]);
-        this.nbBases = Long.parseLong(stats[6]);
-        this.nbBasesGt1K = Long.parseLong(stats[7]);
-        this.maxLen = Long.parseLong(stats[8]);
-        this.n50 = Long.parseLong(stats[9]);
-        this.l50 = Long.parseLong(stats[10]);
-        this.gcPercentage = Double.parseDouble(stats[11]);
-        this.nPercentage = Double.parseDouble(stats[12]);
-        this.completenessPercentage = Double.parseDouble(stats[13]);
-        this.score = Double.parseDouble(stats[14]);
+        int i = 0;
+        this.index = Integer.parseInt(stats[i++]);
+        this.desc = stats[i++];
+        this.dataset = stats[i++];
+        this.filePath = stats[i++];
+        this.bubblePath = stats[i++];
+        this.nbSeqs = Long.parseLong(stats[i++]);
+        this.nbSeqsGt1K = Long.parseLong(stats[i++]);
+        this.nbBases = Long.parseLong(stats[i++]);
+        this.nbBasesGt1K = Long.parseLong(stats[i++]);
+        this.maxLen = Long.parseLong(stats[i++]);
+        this.n50 = Long.parseLong(stats[i++]);
+        this.l50 = Long.parseLong(stats[i++]);
+        this.gcPercentage = Double.parseDouble(stats[i++]);
+        this.nPercentage = Double.parseDouble(stats[i++]);
+        this.completenessPercentage = Double.parseDouble(stats[i++]);
+        this.score = Double.parseDouble(stats[i++]);
     }
 
 
@@ -112,6 +116,14 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getBubblePath() {
+        return bubblePath;
+    }
+
+    public void setBubblePath(String bubblePath) {
+        this.bubblePath = bubblePath;
     }
 
     public long getNbSeqs() {
@@ -211,19 +223,9 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     }
 
     public static String getStatsFileHeader() {
-        return "index|desc|dataset|file|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness|score";
+        return "index|desc|dataset|asm_path|bubble_path|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness|score";
     }
 
-    public void setFromFileName(String filename) {
-        String[] parts = filename.split("-");
-
-        if (parts.length < 4)
-            throw new IllegalArgumentException("Assembly file name does not conform to expected format");
-
-        this.dataset = parts[0];
-        this.desc = parts[1];
-        this.index = Integer.parseInt(parts[2]);
-    }
 
     @Override
     public String toString() {
@@ -234,6 +236,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         sj.add(this.getDesc());
         sj.add(this.getDataset());
         sj.add(this.getFilePath());
+        sj.add(this.getBubblePath());
         sj.add(this.getNbSeqs());
         sj.add(this.getNbSeqsGt1K());
         sj.add(this.getNbBases());

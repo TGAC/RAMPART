@@ -126,10 +126,10 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         return best;
     }
 
-    public AssemblyStats findStatsByDescription(String description) {
+    public AssemblyStats findStats(String group, String description) {
 
         for(AssemblyStats stats : this) {
-            if (stats.getDesc().equalsIgnoreCase(description)) {
+            if (stats.getDataset().equalsIgnoreCase(group) && stats.getDesc().equalsIgnoreCase(description)) {
                 return stats;
             }
         }
@@ -141,10 +141,9 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
      * Overrides any existing entries with results from Quast.  If quast results contain unknown entries then they are
      * created
      * @param quastReportFile
-     * @param assemblyDir
      * @throws IOException
      */
-    public void mergeWithQuastResults(File quastReportFile, File assemblyDir, String massGroup) throws IOException {
+    public void mergeWithQuastResults(File quastReportFile, String massGroup) throws IOException {
 
         QuastV2_2Report quastReport = new QuastV2_2Report(quastReportFile);
         int i = 0;
@@ -152,20 +151,15 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
 
             if (!qStats.getName().endsWith("broken")) {
 
-                AssemblyStats stats = this.findStatsByDescription(qStats.getName());
+                AssemblyStats stats = this.findStats(massGroup, qStats.getName());
 
                 // If not found then create a new entry
                 if (stats == null) {
-                    stats = new AssemblyStats();
-                    stats.setIndex(i++);
-                    stats.setDesc(qStats.getName());
-                    //stats.setFilePath(new File(assemblyDir, qStats.getName() + ".fa").getAbsolutePath());
-                    stats.setFilePath(qStats.getName() + ".fa");
-                    stats.setDataset(massGroup);
-                    this.add(stats);
+                    throw new IOException("Couldn't find assembly stats entry for " + qStats.getName());
                 }
 
                 // Override attributes
+                stats.setFilePath(qStats.getName() + ".fa");
                 stats.setN50(qStats.getN50());
                 stats.setL50(qStats.getL50());
                 stats.setMaxLen(qStats.getLargestContig());
@@ -179,18 +173,14 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         }
     }
 
-    public void mergeWithCegmaResults(File cegmaFile, File assemblyFile, String description, String massGroup) throws IOException {
+    public void mergeWithCegmaResults(File cegmaFile, String subGroup, String description) throws IOException {
 
         CegmaV2_4Report cegmaReport = new CegmaV2_4Report(cegmaFile);
 
-        AssemblyStats stats = this.findStatsByDescription(description);
+        AssemblyStats stats = this.findStats(subGroup, description);
 
         if (stats == null) {
-            stats = new AssemblyStats();
-            stats.setDesc(description);
-            stats.setFilePath(assemblyFile.getAbsolutePath());
-            stats.setDataset(massGroup);
-            this.add(stats);
+            throw new IOException("Couldn't find assembly stats entry for " + subGroup + ", " + description);
         }
 
         stats.setCompletenessPercentage(cegmaReport.getPcComplete());

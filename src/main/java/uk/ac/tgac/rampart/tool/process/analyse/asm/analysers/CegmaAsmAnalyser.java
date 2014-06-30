@@ -114,7 +114,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             if (!asm.exists())
                 throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
 
-            table.mergeWithCegmaResults(c, asm, FilenameUtils.getBaseName(asm.getName()), subGroup);
+            table.mergeWithCegmaResults(c, FilenameUtils.getBaseName(asm.getName()), subGroup);
         }
 
     }

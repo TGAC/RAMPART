@@ -74,6 +74,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     private Mass.Args massArgs;
     private AnalyseMassAssemblies.Args analyseMassArgs;
     private File ampInput;
+    private File ampBubble;
     private Amp.Args ampArgs;
     private AnalyseAmpAssemblies.Args analyseAmpArgs;
     private Finalise.Args finaliseArgs;
@@ -83,7 +84,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
 
 
 
-    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages, File ampInput, boolean doInitialChecks)
+    public RampartArgs(File configFile, File outputDir, String jobPrefix, RampartStageList stages, File ampInput, File ampBubble, boolean doInitialChecks)
             throws IOException {
 
         super(configFile, outputDir, jobPrefix);
@@ -95,6 +96,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
         this.massArgs = null;
         this.analyseMassArgs = null;
         this.ampInput = ampInput;
+        this.ampBubble = ampBubble;
         this.ampArgs = null;
         this.analyseAmpArgs = null;
         this.finaliseArgs = null;
@@ -178,7 +180,14 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         ampElement,
                         this.rampartJobFileSystem.getAmpDir(),
                         this.getJobPrefix() + "-amp",
-                        ampInput != null ? ampInput : this.rampartJobFileSystem.getSelectedAssemblyFile(),
+                        this.ampInput != null ?
+                                this.ampInput :
+                                this.rampartJobFileSystem.getSelectedAssemblyFile(),
+                        this.getOrganism().getPloidy() > 1 ?
+                                this.ampBubble != null ?
+                                    this.ampBubble :
+                                    this.rampartJobFileSystem.getSelectedBubbleFile() :
+                                null,
                         this.libs,
                         this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
                         this.getOrganism());

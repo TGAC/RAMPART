@@ -50,6 +50,7 @@ public class RampartJobFileSystem {
     private File massStatsFile;
     private File massLogFile;
     private File selectedAssemblyFile;
+    private File selectedBubbleFile;
     private File ampPlotsFile;
     private File ampStatsFile;
     private File ampLogFile;
@@ -80,6 +81,7 @@ public class RampartJobFileSystem {
         this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
         this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
         this.selectedAssemblyFile = new File(this.analyseMassDir.getPath() + "/best.fa");
+        this.selectedBubbleFile = new File(this.analyseMassDir.getPath() + "/best_bubbles.fa");
         this.ampPlotsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.pdf");
         this.ampStatsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.txt");
         this.ampLogFile = new File(this.ampDir.getPath() + "/amp.log");
@@ -154,6 +156,10 @@ public class RampartJobFileSystem {
 
     public File getSelectedAssemblyFile() {
         return selectedAssemblyFile;
+    }
+
+    public File getSelectedBubbleFile() {
+        return selectedBubbleFile;
     }
 
     public File getReportTemplateFile() {

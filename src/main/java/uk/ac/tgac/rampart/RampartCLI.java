@@ -82,6 +82,7 @@ public class RampartCLI extends AbstractConanCLI {
     public static final String OPT_RUN_FIRST_HALF = "run_first_half";
     public static final String OPT_RUN_SECOND_HALF = "run_second_half";
     public static final String OPT_AMP_INPUT = "amp_input";
+    public static final String OPT_AMP_BUBBLE_INPUT = "amp_bubble";
     public static final String OPT_SKIP_CHECKS = "skip_checks";
 
     // **** Defaults ****
@@ -104,6 +105,7 @@ public class RampartCLI extends AbstractConanCLI {
     // **** Options ****
     private RampartStageList stages;
     private File ampInput;
+    private File ampBubble;
     private File jobConfig;
     private boolean skipChecks;
 
@@ -120,6 +122,7 @@ public class RampartCLI extends AbstractConanCLI {
 
         this.stages             = DEFAULT_STAGES;
         this.ampInput           = null;
+        this.ampBubble          = null;
         this.jobConfig          = null;
         this.args               = null;
     }
@@ -154,6 +157,7 @@ public class RampartCLI extends AbstractConanCLI {
                 this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
                 this.stages,
                 this.ampInput,
+                this.ampBubble,
                 !this.skipChecks);
 
         // Parse the job config file and set internal variables in RampartArgs
@@ -228,6 +232,10 @@ public class RampartCLI extends AbstractConanCLI {
                 if (commandLine.hasOption(OPT_AMP_INPUT)) {
                     this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT));
                 }
+
+                if (commandLine.hasOption(OPT_AMP_BUBBLE_INPUT)) {
+                    this.ampBubble = new File(commandLine.getOptionValue(OPT_AMP_BUBBLE_INPUT));
+                }
             }
         }
 
@@ -274,6 +282,10 @@ public class RampartCLI extends AbstractConanCLI {
         options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_AMP_INPUT).hasArg()
                 .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate assembly to process.  By default the automatically selected assembly is used.")
                 .create("a"));
+
+        options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_AMP_BUBBLE_INPUT).hasArg()
+                .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate bubble to process.  By default the automatically selected assembly is used, if the best assembly generates a bubble file (not all assemblers do).")
+                .create("b"));
 
         options.add(OptionBuilder.withLongOpt(OPT_SKIP_CHECKS)
                 .withDescription("Skips initial checks to see if all requested tools can be found.")
@@ -325,6 +337,7 @@ public class RampartCLI extends AbstractConanCLI {
         }
         catch (IllegalArgumentException | ParseException e) {
             System.err.println(e.getMessage());
+            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
             System.exit(1);
         }
         catch (Exception e) {

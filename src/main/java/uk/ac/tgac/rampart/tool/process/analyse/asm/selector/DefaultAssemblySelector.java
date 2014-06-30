@@ -19,8 +19,11 @@ package uk.ac.tgac.rampart.tool.process.analyse.asm.selector;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsMatrix;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsMatrixRow;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
@@ -45,7 +48,7 @@ public class DefaultAssemblySelector implements AssemblySelector {
     }
 
     @Override
-    public File selectAssembly(AssemblyStatsTable table,
+    public AssemblyStats selectAssembly(AssemblyStatsTable table,
                                long estimatedGenomeSize,
                                double estimatedGcPercentage,
                                File massDir) {
@@ -67,27 +70,7 @@ public class DefaultAssemblySelector implements AssemblySelector {
         // Report best assembly stats
         log.info("Best assembly stats: " + table.getBest().toString());
 
-        File massGroupDir = new File(massDir, table.getBest().getDataset());
-
-        File aUnitigsDir = new File(massGroupDir, "unitigs");
-        File aContigsDir = new File(massGroupDir, "contigs");
-        File aScaffoldsDir = new File(massGroupDir, "scaffolds");
-
-        File asmDir = null;
-        if (aScaffoldsDir.exists()) {
-            asmDir = aScaffoldsDir;
-        }
-        else if (aContigsDir.exists()) {
-            asmDir = aContigsDir;
-        }
-        else if (aUnitigsDir.exists()) {
-            asmDir = aUnitigsDir;
-        }
-        else {
-            throw new IllegalStateException("Could not find any output sequences for this mass group: " + table.getBest().getDataset());
-        }
-
-        return new File(asmDir, table.getBest().getFilePath());
+        return table.getBest();
     }
 
 

@@ -135,8 +135,16 @@ public class AmpStage extends AbstractConanProcess {
 
     protected AssemblyEnhancer makeStage(Args args, List<Library> libs) throws IOException {
 
-        return AssemblyEnhancerFactory.create(args.getTool(), args.getInputAssembly(), args.getOutputDir(), "amp-" + args.getIndex(),
-                libs, args.getThreads(), args.getMemory(), args.getOtherArgs(), this.conanExecutorService);
+        return AssemblyEnhancerFactory.create(
+                args.getTool(),
+                args.getInputAssembly(),
+                args.getBubbleFile() != null && args.getBubbleFile().exists() ? args.getBubbleFile() : null,
+                args.getOutputDir(),
+                "amp-" + args.getIndex(),
+                libs, args.getThreads(),
+                args.getMemory(),
+                args.getOtherArgs(),
+                this.conanExecutorService);
     }
 
 
@@ -231,7 +239,6 @@ public class AmpStage extends AbstractConanProcess {
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
         private static final String KEY_ELEM_OTHER_ARGS = "args";
-        private static final String KEY_ATTR_SELECTED_ASSEMBLY = "selected_assembly";
         private static final String KEY_ELEM_INPUTS = "inputs";
         private static final String KEY_ELEM_SINGLE_INPUT = "input";
 
@@ -253,6 +260,7 @@ public class AmpStage extends AbstractConanProcess {
         // Specifics
         private String tool;
         private File inputAssembly;
+        private File bubbleFile;
         private List<ReadsInput> inputs;
         private int index;
         private int threads;
@@ -266,6 +274,7 @@ public class AmpStage extends AbstractConanProcess {
 
             this.tool = "";
             this.inputAssembly = null;
+            this.bubbleFile = null;
             this.index = 0;
             this.threads = DEFAULT_THREADS;
             this.memory = DEFAULT_MEMORY;
@@ -280,7 +289,7 @@ public class AmpStage extends AbstractConanProcess {
         }
 
         public Args(Element ele, File outputDir, File assembliesDir, String jobPrefix, List<Library> allLibraries,
-                            List<Mecq.EcqArgs> allMecqs, Organism organism, File inputAssembly, int index) throws IOException {
+                            List<Mecq.EcqArgs> allMecqs, Organism organism, File inputAssembly, File bubbleFile, int index) throws IOException {
 
             // Set defaults
             this();
@@ -290,9 +299,8 @@ public class AmpStage extends AbstractConanProcess {
                 throw new IOException("Could not find " + KEY_ELEM_TOOL + " attribute in AMP stage element");
 
             this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
-            this.inputAssembly = ele.hasAttribute(KEY_ATTR_SELECTED_ASSEMBLY) ?
-                    new File(XmlHelper.getTextValue(ele, KEY_ATTR_SELECTED_ASSEMBLY)) :
-                    inputAssembly;
+            this.inputAssembly = inputAssembly;
+            this.bubbleFile = bubbleFile;
 
             // Required Elements
             Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
@@ -376,6 +384,14 @@ public class AmpStage extends AbstractConanProcess {
             this.inputAssembly = inputAssembly;
         }
 
+        public File getBubbleFile() {
+            return bubbleFile;
+        }
+
+        public void setBubbleFile(File bubbleFile) {
+            this.bubbleFile = bubbleFile;
+        }
+
         public File getOutputFile() {
             return new File(this.assembliesDir, "amp-stage-" + this.index + "-scaffolds.fa");
         }
@@ -440,6 +456,9 @@ public class AmpStage extends AbstractConanProcess {
             if (this.inputAssembly != null)
                 pvp.put(params.getInput(), this.inputAssembly.getAbsolutePath());
 
+            if (this.bubbleFile != null)
+                pvp.put(params.getBubbleFile(), this.bubbleFile.getAbsolutePath());
+
             if (this.outputDir != null)
                 pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
 
@@ -462,6 +481,8 @@ public class AmpStage extends AbstractConanProcess {
 
             if (param.equals(params.getInput())) {
                 this.inputAssembly = new File(value);
+            } else if (param.equals(params.getBubbleFile())) {
+                this.bubbleFile = new File(value);
             } else if (param.equals(params.getOutputDir())) {
                 this.outputDir = new File(value);
             } else if (param.equals(params.getJobPrefix())) {
@@ -484,6 +505,7 @@ public class AmpStage extends AbstractConanProcess {
     public static class Params extends AbstractProcessParams {
 
         private ConanParameter input;
+        private ConanParameter bubbleFile;
         private ConanParameter outputDir;
         private ConanParameter jobPrefix;
         private ConanParameter threads;
@@ -494,6 +516,12 @@ public class AmpStage extends AbstractConanProcess {
 
             this.input = new PathParameter(
                     "input",
+                    "The input assembly containing the assembly to enhance",
+                    true
+            );
+
+            this.bubbleFile = new PathParameter(
+                    "bubble",
                     "The input assembly containing the assembly to enhance",
                     true
             );
@@ -532,6 +560,10 @@ public class AmpStage extends AbstractConanProcess {
             return input;
         }
 
+        public ConanParameter getBubbleFile() {
+            return bubbleFile;
+        }
+
         public ConanParameter getOutputDir() {
             return outputDir;
         }
@@ -556,6 +588,7 @@ public class AmpStage extends AbstractConanProcess {
         public ConanParameter[] getConanParametersAsArray() {
             return new ConanParameter[]{
                     this.input,
+                    this.bubbleFile,
                     this.outputDir,
                     this.jobPrefix,
                     this.threads,

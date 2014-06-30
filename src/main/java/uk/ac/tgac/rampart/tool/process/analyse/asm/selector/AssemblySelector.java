@@ -1,5 +1,7 @@
 package uk.ac.tgac.rampart.tool.process.analyse.asm.selector;
 
+import org.apache.commons.lang3.tuple.Pair;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 
 import java.io.File;
@@ -13,7 +15,8 @@ import java.io.File;
  */
 public interface AssemblySelector {
 
-    File selectAssembly(AssemblyStatsTable table,
+    AssemblyStats selectAssembly(
+                        AssemblyStatsTable table,
                         long estimatedGenomeSize,
                         double estimatedGcPercentage,
                         File massDir);

@@ -2,6 +2,8 @@ package uk.ac.tgac.rampart.tool.process.analyse.asm;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -15,10 +17,13 @@ import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.AssemblySelector;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.DefaultAssemblySelector;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
+import uk.ac.tgac.rampart.tool.process.mass.CoverageRange;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.SpiFactory;
 
@@ -211,7 +216,6 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
                         args.getOutputDir());
             }
 
-
         } catch (ConanParameterException | IOException e) {
             throw new ProcessExecutionException(4, e);
         }
@@ -220,58 +224,65 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
         try {
             AssemblyStatsTable table = new AssemblyStatsTable();
 
+            int index = 0;
+            for(MassJob.Args jobArgs : args.getMassGroups()) {
+
+                File asmDir = this.getAssemblyDir(new File(args.getMassDir(), jobArgs.getName()));
+
+                for(Assembler assembler : jobArgs.getAssemblers()) {
+
+                    AssemblyStats stats = new AssemblyStats();
+                    stats.setIndex(index++);
+                    stats.setDataset(jobArgs.getName());
+                    stats.setDesc(assembler.getAssemblerArgs().getOutputDir().getName());
+                    stats.setFilePath(this.getAssemblyFile(assembler, asmDir).getAbsolutePath());
+                    stats.setBubblePath(assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
+                    table.add(stats);
+                }
+            }
+
             // Merge all the results
             for(AssemblyAnalyser analyser : requestedServices) {
 
                 // Loop through MASS groups
-                for(MassJob.Args singleMassArgs : args.getMassGroups()) {
+                for(MassJob.Args jobArgs : args.getMassGroups()) {
 
-                    String massGroup = singleMassArgs.getName();
-
-                    File asmDirs = new File(args.getMassDir(), massGroup);
-                    File aUnitigsDir = new File(asmDirs, "unitigs");
-                    File aContigsDir = new File(asmDirs, "contigs");
-                    File aScaffoldsDir = new File(asmDirs, "scaffolds");
-
-                    File asmDir = null;
-                    if (aScaffoldsDir.exists()) {
-                        asmDir = aScaffoldsDir;
-                    }
-                    else if (aContigsDir.exists()) {
-                        asmDir = aContigsDir;
-                    }
-                    else if (aUnitigsDir.exists()) {
-                        asmDir = aUnitigsDir;
-                    }
-                    else {
-                        throw new IllegalStateException("Could not find any output sequences for this mass group: " + massGroup);
-                    }
-
+                    String massGroup = jobArgs.getName();
+                    File asmDir = this.getAssemblyDir(new File(args.getMassDir(), massGroup));
                     File reportDir = new File(args.getOutputDir(), massGroup + "/" + analyser.getName().toLowerCase());
-
 
                     analyser.updateTable(
                             table,
                             assembliesFromDir(asmDir),
                             analyser.isFast() ? new File(reportDir, asmDir.getName()) : reportDir,
-                            massGroup);
+                            massGroup
+                            );
                 }
             }
 
             // Select the assembly
             AssemblySelector assemblySelector = new DefaultAssemblySelector(args.getWeightings());
-            File selectedAssembly = assemblySelector.selectAssembly(
+            AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
                     table,
                     args.getOrganism().getEstGenomeSize(),
                     args.getOrganism().getEstGcPercentage(),
                     args.getMassDir());
 
-            File outputAssembly = new File(args.getOutputDir(), "best.fa");
+            File massGroupDir = new File(args.getMassDir(), selectedAssembly.getDataset());
 
-            log.info("Best assembly path: " + selectedAssembly.getAbsolutePath());
+            File bestAssembly = new File(selectedAssembly.getFilePath());
+            File bubbles = new File(selectedAssembly.getBubblePath());
+
+            File bestAssemblyLink = new File(args.getOutputDir(), "best.fa");
+            File bubblesLink = new File(args.getOutputDir(), "best_bubbles.fa");
+
+            log.info("Best assembly path: " + bestAssembly.getAbsolutePath());
 
             // Create link to "best" assembly in stats dir
-            this.getConanProcessService().createLocalSymbolicLink(selectedAssembly, outputAssembly);
+            this.getConanProcessService().createLocalSymbolicLink(bestAssembly, bestAssemblyLink);
+            if (bubbles != null && bubbles.exists()) {
+                this.getConanProcessService().createLocalSymbolicLink(bubbles, bubblesLink);
+            }
 
             // Save table to disk
             File finalFile = new File(args.getOutputDir(), "scores.tab");
@@ -285,7 +296,42 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
         return true;
     }
 
+    protected File getAssemblyFile(Assembler assembler, File assemblyDir) {
+        if (assemblyDir.getName().equals("scaffolds")) {
+            return assembler.getScaffoldsFile();
+        }
+        else if (assemblyDir.getName().equals("contigs")) {
+            return assembler.getContigsFile();
+        }
+        else if (assemblyDir.getName().equals("unitigs")) {
+            return assembler.getUnitigsFile();
+        }
+        else {
+            throw new IllegalStateException("Could not find any output sequences for this directory: " + assemblyDir.getName());
+        }
+    }
 
+    protected File getAssemblyDir(File massGroupDir) {
+        File aUnitigsDir = new File(massGroupDir, "unitigs");
+        File aContigsDir = new File(massGroupDir, "contigs");
+        File aScaffoldsDir = new File(massGroupDir, "scaffolds");
+
+        File asmDir = null;
+        if (aScaffoldsDir.exists()) {
+            asmDir = aScaffoldsDir;
+        }
+        else if (aContigsDir.exists()) {
+            asmDir = aContigsDir;
+        }
+        else if (aUnitigsDir.exists()) {
+            asmDir = aUnitigsDir;
+        }
+        else {
+            throw new IllegalStateException("Could not find any output sequences for this mass group: " + massGroupDir.getName());
+        }
+
+        return asmDir;
+    }
 
     /**
      * Gets all the FastA files in the directory specified by the user.

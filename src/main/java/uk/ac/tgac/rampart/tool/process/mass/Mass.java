@@ -37,6 +37,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.Mecq;
 
@@ -190,7 +191,6 @@ public class Mass extends AbstractConanProcess {
         private boolean runParallel;                // Whether to run MASS groups in parallel
         private Organism organism;
 
-
         private OutputLevel outputLevel;
 
         @Override
@@ -243,6 +243,7 @@ public class Mass extends AbstractConanProcess {
                                 (Element)nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
                                 this.allLibraries, this.allMecqs, this.organism, this.runParallel));
             }
+
         }
 
         protected Params getParams() {

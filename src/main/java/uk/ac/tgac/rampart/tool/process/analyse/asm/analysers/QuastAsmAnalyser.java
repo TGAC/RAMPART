@@ -86,7 +86,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         File quastReportFile = new File(reportDir, QUAST_REPORT_NAME);
         if (quastReportFile.exists()) {
-            table.mergeWithQuastResults(quastReportFile, null, subGroup);
+            table.mergeWithQuastResults(quastReportFile, subGroup);
         }
         else {
             log.warn("Could not find Quast report file at: " + quastReportFile.getAbsolutePath() + "; possibly one of the assemblies does not contain valid contigs.  Skipping quast result integration for this group.");
