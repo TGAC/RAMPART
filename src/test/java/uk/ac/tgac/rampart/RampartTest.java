@@ -23,10 +23,15 @@ public class RampartTest {
 
         File testFile = FileUtils.toFile(RampartTest.class.getResource("/config/rampart_config_1.xml"));
 
-        RampartCLI rampart = new RampartCLI();
+        /*RampartCLI rampart = new RampartCLI();
         rampart.setJobConfig(testFile);
         rampart.setSkipChecks(true);
-        //rampart.initialise();
+
+        rampart.initialise();
+
+        String kr0 = rampart.getArgs().getMassArgs().getMassJobArgList().get(0).getKmerRange().toString();   */
+
+
 
         //rampart.execute();
 

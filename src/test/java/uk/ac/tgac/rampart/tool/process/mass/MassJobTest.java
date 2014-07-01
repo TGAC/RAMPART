@@ -63,8 +63,7 @@ public class MassJobTest extends MockedConanProcess {
         args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
-
-        args.validateInputs();
+        args.initialise();
 
         MassJob massJob = new MassJob(conanExecutorService, args);
         MassJob spy = Mockito.spy(massJob);
@@ -97,7 +96,6 @@ public class MassJobTest extends MockedConanProcess {
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);
         args.initialise();
-        args.validate();
 
         MassJob massJob = new MassJob(conanExecutorService, args);
         MassJob spy = Mockito.spy(massJob);

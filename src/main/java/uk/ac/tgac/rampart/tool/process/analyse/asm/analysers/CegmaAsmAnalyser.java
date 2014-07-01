@@ -14,8 +14,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Report;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
@@ -114,7 +116,15 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             if (!asm.exists())
                 throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
 
-            table.mergeWithCegmaResults(c, FilenameUtils.getBaseName(asm.getName()), subGroup);
+            CegmaV2_4Report cegmaReport = new CegmaV2_4Report(c);
+
+            AssemblyStats stats = table.findStats(subGroup, asm.getName());
+
+            if (stats == null) {
+                throw new IOException("Couldn't find assembly stats entry for " + subGroup + ", " + asm.getName());
+            }
+
+            stats.setCompletenessPercentage(cegmaReport.getPcComplete());
         }
 
     }

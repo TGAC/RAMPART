@@ -37,7 +37,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStageArgs;
 import uk.ac.tgac.rampart.tool.process.Mecq;
 
@@ -83,7 +82,7 @@ public class Mass extends AbstractConanProcess {
 
         Args args = (Args) this.getProcessArgs();
 
-        for(MassJob.Args singleMassArgs : args.getSingleMassArgsList()) {
+        for(MassJob.Args singleMassArgs : args.getMassJobArgList()) {
             if (!new MassJob(this.conanExecutorService, singleMassArgs).isOperational(executionContext)) {
                 log.warn("MASS stage is NOT operational.");
                 return false;
@@ -111,7 +110,7 @@ public class Mass extends AbstractConanProcess {
 
             List<Integer> jobIds = new ArrayList<>();
 
-            for (MassJob.Args singleMassArgs : args.getSingleMassArgsList()) {
+            for (MassJob.Args singleMassArgs : args.getMassJobArgList()) {
 
                 // Ensure output directory for this MASS run exists
                 if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
@@ -170,7 +169,7 @@ public class Mass extends AbstractConanProcess {
 
         // Keys for config file
         private static final String KEY_ATTR_PARALLEL = "parallel";
-        private static final String KEY_ELEM_SINGLE_MASS = "job";
+        private static final String KEY_ELEM_MASS_JOB = "job";
 
         // Constants
         public static final int DEFAULT_CVG_CUTOFF = -1;
@@ -184,11 +183,11 @@ public class Mass extends AbstractConanProcess {
         // Rampart vars
         private String jobPrefix;
         private File outputDir;
-        private List<MassJob.Args> singleMassArgsList;    // List of Single MASS groups to run separately
-        private List<Library> allLibraries;                    // All allLibraries available in this job
-        private List<Mecq.EcqArgs> allMecqs;                 // All mecq configurations
+        private List<MassJob.Args> massJobArgList;    // List of MASS groups to run separately
+        private List<Library> allLibraries;           // All allLibraries available in this job
+        private List<Mecq.EcqArgs> allMecqs;          // All mecq configurations
         private File mecqDir;
-        private boolean runParallel;                // Whether to run MASS groups in parallel
+        private boolean runParallel;                  // Whether to run MASS groups in parallel
         private Organism organism;
 
         private OutputLevel outputLevel;
@@ -212,7 +211,7 @@ public class Mass extends AbstractConanProcess {
 
             this.organism = null;
             this.runParallel = DEFAULT_RUN_PARALLEL;
-            this.singleMassArgsList = new ArrayList<>();
+            this.massJobArgList = new ArrayList<>();
         }
 
         public Args(Element ele, File outputDir, File mecqDir, String jobPrefix, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, Organism organism)
@@ -236,12 +235,13 @@ public class Mass extends AbstractConanProcess {
                     DEFAULT_RUN_PARALLEL;
 
             // All single mass args
-            NodeList nodes = ele.getElementsByTagName(KEY_ELEM_SINGLE_MASS);
+            NodeList nodes = ele.getElementsByTagName(KEY_ELEM_MASS_JOB);
             for(int i = 0; i < nodes.getLength(); i++) {
-                this.singleMassArgsList.add(
+                this.massJobArgList.add(
                         new MassJob.Args(
-                                (Element)nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                                this.allLibraries, this.allMecqs, this.organism, this.runParallel));
+                                (Element) nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
+                                this.allLibraries, this.allMecqs, this.organism, this.runParallel)
+                );
             }
 
         }
@@ -299,12 +299,12 @@ public class Mass extends AbstractConanProcess {
             this.allLibraries = allLibraries;
         }
 
-        public List<MassJob.Args> getSingleMassArgsList() {
-            return singleMassArgsList;
+        public List<MassJob.Args> getMassJobArgList() {
+            return massJobArgList;
         }
 
-        public void setSingleMassArgsList(List<MassJob.Args> singleMassArgsList) {
-            this.singleMassArgsList = singleMassArgsList;
+        public void setMassJobArgList(List<MassJob.Args> massJobArgList) {
+            this.massJobArgList = massJobArgList;
         }
 
         public List<Mecq.EcqArgs> getAllMecqs() {

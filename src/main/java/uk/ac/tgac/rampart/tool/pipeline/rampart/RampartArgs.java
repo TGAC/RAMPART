@@ -167,7 +167,7 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
                         this.rampartJobFileSystem.getMassDir(),
                         this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
                         this.rampartJobFileSystem.getAnalyseMassDir(),
-                        this.massArgs == null ? null : this.massArgs.getSingleMassArgsList(),
+                        this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
                         this.getOrganism(),
                         this.getJobPrefix() + "-analyse_mass");
 

@@ -197,6 +197,10 @@ public class RampartCLI extends AbstractConanCLI {
         this.skipChecks = skipChecks;
     }
 
+    public RampartArgs getArgs() {
+        return args;
+    }
+
     @Override
     protected void parseExtra(CommandLine commandLine) throws ParseException {
 

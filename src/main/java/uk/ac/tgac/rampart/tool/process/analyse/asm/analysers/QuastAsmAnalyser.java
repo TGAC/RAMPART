@@ -13,8 +13,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
 import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
+import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Report;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
@@ -86,7 +88,32 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         File quastReportFile = new File(reportDir, QUAST_REPORT_NAME);
         if (quastReportFile.exists()) {
-            table.mergeWithQuastResults(quastReportFile, subGroup);
+            QuastV2_2Report quastReport = new QuastV2_2Report(quastReportFile);
+            for(QuastV2_2Report.QuastV2_2AssemblyStats qStats : quastReport.getStatList()) {
+
+                if (!qStats.getName().endsWith("broken")) {
+
+                    String desc = qStats.getName().substring(subGroup.length() + 1, qStats.getName().lastIndexOf("-"));
+
+                    AssemblyStats stats = table.findStats(subGroup, desc);
+
+                    // If not found then create a new entry
+                    if (stats == null) {
+                        throw new IOException("Couldn't find assembly stats entry for " + subGroup + " " + desc);
+                    }
+
+                    // Override attributes
+                    stats.setN50(qStats.getN50());
+                    stats.setL50(qStats.getL50());
+                    stats.setMaxLen(qStats.getLargestContig());
+                    stats.setGcPercentage(qStats.getGcPc());
+                    stats.setNbSeqs(qStats.getNbContigsGt0());
+                    stats.setNbSeqsGt1K(qStats.getNbContigsGt1k());
+                    stats.setNbBases(qStats.getTotalLengthGt0());
+                    stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
+                    stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
+                }
+            }
         }
         else {
             log.warn("Could not find Quast report file at: " + quastReportFile.getAbsolutePath() + "; possibly one of the assemblies does not contain valid contigs.  Skipping quast result integration for this group.");

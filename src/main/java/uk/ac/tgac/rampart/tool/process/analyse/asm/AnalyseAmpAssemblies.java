@@ -16,10 +16,12 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStage;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.AssemblySelector;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.DefaultAssemblySelector;
+import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.SpiFactory;
@@ -144,7 +146,8 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
 
         try {
-            AssemblyStatsTable table = new AssemblyStatsTable();
+            // Create the stats table with information derived from the configuration file.
+            AssemblyStatsTable table = this.createTable();
 
             // Merge all the results
             for(AssemblyAnalyser analyser : requestedServices) {
@@ -152,7 +155,7 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
                 List<File> assemblies = this.findAssemblies(analyser);
                 File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
 
-                analyser.updateTable(table, assemblies, outputDir, "AMP");
+                analyser.updateTable(table, assemblies, outputDir, "amp");
             }
 
             // Save table to disk
@@ -165,6 +168,36 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         }
 
         return true;
+    }
+
+    protected AssemblyStatsTable createTable() {
+
+        Args args = this.getArgs();
+
+        AssemblyStatsTable table = new AssemblyStatsTable();
+
+        AssemblyStats stats = new AssemblyStats();
+        stats.setIndex(0);
+        stats.setDataset("amp");
+        stats.setDesc("stage-0");
+        stats.setFilePath(args.getAmpStages().get(0).getInputAssembly().getAbsolutePath());
+        stats.setBubblePath("");//assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
+        table.add(stats);
+
+        int index = 1;
+        for(AmpStage.Args asArgs : args.getAmpStages()) {
+
+            stats = new AssemblyStats();
+            stats.setIndex(index);
+            stats.setDataset("amp");
+            stats.setDesc("stage-" + index);
+            stats.setFilePath(asArgs.getOutputFile().getAbsolutePath());
+            stats.setBubblePath("");//assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
+            table.add(stats);
+            index++;
+        }
+
+        return table;
     }
 
     protected List<File> findAssemblies(AssemblyAnalyser analyser) throws ProcessExecutionException {

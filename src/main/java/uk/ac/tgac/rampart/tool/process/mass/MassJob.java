@@ -53,10 +53,7 @@ import uk.ac.tgac.rampart.tool.process.ReadsInput;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class MassJob extends AbstractConanProcess {
 
@@ -109,80 +106,38 @@ public class MassJob extends AbstractConanProcess {
 
             jobIds.clear();
 
-            // Iterate over coverage range
+            Map<Integer, List<Integer>> ssResults = new HashMap<>();
+
+            // Iterate over coverage range, and do subsampling if required
             for (Integer cvg : args.getCoverageRange()) {
 
                 // Do subsampling for this coverage level if required
-                SubsamplingResult subsamplingResult = this.doSubsampling(genericAssembler.doesSubsampling(), cvg, args.getSelectedLibs(),
-                        args.isRunParallel());
+                ssResults.put(cvg, this.doSubsampling(genericAssembler.doesSubsampling(), cvg, args.getSelectedLibs(),
+                        args.isRunParallel()));
+            }
 
+            for(Assembler assembler : args.getAssemblers()) {
 
-                // Generate a directory name for this assembly
-                String cvgString = CoverageRange.toString(cvg);
-                String cvgDirName = "cvg-" + cvgString;
+                AbstractAssemblerArgs asmArgs = assembler.getAssemblerArgs();
+                File outputDir = asmArgs.getOutputDir();
 
-                // This is the output directory for this particular assembly
-                File outputDir = new File(args.getOutputDir(), cvgDirName);
+                log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
-                if (type == Assembler.Type.DE_BRUIJN) {
-
-                    // Iterate over kmer range
-                    for (Integer k : args.getKmerRange()) {
-
-                        // Override output dir name with k values
-                        File kOutputDir = new File(args.getOutputDir(), cvgDirName + "_k-" + k);
-
-                        GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs();
-                        dbgArgs.setOutputDir(kOutputDir);
-                        dbgArgs.setLibraries(subsamplingResult.getLibraries());
-                        dbgArgs.setThreads(args.getThreads());
-                        dbgArgs.setMemory(args.getMemory());
-                        dbgArgs.setK(k);
-                        dbgArgs.setOrganism(args.getOrganism());
-
-                        //TODO set other args here
-
-                        // Create the actual assembler for these settings
-                        Assembler assembler = dbgArgs.createAssembler(args.getTool(), this.conanExecutorService);
-                        args.assemblers.add(assembler);
-
-                        // Execute the assembler and do any other file related setup and finalisation
-                        this.run(assembler, cvg, kOutputDir, subsamplingResult);
-                    }
-                } else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
-
-                    GenericDeBruijnAutoArgs dbgAutoArgs = new GenericDeBruijnAutoArgs();
-                    dbgAutoArgs.setOutputDir(outputDir);
-                    dbgAutoArgs.setLibraries(subsamplingResult.getLibraries());
-                    dbgAutoArgs.setThreads(args.getThreads());
-                    dbgAutoArgs.setMemory(args.getMemory());
-                    dbgAutoArgs.setOrganism(args.getOrganism());
-
-                    // Create the actual assembler for these settings
-                    Assembler assembler = dbgAutoArgs.createAssembler(args.getTool(), this.conanExecutorService);
-                    args.assemblers.add(assembler);
-
-                    // Execute the assembler and do any other file related setup and finalisation
-                    this.run(assembler, cvg, outputDir, subsamplingResult);
-                } else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
-
-                    GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs();
-                    dbgOptArgs.setOutputDir(outputDir);
-                    dbgOptArgs.setLibraries(subsamplingResult.getLibraries());
-                    dbgOptArgs.setThreads(args.getThreads());
-                    dbgOptArgs.setMemory(args.getMemory());
-                    dbgOptArgs.setOrganism(args.getOrganism());
-                    dbgOptArgs.setKmerRange(args.getKmerRange());
-
-                    // Create the actual assembler for these settings
-                    Assembler assembler = dbgOptArgs.createAssembler(args.getTool(), this.conanExecutorService);
-                    args.assemblers.add(assembler);
-
-                    // Execute the assembler and do any other file related setup and finalisation
-                    this.run(assembler, cvg, outputDir, subsamplingResult);
-                } else {
-                    throw new ProcessExecutionException(-2, "Unknown assembly type detected: " + type);
+                // Make the output directory for this child job (delete the directory if it already exists)
+                if (outputDir.exists()) {
+                    FileUtils.deleteDirectory(outputDir);
                 }
+                outputDir.mkdirs();
+
+                // Execute the assembler
+                ExecutionResult result = this.executeAssembler(assembler, args.getJobPrefix() +
+                        "-assembly-" + outputDir.getName(), args.isRunParallel(), ssResults.get(asmArgs.getDesiredCoverage()));
+
+                // Add assembler id to list
+                jobIds.add(result.getJobId());
+
+                // Create links for outputs from this assembler to known locations
+                this.createAssemblyLinks(assembler, args, args.getName() + "-" + outputDir.getName());
             }
 
             // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
@@ -207,34 +162,6 @@ public class MassJob extends AbstractConanProcess {
         return true;
     }
 
-    protected void run(Assembler assembler, int cvg, File outputDir, SubsamplingResult subsamplingResult)
-            throws IOException, InterruptedException, ProcessExecutionException, ConanParameterException {
-
-        Args args = this.getArgs();
-
-        log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
-
-        // Set the level of subsampling for the assembler to conduct... if required
-        if (assembler.doesSubsampling()) {
-            ((Subsampler)assembler).setDesiredCoverage(cvg);
-        }
-
-        // Make the output directory for this child job (delete the directory if it already exists)
-        if (outputDir.exists()) {
-            FileUtils.deleteDirectory(outputDir);
-        }
-        outputDir.mkdirs();
-
-        // Execute the assembler
-        ExecutionResult result = this.executeAssembler(assembler, args.getJobPrefix() +
-                "-assembly-" + outputDir.getName(), args.isRunParallel(), subsamplingResult.getJobIds());
-
-        // Add assembler id to list
-        jobIds.add(result.getJobId());
-
-        // Create links for outputs from this assembler to known locations
-        this.createAssemblyLinks(assembler, args, args.getName() + "-" + outputDir.getName());
-    }
 
     public List<Integer> getJobIds() {
         return this.jobIds;
@@ -259,7 +186,7 @@ public class MassJob extends AbstractConanProcess {
     }
 
 
-    private SubsamplingResult doSubsampling(boolean assemblerDoesSubsampling, int coverage,
+    private List<Integer> doSubsampling(boolean assemblerDoesSubsampling, int coverage,
                                         List<Library> libraries, boolean runParallel)
             throws IOException, InterruptedException, ProcessExecutionException, ConanParameterException {
 
@@ -267,7 +194,7 @@ public class MassJob extends AbstractConanProcess {
 
         // Check to see if we even need to do subsampling.  If not just return the current libraries.
         if (assemblerDoesSubsampling || coverage == CoverageRange.ALL) {
-            return new SubsamplingResult(libraries, new ArrayList<Integer>());
+            return new ArrayList<Integer>();
         }
 
         // Try to create directory to contain subsampled libraries
@@ -280,7 +207,6 @@ public class MassJob extends AbstractConanProcess {
         }
 
         // Subsample each library
-        List<Library> subsampledLibs = new ArrayList<>();
         List<Integer> jobIds = new ArrayList<>();
 
         for(Library lib : libraries) {
@@ -350,11 +276,9 @@ public class MassJob extends AbstractConanProcess {
 
                 jobIds.add(result.getJobId());
             }
-
-            subsampledLibs.add(subsampledLib);
         }
 
-        return new SubsamplingResult(subsampledLibs, jobIds);
+        return jobIds;
     }
 
     /**
@@ -673,24 +597,22 @@ public class MassJob extends AbstractConanProcess {
             this.massParallel = DEFAULT_MASS_PARALLEL;
 
             this.assemblers = new ArrayList<>();
-
-            this.initialise();
         }
 
 
 
         public Args(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel) throws IOException {
+                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel) {
 
             // Set defaults
             this();
 
             // Required Attributes
             if (!ele.hasAttribute(KEY_ATTR_NAME))
-                throw new IOException("Could not find " + KEY_ATTR_NAME + " attribute in single mass element");
+                throw new IllegalArgumentException("Could not find " + KEY_ATTR_NAME + " attribute in MASS job element");
 
             if (!ele.hasAttribute(KEY_ATTR_TOOL))
-                throw new IOException("Could not find " + KEY_ATTR_TOOL + " attribute in single mass element");
+                throw new IllegalArgumentException("Could not find " + KEY_ATTR_TOOL + " attribute in MASS job element");
 
             this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
             this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
@@ -727,7 +649,10 @@ public class MassJob extends AbstractConanProcess {
             this.mecqDir = mecqDir;
             this.massParallel = massParallel;
 
-            this.initialise();
+            // Setup input and generic assembler
+            this.genericAssembler = this.createGenericAssembler();
+            this.selectedLibs = this.selectInputs();
+            this.genericAssembler.setLibraries(this.selectedLibs);
 
             Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
             this.kmerRange = kmerElement != null ?
@@ -739,23 +664,39 @@ public class MassJob extends AbstractConanProcess {
                     new CoverageRange(cvgElement) :
                     new CoverageRange();
 
-            this.validate();
+            this.initialise(false);
         }
 
         public final void initialise() {
-            this.genericAssembler = AssemblerFactory.createGenericAssembler(this.tool);
+            this.initialise(true);
+        }
+
+        protected final void initialise(boolean createGenericAssembler) {
+
+            if (createGenericAssembler) {
+                // Setup input and generic assembler
+                this.genericAssembler = this.createGenericAssembler();
+                this.selectedLibs = this.selectInputs();
+                this.genericAssembler.setLibraries(this.selectedLibs);
+            }
+
+            this.validateKmerRange();
+            this.validateCoverageRange();
+
+            this.assemblers = this.createAssemblers();
+        }
+
+        public final Assembler createGenericAssembler() {
+
+            Assembler genericAssembler = AssemblerFactory.createGenericAssembler(this.tool);
 
             if (genericAssembler == null)
                 throw new IllegalArgumentException("Could not find assembler: " + this.tool);
+
+            return genericAssembler;
         }
 
-        public final void validate() throws IOException {
-            this.validateInputs();
-            this.validateKmerRange();
-            this.validateCoverageRange();
-        }
-
-        public final void validateInputs() throws IOException {
+        public final List<Library> selectInputs() {
 
             List<Library> selectedLibs = new ArrayList<>();
 
@@ -764,7 +705,7 @@ public class MassJob extends AbstractConanProcess {
                 Mecq.EcqArgs ecqArgs = mi.findMecq(allMecqs);
 
                 if (lib == null) {
-                    throw new IOException("Unrecognised library: " + mi.getLib() + "; not processing MASS run: " + name);
+                    throw new IllegalArgumentException("Unrecognised library: " + mi.getLib() + "; not processing MASS run: " + name);
                 }
 
                 if (ecqArgs == null) {
@@ -772,7 +713,7 @@ public class MassJob extends AbstractConanProcess {
                         selectedLibs.add(lib);
                     }
                     else {
-                        throw new IOException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + name);
+                        throw new IllegalArgumentException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + name);
                     }
                 }
                 else {
@@ -783,14 +724,14 @@ public class MassJob extends AbstractConanProcess {
 
                     if (modLib.isPairedEnd()) {
                         if (files.size() < 2 || files.size() > 3) {
-                            throw new IOException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two or three files");
+                            throw new IllegalArgumentException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two or three files");
                         }
 
                         modLib.setFiles(files.get(0), files.get(1));
                     }
                     else {
                         if (files.size() != 1) {
-                            throw new IOException("Single end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have one file");
+                            throw new IllegalArgumentException("Single end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have one file");
                         }
 
                         modLib.setFiles(files.get(0), null);
@@ -802,29 +743,28 @@ public class MassJob extends AbstractConanProcess {
                 log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq() + "; Job name: " + name);
             }
 
-            this.selectedLibs = selectedLibs;
-
-            this.genericAssembler.setLibraries(this.selectedLibs);
+            return selectedLibs;
         }
 
-        protected void validateKmerRange() {
+        protected final void validateKmerRange() {
 
             if (genericAssembler.getType() != Assembler.Type.DE_BRUIJN && genericAssembler.getType() != Assembler.Type.DE_BRUIJN_OPTIMISER) {
-                log.warn("The selected assembler \"" + this.tool + "\" for job: \"" + this.name + "\" does not support K parameter");
+                this.kmerRange = null;  // Force to null
+                log.warn("The selected assembler \"" + this.tool + "\" for job \"" + this.name + "\" does not support K parameter");
             }
             else if (kmerRange == null) {
-                KmerRange defaultKmerRange = new KmerRange(35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.MEDIUM);
-                log.info("No K-mer range specified for \"" + this.name + "\" running assembler with default range: " + defaultKmerRange.toString());
+                this.kmerRange = new KmerRange(35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.MEDIUM);
+                log.info("No K-mer range specified for \"" + this.name + "\" running assembler with default range: " + this.kmerRange.toString());
             }
             else if (kmerRange.validate()) {
                 log.info("K-mer range for \"" + this.name + "\" validated: " + kmerRange.toString());
             }
             else {
-                throw new IllegalArgumentException("Invalid K-mer range: " + kmerRange.toString() + " Not processing MASS run: " + this.name);
+                throw new IllegalArgumentException("Invalid K-mer range: " + kmerRange.toString() + " Not processing MASS job: " + this.name);
             }
         }
 
-        protected void validateCoverageRange() {
+        protected final void validateCoverageRange() {
 
             if (coverageRange == null) {
                 CoverageRange defaultCoverageRange = new CoverageRange();
@@ -841,6 +781,125 @@ public class MassJob extends AbstractConanProcess {
             else {
                 throw new IllegalArgumentException("Invalid coverage range: " + coverageRange.toString() + " Not processing MASS run: \"" + this.name + "\"");
             }
+        }
+
+        private List<Library> createSubsampledLibPaths(int coverage) {
+
+            // Check to see if we even need to do subsampling.  If not just return the current libraries.
+            if (this.genericAssembler.doesSubsampling() || coverage == CoverageRange.ALL) {
+                return this.selectedLibs;
+            }
+
+            // Try to create directory to contain subsampled libraries
+            File subsamplingDir = new File(this.outputDir, "subsampled_libs");
+
+            // Subsample each library
+            List<Library> subsampledLibs = new ArrayList<>();
+            List<Integer> jobIds = new ArrayList<>();
+
+            for(Library lib : this.selectedLibs) {
+
+                Library subsampledLib = lib.copy();
+
+                // Subsample to this coverage level if required
+                String fileSuffix = "_cvg-" + coverage + ".fastq";
+                String jobPrefix = this.jobPrefix + "-subsample-" + lib.getName() + "-" + coverage + "x";
+
+                subsampledLib.setName(lib.getName() + "-" + coverage + "x");
+
+                if (subsampledLib.isPairedEnd()) {
+
+                    subsampledLib.setFiles(
+                            new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
+                            new File(subsamplingDir, lib.getFile2().getName() + fileSuffix)
+                    );
+                }
+                else {
+                    subsampledLib.setFiles(
+                            new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
+                            null
+                    );
+                }
+
+                subsampledLibs.add(subsampledLib);
+            }
+
+            return subsampledLibs;
+        }
+
+        protected final List<Assembler> createAssemblers() {
+
+            List<Assembler> assemblers = new ArrayList<>();
+
+            // Iterate over coverage range
+            for (Integer cvg : this.coverageRange) {
+
+                // Do subsampling for this coverage level if required
+                List<Library> subsampledLibs = this.createSubsampledLibPaths(cvg);
+
+                // Generate a directory name for this assembly
+                String cvgString = CoverageRange.toString(cvg);
+                String cvgDirName = "cvg-" + cvgString;
+
+                // This is the output directory for this particular assembly
+                File outputDir = new File(this.outputDir, cvgDirName);
+
+                Assembler.Type type = this.genericAssembler.getType();
+
+                if (type == Assembler.Type.DE_BRUIJN) {
+
+                    // Iterate over kmer range
+                    for (Integer k : this.kmerRange) {
+
+                        // Override output dir name with k values
+                        File kOutputDir = new File(this.outputDir, cvgDirName + "_k-" + k);
+
+                        GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs();
+                        dbgArgs.setOutputDir(kOutputDir);
+                        dbgArgs.setLibraries(subsampledLibs);
+                        dbgArgs.setThreads(this.threads);
+                        dbgArgs.setMemory(this.memory);
+                        dbgArgs.setOrganism(this.organism);
+                        dbgArgs.setDesiredCoverage(cvg);
+                        dbgArgs.setK(k);
+
+                        //TODO set other args here
+
+                        // Create the actual assembler for these settings
+                        assemblers.add(dbgArgs.createAssembler(this.tool));
+                    }
+                } else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
+
+                    GenericDeBruijnAutoArgs dbgAutoArgs = new GenericDeBruijnAutoArgs();
+                    dbgAutoArgs.setOutputDir(outputDir);
+                    dbgAutoArgs.setLibraries(subsampledLibs);
+                    dbgAutoArgs.setThreads(this.threads);
+                    dbgAutoArgs.setMemory(this.memory);
+                    dbgAutoArgs.setOrganism(this.organism);
+                    dbgAutoArgs.setDesiredCoverage(cvg);
+
+                    // Create the actual assembler for these settings
+                    assemblers.add(dbgAutoArgs.createAssembler(this.tool));
+
+                } else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
+
+                    GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs();
+                    dbgOptArgs.setOutputDir(outputDir);
+                    dbgOptArgs.setLibraries(subsampledLibs);
+                    dbgOptArgs.setThreads(this.threads);
+                    dbgOptArgs.setMemory(this.memory);
+                    dbgOptArgs.setOrganism(this.organism);
+                    dbgOptArgs.setKmerRange(this.kmerRange);
+
+                    // Create the actual assembler for these settings
+                    assemblers.add(dbgOptArgs.createAssembler(this.tool));
+
+                } else {
+                    throw new IllegalArgumentException("Unknown assembly type detected: " + type);
+                }
+            }
+
+            return assemblers;
         }
 
 

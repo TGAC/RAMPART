@@ -2,8 +2,6 @@ package uk.ac.tgac.rampart.tool.process.analyse.asm;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -23,7 +21,6 @@ import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.AssemblySelector;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.DefaultAssemblySelector;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.CoverageRange;
 import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.SpiFactory;
 
@@ -126,7 +123,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
             for(AssemblyAnalyser analyser : requestedServices) {
 
                 // Loop through MASS groups
-                for(MassJob.Args singleMassArgs : args.getMassGroups()) {
+                for(MassJob.Args singleMassArgs : args.getMassJobs()) {
 
                     String massGroup = singleMassArgs.getName();
 
@@ -222,30 +219,15 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
 
 
         try {
-            AssemblyStatsTable table = new AssemblyStatsTable();
 
-            int index = 0;
-            for(MassJob.Args jobArgs : args.getMassGroups()) {
-
-                File asmDir = this.getAssemblyDir(new File(args.getMassDir(), jobArgs.getName()));
-
-                for(Assembler assembler : jobArgs.getAssemblers()) {
-
-                    AssemblyStats stats = new AssemblyStats();
-                    stats.setIndex(index++);
-                    stats.setDataset(jobArgs.getName());
-                    stats.setDesc(assembler.getAssemblerArgs().getOutputDir().getName());
-                    stats.setFilePath(this.getAssemblyFile(assembler, asmDir).getAbsolutePath());
-                    stats.setBubblePath(assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
-                    table.add(stats);
-                }
-            }
+            // Create the stats table with information derived from the configuration file.
+            AssemblyStatsTable table = this.createTable();
 
             // Merge all the results
             for(AssemblyAnalyser analyser : requestedServices) {
 
                 // Loop through MASS groups
-                for(MassJob.Args jobArgs : args.getMassGroups()) {
+                for(MassJob.Args jobArgs : args.getMassJobs()) {
 
                     String massGroup = jobArgs.getName();
                     File asmDir = this.getAssemblyDir(new File(args.getMassDir(), massGroup));
@@ -296,15 +278,41 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
         return true;
     }
 
+    protected AssemblyStatsTable createTable() {
+
+        Args args = this.getArgs();
+
+        AssemblyStatsTable table = new AssemblyStatsTable();
+
+        int index = 0;
+        for(MassJob.Args jobArgs : args.getMassJobs()) {
+
+            File asmDir = this.getAssemblyDir(new File(args.getMassDir(), jobArgs.getName()));
+
+            for(Assembler assembler : jobArgs.getAssemblers()) {
+
+                AssemblyStats stats = new AssemblyStats();
+                stats.setIndex(index++);
+                stats.setDataset(jobArgs.getName());
+                stats.setDesc(assembler.getAssemblerArgs().getOutputDir().getName());
+                stats.setFilePath(this.getAssemblyFile(assembler, asmDir).getAbsolutePath());
+                stats.setBubblePath(assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
+                table.add(stats);
+            }
+        }
+
+        return table;
+    }
+
     protected File getAssemblyFile(Assembler assembler, File assemblyDir) {
         if (assemblyDir.getName().equals("scaffolds")) {
-            return assembler.getScaffoldsFile();
+            return assembler.getScaffoldsFile().getAbsoluteFile();
         }
         else if (assemblyDir.getName().equals("contigs")) {
-            return assembler.getContigsFile();
+            return assembler.getContigsFile().getAbsoluteFile();
         }
         else if (assemblyDir.getName().equals("unitigs")) {
-            return assembler.getUnitigsFile();
+            return assembler.getUnitigsFile().getAbsoluteFile();
         }
         else {
             throw new IllegalStateException("Could not find any output sequences for this directory: " + assemblyDir.getName());
@@ -360,18 +368,18 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
     public static class Args extends AnalyseAssembliesArgs {
 
         private File massDir;
-        private List<MassJob.Args> massGroups;
+        private List<MassJob.Args> massJobs;
 
         public Args() {
             super(new Params());
 
             this.massDir = null;
-            this.massGroups = null;
+            this.massJobs = null;
 
             this.setJobPrefix("mass-analyses");
         }
 
-        public Args(Element element, File massDir, File analyseReadsDir, File outputDir, List<MassJob.Args> massGroups,
+        public Args(Element element, File massDir, File analyseReadsDir, File outputDir, List<MassJob.Args> massJobs,
                                Organism organism, String jobPrefix) {
 
             super(  new Params(),
@@ -383,7 +391,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
                     );
 
             this.massDir = massDir;
-            this.massGroups = massGroups;
+            this.massJobs = massJobs;
         }
 
         public Params getParams() {
@@ -398,12 +406,12 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
             this.massDir = massDir;
         }
 
-        public List<MassJob.Args> getMassGroups() {
-            return massGroups;
+        public List<MassJob.Args> getMassJobs() {
+            return massJobs;
         }
 
-        public void setMassGroups(List<MassJob.Args> massGroups) {
-            this.massGroups = massGroups;
+        public void setMassJobs(List<MassJob.Args> massJobs) {
+            this.massJobs = massJobs;
         }
 
     }
@@ -427,7 +435,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
                     .create();
 
             this.massGroups = new ParameterBuilder()
-                    .longName("massGroups")
+                    .longName("massJobs")
                     .description("A comma separated list of the mass groups that should be analysed")
                     .argValidator(ArgValidator.OFF)
                     .create();

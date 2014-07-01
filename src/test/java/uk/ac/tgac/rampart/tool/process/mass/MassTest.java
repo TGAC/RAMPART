@@ -63,9 +63,9 @@ public class MassTest extends MockedConanProcess {
         Mass.Args args = new Mass.Args();
         args.setJobPrefix("testMass");
         args.setOutputDir(outputDir);
-        args.setSingleMassArgsList(singleMassArgsList);
+        args.setMassJobArgList(singleMassArgsList);
 
-        assertTrue(args.getSingleMassArgsList().get(0).getKmerRange().getFirstKmer() == 31);
+        assertTrue(args.getMassJobArgList().get(0).getKmerRange().getFirstKmer() == 31);
 
         Mass multiMass = new Mass(this.conanExecutorService, args);
         Mass spy = spy(multiMass);

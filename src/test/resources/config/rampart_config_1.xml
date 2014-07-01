@@ -39,24 +39,24 @@
         </mecq>
         <analyse_reads kmer="true" parallel="true" threads="4"/>
         <mass parallel="true">
-            <single_mass name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="8" memory="4000" parallel="true">
-                <kmer min="61" max="75" step="COARSE"/>
+            <job name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="8" memory="4000" parallel="true">
+                <kmer min="61" step="COARSE"/>
                 <inputs>
                     <input ecq="raw" lib="lib1896-pe"/>
                 </inputs>
-            </single_mass>
-            <single_mass name="abyss-sickle-kmer" tool="ABYSS_V1.3" threads="16" memory="4000" parallel="true">
-                <kmer min="61" max="75" step="COARSE"/>
+            </job>
+            <job name="abyss-sickle-kmer" tool="ABYSS_V1.3" threads="16" memory="4000" parallel="true">
+                <kmer min="61" max="75" step="MEDIUM"/>
                 <inputs>
                     <input ecq="sickle_agressive" lib="lib1896-pe"/>
                 </inputs>
-            </single_mass>
-            <single_mass name="abyss-raw-cvg" tool="ABYSS_V1.3" threads="16" memory="4000" parallel="true">
+            </job>
+            <job name="abyss-raw-cvg" tool="ABYSS_V1.3" threads="16" memory="4000" parallel="true">
                 <coverage list="75"/>
                 <inputs>
                     <input ecq="raw" lib="lib1896-pe"/>
                 </inputs>
-            </single_mass>
+            </job>
         </mass>
         <analyse_mass types="QUAST,KAT" threads="8" parallel="true"/>
         <!--<amp>

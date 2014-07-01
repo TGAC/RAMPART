@@ -36,7 +36,6 @@ public class RampartJobFileSystem {
     private File analyseReadsDir;
     private File massDir;
     private File analyseMassDir;
-    private File massStatsDir;
     private File ampDir;
     private File ampAssembliesDir;
     private File analyseAmpDir;
@@ -68,7 +67,6 @@ public class RampartJobFileSystem {
         this.analyseReadsDir = new File(jobDir, "reads-analyses");
         this.massDir = new File(jobDir, "mass");
         this.analyseMassDir = new File(jobDir, "mass-analyses");
-        this.massStatsDir = new File(massDir, "stats");
         this.ampDir = new File(jobDir, "amp");
         this.ampAssembliesDir = new File(ampDir, "assemblies");
         this.analyseAmpDir = new File(jobDir, "amp-analyses");
@@ -77,8 +75,8 @@ public class RampartJobFileSystem {
         this.finalDir = new File(jobDir, "final");
 
         this.qtLogFile = new File(this.meqcDir + "/qt.log");
-        this.massPlotsFile = new File(this.massStatsDir.getPath() + "/plots.pdf");
-        this.massStatsFile = new File(this.massStatsDir.getPath() + "/score.tab");
+        this.massPlotsFile = new File(this.analyseMassDir.getPath() + "/plots.pdf");
+        this.massStatsFile = new File(this.analyseMassDir.getPath() + "/score.tab");
         this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
         this.selectedAssemblyFile = new File(this.analyseMassDir.getPath() + "/best.fa");
         this.selectedBubbleFile = new File(this.analyseMassDir.getPath() + "/best_bubbles.fa");
@@ -109,10 +107,6 @@ public class RampartJobFileSystem {
 
     public File getAnalyseMassDir() {
         return analyseMassDir;
-    }
-
-    public File getMassStatsDir() {
-        return massStatsDir;
     }
 
     public File getAmpDir() {
