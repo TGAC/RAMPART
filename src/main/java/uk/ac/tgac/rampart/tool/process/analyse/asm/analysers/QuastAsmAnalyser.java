@@ -7,18 +7,13 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Args;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Process;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Report;
+import uk.ac.tgac.conan.process.asm.stats.QuastV22;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,9 +38,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        QuastV2_2Process proc = new QuastV2_2Process();
-        proc.setConanProcessService(this.getConanProcessService());
-        return proc.isOperational(executionContext);
+        return new QuastV22(this.conanExecutorService).isOperational(executionContext);
     }
 
     @Override
@@ -62,7 +55,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         // Add quast job id to list
         List<Integer> jobIds = new ArrayList<>();
 
-        QuastV2_2Process quastProcess = this.makeQuast(
+        QuastV22 quastProcess = this.makeQuast(
                 assemblies,
                 outputDir,
                 args.getOrganism().getEstGenomeSize(),
@@ -88,8 +81,8 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         File quastReportFile = new File(reportDir, QUAST_REPORT_NAME);
         if (quastReportFile.exists()) {
-            QuastV2_2Report quastReport = new QuastV2_2Report(quastReportFile);
-            for(QuastV2_2Report.QuastV2_2AssemblyStats qStats : quastReport.getStatList()) {
+            QuastV22.Report quastReport = new QuastV22.Report(quastReportFile);
+            for(QuastV22.AssemblyStats qStats : quastReport.getStatList()) {
 
                 if (!qStats.getName().endsWith("broken")) {
 
@@ -131,14 +124,14 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
 
-    protected QuastV2_2Process makeQuast(List<File> assemblies, File outputDir, long genomeSize, int threads, boolean scaffolds) {
-        QuastV2_2Args quastArgs = new QuastV2_2Args();
+    protected QuastV22 makeQuast(List<File> assemblies, File outputDir, long genomeSize, int threads, boolean scaffolds) {
+        QuastV22.Args quastArgs = new QuastV22.Args();
         quastArgs.setInputFiles(assemblies);
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
         quastArgs.setEstimatedGenomeSize(genomeSize);
         quastArgs.setThreads(threads);
         quastArgs.setScaffolds(scaffolds);
 
-        return new QuastV2_2Process(quastArgs);
+        return new QuastV22(this.conanExecutorService, quastArgs);
     }
 }

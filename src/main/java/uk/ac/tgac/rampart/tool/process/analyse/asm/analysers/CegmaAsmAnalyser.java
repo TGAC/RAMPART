@@ -8,18 +8,13 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Args;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Process;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Report;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV24;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,9 +38,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
-        CegmaV2_4Process proc = new CegmaV2_4Process();
-        proc.setConanProcessService(getConanProcessService());
-        return proc.isOperational(executionContext);
+        return new CegmaV24(this.conanExecutorService).isOperational(executionContext);
     }
 
     @Override
@@ -71,7 +64,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             }
             cegOutputDir.mkdirs();
 
-            CegmaV2_4Process cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreadsPerProcess());
+            CegmaV24 cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreadsPerProcess());
             ExecutionResult result = ces.executeProcess(
                     cegmaProc,
                     cegOutputDir,
@@ -83,7 +76,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             jobIds.add(result.getJobId());
 
             // Create symbolic links to completeness_reports
-            File sourceFile = new File(((CegmaV2_4Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
+            File sourceFile = new File(((CegmaV24.Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
                     ".completeness_report");
             File destFile = new File(cegOutputDir, f.getName() + ".cegma");
 
@@ -116,7 +109,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             if (!asm.exists())
                 throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
 
-            CegmaV2_4Report cegmaReport = new CegmaV2_4Report(c);
+            CegmaV24.Report cegmaReport = new CegmaV24.Report(c);
 
             AssemblyStats stats = table.findStats(subGroup, asm.getName());
 
@@ -139,15 +132,15 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         return "CEGMA";
     }
 
-    protected CegmaV2_4Process makeCegmaProcess(File input, File outputDir, int threads) throws IOException {
+    protected CegmaV24 makeCegmaProcess(File input, File outputDir, int threads) throws IOException {
 
         // Setup CEGMA
-        CegmaV2_4Args cegmaArgs = new CegmaV2_4Args();
+        CegmaV24.Args cegmaArgs = new CegmaV24.Args();
         cegmaArgs.setGenomeFile(input);
         cegmaArgs.setOutputPrefix(new File(outputDir, input.getName()));
         cegmaArgs.setThreads(threads);
 
-        CegmaV2_4Process cegmaProcess = new CegmaV2_4Process(cegmaArgs);
+        CegmaV24 cegmaProcess = new CegmaV24(this.conanExecutorService, cegmaArgs);
 
         // Creates output and temp directories
         // Also creates a modified genome file that's BLAST tolerant.

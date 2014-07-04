@@ -4,7 +4,6 @@ import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 
 import java.util.*;
 

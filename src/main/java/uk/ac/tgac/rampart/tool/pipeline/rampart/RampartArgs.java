@@ -236,6 +236,11 @@ public class RampartArgs extends AbstractXmlJobConfiguration implements ProcessA
     }
 
     @Override
+    public String getUncheckedArgs() {
+        return null;
+    }
+
+    @Override
     public ParamMap getArgMap() {
 
         ParamMap pvp = new DefaultParamMap();

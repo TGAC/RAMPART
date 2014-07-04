@@ -52,7 +52,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
     public AnalyseMassAssemblies(ConanExecutorService ces, Args args) {
         super("", args, new Params(), ces);
 
-        this.assemblyAnalyserFactory = new SpiFactory<AssemblyAnalyser>(AssemblyAnalyser.class);
+        this.assemblyAnalyserFactory = new SpiFactory<>(AssemblyAnalyser.class);
     }
 
     public Args getArgs() {
@@ -81,7 +81,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
                 return false;
             }
             else {
-                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
+                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
             }
         }
 
@@ -110,7 +110,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
         // Create requested services
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
         for(String requestedService : this.getArgs().getAsmAnalyses()) {
-            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
+            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
         }
 
         // Just loop through all requested stats levels and execute each.

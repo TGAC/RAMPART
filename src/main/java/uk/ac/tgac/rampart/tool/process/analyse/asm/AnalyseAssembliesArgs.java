@@ -9,7 +9,6 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStageArgs;
-import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 
 import java.io.File;
 import java.io.IOException;

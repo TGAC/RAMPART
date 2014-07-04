@@ -143,7 +143,8 @@ public class AmpStage extends AbstractConanProcess {
                 "amp-" + args.getIndex(),
                 libs, args.getThreads(),
                 args.getMemory(),
-                args.getOtherArgs(),
+                args.getCheckedArgs(),
+                args.getUncheckedArgs(),
                 this.conanExecutorService);
     }
 
@@ -238,7 +239,8 @@ public class AmpStage extends AbstractConanProcess {
         private static final String KEY_ELEM_TOOL = "tool";
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
-        private static final String KEY_ELEM_OTHER_ARGS = "args";
+        private static final String KEY_ELEM_CHECKED_ARGS = "checked_args";
+        private static final String KEY_ELEM_UNCHECKED_ARGS = "unchecked_args";
         private static final String KEY_ELEM_INPUTS = "inputs";
         private static final String KEY_ELEM_SINGLE_INPUT = "input";
 
@@ -246,7 +248,6 @@ public class AmpStage extends AbstractConanProcess {
         // Defaults
         public static final int DEFAULT_THREADS = 1;
         public static final int DEFAULT_MEMORY = 0;
-        public static final String DEFAULT_OTHER_ARGS = "";
 
 
         // Common stuff
@@ -265,7 +266,8 @@ public class AmpStage extends AbstractConanProcess {
         private int index;
         private int threads;
         private int memory;
-        private String otherArgs;
+        private String checkedArgs;
+        private String uncheckedArgs;
 
 
         public Args() {
@@ -278,7 +280,8 @@ public class AmpStage extends AbstractConanProcess {
             this.index = 0;
             this.threads = DEFAULT_THREADS;
             this.memory = DEFAULT_MEMORY;
-            this.otherArgs = DEFAULT_OTHER_ARGS;
+            this.checkedArgs = null;
+            this.uncheckedArgs = null;
 
             this.outputDir = new File("");
             this.jobPrefix = "AMP-" + this.index;
@@ -312,7 +315,8 @@ public class AmpStage extends AbstractConanProcess {
             // Optional
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
-            this.otherArgs = ele.hasAttribute(KEY_ELEM_OTHER_ARGS) ? XmlHelper.getTextValue(ele, KEY_ELEM_OTHER_ARGS) : DEFAULT_OTHER_ARGS;
+            this.checkedArgs = ele.hasAttribute(KEY_ELEM_CHECKED_ARGS) ? XmlHelper.getTextValue(ele, KEY_ELEM_CHECKED_ARGS) : null;
+            this.uncheckedArgs = ele.hasAttribute(KEY_ELEM_UNCHECKED_ARGS) ? XmlHelper.getTextValue(ele, KEY_ELEM_UNCHECKED_ARGS) : null;
 
             // Other args
             this.outputDir = outputDir;
@@ -429,12 +433,20 @@ public class AmpStage extends AbstractConanProcess {
             this.memory = memory;
         }
 
-        public String getOtherArgs() {
-            return otherArgs;
+        public String getCheckedArgs() {
+            return checkedArgs;
         }
 
-        public void setOtherArgs(String otherArgs) {
-            this.otherArgs = otherArgs;
+        public void setCheckedArgs(String checkedArgs) {
+            this.checkedArgs = checkedArgs;
+        }
+
+        public String getUncheckedArgs() {
+            return uncheckedArgs;
+        }
+
+        public void setUncheckedArgs(String uncheckedArgs) {
+            this.uncheckedArgs = uncheckedArgs;
         }
 
         public List<ReadsInput> getInputs() {
@@ -468,8 +480,11 @@ public class AmpStage extends AbstractConanProcess {
             pvp.put(params.getThreads(), Integer.toString(this.threads));
             pvp.put(params.getMemory(), Integer.toString(this.memory));
 
-            if (this.otherArgs != null)
-                pvp.put(params.getOtherArgs(), this.otherArgs);
+            if (this.checkedArgs != null)
+                pvp.put(params.getCheckedArgs(), this.checkedArgs);
+
+            if (this.uncheckedArgs != null)
+                pvp.put(params.getUncheckedArgs(), this.uncheckedArgs);
 
             return pvp;
         }
@@ -491,8 +506,10 @@ public class AmpStage extends AbstractConanProcess {
                 this.threads = Integer.parseInt(value);
             } else if (param.equals(params.getMemory())) {
                 this.memory = Integer.parseInt(value);
-            } else if (param.equals(params.getOtherArgs())) {
-                this.otherArgs = value;
+            } else if (param.equals(params.getCheckedArgs())) {
+                this.checkedArgs = value;
+            } else if (param.equals(params.getUncheckedArgs())) {
+                this.uncheckedArgs = value;
             }
         }
 
@@ -510,7 +527,8 @@ public class AmpStage extends AbstractConanProcess {
         private ConanParameter jobPrefix;
         private ConanParameter threads;
         private ConanParameter memory;
-        private ConanParameter otherArgs;
+        private ConanParameter checkedArgs;
+        private ConanParameter uncheckedArgs;
 
         public Params() {
 
@@ -549,9 +567,15 @@ public class AmpStage extends AbstractConanProcess {
                     true
             );
 
-            this.otherArgs = new ParameterBuilder()
-                    .longName("other_args")
-                    .description("Any additional arguments to provide to this specific process")
+            this.checkedArgs = new ParameterBuilder()
+                    .longName("checked_args")
+                    .description("Any additional arguments to provide to this specific process.  MUST be in posix format.  Will be checked by wrappers")
+                    .argValidator(ArgValidator.OFF)
+                    .create();
+
+            this.uncheckedArgs = new ParameterBuilder()
+                    .longName("checked_args")
+                    .description("Any additional arguments to provide to this specific process.  Will NOT be checked by wrappers.  Will be passed as is to the underlying process.")
                     .argValidator(ArgValidator.OFF)
                     .create();
         }
@@ -580,8 +604,12 @@ public class AmpStage extends AbstractConanProcess {
             return memory;
         }
 
-        public ConanParameter getOtherArgs() {
-            return otherArgs;
+        public ConanParameter getCheckedArgs() {
+            return checkedArgs;
+        }
+
+        public ConanParameter getUncheckedArgs() {
+            return uncheckedArgs;
         }
 
         @Override
@@ -593,7 +621,8 @@ public class AmpStage extends AbstractConanProcess {
                     this.jobPrefix,
                     this.threads,
                     this.memory,
-                    this.otherArgs
+                    this.checkedArgs,
+                    this.uncheckedArgs
             };
         }
 

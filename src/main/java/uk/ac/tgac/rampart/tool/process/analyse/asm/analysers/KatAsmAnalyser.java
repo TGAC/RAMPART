@@ -15,16 +15,15 @@ import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
 import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseAssembliesArgs;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.AnalyseMassAssemblies;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.JobOutput;
 import uk.ac.tgac.rampart.util.JobOutputList;
-import uk.ac.tgac.rampart.util.JobOutputMap;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.

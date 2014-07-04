@@ -23,7 +23,6 @@ import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 
 import java.io.IOException;
 

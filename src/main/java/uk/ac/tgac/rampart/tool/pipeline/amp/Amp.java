@@ -30,6 +30,7 @@ import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
@@ -223,7 +224,7 @@ public class Amp extends AbstractConanProcess {
     }
 
 
-    public static class Args implements RampartStageArgs {
+    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
 
         private static final String INPUT_ASSEMBLY = "input";
         private static final String KEY_ELEM_AMP_STAGE = "stage";
@@ -238,9 +239,6 @@ public class Amp extends AbstractConanProcess {
         public static final boolean DEFAULT_RUN_PARALLEL = false;
         public static final int DEFAULT_THREADS = 1;
         public static final int DEFAULT_MEMORY = 0;
-
-        // Need access to these
-        private Params params = new Params();
 
         private File inputAssembly;
         private File bubbleFile;
@@ -258,6 +256,7 @@ public class Amp extends AbstractConanProcess {
 
 
         public Args() {
+            super(new Params());
             this.inputAssembly = null;
             this.bubbleFile = null;
             this.outputDir = null;
@@ -436,6 +435,7 @@ public class Amp extends AbstractConanProcess {
         @Override
         public ParamMap getArgMap() {
 
+            Params params = (Params)this.params;
             ParamMap pvp = new DefaultParamMap();
 
             if (this.inputAssembly != null)
@@ -454,26 +454,24 @@ public class Amp extends AbstractConanProcess {
         }
 
         @Override
-        public void setFromArgMap(ParamMap pvp) {
+        protected void setOptionFromMapEntry(ConanParameter param, String value) {
 
-            for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+            Params params = (Params)this.params;
 
-                if (!entry.getKey().validateParameterValue(entry.getValue())) {
-                    throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
-                }
-
-                ConanParameter param = entry.getKey();
-
-                if (param.equals(this.params.getInputAssembly())) {
-                    this.inputAssembly = new File(entry.getValue());
-                } else if (param.equals(this.params.getBubbleFile())) {
-                    this.bubbleFile = new File(entry.getValue());
-                } else if (param.equals(this.params.getOutputDir())) {
-                    this.outputDir = new File(entry.getValue());
-                } else if (param.equals(this.params.getJobPrefix())) {
-                    this.jobPrefix = entry.getValue();
-                }
+            if (param.equals(params.getInputAssembly())) {
+                this.inputAssembly = new File(value);
+            } else if (param.equals(params.getBubbleFile())) {
+                this.bubbleFile = new File(value);
+            } else if (param.equals(params.getOutputDir())) {
+                this.outputDir = new File(value);
+            } else if (param.equals(params.getJobPrefix())) {
+                this.jobPrefix = value;
             }
+        }
+
+        @Override
+        protected void setArgFromMapEntry(ConanParameter param, String value) {
+
         }
 
         public File getFinalAssembly() {

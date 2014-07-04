@@ -16,14 +16,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.rampart.tool.process.amp.AmpStage;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.analysers.AssemblyAnalyser;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.AssemblySelector;
-import uk.ac.tgac.rampart.tool.process.analyse.asm.selector.DefaultAssemblySelector;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.tool.process.mass.MassJob;
 import uk.ac.tgac.rampart.util.SpiFactory;
 
 import java.io.File;
@@ -83,7 +79,7 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
                 return false;
             }
             else {
-                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
+                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
             }
         }
 
@@ -112,7 +108,7 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         // Create requested services
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
         for(String requestedService : this.getArgs().getAsmAnalyses()) {
-            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.getConanProcessService()));
+            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
         }
 
         List<Integer> jobIds = new ArrayList<>();

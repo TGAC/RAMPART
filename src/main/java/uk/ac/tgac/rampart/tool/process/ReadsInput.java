@@ -21,7 +21,6 @@ import org.w3c.dom.Element;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 
-import java.io.IOException;
 import java.util.List;
 
 /**

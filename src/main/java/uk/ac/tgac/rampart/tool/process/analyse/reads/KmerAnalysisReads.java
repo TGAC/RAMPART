@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
+import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
@@ -465,7 +466,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         return true;
     }
 
-    public static class Args implements RampartStageArgs {
+    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
 
         private static final String KEY_ATTR_PARALLEL = "parallel";
         private static final String KEY_ATTR_THREADS = "threads";
@@ -488,6 +489,8 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         private int memoryPerProcess;
 
         public Args() {
+            super(new Params());
+
             this.allLibraries = new ArrayList<>();
             this.allMecqs = new ArrayList<>();
             this.jobPrefix = "kmer-reads";
@@ -502,6 +505,8 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
         public Args(Element element, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, String jobPrefix, File mecqDir,
                                      File outputDir, Organism organism) {
+
+            super(new Params());
 
             this.allLibraries = allLibraries;
             this.allMecqs = allMecqs;
@@ -617,8 +622,13 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         }
 
         @Override
-        public void setFromArgMap(ParamMap pvp) throws IOException, ConanParameterException {
-            //To change body of implemented methods use File | Settings | File Templates.
+        protected void setOptionFromMapEntry(ConanParameter param, String value) {
+
+        }
+
+        @Override
+        protected void setArgFromMapEntry(ConanParameter param, String value) {
+
         }
 
         @Override

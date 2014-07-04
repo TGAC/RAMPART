@@ -28,9 +28,7 @@ import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 
 import java.io.File;
 
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 

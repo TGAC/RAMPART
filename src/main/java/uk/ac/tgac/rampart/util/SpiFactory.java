@@ -2,7 +2,7 @@ package uk.ac.tgac.rampart.util;
 
 import org.apache.commons.lang3.StringUtils;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -54,14 +54,14 @@ public class SpiFactory<T extends Service> {
      * @param name
      * @return A new service
      */
-    public T create(String name, ConanProcessService conanProcessService) {
+    public T create(String name, ConanExecutorService ces) {
 
         // Create the appropriate service, if the name is recognized
         for (T service : loader) {
             if (this.acceptsIdentifier(name, service)) {
 
                 // Horrible hack!!!  Cleanup at some point.
-                ((AbstractConanProcess)service).setConanProcessService(conanProcessService);
+                ((AbstractConanProcess)service).setConanProcessService(ces.getConanProcessService());
                 return service;
             }
         }

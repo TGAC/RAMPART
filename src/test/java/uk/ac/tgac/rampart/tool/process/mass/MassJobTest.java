@@ -59,7 +59,7 @@ public class MassJobTest extends MockedConanProcess {
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         MassJob.Args args = new MassJob.Args();
-        args.setTool("ABYSS_V1.3");
+        args.setTool("ABYSS_V1.5");
         args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
         args.setJobPrefix("massTest");
         args.setOutputDir(outputDir);

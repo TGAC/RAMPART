@@ -1,6 +1,5 @@
 package uk.ac.tgac.rampart.tool.process.analyse.asm.selector;
 
-import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStatsTable;
 

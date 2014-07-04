@@ -53,7 +53,7 @@ public class MassTest extends MockedConanProcess {
         File outputDir = temp.newFolder("testMass");
 
         MassJob.Args singleMassArgs = new MassJob.Args();
-        singleMassArgs.setTool("Abyss_V1.3");
+        singleMassArgs.setTool("Abyss_V1.5");
         singleMassArgs.setKmerRange(new KmerRange(31, 61, KmerRange.StepSize.COARSE));
         singleMassArgs.setOutputDir(new File(outputDir, "raw"));
 

@@ -59,6 +59,11 @@ public class ReportArgs implements RampartStageArgs {
     }
 
     @Override
+    public String getUncheckedArgs() {
+        return null;
+    }
+
+    @Override
     public ParamMap getArgMap() {
 
         ParamMap pvp = new DefaultParamMap();

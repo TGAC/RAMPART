@@ -18,7 +18,6 @@
 
 package uk.ac.tgac.rampart.tool.process.analyse.asm;
 
-import org.apache.log4j.BasicConfigurator;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -33,7 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class AnalyseMassAssembliesTest extends MockedConanProcess {
 
@@ -50,7 +49,7 @@ public class AnalyseMassAssembliesTest extends MockedConanProcess {
 
         MassJob.Args mjArgs = new MassJob.Args();
         mjArgs.setThreads(4);
-        mjArgs.setTool("ABYSS_V1.3");
+        mjArgs.setTool("ABYSS_V1.5");
         mjArgs.setName("mj1");
         mjArgs.setKmerRange(new KmerRange(31, 51, 10));
         mjArgs.setCoverageRange(new CoverageRange("-1"));

@@ -19,8 +19,6 @@ package uk.ac.tgac.rampart.tool.process.analyse.asm.selector;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.tgac.rampart.tool.process.analyse.asm.stats.AssemblyStats;

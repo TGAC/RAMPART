@@ -45,8 +45,7 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.*;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
-import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Args;
-import uk.ac.tgac.conan.process.subsampler.SubsamplerV1_0Process;
+import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.tool.process.Mecq;
 import uk.ac.tgac.rampart.tool.process.ReadsInput;
@@ -509,14 +508,14 @@ public class MassJob extends AbstractConanProcess {
                                              boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
-        SubsamplerV1_0Args ssArgs = new SubsamplerV1_0Args();
+        TgacSubsamplerV1.Args ssArgs = new TgacSubsamplerV1.Args();
         ssArgs.setInputFile(input);
         ssArgs.setOutputFile(output);
         ssArgs.setLogFile(new File(output.getParentFile(), output.getName() + ".log"));
         ssArgs.setSeed(timestamp);
         ssArgs.setProbability(probability);
 
-        SubsamplerV1_0Process ssProc = new SubsamplerV1_0Process(ssArgs);
+        TgacSubsamplerV1 ssProc = new TgacSubsamplerV1(ssArgs);
 
         // Create process
         return this.conanExecutorService.executeProcess(ssProc, output.getParentFile(), jobName, 1, 2000,
@@ -536,6 +535,8 @@ public class MassJob extends AbstractConanProcess {
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
         private static final String KEY_ATTR_PARALLEL = "parallel";
+        private static final String KEY_ATTR_CHECKED_ARGS = "checked_args";
+        private static final String KEY_ATTR_UNCHECKED_ARGS = "unchecked_args";
 
         public static final boolean DEFAULT_STATS_ONLY = false;
         public static final boolean DEFAULT_RUN_PARALLEL = false;
@@ -552,8 +553,9 @@ public class MassJob extends AbstractConanProcess {
         private String tool;
         private KmerRange kmerRange;
         private CoverageRange coverageRange;
-        private int coverageCutoff;
         private Organism organism;
+        private String checkedArgs;
+        private String uncheckedArgs;
 
         // Inputs
         private File mecqDir;
@@ -583,8 +585,9 @@ public class MassJob extends AbstractConanProcess {
             this.tool = "ABYSS_V1.3";
             this.kmerRange = new KmerRange();
             this.coverageRange = new CoverageRange();
-            this.coverageCutoff = 0;
             this.organism = null;
+            this.checkedArgs = null;
+            this.uncheckedArgs = null;
 
             this.mecqDir = null;
             this.inputs = new ArrayList<>();
@@ -638,6 +641,14 @@ public class MassJob extends AbstractConanProcess {
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                     DEFAULT_RUN_PARALLEL;
+
+            this.checkedArgs = ele.hasAttribute(KEY_ATTR_CHECKED_ARGS) ?
+                    XmlHelper.getTextValue(ele, KEY_ATTR_CHECKED_ARGS) :
+                    null;
+
+            this.uncheckedArgs = ele.hasAttribute(KEY_ATTR_UNCHECKED_ARGS) ?
+                    XmlHelper.getTextValue(ele, KEY_ATTR_UNCHECKED_ARGS) :
+                    null;
 
 
             // Other args
@@ -829,77 +840,89 @@ public class MassJob extends AbstractConanProcess {
 
         protected final List<Assembler> createAssemblers() {
 
-            List<Assembler> assemblers = new ArrayList<>();
+            try {
+                List<Assembler> assemblers = new ArrayList<>();
 
-            // Iterate over coverage range
-            for (Integer cvg : this.coverageRange) {
+                // Iterate over coverage range
+                for (Integer cvg : this.coverageRange) {
 
-                // Do subsampling for this coverage level if required
-                List<Library> subsampledLibs = this.createSubsampledLibPaths(cvg);
+                    // Do subsampling for this coverage level if required
+                    List<Library> subsampledLibs = this.createSubsampledLibPaths(cvg);
 
-                // Generate a directory name for this assembly
-                String cvgString = CoverageRange.toString(cvg);
-                String cvgDirName = "cvg-" + cvgString;
+                    // Generate a directory name for this assembly
+                    String cvgString = CoverageRange.toString(cvg);
+                    String cvgDirName = "cvg-" + cvgString;
 
-                // This is the output directory for this particular assembly
-                File outputDir = new File(this.outputDir, cvgDirName);
+                    // This is the output directory for this particular assembly
+                    File outputDir = new File(this.outputDir, cvgDirName);
 
-                Assembler.Type type = this.genericAssembler.getType();
+                    Assembler.Type type = this.genericAssembler.getType();
 
-                if (type == Assembler.Type.DE_BRUIJN) {
+                    if (type == Assembler.Type.DE_BRUIJN) {
 
-                    // Iterate over kmer range
-                    for (Integer k : this.kmerRange) {
+                        // Iterate over kmer range
+                        for (Integer k : this.kmerRange) {
 
-                        // Override output dir name with k values
-                        File kOutputDir = new File(this.outputDir, cvgDirName + "_k-" + k);
+                            // Override output dir name with k values
+                            File kOutputDir = new File(this.outputDir, cvgDirName + "_k-" + k);
 
-                        GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs();
-                        dbgArgs.setOutputDir(kOutputDir);
-                        dbgArgs.setLibraries(subsampledLibs);
-                        dbgArgs.setThreads(this.threads);
-                        dbgArgs.setMemory(this.memory);
-                        dbgArgs.setOrganism(this.organism);
-                        dbgArgs.setDesiredCoverage(cvg);
-                        dbgArgs.setK(k);
+                            GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs();
+                            dbgArgs.setOutputDir(kOutputDir);
+                            dbgArgs.setLibraries(subsampledLibs);
+                            dbgArgs.setThreads(this.threads);
+                            dbgArgs.setMemory(this.memory);
+                            dbgArgs.setOrganism(this.organism);
+                            dbgArgs.setDesiredCoverage(cvg);
+                            dbgArgs.setK(k);
 
-                        //TODO set other args here
+                            // Create the actual assembler for these settings
+                            Assembler asm = dbgArgs.createAssembler(this.tool);
+                            asm.getAssemblerArgs().parse(this.checkedArgs);
+                            asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
+                            assemblers.add(asm);
+                        }
+                    } else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
+
+                        GenericDeBruijnAutoArgs dbgAutoArgs = new GenericDeBruijnAutoArgs();
+                        dbgAutoArgs.setOutputDir(outputDir);
+                        dbgAutoArgs.setLibraries(subsampledLibs);
+                        dbgAutoArgs.setThreads(this.threads);
+                        dbgAutoArgs.setMemory(this.memory);
+                        dbgAutoArgs.setOrganism(this.organism);
+                        dbgAutoArgs.setDesiredCoverage(cvg);
 
                         // Create the actual assembler for these settings
-                        assemblers.add(dbgArgs.createAssembler(this.tool));
+                        Assembler asm = dbgAutoArgs.createAssembler(this.tool);
+                        asm.getAssemblerArgs().parse(this.checkedArgs);
+                        asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
+                        assemblers.add(asm);
+
+                    } else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
+
+                        GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs();
+                        dbgOptArgs.setOutputDir(outputDir);
+                        dbgOptArgs.setLibraries(subsampledLibs);
+                        dbgOptArgs.setThreads(this.threads);
+                        dbgOptArgs.setMemory(this.memory);
+                        dbgOptArgs.setOrganism(this.organism);
+                        dbgOptArgs.setKmerRange(this.kmerRange);
+
+                        // Create the actual assembler for these settings
+                        Assembler asm = dbgOptArgs.createAssembler(this.tool);
+                        asm.getAssemblerArgs().parse(this.checkedArgs);
+                        asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
+                        assemblers.add(asm);
+
+                    } else {
+                        throw new IllegalArgumentException("Unknown assembly type detected: " + type);
                     }
-                } else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
-
-                    GenericDeBruijnAutoArgs dbgAutoArgs = new GenericDeBruijnAutoArgs();
-                    dbgAutoArgs.setOutputDir(outputDir);
-                    dbgAutoArgs.setLibraries(subsampledLibs);
-                    dbgAutoArgs.setThreads(this.threads);
-                    dbgAutoArgs.setMemory(this.memory);
-                    dbgAutoArgs.setOrganism(this.organism);
-                    dbgAutoArgs.setDesiredCoverage(cvg);
-
-                    // Create the actual assembler for these settings
-                    assemblers.add(dbgAutoArgs.createAssembler(this.tool));
-
-                } else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
-
-                    GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs();
-                    dbgOptArgs.setOutputDir(outputDir);
-                    dbgOptArgs.setLibraries(subsampledLibs);
-                    dbgOptArgs.setThreads(this.threads);
-                    dbgOptArgs.setMemory(this.memory);
-                    dbgOptArgs.setOrganism(this.organism);
-                    dbgOptArgs.setKmerRange(this.kmerRange);
-
-                    // Create the actual assembler for these settings
-                    assemblers.add(dbgOptArgs.createAssembler(this.tool));
-
-                } else {
-                    throw new IllegalArgumentException("Unknown assembly type detected: " + type);
                 }
-            }
 
-            return assemblers;
+                return assemblers;
+            }
+            catch(IOException ioe) {
+                throw new IllegalArgumentException(ioe);
+            }
         }
 
 
@@ -949,14 +972,6 @@ public class MassJob extends AbstractConanProcess {
 
         public void setCoverageRange(CoverageRange coverageRange) {
             this.coverageRange = coverageRange;
-        }
-
-        public int getCoverageCutoff() {
-            return coverageCutoff;
-        }
-
-        public void setCoverageCutoff(int coverageCutoff) {
-            this.coverageCutoff = coverageCutoff;
         }
 
         public boolean isRunParallel() {

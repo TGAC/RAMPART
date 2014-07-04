@@ -18,8 +18,6 @@
 package uk.ac.tgac.rampart.tool.process.analyse.asm.stats;
 
 import org.apache.commons.io.FileUtils;
-import uk.ac.tgac.conan.process.asm.stats.CegmaV2_4Report;
-import uk.ac.tgac.conan.process.asm.stats.QuastV2_2Report;
 
 import java.io.File;
 import java.io.IOException;
