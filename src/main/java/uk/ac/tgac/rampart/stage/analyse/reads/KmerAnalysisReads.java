@@ -167,7 +167,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
             String katGcpJobPrefix = args.getJobPrefix() + "-kat-gcp";
 
             // Run KAT GCP on everything
-            JobOutputList katGcpFiles = this.executeKatGcp(jfCountOutputs, katGcpJobPrefix, args.getThreadsPerProcess(), args.isRunParallel());
+            JobOutputList katGcpFiles = this.executeKatGcp(jfCountOutputs, katGcpJobPrefix, args.getThreadsPerProcess(), args.getMemoryPerProcess(), args.isRunParallel());
 
             // If we're using a scheduler and we have been asked to run each MECQ group for each library
             // in parallel, then we should wait for all those to complete before continueing.
@@ -231,7 +231,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         return new KatPlotDensityV1(katPlotDensityArgs);
     }
 
-    private JobOutputList executeKatGcp(JobOutputMap jfCountOutputs, String jobPrefix, int threads, boolean runInParallel)
+    private JobOutputList executeKatGcp(JobOutputMap jfCountOutputs, String jobPrefix, int threads, int memory, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException, ConanParameterException {
 
         JobOutputList output = new JobOutputList();
@@ -249,7 +249,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
                         inputFile.getParentFile(),
                         jobPrefix + "-" + inputFile.getName(),
                         threads,
-                        0, // TODO Probably should put something here
+                        memory,
                         runInParallel).getJobId();
 
                 output.add(new JobOutput(jobId, new File(outputPrefix + ".mx")));

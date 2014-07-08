@@ -40,8 +40,8 @@ public class FilePair extends MutablePair<File, File> {
             if (!left.getParentFile().getAbsolutePath().equals(right.getParentFile().getAbsolutePath()))
                 throw new IOException("Paired files are not found in the same directory");
 
-            int fn1m = left.getName().indexOf("R1");
-            int fn2m = right.getName().indexOf("R2");
+            int fn1m = left.getName().toUpperCase().indexOf("R1");
+            int fn2m = right.getName().toUpperCase().indexOf("R2");
 
             String fn1s = left.getName().substring(0,fn1m);
             String fn2s = right.getName().substring(0,fn2m);

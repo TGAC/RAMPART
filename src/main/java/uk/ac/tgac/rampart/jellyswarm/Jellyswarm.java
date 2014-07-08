@@ -72,6 +72,7 @@ public class Jellyswarm {
             counterArgs.setJobPrefix(args.getJobPrefix() + "-counter");
             counterArgs.setRunParallel(true);
             counterArgs.setLowerCount(args.getLowerCount());
+            counterArgs.setHashSize(args.getHashSize());
             counterArgs.setRecursive(args.isRecursive());
             counterArgs.setPaired(args.isPaired());
 
@@ -113,6 +114,7 @@ public class Jellyswarm {
         private File outputDir;
         private String jobPrefix;
         private long lowerCount;
+        private long hashSize;
         private List<JellyswarmStage> stages;
         private int threads;
         private int memory;
@@ -128,6 +130,7 @@ public class Jellyswarm {
             this.outputDir = new File("");
             this.jobPrefix = "";
             this.lowerCount = 0;
+            this.hashSize = 4000000000L;
             this.stages = null;
             this.threads = 1;
             this.memory = 0;
@@ -167,6 +170,14 @@ public class Jellyswarm {
 
         public void setLowerCount(long lowerCount) {
             this.lowerCount = lowerCount;
+        }
+
+        public long getHashSize() {
+            return hashSize;
+        }
+
+        public void setHashSize(long hashSize) {
+            this.hashSize = hashSize;
         }
 
         public List<JellyswarmStage> getStages() {
@@ -269,6 +280,7 @@ public class Jellyswarm {
             }
 
             pvp.put(params.getLower(), Long.toString(this.lowerCount));
+            pvp.put(params.getHashSize(), Long.toString(this.hashSize));
             pvp.put(params.getThreads(), Integer.toString(this.threads));
             pvp.put(params.getMemory(), Integer.toString(this.memory));
             pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
@@ -299,6 +311,7 @@ public class Jellyswarm {
         private ConanParameter inputDir;
         private ConanParameter outputDir;
         private ConanParameter lower;
+        private ConanParameter hashSize;
         private ConanParameter jobPrefix;
         private ConanParameter threads;
         private ConanParameter runParallel;
@@ -323,6 +336,13 @@ public class Jellyswarm {
                     "lower",
                     "Don't output k-mer with count < lower-count",
                     true);
+
+            this.hashSize = new ParameterBuilder()
+                    .shortName("h")
+                    .longName("hash")
+                    .description("The hash size to pass to each jellyfish count instance")
+                    .argValidator(ArgValidator.DIGITS)
+                    .create();
 
             this.jobPrefix = new ParameterBuilder()
                     .longName("prefix")
@@ -371,6 +391,10 @@ public class Jellyswarm {
             return lower;
         }
 
+        public ConanParameter getHashSize() {
+            return hashSize;
+        }
+
         public ConanParameter getJobPrefix() {
             return jobPrefix;
         }
@@ -405,6 +429,7 @@ public class Jellyswarm {
                     this.inputDir,
                     this.outputDir,
                     this.lower,
+                    this.hashSize,
                     this.jobPrefix,
                     this.threads,
                     this.memory,

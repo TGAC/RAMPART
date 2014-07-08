@@ -45,15 +45,19 @@ public class JellyswarmCLI extends AbstractConanCLI
     public static final String OPT_RECURSIVE = "recursive";
     public static final String OPT_SINGLE = "single";
     public static final String OPT_THREADS = "threads";
+    public static final String OPT_MEMORY = "memory";
+    public static final String OPT_HASH = "hash";
 
     public static final List<JellyswarmStage>  DEFAULT_STAGES = JellyswarmStage.parse("ALL");
     public static final long DEFAULT_LOWER = 0;
     public static final int DEFAULT_THREADS = 1;
+    public static final int DEFAULT_MEMORY = 60;
+    public static final long DEFAULT_HASH = 4000000000L;
 
     /**
      * Environment specific configuration options and resource files are set in the user's home directory
      */
-    public static final File USER_DIR = new File(System.getProperty("user.home") + "/.tgac/jellyswarm");
+    public static final File USER_DIR = new File(System.getProperty("user.home") + "/.tgac/rampart");
 
     /**
      * Gets the application config directory.  This is really messy way to do it... try to think of a better way later
@@ -94,6 +98,8 @@ public class JellyswarmCLI extends AbstractConanCLI
     private boolean recursive;
     private boolean single;
     private int threads;
+    private int memory;
+    private long hash;
 
 
     private Jellyswarm.Args args;
@@ -123,9 +129,10 @@ public class JellyswarmCLI extends AbstractConanCLI
             this.args.setOutputDir(this.getOutputDir());
             this.args.setJobPrefix(this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()));
             this.args.setLowerCount(this.lower);
+            this.args.setHashSize(this.hash);
             this.args.setStages(this.stages);
             this.args.setThreads(this.threads);
-            this.args.setMemory(60000);
+            this.args.setMemory(this.memory / 1000);
             this.args.setRunParallel(true);
             this.args.setRecursive(this.recursive);
             this.args.setPaired(!this.single);
@@ -154,8 +161,14 @@ public class JellyswarmCLI extends AbstractConanCLI
         options.add(OptionBuilder.withArgName("number").withLongOpt(OPT_LOWER).hasArg()
                 .withDescription("K-mer counts below this number are discarded.  Default: " + DEFAULT_LOWER).create("l"));
 
+        options.add(OptionBuilder.withArgName("number").withLongOpt(OPT_HASH).hasArg()
+                .withDescription("The hash size to use for each jellyfish count process.  Default: " + DEFAULT_HASH).create("h"));
+
         options.add(OptionBuilder.withArgName("number").withLongOpt(OPT_THREADS).hasArg()
                 .withDescription("Number of threads to use for each jellyfish process.  Default: " + DEFAULT_THREADS).create("t"));
+
+        options.add(OptionBuilder.withArgName("number").withLongOpt(OPT_MEMORY).hasArg()
+                .withDescription("Memory limit in GB.  Limit may or may not be enforced depending on scheduling system and architecture.  Default: " + DEFAULT_MEMORY).create("m"));
 
         options.add(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
                 .withDescription("The jellyswarm stages to execute: " + JellyswarmStage.getFullListAsString() + ", ALL.  Default: ALL.")
@@ -163,7 +176,7 @@ public class JellyswarmCLI extends AbstractConanCLI
 
         options.add(new Option("r", OPT_RECURSIVE, false, "If set, tells jellyswarm to recurse through sub-directories in the input directory to search for read files"));
 
-        options.add(new Option("g", OPT_SINGLE, false, "If set, tells jellyswarm to process single end data, rather than paired end"));
+        options.add(new Option("1", OPT_SINGLE, false, "If set, tells jellyswarm to process single end data, or interleaved paired end data, i.e. one file per sample"));
 
         return options;
     }
@@ -179,9 +192,17 @@ public class JellyswarmCLI extends AbstractConanCLI
                 Long.parseLong(commandLine.getOptionValue(OPT_LOWER)) :
                 DEFAULT_LOWER;
 
+        this.hash = commandLine.hasOption(OPT_HASH) ?
+                Long.parseLong(commandLine.getOptionValue(OPT_HASH)) :
+                DEFAULT_HASH;
+
         this.threads = commandLine.hasOption(OPT_THREADS) ?
                 Integer.parseInt(commandLine.getOptionValue(OPT_THREADS)) :
                 DEFAULT_THREADS;
+
+        this.memory = commandLine.hasOption(OPT_MEMORY) ?
+                Integer.parseInt(commandLine.getOptionValue(OPT_MEMORY)) :
+                DEFAULT_MEMORY;
 
         this.recursive = commandLine.hasOption(OPT_RECURSIVE);
 

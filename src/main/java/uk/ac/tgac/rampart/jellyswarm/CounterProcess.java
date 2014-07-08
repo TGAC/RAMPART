@@ -167,6 +167,7 @@ public class CounterProcess extends AbstractConanProcess {
         private int memory;
         private String jobPrefix;
         private long lowerCount;
+        private long hashSize;
         private boolean recursive;
         private boolean paired;
 
@@ -181,6 +182,7 @@ public class CounterProcess extends AbstractConanProcess {
             this.memory = 0;
             this.jobPrefix = "counter";
             this.lowerCount = 0;
+            this.hashSize = 4000000000L;
             this.recursive = false;
             this.paired = true;
         }
@@ -245,6 +247,13 @@ public class CounterProcess extends AbstractConanProcess {
             this.lowerCount = lowerCount;
         }
 
+        public long getHashSize() {
+            return hashSize;
+        }
+
+        public void setHashSize(long hashSize) {
+            this.hashSize = hashSize;
+        }
 
         public boolean isRecursive() {
             return recursive;
@@ -287,6 +296,7 @@ public class CounterProcess extends AbstractConanProcess {
             }
 
             pvp.put(params.getLowerCount(), Long.toString(this.lowerCount));
+            pvp.put(params.getHashSize(), Long.toString(this.hashSize));
             pvp.put(params.getThreads(), Integer.toString(this.threads));
             pvp.put(params.getMemory(), Integer.toString(this.memory));
             pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
@@ -313,6 +323,9 @@ public class CounterProcess extends AbstractConanProcess {
             }
             else if (param.equals(params.getLowerCount())) {
                 this.lowerCount = Long.parseLong(value);
+            }
+            else if (param.equals(params.getHashSize())) {
+                this.hashSize = Long.parseLong(value);
             }
             else if (param.equals(params.getThreads())) {
                 this.threads = Integer.parseInt(value);
@@ -348,6 +361,7 @@ public class CounterProcess extends AbstractConanProcess {
         private ConanParameter outputDir;
         private ConanParameter jobPrefix;
         private ConanParameter lowerCount;
+        private ConanParameter hashSize;
         private ConanParameter threads;
         private ConanParameter memory;
         private ConanParameter runParallel;
@@ -376,6 +390,13 @@ public class CounterProcess extends AbstractConanProcess {
                     "lower",
                     "Don't output k-mer with count < lower-count",
                     true);
+
+            this.hashSize = new ParameterBuilder()
+                    .shortName("h")
+                    .longName("hash")
+                    .description("The hash size to pass to each jellyfish count instance")
+                    .argValidator(ArgValidator.DIGITS)
+                    .create();
 
             this.threads = new NumericParameter(
                     "threads",
@@ -416,6 +437,10 @@ public class CounterProcess extends AbstractConanProcess {
             return lowerCount;
         }
 
+        public ConanParameter getHashSize() {
+            return hashSize;
+        }
+
         public ConanParameter getThreads() {
             return threads;
         }
@@ -442,6 +467,7 @@ public class CounterProcess extends AbstractConanProcess {
                     this.inputDir,
                     this.outputDir,
                     this.lowerCount,
+                    this.hashSize,
                     this.jobPrefix,
                     this.threads,
                     this.memory,
