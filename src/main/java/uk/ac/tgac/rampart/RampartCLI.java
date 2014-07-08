@@ -33,10 +33,8 @@ import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
 import uk.ac.tgac.conan.core.util.JarUtils;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStage;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartStageList;
+import uk.ac.tgac.rampart.stage.RampartStage;
+import uk.ac.tgac.rampart.stage.RampartStageList;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
 
 import java.io.File;
@@ -109,7 +107,7 @@ public class RampartCLI extends AbstractConanCLI {
     private File jobConfig;
     private boolean skipChecks;
 
-    private RampartArgs args;
+    private Rampart.Args args;
 
     /**
      * Creates a new RAMPART instance with default arguments
@@ -151,7 +149,7 @@ public class RampartCLI extends AbstractConanCLI {
         this.init();
 
         // Create RnaSeqEvalArgs based on reads from the command line
-        this.args = new RampartArgs(
+        this.args = new Rampart.Args(
                 this.jobConfig,
                 this.getOutputDir(),
                 this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
@@ -197,7 +195,7 @@ public class RampartCLI extends AbstractConanCLI {
         this.skipChecks = skipChecks;
     }
 
-    public RampartArgs getArgs() {
+    public Rampart.Args getArgs() {
         return args;
     }
 
@@ -259,9 +257,10 @@ public class RampartCLI extends AbstractConanCLI {
         CommandLineHelper.printHelp(
                 System.err,
                 "rampart [options] <job_config_file>\nOptions: ",
-                "RAMPART is a de novo assembly pipeline that makes use of third party-tools and High Performance Computing " +
-                "resources.  It can be used as a single interface to several popular assemblers, and can perform " +
-                "automated comparison and analysis of any generated assemblies.\n\n",
+                "RAMPART is a de novo assembly workflow creation tool.  It allows you to construct assembly " +
+                "workflows built using third party-tools and High Performance Computing resources.  It can be " +
+                "used as a single interface to several popular assemblers, and can perform automated comparison " +
+                "and analysis of any generated assemblies.\n\nOptions:\n",
                 createOptions()
         );
     }
@@ -306,7 +305,7 @@ public class RampartCLI extends AbstractConanCLI {
     @Override
     protected ConanPipeline createPipeline() throws IOException {
 
-        return new RampartPipeline(this.args, new DefaultExecutorService(
+        return new Rampart.Pipeline(this.args, new DefaultExecutorService(
                 new DefaultProcessService(),
                 this.args.getExecutionContext()));
     }
@@ -322,7 +321,7 @@ public class RampartCLI extends AbstractConanCLI {
      * mode is handled by RampartMode.
      * @param args Command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         try {
 
@@ -339,9 +338,9 @@ public class RampartCLI extends AbstractConanCLI {
                 rampartCLI.execute();
             }
         }
-        catch (IllegalArgumentException | ParseException e) {
-            System.err.println(e.getMessage());
-            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
+        catch (ParseException e) {
+            System.err.println("\n" + e.getMessage() + "\n");
+            new RampartCLI().printHelp();
             System.exit(1);
         }
         catch (Exception e) {

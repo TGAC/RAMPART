@@ -178,7 +178,7 @@
                         <platform>unix</platform>
                     </platforms>
 
-                    <!-- Create a single bin script for rampart -->
+                    <!-- Create executable scripts -->
                     <programs>
                         <program>
                             <mainClass>uk.ac.tgac.rampart.RampartCLI</mainClass>
@@ -191,6 +191,10 @@
                         <program>
                             <mainClass>uk.ac.tgac.rampart.util.JobCleaner</mainClass>
                             <id>rampart-clean</id>
+                        </program>
+                        <program>
+                            <mainClass>uk.ac.tgac.rampart.jellyswarm.JellyswarmCLI</mainClass>
+                            <id>jellyswarm</id>
                         </program>
                     </programs>
                 </configuration>

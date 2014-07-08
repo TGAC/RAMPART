@@ -1,8 +1,12 @@
 package uk.ac.tgac.rampart;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.rampart.stage.RampartStageList;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +21,22 @@ import static junit.framework.TestCase.assertTrue;
  * To change this template use File | Settings | File Templates.
  */
 public class RampartTest {
+
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
+
+
+    @Test
+    public void testConfigLoad() throws IOException {
+
+        File cfgFile = FileUtils.toFile(this.getClass().getResource("/config/test_rampart_config.xml"));
+        File outDir = temp.newFolder("configTest");
+        String jobPrefix = "configTestJob";
+
+        Rampart.Args args = new Rampart.Args(cfgFile, outDir, jobPrefix, RampartStageList.parse("ALL"), null, null, true);
+
+        Assert.assertTrue(true);
+    }
 
     @Test
     public void setupTest() throws IOException, TaskExecutionException, InterruptedException {
