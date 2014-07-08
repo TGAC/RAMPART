@@ -31,13 +31,9 @@ import java.util.*;
  */
 public class FileFinder {
 
-    private static Logger log = LoggerFactory.getLogger(FileFinder.class);
-
     public static List<FilePair> find(File inputDir, boolean recursive, boolean paired) throws IOException {
 
         Collection<File> files = FileUtils.listFiles(inputDir, new String[]{"fastq", "fq"}, recursive);
-
-        log.info("Found " + files.size() + " in " + inputDir.getAbsolutePath());
 
         java.util.List<File> fileList = new ArrayList<>(files);
 

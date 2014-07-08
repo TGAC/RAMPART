@@ -428,18 +428,12 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        JellyfishCountV11 jfCountProc = new JellyfishCountV11();
-        jfCountProc.setConanProcessService(this.getConanProcessService());
-
-        if (!jfCountProc.isOperational(executionContext)) {
+        if (!new JellyfishCountV11(this.conanExecutorService).isOperational(executionContext)) {
             log.warn("Jellyfish Count is not operational.");
             return false;
         }
 
-        JellyfishMergeV11 jfMergeProc = new JellyfishMergeV11();
-        jfMergeProc.setConanProcessService(this.getConanProcessService());
-
-        if (!jfMergeProc.isOperational(executionContext)) {
+        if (!new JellyfishMergeV11(this.conanExecutorService).isOperational(executionContext)) {
             log.warn("Jellyfish Merge is not operational.");
             return false;
         }

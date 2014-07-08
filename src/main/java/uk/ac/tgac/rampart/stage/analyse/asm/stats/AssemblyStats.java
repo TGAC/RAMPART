@@ -236,7 +236,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         sj.add(this.getDesc());
         sj.add(this.getDataset());
         sj.add(this.getFilePath());
-        sj.add(this.getBubblePath());
+        sj.add(this.getBubblePath() == null || this.getBubblePath().trim().isEmpty() ? "NA" : this.getBubblePath());
         sj.add(this.getNbSeqs());
         sj.add(this.getNbSeqsGt1K());
         sj.add(this.getNbBases());
