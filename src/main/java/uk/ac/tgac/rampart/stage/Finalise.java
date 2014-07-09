@@ -15,6 +15,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
@@ -45,11 +46,15 @@ public class Finalise extends AbstractConanProcess {
     private int contigId;
 
     public Finalise() {
-        this(new Args());
+        this(null);
     }
 
-    public Finalise(Args args) {
-        super("", args, new Params());
+    public Finalise(ConanExecutorService ces) {
+        this(ces, new Args());
+    }
+
+    public Finalise(ConanExecutorService ces, Args args) {
+        super("", args, new Params(), ces);
 
         this.reader = null;
         this.contigWriter = null;
@@ -88,11 +93,11 @@ public class Finalise extends AbstractConanProcess {
         this.scaffoldId = 0;
         this.contigId = 0;
 
+        Args args = this.getArgs();
+
         try {
 
-            log.info("Starting finalising process to standardise assembly names.  Note that finaliser does not call out to external processes.");
-
-            Args args = this.getArgs();
+            log.info("Starting finalising process to standardise assembly names.");
 
             // Create the output directory
             if (args.getOutputDir().exists()) {
@@ -101,10 +106,10 @@ public class Finalise extends AbstractConanProcess {
             args.getOutputDir().mkdir();
 
             this.reader = new BufferedReader(new FileReader(args.getInputFile()));
-            this.contigWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".contigs.fa"))));
-            this.scaffoldWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".scaffolds.fa"))));
-            this.agpWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".agp"))));
-            this.translationWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(args.getOutputDir(), args.getOutputPrefix() + ".translation"))));
+            this.contigWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getContigsFile())));
+            this.scaffoldWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getScaffoldsFile())));
+            this.agpWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getAGPFile())));
+            this.translationWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getTranslationFile())));
 
             String currentId = "";
             StringBuilder currentContig = new StringBuilder();
@@ -146,6 +151,27 @@ public class Finalise extends AbstractConanProcess {
             catch (IOException ioe) {
                 throw new ProcessExecutionException(4, ioe);
             }
+        }
+
+        //TODO Just compresses the assembly for now... may want to include plots and results too maybe....
+        if (args.compress) {
+
+            log.info("Compressing output");
+
+            String pwdFull = new File(".").getAbsolutePath();
+            String pwd = pwdFull.substring(0, pwdFull.length() - 2);
+
+            String command = "cd " + args.getOutputDir().getAbsolutePath() + "; " +
+                    "tar -cvzf " + args.getCompressedFile().getName() + " " +
+                    args.getContigsFile().getName() + " " +
+                    args.getScaffoldsFile().getName() + " " +
+                    args.getAGPFile().getName() + " " +
+                    args.getTranslationFile().getName() + "; " +
+                    "cd " + pwd;
+
+            this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, false);
+
+            log.info("Output compressed to: " + args.getCompressedFile().getAbsolutePath());
         }
 
         return true;
@@ -197,25 +223,30 @@ public class Finalise extends AbstractConanProcess {
 
         public static final String KEY_ATTR_PREFIX = "prefix";
         public static final String KEY_ATTR_MIN_N = "min_n";
+        public static final String KEY_ATTR_COMPRESS = "compress";
 
         public static final int DEFAULT_MIN_N = 10;
 
         private String outputPrefix;
+        private String jobPrefix;
         private File inputFile;
         private File outputDir;
         private int minN;
+        private boolean compress;
 
 
         public Args() {
 
             super(new Params());
+            this.jobPrefix = "";
             this.outputPrefix = "rampart";
             this.inputFile = null;
             this.outputDir = RampartCLI.CWD;
             this.minN = DEFAULT_MIN_N;
+            this.compress = true;
         }
 
-        public Args(Element element, File inputFile, File outputDir, Organism organism, String institution) {
+        public Args(Element element, File inputFile, File outputDir, String jobPrefix, Organism organism, String institution) {
 
             this();
 
@@ -229,6 +260,7 @@ public class Finalise extends AbstractConanProcess {
 
             this.inputFile = inputFile;
             this.outputDir = outputDir;
+            this.jobPrefix = jobPrefix;
 
             this.outputPrefix = element.hasAttribute(KEY_ATTR_PREFIX) ?
                     XmlHelper.getTextValue(element, KEY_ATTR_PREFIX) :
@@ -237,6 +269,10 @@ public class Finalise extends AbstractConanProcess {
             this.minN = element.hasAttribute(KEY_ATTR_MIN_N) ?
                     XmlHelper.getIntValue(element, KEY_ATTR_MIN_N) :
                     DEFAULT_MIN_N;
+
+            this.compress = element.hasAttribute(KEY_ATTR_COMPRESS) ?
+                    XmlHelper.getBooleanValue(element, KEY_ATTR_COMPRESS) :
+                    true;
 
             if (this.outputPrefix.contains(".") || this.outputPrefix.contains("|")) {
                 throw new IllegalArgumentException("Will not use dots or pipes in the assembly headers because this can cause " +
@@ -271,6 +307,14 @@ public class Finalise extends AbstractConanProcess {
             this.outputPrefix = outputPrefix;
         }
 
+        public String getJobPrefix() {
+            return jobPrefix;
+        }
+
+        public void setJobPrefix(String jobPrefix) {
+            this.jobPrefix = jobPrefix;
+        }
+
         public File getInputFile() {
             return inputFile;
         }
@@ -293,6 +337,35 @@ public class Finalise extends AbstractConanProcess {
 
         public void setMinN(int minN) {
             this.minN = minN;
+        }
+
+        public boolean isCompress() {
+            return compress;
+        }
+
+        public void setCompress(boolean compress) {
+            this.compress = compress;
+        }
+
+
+        public File getContigsFile() {
+            return new File(this.outputDir, this.outputPrefix + ".contigs.fa");
+        }
+
+        public File getScaffoldsFile() {
+            return new File(this.outputDir, this.outputPrefix + ".scaffolds.fa");
+        }
+
+        public File getAGPFile() {
+            return new File(this.outputDir, this.outputPrefix + ".agp");
+        }
+
+        public File getTranslationFile() {
+            return new File(this.outputDir, this.outputPrefix + ".translation");
+        }
+
+        public File getCompressedFile() {
+            return new File(this.outputDir, this.outputPrefix + ".tar.gz");
         }
 
         @Override
@@ -329,6 +402,7 @@ public class Finalise extends AbstractConanProcess {
         private ConanParameter inputFile;
         private ConanParameter outputDir;
         private ConanParameter minN;
+        private ConanParameter compress;
 
         public Params() {
 
@@ -353,6 +427,12 @@ public class Finalise extends AbstractConanProcess {
                     "min_n",
                     "The minimum number of contiguous 'N's, which are necessary to distinguish a contig from a scaffold",
                     true);
+
+            this.compress = new ParameterBuilder()
+                    .longName("compress")
+                    .description("Whether or not to compress the final output for distribution")
+                    .isFlag(true)
+                    .create();
         }
 
         public ConanParameter getJobPrefix() {
@@ -371,6 +451,9 @@ public class Finalise extends AbstractConanProcess {
             return minN;
         }
 
+        public ConanParameter getCompress() {
+            return compress;
+        }
 
         @Override
         public ConanParameter[] getConanParametersAsArray() {
@@ -378,7 +461,8 @@ public class Finalise extends AbstractConanProcess {
                     this.jobPrefix,
                     this.minN,
                     this.outputDir,
-                    this.inputFile
+                    this.inputFile,
+                    this.compress
             };
         }
 

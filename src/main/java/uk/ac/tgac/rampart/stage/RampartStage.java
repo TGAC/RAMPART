@@ -151,7 +151,7 @@ public enum RampartStage {
 
         @Override
         public AbstractConanProcess create(ConanExecutorService ces) {
-            return new Finalise((Finalise.Args)this.getArgs());
+            return new Finalise(ces, (Finalise.Args)this.getArgs());
         }
     },
     /*REPORT {

@@ -37,10 +37,10 @@ import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * This class handles execution of Rampart in run mode.
@@ -82,6 +82,8 @@ public class RampartCLI extends AbstractConanCLI {
     public static final String OPT_AMP_INPUT = "amp_input";
     public static final String OPT_AMP_BUBBLE_INPUT = "amp_bubble";
     public static final String OPT_SKIP_CHECKS = "skip_checks";
+    public static final String OPT_VERSION = "version";
+
 
     // **** Defaults ****
 
@@ -95,7 +97,7 @@ public class RampartCLI extends AbstractConanCLI {
     public static final File    DEFAULT_LOG_FILE = DEFAULT_USER_LOG_FILE.exists() ?
             DEFAULT_USER_LOG_FILE : DEFAULT_SYSTEM_LOG_FILE;
 
-
+    public static final File    PROPERTIES_FILE = new File(ETC_DIR, "app.properties");
 
     public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
 
@@ -106,6 +108,7 @@ public class RampartCLI extends AbstractConanCLI {
     private File ampBubble;
     private File jobConfig;
     private boolean skipChecks;
+    private boolean version;
 
     private Rampart.Args args;
 
@@ -123,6 +126,7 @@ public class RampartCLI extends AbstractConanCLI {
         this.ampBubble          = null;
         this.jobConfig          = null;
         this.args               = null;
+        this.version            = false;
     }
 
     /**
@@ -158,18 +162,11 @@ public class RampartCLI extends AbstractConanCLI {
                 this.ampBubble,
                 !this.skipChecks);
 
-        // Parse the job config file and set internal variables in RampartArgs
-        this.args.parseXml();
-
-        // Create an execution context based on environment information detected or provide by the user
-        this.args.setExecutionContext(this.buildExecutionContext());
-
-        // Log setup
-
         // Override log level to debug if the verbose flag is set
         if (this.isVerbose()) {
             LogManager.getRootLogger().setLevel(Level.DEBUG);
         }
+        log.info("RAMPART Version: " + loadVersion());
         log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
         log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
         log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
@@ -177,6 +174,19 @@ public class RampartCLI extends AbstractConanCLI {
         if (ConanProperties.containsKey("externalProcessConfigFile")) {
             log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
         }
+
+        // Parse the job config file and set internal variables in RampartArgs
+        log.info("Parsing configuration file: " + this.jobConfig.getAbsolutePath());
+        this.args.parseXml();
+
+        // Create an execution context based on environment information detected or provide by the user
+        this.args.setExecutionContext(this.buildExecutionContext());
+    }
+
+    private static String loadVersion() throws IOException {
+        Properties properties = new Properties();
+        properties.load(new BufferedInputStream(new FileInputStream(PROPERTIES_FILE)));
+        return properties.getProperty("rampart-version");
     }
 
     public File getJobConfig() {
@@ -201,6 +211,11 @@ public class RampartCLI extends AbstractConanCLI {
 
     @Override
     protected void parseExtra(CommandLine commandLine) throws ParseException {
+
+        this.version = commandLine.hasOption(OPT_VERSION);
+
+        if (version)
+            return;
 
         this.skipChecks = commandLine.hasOption(OPT_SKIP_CHECKS);
 
@@ -294,6 +309,8 @@ public class RampartCLI extends AbstractConanCLI {
                 .withDescription("Skips initial checks to see if all requested tools can be found.")
                 .create("sc"));
 
+        options.add(new Option("V", OPT_VERSION, false, "Current version"));
+
         return options;
     }
 
@@ -332,6 +349,9 @@ public class RampartCLI extends AbstractConanCLI {
 
             if (rampartCLI.isHelp()) {
                 rampartCLI.printHelp();
+            }
+            else if (rampartCLI.version) {
+                System.out.println("Version: " + loadVersion());
             }
             else {
                 rampartCLI.initialise();

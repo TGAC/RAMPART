@@ -37,13 +37,13 @@ public class FinaliseTest {
         args.setOutputDir(outputDir);
         args.setMinN(5);
         args.setOutputPrefix("TGAC_TS_V1");
+        args.setCompress(false);
 
-        Finalise process = new Finalise(args);
+        Finalise process = new Finalise(null, args);
 
         boolean result = process.execute(new DefaultExecutionContext());
 
         assertTrue(result);
-
-
+        //assertTrue(new File(outputDir, "TGAC_TS_V1.tar.gz").exists());
     }
 }

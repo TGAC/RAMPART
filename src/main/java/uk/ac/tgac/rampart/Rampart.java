@@ -272,6 +272,7 @@ public class Rampart {
                             finaliseElement,
                             finalAssembly,
                             this.rampartJobFileSystem.getFinalDir(),
+                            this.getJobPrefix() + "-finalise",
                             this.getOrganism(),
                             this.getInstitution());
 

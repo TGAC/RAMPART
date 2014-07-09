@@ -20,11 +20,14 @@ package uk.ac.tgac.rampart.jellyswarm;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
+import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultExecutorService;
 import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
@@ -32,13 +35,17 @@ import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
 import uk.ac.tgac.conan.core.util.JarUtils;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class JellyswarmCLI extends AbstractConanCLI
 {
+    private static Logger log = LoggerFactory.getLogger(JellyswarmCLI.class);
 
     public static final String OPT_STAGES = "stages";
     public static final String OPT_LOWER = "lower";
@@ -47,6 +54,8 @@ public class JellyswarmCLI extends AbstractConanCLI
     public static final String OPT_THREADS = "threads";
     public static final String OPT_MEMORY = "memory";
     public static final String OPT_HASH = "hash";
+    public static final String OPT_VERSION = "version";
+
 
     public static final List<JellyswarmStage>  DEFAULT_STAGES = JellyswarmStage.parse("ALL");
     public static final long DEFAULT_LOWER = 0;
@@ -90,7 +99,7 @@ public class JellyswarmCLI extends AbstractConanCLI
     public static final File    DEFAULT_LOG_FILE = DEFAULT_USER_LOG_FILE.exists() ?
             DEFAULT_USER_LOG_FILE : DEFAULT_SYSTEM_LOG_FILE;
 
-
+    public static final File    PROPERTIES_FILE = new File(ETC_DIR, "app.properties");
 
     private File inputDir;
     private List<JellyswarmStage> stages;
@@ -100,6 +109,7 @@ public class JellyswarmCLI extends AbstractConanCLI
     private int threads;
     private int memory;
     private long hash;
+    private boolean version;
 
 
     private Jellyswarm.Args args;
@@ -117,6 +127,10 @@ public class JellyswarmCLI extends AbstractConanCLI
 
         // Parses the command line using a posix parser and sets all the variables
         this.parse(new PosixParser().parse(createOptions(), cliArgs, false));
+
+        if (this.version) {
+            return;
+        }
 
         // Only bother doing more if help is not requested
         if (!this.isHelp() && cliArgs.length != 0) {
@@ -142,10 +156,22 @@ public class JellyswarmCLI extends AbstractConanCLI
             // Create an execution context based on environment information detected or provide by the user
             this.args.setExecutionContext(this.executionContext);
 
+            log.info("Jellyswarm Version (linked to RAMPART): " + loadVersion());
+            log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
+            log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
+            log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
+            log.info("Job Prefix: " + this.args.getJobPrefix());
+            if (ConanProperties.containsKey("externalProcessConfigFile")) {
+                log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
+            }
         }
     }
 
-
+    private static String loadVersion() throws IOException {
+        Properties properties = new Properties();
+        properties.load(new BufferedInputStream(new FileInputStream(PROPERTIES_FILE)));
+        return properties.getProperty("rampart-version");
+    }
 
 
     /**
@@ -178,11 +204,18 @@ public class JellyswarmCLI extends AbstractConanCLI
 
         options.add(new Option("1", OPT_SINGLE, false, "If set, tells jellyswarm to process single end data, or interleaved paired end data, i.e. one file per sample"));
 
+        options.add(new Option("V", OPT_VERSION, false, "Current version"));
+
         return options;
     }
 
     @Override
     protected void parseExtra(CommandLine commandLine) throws ParseException {
+
+        this.version = commandLine.hasOption(OPT_VERSION);
+
+        if (this.version)
+            return;
 
         this.stages = commandLine.hasOption(OPT_STAGES) ?
                 JellyswarmStage.parse(commandLine.getOptionValue(OPT_STAGES)) :
@@ -252,6 +285,9 @@ public class JellyswarmCLI extends AbstractConanCLI
 
             if (jellyswarm.isHelp() || args.length == 0) {
                 jellyswarm.printHelp();
+            }
+            else if (jellyswarm.version) {
+                System.out.println("Version: " + loadVersion());
             }
             else {
                 jellyswarm.execute();

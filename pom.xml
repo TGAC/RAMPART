@@ -8,7 +8,7 @@
 	<version>0.9.0</version>
 	<packaging>jar</packaging>
 
-	<name>Rampart</name>
+    <name>Rampart</name>
 	<url>http://www.tgac.ac.uk</url>
     <description>RAMPART</description>
 
@@ -20,6 +20,7 @@
         <dist-name>${project.artifactId}-${project.version}</dist-name>
         <dist-dir>${project.basedir}/build/dist</dist-dir>
         <build-dir>${project.basedir}/build/${dist-name}</build-dir>
+        <rampart-version>${project.version}</rampart-version>
 	</properties>
 
 	<!-- Licensing -->
@@ -204,6 +205,26 @@
 
             <!-- Install phase -->
 
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>write-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>
+                                ${build-dir}/etc/app.properties
+                            </outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
             <!-- Creates a jar file containing the sources -->
             <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -337,6 +358,16 @@
                 <version>2.2</version>
             </extension>
         </extensions>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.prop</include>
+                </includes>
+            </resource>
+        </resources>
+
 	</build>
 
 
@@ -423,6 +454,6 @@
         </dependency>
 
 
-	</dependencies>
+    </dependencies>
 
 </project>
