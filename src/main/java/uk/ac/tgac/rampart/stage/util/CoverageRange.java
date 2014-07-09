@@ -121,7 +121,9 @@ public class CoverageRange extends ArrayList<Integer> {
         }
     }
 
-
+    public boolean isAllOnly() {
+        return this.size() == 1 && this.get(0).intValue() == ALL;
+    }
 
     public enum StepSize {
         FINE {

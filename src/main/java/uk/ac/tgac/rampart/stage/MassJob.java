@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -44,11 +45,13 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.*;
+import uk.ac.tgac.conan.process.asm.tools.AbyssV15;
 import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.stage.util.CoverageRange;
 import uk.ac.tgac.rampart.stage.util.ReadsInput;
+import uk.ac.tgac.rampart.stage.util.VariableRange;
 
 import java.io.File;
 import java.io.IOException;
@@ -529,6 +532,7 @@ public class MassJob extends AbstractConanProcess {
         private static final String KEY_ELEM_SINGLE_INPUT = "input";
         private static final String KEY_ELEM_KMER_RANGE = "kmer";
         private static final String KEY_ELEM_CVG_RANGE = "coverage";
+        private static final String KEY_ELEM_VAR_RANGE = "var";
 
         private static final String KEY_ATTR_NAME = "name";
         private static final String KEY_ATTR_TOOL = "tool";
@@ -553,6 +557,7 @@ public class MassJob extends AbstractConanProcess {
         private String tool;
         private KmerRange kmerRange;
         private CoverageRange coverageRange;
+        private VariableRange variableRange;
         private Organism organism;
         private String checkedArgs;
         private String uncheckedArgs;
@@ -573,6 +578,8 @@ public class MassJob extends AbstractConanProcess {
         // Temp vars
         private Assembler genericAssembler;
         private List<Assembler> assemblers;
+        private boolean multiCoverageJob;
+        private boolean multiKmerJob;
 
 
         public Args() {
@@ -582,9 +589,10 @@ public class MassJob extends AbstractConanProcess {
             this.outputDir = null;
             this.jobPrefix = "";
 
-            this.tool = "ABYSS_V1.3";
+            this.tool = AbyssV15.NAME;
             this.kmerRange = new KmerRange();
             this.coverageRange = new CoverageRange();
+            this.variableRange = null;
             this.organism = null;
             this.checkedArgs = null;
             this.uncheckedArgs = null;
@@ -600,6 +608,8 @@ public class MassJob extends AbstractConanProcess {
             this.massParallel = DEFAULT_MASS_PARALLEL;
 
             this.assemblers = new ArrayList<>();
+            this.multiCoverageJob = false;
+            this.multiKmerJob = false;
         }
 
 
@@ -621,6 +631,8 @@ public class MassJob extends AbstractConanProcess {
             this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
 
             this.assemblers = new ArrayList<>();
+            this.multiCoverageJob = false;
+            this.multiKmerJob = false;
 
             // Required Elements
             Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
@@ -675,6 +687,11 @@ public class MassJob extends AbstractConanProcess {
                     new CoverageRange(cvgElement) :
                     new CoverageRange();
 
+            Element varElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_VAR_RANGE);
+            this.variableRange = varElement != null ?
+                    new VariableRange(varElement) :
+                    null;
+
             this.initialise(false);
         }
 
@@ -693,6 +710,7 @@ public class MassJob extends AbstractConanProcess {
 
             this.validateKmerRange();
             this.validateCoverageRange();
+            this.validateVarRange();
 
             this.assemblers = this.createAssemblers();
         }
@@ -794,6 +812,19 @@ public class MassJob extends AbstractConanProcess {
             }
         }
 
+        protected final void validateVarRange() {
+
+            if (variableRange == null) {
+                // Do nothing
+            }
+            else if (variableRange.getName() == null || variableRange.getName().isEmpty()) {
+                log.warn("Variable Range requested but no name provided: " + variableRange.toString());
+            }
+            else if (variableRange.getValues() == null || variableRange.getValues().isEmpty()) {
+                log.warn("Variable Range requested but not values provided: " + variableRange.toString());
+            }
+        }
+
         private List<Library> createSubsampledLibPaths(int coverage) {
 
             // Check to see if we even need to do subsampling.  If not just return the current libraries.
@@ -806,7 +837,6 @@ public class MassJob extends AbstractConanProcess {
 
             // Subsample each library
             List<Library> subsampledLibs = new ArrayList<>();
-            List<Integer> jobIds = new ArrayList<>();
 
             for(Library lib : this.selectedLibs) {
 
@@ -814,7 +844,6 @@ public class MassJob extends AbstractConanProcess {
 
                 // Subsample to this coverage level if required
                 String fileSuffix = "_cvg-" + coverage + ".fastq";
-                String jobPrefix = this.jobPrefix + "-subsample-" + lib.getName() + "-" + coverage + "x";
 
                 subsampledLib.setName(lib.getName() + "-" + coverage + "x");
 
@@ -838,84 +867,175 @@ public class MassJob extends AbstractConanProcess {
             return subsampledLibs;
         }
 
+        private static class JobVars {
+
+            private int cvg;
+            private int k;
+            private String varName;
+            private String varValue;
+
+            private JobVars(int cvg, int k, String varName, String varValue) {
+                this.cvg = cvg;
+                this.k = k;
+                this.varName = varName;
+                this.varValue = varValue;
+            }
+
+            public int getCvg() {
+                return cvg;
+            }
+
+            public int getK() {
+                return k;
+            }
+
+            public String getVarName() {
+                return varName;
+            }
+
+            public String getVarValue() {
+                return varValue;
+            }
+        }
+
+        protected final List<JobVars> createJobVars() {
+
+            int[] cvg = null;
+
+            if (this.coverageRange == null || this.coverageRange.isEmpty() || this.coverageRange.isAllOnly()) {
+                cvg = new int[]{-1};
+            }
+            else {
+                cvg = new int[this.coverageRange.size()];
+
+                for(int i = 0; i < this.coverageRange.size(); i++) {
+                    cvg[i] = this.coverageRange.get(i);
+                }
+            }
+
+            int[] kmer = null;
+            if (this.kmerRange == null || this.kmerRange.isEmpty()) {
+                kmer = new int[]{0};
+            }
+            else {
+                kmer = new int[this.kmerRange.size()];
+
+                for(int i = 0; i < this.kmerRange.size(); i++) {
+                    kmer[i] = this.kmerRange.get(i);
+                }
+            }
+
+            String[] var = null;
+            if (this.variableRange == null || this.variableRange.getValues() == null || this.variableRange.getValues().isEmpty()) {
+                var = new String[]{""};
+            }
+            else {
+                for (String val : this.variableRange.getValues()) {
+                    var = new String[this.variableRange.getValues().size()];
+
+                    for (int i = 0; i < this.variableRange.getValues().size(); i++) {
+                        var[i] = this.variableRange.getValues().get(i);
+                    }
+                }
+            }
+
+            List<JobVars> list = new ArrayList<>();
+
+            for(int i = 0; i < cvg.length; i++) {
+                for (int j = 0; j < kmer.length; j++) {
+                    for (int k = 0; k < var.length; k++) {
+
+                        if (cvg[i] != -1) this.multiCoverageJob = true;
+                        if (kmer[j] != 0) this.multiKmerJob = true;
+
+                        list.add(new JobVars(cvg[i], kmer[j], this.variableRange == null ? "" : this.variableRange.getName(), var[k]));
+                    }
+                }
+            }
+
+            return list;
+        }
+
         protected final List<Assembler> createAssemblers() {
 
             try {
                 List<Assembler> assemblers = new ArrayList<>();
 
-                // Iterate over coverage range
-                for (Integer cvg : this.coverageRange) {
+                List<JobVars> jobs = this.createJobVars();
+
+                Assembler.Type type = this.genericAssembler.getType();
+
+                for(JobVars jv : jobs) {
+
+                    // Create the output directory name
+                    String cvgName = this.multiCoverageJob ? "cvg-" + CoverageRange.toString(jv.cvg) : "";
+                    String kmerName = this.multiKmerJob ? "k-" + jv.k : "";
+                    String varName = (jv.varName != null && !jv.varName.isEmpty()) ?
+                            (jv.varName + "-" + jv.varValue) : "";
+
+                    List<String> dirNameParts = new ArrayList<>();
+                    if (!cvgName.isEmpty())     dirNameParts.add(cvgName);
+                    if (!kmerName.isEmpty())    dirNameParts.add(kmerName);
+                    if (!varName.isEmpty())     dirNameParts.add(varName);
+                    String dirName = StringUtils.join(dirNameParts, "_");
+
+                    // Make sure we have a name to use if the user is doing any parameter optimisation
+                    dirName = dirName.isEmpty() ? this.tool.toLowerCase() : dirName;
+
+                    File jobOutputDir = new File(this.outputDir, dirName);
 
                     // Do subsampling for this coverage level if required
-                    List<Library> subsampledLibs = this.createSubsampledLibPaths(cvg);
+                    List<Library> libs = jv.cvg != -1 ?
+                            this.createSubsampledLibPaths(jv.cvg) :
+                            this.selectedLibs;
 
-                    // Generate a directory name for this assembly
-                    String cvgString = CoverageRange.toString(cvg);
-                    String cvgDirName = "cvg-" + cvgString;
+                    GenericAssemblerArgs asmArgs = new GenericAssemblerArgs();
+                    asmArgs.setOutputDir(jobOutputDir);
+                    asmArgs.setLibraries(libs);
+                    asmArgs.setThreads(this.threads);
+                    asmArgs.setMemory(this.memory);
+                    asmArgs.setOrganism(this.organism);
+                    asmArgs.setDesiredCoverage(jv.cvg);
 
-                    // This is the output directory for this particular assembly
-                    File outputDir = new File(this.outputDir, cvgDirName);
-
-                    Assembler.Type type = this.genericAssembler.getType();
+                    Assembler asm = null;
 
                     if (type == Assembler.Type.DE_BRUIJN) {
 
-                        // Iterate over kmer range
-                        for (Integer k : this.kmerRange) {
-
-                            // Override output dir name with k values
-                            File kOutputDir = new File(this.outputDir, cvgDirName + "_k-" + k);
-
-                            GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs();
-                            dbgArgs.setOutputDir(kOutputDir);
-                            dbgArgs.setLibraries(subsampledLibs);
-                            dbgArgs.setThreads(this.threads);
-                            dbgArgs.setMemory(this.memory);
-                            dbgArgs.setOrganism(this.organism);
-                            dbgArgs.setDesiredCoverage(cvg);
-                            dbgArgs.setK(k);
-
-                            // Create the actual assembler for these settings
-                            Assembler asm = dbgArgs.createAssembler(this.tool);
-                            asm.getAssemblerArgs().parse(this.checkedArgs);
-                            asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
-                            assemblers.add(asm);
-                        }
-                    } else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
-
-                        GenericDeBruijnAutoArgs dbgAutoArgs = new GenericDeBruijnAutoArgs();
-                        dbgAutoArgs.setOutputDir(outputDir);
-                        dbgAutoArgs.setLibraries(subsampledLibs);
-                        dbgAutoArgs.setThreads(this.threads);
-                        dbgAutoArgs.setMemory(this.memory);
-                        dbgAutoArgs.setOrganism(this.organism);
-                        dbgAutoArgs.setDesiredCoverage(cvg);
+                        GenericDeBruijnArgs dbgArgs = new GenericDeBruijnArgs(asmArgs);
+                        dbgArgs.setK(jv.k);
 
                         // Create the actual assembler for these settings
-                        Assembler asm = dbgAutoArgs.createAssembler(this.tool);
-                        asm.getAssemblerArgs().parse(this.checkedArgs);
-                        asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
-                        assemblers.add(asm);
+                        asm = dbgArgs.createAssembler(this.tool);
+                    }
+                    else if (type == Assembler.Type.DE_BRUIJN_AUTO) {
+                        asm = new GenericDeBruijnAutoArgs(asmArgs).createAssembler(this.tool);
+                    }
+                    else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
 
-                    } else if (type == Assembler.Type.DE_BRUIJN_OPTIMISER) {
-
-                        GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs();
-                        dbgOptArgs.setOutputDir(outputDir);
-                        dbgOptArgs.setLibraries(subsampledLibs);
-                        dbgOptArgs.setThreads(this.threads);
-                        dbgOptArgs.setMemory(this.memory);
-                        dbgOptArgs.setOrganism(this.organism);
+                        GenericDeBruijnOptimiserArgs dbgOptArgs = new GenericDeBruijnOptimiserArgs(asmArgs);
                         dbgOptArgs.setKmerRange(this.kmerRange);
 
                         // Create the actual assembler for these settings
-                        Assembler asm = dbgOptArgs.createAssembler(this.tool);
-                        asm.getAssemblerArgs().parse(this.checkedArgs);
-                        asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
-                        assemblers.add(asm);
+                        asm = dbgOptArgs.createAssembler(this.tool);
 
                     } else {
                         throw new IllegalArgumentException("Unknown assembly type detected: " + type);
                     }
+
+                    // Add the varname to checked args
+                    String newCheckedArgs = (this.checkedArgs == null ? "" : this.checkedArgs) +
+                            " -" + jv.varName + " " + jv.varValue;
+
+                    log.debug("Parsing: " + newCheckedArgs);
+
+                    // Parse checked args
+                    asm.getAssemblerArgs().parse(newCheckedArgs);
+
+                    // Add unchecked args
+                    asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
+
+                    // Record assembler in list
+                    assemblers.add(asm);
                 }
 
                 return assemblers;
@@ -972,6 +1092,30 @@ public class MassJob extends AbstractConanProcess {
 
         public void setCoverageRange(CoverageRange coverageRange) {
             this.coverageRange = coverageRange;
+        }
+
+        public VariableRange getVariableRange() {
+            return variableRange;
+        }
+
+        public void setVariableRange(VariableRange variableRange) {
+            this.variableRange = variableRange;
+        }
+
+        public String getCheckedArgs() {
+            return checkedArgs;
+        }
+
+        public void setCheckedArgs(String checkedArgs) {
+            this.checkedArgs = checkedArgs;
+        }
+
+        public String getUncheckedArgs() {
+            return uncheckedArgs;
+        }
+
+        public void setUncheckedArgs(String uncheckedArgs) {
+            this.uncheckedArgs = uncheckedArgs;
         }
 
         public boolean isRunParallel() {

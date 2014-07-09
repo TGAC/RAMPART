@@ -4,19 +4,21 @@
 MASS - Multiple Assembly Creation
 =================================
 
-This tool enables the user to try different assemblers with different settings and automatically compare the assemblies.
-MASS can select an assembly out of the set that scores highest.  Scoring depends on the kinds of evaulation that are
-performed and how the user wants to weight specific metrics.
+This tool enables the user to try different assemblers with different settings.  Currently, the following assemblers are
+supported by RAMPART:
 
-Currently, the following assemblers are supported by RAMPART:
-
-* Abyss V1.3
+* Abyss V1.5
 * ALLPATHS-LG V44837
+* Platanus V1.2
+* SOAP denovo V2.04
+* SPAdes V3.1
+* Velvet V1.2
 
-A simple MASS step might be configured as follows::
+
+A simple MASS job might be configured as follows::
 
    <mass>
-      <job name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="16" memory="4000">
+      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
          <kmer list="75"/>
          <inputs>
             <input ecq="raw" lib="pe1"/>
@@ -25,25 +27,7 @@ A simple MASS step might be configured as follows::
    </mass>
 
 This instructs RAMPART to run a single Abyss assembly using 16 threads, requesting 4GB RAM, with kmer value 75 on the
-raw pe1 dataset.  It will also analyse the assemblies contiguity and conduct a kmer analysis, comparing kmers in the
-raw reads to those found in the assembly.
-
-MASS also supports ALLPATHS-LG, which has more requirements for its input: a so-called fragment library and a jumping
-library.  In RAMPART nomenclature, we would refer to a fragment library, as either an overlapping paired end library,
-and a jumping library as either a paired end or mate pair library.  ALLPATHS-LG also has the concept of a long jump
-library and long library.  RAMPART will translate mate pair libraries with an insert size > 20KB as long jump libraries
-and single end reads longer than 500B as long libraries.
-
-An simple example of ALLPATHS-LG run, using a single fragment and jumping library is shown below::
-
-   <mass>
-      <job name="allpaths-raw" tool="ALLPATHS-LG_V44837" threads="16" memory="16000">
-         <inputs>
-            <input ecq="raw" lib="ope1"/>
-            <input ecq="raw" lib="mp1"/>
-         </inputs>
-      </job>
-   </mass>
+raw pe1 dataset.
 
 
 Varying kmers for De Bruijn Graph assemblers
@@ -57,7 +41,7 @@ try many kmers to "optimise" to the kmer parameter.  RAMPART allows the user to 
 The snippet below shows how to run Abyss using a spread of kmer values::
 
    <mass>
-      <job name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="16" memory="4000">
+      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
          <kmer min="61" max="101" step="COARSE"/>
          <inputs>
             <input ecq="raw" lib="pe1"/>
@@ -114,7 +98,7 @@ it will use an external tool developed by TGAC to do this if the assembler doesn
 cases user's interface to this is identical, and an example is shown below::
 
    <mass>
-      <job name="abyss-raw-cvg" tool="ABYSS_V1.3" threads="16" memory="4000">
+      <job name="abyss-raw-cvg" tool="ABYSS_V1.5" threads="16" memory="4000">
          <coverage min="50" max="100" step="MEDIUM" all="true"/>
          <inputs>
             <input ecq="raw" lib="pe1"/>
@@ -126,6 +110,54 @@ This snippet says to run Abyss varying the coverage between 50X to 100X using a 
 abyss assembly using all the reads.  The step options has the following valid values: ``FINE, MEDIUM, COARSE``, which
 correspond to steps of: ``10X, 25X, 50X``.  If the user does not wish to run an assembly with all the reads, then they
 should set the all option to false.
+
+
+Varying other variables
+-----------------------
+
+MASS provides a mechanism to vary most parameters of any assembler.  This is done with the ``var`` element, and there can
+be only one ``var`` element per MASS job.  The parameter name should be specified by an attribute called ``name`` in that
+element and the values to test should be put in a single comma separated string under an attribute called ``values``.  For
+example, should you wish to alter the coverage cutoff parameter in the velvet assembler you might write something like this::
+
+   <mass>
+      <job name="velvet-cc" tool="VELVET_V1.2" threads="16" memory="8000">
+         <kmer list="75"/>
+         <var name="cov_cutoff" values="2,5,10,auto"/>
+         <inputs>
+            <input ecq="raw" lib="pe1"/>
+         </inputs>
+      </job>
+   </mass>
+
+
+Note that in this example we set the kmer value to 75 for all tests.  If the kmer value is not specified then the default
+for the assembler should be used.
+
+
+Using multiple input libraries
+------------------------------
+
+You can add more than one input library for most assemblers.  You can specify additional libraries to the MASS job by
+simply adding additional ``input`` elements inside the ``inputs`` element.
+
+MASS supports the ALLPATHS-LG assembler, which has particular requirements for its input: a so-called fragment library and a jumping
+library.  In RAMPART nomenclature, we would refer to a fragment library, as either an overlapping paired end library,
+and a jumping library as either a paired end or mate pair library.  ALLPATHS-LG also has the concept of a long jump
+library and long library.  RAMPART will translate mate pair libraries with an insert size > 20KBP as long jump libraries
+and single end reads longer than 500BP as long libraries.
+
+An simple example of ALLPATHS-LG run, using a single fragment and jumping library is shown below::
+
+   <mass>
+      <job name="allpaths-raw" tool="ALLPATHS-LG_V44837" threads="16" memory="16000">
+         <inputs>
+            <input ecq="raw" lib="ope1"/>
+            <input ecq="raw" lib="mp1"/>
+         </inputs>
+      </job>
+   </mass>
+
 
 
 
@@ -161,31 +193,63 @@ The next example, shows running two sets of abyss assemblies (not in parallel th
 same way, but one set running on error corrected data, the other on raw data::
 
    <mass parallel="false">
-      <job name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="16" memory="4000">
+      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
          <kmer min="65" max="85" step="MEDIUM"/>
          <inputs>
             <input ecq="raw" lib="pe1"/>
          </inputs>
       </job>
-      <job name="allpaths-raw" tool="ALLPATHS-LG_V44837" threads="16" memory="16000">
+      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
          <inputs>
             <input ecq="quake" lib="pe1"/>
          </inputs>
       </job>
    </mass>
 
+Adding other command line arguments to the assembler
+----------------------------------------------------
+
+MASS offers two ways to add command line arguments to the assembler.  The first is via a POSIX format string containing
+command line options/arguments that should be checked/validated as soon as the configuration file is parsed.  Checked
+arguments undergo a limited amount of validation to check the argument name is recognized and that the argument values
+(if required) are plausible.  The second method is to add a string containing unchecked arguments directly to the assembler
+verbatim.  This second method is not recommended in general because any syntax error in the options will only register
+once the assembler starts running, which maybe well into the workflow.  However, it is useful for working around problems that can't
+be easily fixed in any other way.  For example, checked args only work if the developer has properly implemented handling
+of the argument in the assembler wrapper script.  If this has not been implemented then the only way to work around the
+problem is to use unchecked arguments.
+
+The following example demonstrates how to set some checked and unchecked arguments for Abyss::
+
+   <mass>
+      <job name="abyss" tool="ABYSS_V1.5" threads="16" memory="16000"
+            checked_args="-n 20 -t 250"
+            unchecked_args="p=0.8 q=5 s=300 S=350>
+         <kmer list="83"/>
+         <inputs>
+            <input ecq="raw" lib="ope1"/>
+            <input ecq="raw" lib="mp1"/>
+         </inputs>
+      </job>
+   </mass>
+
+Note that we use POSIX format for the checked arguments, regardless of what the underlying tool typically would expect.
+Unchecked arguments are passed verbatim to the tool.
+
+You should also ensure that care is taken not to override variables, otherwise unpredictable behaviour will occur.  In
+general options related to input libraries, threads/cpus, memory and kmer values are set separately.  Also remember not
+to override arguments that you may be varying using a ``var`` element.
+
 
 Navigating the directory structure
 ----------------------------------
 
-MASS will take input from the MECQ and KMER stages, and is controlled via the job configuration file.  Once it has been
-executed it will create a directory within the job's output directory called ``mass``.  Inside this directory
-
-As an example, you might expect to see something like this::
+Once MASS starts it will create a directory within the job's output directory called ``mass``.  Inside this directory you
+might expect to see something like this::
 
   - <Job output directory>
   -- mass
-  --- <single_mass_id>
+  --- <mass_job_name>
   ---- <assembly> (contains output from the assembler for this assembly)
   ---- ...
   ---- unitigs (contains links to unitigs for each assembly and analysis of unitigs)
@@ -193,7 +257,7 @@ As an example, you might expect to see something like this::
   ---- scaffolds (contains links to scaffolds for each assembly and analysis of scaffolds)
   --- ...
 
-The file best.fa is particularly important as this is the assembly that will be taken forward to the AMP / FINALISE
-stage.  If you are not happy with RAMPART's choice of assembly you should replace best.fa with your selection and re-run
-the rampart pipeline from the AMP stage: ``rampart -s AMP,FINALISE job.cfg``.
+The directory structure is created as the assemblers run.  So the full file structure may not be visible straight after
+MASS starts.  Also, we create the symbolic links to unitigs, contigs and scaffolds on an as needed basis.  Some assemblers
+may not produce certain types of assembled sequences and in those cases we do not create the associated links directory.
 

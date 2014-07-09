@@ -55,6 +55,10 @@ All the metrics are derived from Quast results, except for the last one.
 TODO: Currently the kmer metric, is not included.  In the future this will offer an alternate means of assessing the
 assembly completeness.
 
+The file best.fa is particularly important as this is the assembly that will be taken forward to the AMP / FINALISE
+stage.  If you are not happy with RAMPART's choice of assembly you should replace best.fa with your selection and re-run
+the rampart pipeline from the AMP stage: ``rampart -s AMP,FINALISE job.cfg``.
+
 
 Analysing assemblies produced by AMP
 ------------------------------------

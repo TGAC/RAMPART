@@ -31,6 +31,8 @@ import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.process.asm.Assembler;
 import uk.ac.tgac.conan.process.asm.KmerRange;
 import uk.ac.tgac.rampart.MockedConanProcess;
+import uk.ac.tgac.rampart.stage.util.CoverageRange;
+import uk.ac.tgac.rampart.stage.util.VariableRange;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,14 +56,14 @@ public class MassJobTest extends MockedConanProcess {
     @Test
     public void testExecuteAbyss() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException, ConanParameterException {
 
-        File outputDir = temp.newFolder("massJobTest");
+        File outputDir = temp.newFolder("testExecuteAbyss");
 
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         MassJob.Args args = new MassJob.Args();
         args.setTool("ABYSS_V1.5");
         args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
-        args.setJobPrefix("massTest");
+        args.setJobPrefix("testExecuteAbyss");
         args.setOutputDir(outputDir);
         args.initialise();
 
@@ -80,20 +82,21 @@ public class MassJobTest extends MockedConanProcess {
 
         spy.execute(ec);
 
-        assertTrue(new File(outputDir, "cvg-all_k-51").exists());
-        assertTrue(new File(outputDir, "cvg-all_k-61").exists());
+        assertTrue(new File(outputDir, "k-51").exists());
+        assertTrue(new File(outputDir, "k-61").exists());
         assertTrue(new File(outputDir, "unitigs").exists());
     }
 
     @Test
     public void testExecuteSoap() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException, ConanParameterException {
 
-        File outputDir = temp.newFolder("massJobTest");
+        File outputDir = temp.newFolder("testExecuteSoap");
 
         MassJob.Args args = new MassJob.Args();
         args.setTool("SOAP_Assemble_V2.4");
         args.setKmerRange(new KmerRange(51, 65, 14));
-        args.setJobPrefix("massTest");
+        args.setCoverageRange(new CoverageRange(50, 100, CoverageRange.StepSize.COARSE, true));
+        args.setJobPrefix("testExecuteSoap");
         args.setOutputDir(outputDir);
         args.initialise();
 
@@ -114,6 +117,39 @@ public class MassJobTest extends MockedConanProcess {
 
         assertTrue(new File(outputDir, "cvg-all_k-51").exists());
         assertTrue(new File(outputDir, "cvg-all_k-65").exists());
+        assertTrue(new File(outputDir, "contigs").exists());
+    }
+
+    @Test
+    public void testExecuteVelvet() throws ProcessExecutionException, InterruptedException, IOException, CommandExecutionException, ConanParameterException {
+
+        File outputDir = temp.newFolder("testExecuteVelvet");
+
+        MassJob.Args args = new MassJob.Args();
+        args.setTool("Velvet_V1.2");
+        args.setKmerRange(new KmerRange(51, 51, 0));
+        args.setVariableRange(new VariableRange("cov_cutoff", "2,5,10"));
+        args.setJobPrefix("testExecuteVelvet");
+        args.setOutputDir(outputDir);
+        args.initialise();
+
+        MassJob massJob = new MassJob(conanExecutorService, args);
+        MassJob spy = Mockito.spy(massJob);
+
+        AbstractConanProcess smParent = massJob;
+
+        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
+        doReturn(new DefaultExecutionResult(0, null, null, -1))
+                .when(spy)
+                .executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>) any());
+
+
+        ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);
+
+        spy.execute(ec);
+
+        assertTrue(new File(outputDir, "k-51_cov_cutoff-2").exists());
+        assertTrue(new File(outputDir, "k-51_cov_cutoff-10").exists());
         assertTrue(new File(outputDir, "contigs").exists());
     }
 }
