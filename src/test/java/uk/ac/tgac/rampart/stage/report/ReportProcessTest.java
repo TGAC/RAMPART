@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart.stage.report;
 
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;

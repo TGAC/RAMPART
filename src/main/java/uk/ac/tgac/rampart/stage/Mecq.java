@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
@@ -35,11 +34,11 @@ import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.ebi.fgpt.conan.util.StringJoiner;
-import uk.ac.tgac.conan.core.data.FilePair;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.conan.process.ec.*;
+import uk.ac.tgac.conan.process.re.GenericReadEnhancerArgs;
+import uk.ac.tgac.conan.process.re.ReadEnhancer;
+import uk.ac.tgac.conan.process.re.ReadEnhancerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,37 +98,39 @@ public class Mecq extends AbstractConanProcess {
         }
 
         List<Integer> jobIds = new ArrayList<>();
-        List<AbstractErrorCorrector> errorCorrectors = new ArrayList<>();
+        List<ReadEnhancer> readEnhancers = new ArrayList<>();
 
         // For each ecq process all libraries
         for(EcqArgs ecqArgs : args.getEqcArgList()) {
-
-            // Create an output dir for this error corrector
-            File ecDir = new File(args.getMecqDir(), ecqArgs.getName());
-            ecDir.mkdirs();
 
             // Process each lib
             for(Library lib : ecqArgs.getLibraries()) {
 
                 // Create the output directory
-                File ecqLibDir = new File(ecDir, lib.getName());
+                File ecqLibDir = new File(ecqArgs.getOutputDir(), lib.getName());
                 ecqLibDir.mkdirs();
 
                 // Create a job name
                 String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
 
+                GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
+                genericArgs.setInput(lib);
+                genericArgs.setOutputDir(ecqLibDir);
+                genericArgs.setThreads(ecqArgs.getThreads());
+                genericArgs.setMemoryGb(ecqArgs.getMemory());
+
                 // Create the actual error corrector from the user provided EcqArgs
-                AbstractErrorCorrector ec = ecqArgs.makeErrorCorrector(lib);
+                ReadEnhancer readEnhancer = ReadEnhancerFactory.create(
+                        ecqArgs.getTool(),
+                        genericArgs,
+                        this.conanExecutorService);
 
                 // Add this to the list in case we need it later
-                errorCorrectors.add(ec);
-
-                // Create symbolic links between file paths specified by the library and the working directory for this ECQ
-                this.createInputLinks(lib, ec.getArgs());
+                readEnhancers.add(readEnhancer);
 
                 // Execute this error corrector
                 ExecutionResult result = this.conanExecutorService.executeProcess(
-                        ec,
+                        readEnhancer.toConanProcess(),
                         ecqLibDir,
                         jobName,
                         ecqArgs.getThreads(),
@@ -141,7 +142,7 @@ public class Mecq extends AbstractConanProcess {
                 jobIds.add(result.getJobId());
 
                 // Create links for outputs from this assembler to known locations
-                this.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), ec, ecqArgs, lib);
+                this.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), readEnhancer, ecqArgs, lib);
             }
 
             // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
@@ -153,7 +154,7 @@ public class Mecq extends AbstractConanProcess {
                         ecqArgs.getJobPrefix() + "*",
                         ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
-                        ecDir);
+                        ecqArgs.getOutputDir());
 
                 jobIds.clear();
             }
@@ -190,13 +191,13 @@ public class Mecq extends AbstractConanProcess {
 
         for(EcqArgs ecqArgs : args.getEqcArgList()) {
 
-            AbstractErrorCorrector ec = ErrorCorrectorFactory.create(ecqArgs.getTool(), this.getConanProcessService());
+            ReadEnhancer ec = ReadEnhancerFactory.create(ecqArgs.getTool(), this.conanExecutorService);
 
             if (ec == null) {
                 throw new NullPointerException("Unidentified tool requested for MECQ run: " + ecqArgs.getTool());
             }
 
-            if (!ec.isOperational(executionContext)) {
+            if (!ec.toConanProcess().isOperational(executionContext)) {
                 log.warn("MECQ stage is NOT operational.");
                 return false;
             }
@@ -212,34 +213,7 @@ public class Mecq extends AbstractConanProcess {
         return null;
     }
 
-
-    public void createInputLinks(Library library, AbstractErrorCorrectorArgs args)
-            throws ProcessExecutionException, InterruptedException {
-
-        // Modify execution context so we execute these instructions straight away (i.e. no scheduling)
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(
-                this.conanExecutorService.getExecutionContext().getLocality(), null, null);
-
-        final ConanProcessService cps = this.conanExecutorService.getConanProcessService();
-
-        if (library.isPairedEnd()) {
-
-            FilePair pairedEndFiles = ((AbstractErrorCorrectorPairedEndArgs)args).getPairedEndInputFiles();
-
-            StringJoiner compoundLinkCmdLine = new StringJoiner(";");
-
-            compoundLinkCmdLine.add(cps.makeLinkCommand(library.getFile1(), pairedEndFiles.getFile1()));
-            compoundLinkCmdLine.add(cps.makeLinkCommand(library.getFile2(), pairedEndFiles.getFile2()));
-
-            cps.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
-        }
-        else {
-            cps.execute(cps.makeLinkCommand(library.getFile1(),
-                    ((AbstractErrorCorrectorSingleEndArgs)args).getSingleEndInputFile()), linkingExecutionContext);
-        }
-    }
-
-    public void createOutputLinks(File outputDir, AbstractErrorCorrector ec, EcqArgs ecqArgs, Library library)
+    public void createOutputLinks(File outputDir, ReadEnhancer ec, EcqArgs ecqArgs, Library library)
             throws ProcessExecutionException, InterruptedException {
 
         // Make sure the output directory exists
@@ -247,23 +221,13 @@ public class Mecq extends AbstractConanProcess {
             outputDir.mkdirs();
         }
 
-        // Modify execution context so we execute these instructions straight away (i.e. no scheduling)
-        ExecutionContext linkingExecutionContext = new DefaultExecutionContext(
-                this.conanExecutorService.getExecutionContext().getLocality(), null, null);
-
         final ConanProcessService cps = this.conanExecutorService.getConanProcessService();
 
-        StringJoiner compoundLinkCmdLine = new StringJoiner(";");
+        List<File> outputs = ec == null ? library.getFiles() : ec.getEnhancedFiles();
 
-        Library modLib = ec == null ? library : ec.getArgs().getOutputLibrary(library);
-
-        for(File file : modLib.getFiles()) {
-            compoundLinkCmdLine.add(
-                    cps.makeLinkCommand(file,
-                            new File(outputDir, file.getName())));
+        for(File file : outputs) {
+            cps.createLocalSymbolicLink(file, new File(outputDir, file.getName()));
         }
-
-        cps.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
     }
 
 
@@ -276,11 +240,11 @@ public class Mecq extends AbstractConanProcess {
      * @return
      * @throws ProcessExecutionException
      */
-    protected Library modifyLib(AbstractErrorCorrector ec, Library lib, EcqArgs ecqArgs) throws ProcessExecutionException {
+    protected Library modifyLib(ReadEnhancer ec, Library lib, EcqArgs ecqArgs) throws ProcessExecutionException {
 
         Library modLib = lib.copy();
 
-        List<File> files = ec.getArgs().getCorrectedFiles();
+        List<File> files = ec.getEnhancedFiles();
 
         try {
             if (modLib.isPairedEnd()) {
@@ -466,7 +430,6 @@ public class Mecq extends AbstractConanProcess {
 
         // **** Xml Config file property keys ****
 
-        public static final String KEY_ELEM_KMER = "kmer";
         public static final String KEY_ELEM_LIBS = "libs";
 
         public static final String KEY_ATTR_NAME = "name";
@@ -474,15 +437,10 @@ public class Mecq extends AbstractConanProcess {
         public static final String KEY_ATTR_THREADS = "threads";
         public static final String KEY_ATTR_MEMORY = "memory";
         public static final String KEY_ATTR_PARALLEL = "parallel";
-        public static final String KEY_ATTR_MIN_LEN = "min_len";
-        public static final String KEY_ATTR_MIN_QUAL = "min_qual";
 
 
         // **** Default values ****
 
-        public static final int DEFAULT_MIN_LEN = 60;
-        public static final int DEFAULT_MIN_QUAL = 30;
-        public static final int DEFAULT_KMER = 17;
         public static final int DEFAULT_THREADS = 1;
         public static final int DEFAULT_MEMORY = 0;
         public static final boolean DEFAULT_RUN_PARALLEL = false;
@@ -494,9 +452,6 @@ public class Mecq extends AbstractConanProcess {
 
         private String name;
         private String tool;
-        private int minLen;
-        private int minQual;
-        private int kmer;
         private int threads;
         private int memory;
         private boolean runParallel;
@@ -506,9 +461,6 @@ public class Mecq extends AbstractConanProcess {
 
         public EcqArgs() {
             this.name = "";
-            this.minLen = DEFAULT_MIN_LEN;
-            this.minQual = DEFAULT_MIN_QUAL;
-            this.kmer = DEFAULT_KMER;
             this.threads = DEFAULT_THREADS;
             this.memory = DEFAULT_MEMORY;
             this.runParallel = DEFAULT_RUN_PARALLEL;
@@ -533,9 +485,6 @@ public class Mecq extends AbstractConanProcess {
             this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
 
             // Optional
-            this.minLen = ele.hasAttribute(KEY_ATTR_MIN_LEN) ? XmlHelper.getIntValue(ele, KEY_ATTR_MIN_LEN) : DEFAULT_MIN_LEN;
-            this.minQual = ele.hasAttribute(KEY_ATTR_MIN_QUAL) ? XmlHelper.getIntValue(ele, KEY_ATTR_MIN_QUAL): DEFAULT_MIN_QUAL;
-            this.kmer = ele.hasAttribute(KEY_ELEM_KMER) ? XmlHelper.getIntValue(ele, KEY_ELEM_KMER) : DEFAULT_KMER;
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
             this.runParallel = forceParallel ||
@@ -574,30 +523,6 @@ public class Mecq extends AbstractConanProcess {
 
         public void setTool(String tool) {
             this.tool = tool;
-        }
-
-        public int getMinLen() {
-            return minLen;
-        }
-
-        public void setMinLen(int minLen) {
-            this.minLen = minLen;
-        }
-
-        public int getMinQual() {
-            return minQual;
-        }
-
-        public void setMinQual(int minQual) {
-            this.minQual = minQual;
-        }
-
-        public int getKmer() {
-            return kmer;
-        }
-
-        public void setKmer(int kmer) {
-            this.kmer = kmer;
         }
 
         public int getThreads() {
@@ -648,20 +573,39 @@ public class Mecq extends AbstractConanProcess {
             this.jobPrefix = jobPrefix;
         }
 
-        public Library findLibrary(String libName) {
+        public Library getOutputLibrary(Library lib) {
 
-            for (Library lib : this.libraries) {
-                if (lib.getName().equalsIgnoreCase(libName)) {
-                    return lib;
+            GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
+            genericArgs.setInput(lib);
+            genericArgs.setOutputDir(new File(this.outputDir, lib.getName()));
+            genericArgs.setThreads(this.threads);
+            genericArgs.setMemoryGb(this.memory);
+
+            ReadEnhancer re = ReadEnhancerFactory.create(
+                    this.tool,
+                    genericArgs,
+                    null);
+
+            Library modLib = lib.copy();
+
+            List<File> files = re.getEnhancedFiles();
+
+            if (modLib.isPairedEnd()) {
+                if (files.size() < 2 || files.size() > 3) {
+                    throw new IllegalArgumentException("Paired end library: " + modLib.getName() + " from " + this.name + " does not have two or three files");
                 }
+
+                modLib.setFiles(files.get(0), files.get(1));
+            }
+            else {
+                if (files.size() != 1) {
+                    throw new IllegalArgumentException("Single end library: " + modLib.getName() + " from " + this.name + " does not have one file");
+                }
+
+                modLib.setFiles(files.get(0), null);
             }
 
-            return null;
-        }
-
-        public List<File> getOutputFiles(AbstractErrorCorrector ec) {
-
-            return ec.getArgs().getCorrectedFiles();
+            return modLib;
         }
 
         public List<Library> getOutputLibraries() {
@@ -669,47 +613,12 @@ public class Mecq extends AbstractConanProcess {
             List<Library> modLibs = new ArrayList<>();
 
             for(Library lib : this.getLibraries()) {
-                modLibs.add(this.makeErrorCorrector(lib).getArgs().getOutputLibrary(lib));
+                modLibs.add(this.getOutputLibrary(lib));
             }
 
             return modLibs;
         }
 
-
-        /**
-         * Using a set of ECQ specific args, creates an ErrorCorrector object for execution
-         * @param inputLib
-         * @return An error corrector build from the provided arguments.
-         */
-        public AbstractErrorCorrector makeErrorCorrector(Library inputLib) {
-
-            File ecqLibDir = new File(this.outputDir, inputLib.getName());
-
-
-            AbstractErrorCorrector ec = ErrorCorrectorFactory.create(
-                    this.getTool(),
-                    ecqLibDir,
-                    inputLib,
-                    this.getThreads(),
-                    this.getMemory(),
-                    this.getKmer(),
-                    this.getMinLen(),
-                    this.getMinQual(),
-                    null);
-
-            // Add files to ec (assumes ECQ tool and reads libraries are compatible with regards to Paired / Single End)
-            List<File> altInputFiles = new ArrayList<>();
-            if (inputLib.isPairedEnd()) {
-                altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
-                altInputFiles.add(new File(ecqLibDir, inputLib.getFile2().getName()));
-            }
-            else {
-                altInputFiles.add(new File(ecqLibDir, inputLib.getFile1().getName()));
-            }
-            ec.getArgs().setFromLibrary(inputLib, altInputFiles);
-
-            return ec;
-        }
     }
 
 

@@ -21,7 +21,6 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
-import uk.ac.tgac.conan.process.ec.AbstractErrorCorrectorArgs;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11;
 import uk.ac.tgac.conan.process.kmer.kat.KatGcpV1;
@@ -365,29 +364,6 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         mergeArgs.setInputFiles(inputFiles);
 
         return new JellyfishMergeV11(this.conanExecutorService, mergeArgs);
-    }
-
-    protected String makeInputStringFromEcq(AbstractErrorCorrectorArgs args) throws ProcessExecutionException {
-
-        String inputFilesStr = "";
-
-        for (File file : args.getCorrectedFiles()) {
-
-            if (!file.exists()) {
-                throw new ProcessExecutionException(2, "Couldn't locate: " + file.getAbsolutePath() + "; for kmer counting.");
-            }
-
-            StringUtils.join(file.getAbsolutePath(), " ");
-        }
-
-        inputFilesStr = inputFilesStr.trim();
-
-        // Check we have something plausible to work with
-        if (inputFilesStr.isEmpty())
-            throw new ProcessExecutionException(2, "Couldn't locate output files for at: " +
-                    args.getOutputDir().getAbsolutePath());
-
-        return inputFilesStr;
     }
 
     protected String makeInputStringFromLib(Library lib) throws ProcessExecutionException {

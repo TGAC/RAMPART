@@ -32,9 +32,8 @@ An example XML snippet demonstrating how to run two different tools in parallel,
 single dataset::
 
    <mecq parallel="false">
-      <ecq name="sickle_agressive" tool="SICKLE_V1.1" min_len="70" min_qual="20" 
-           libs="lib1896-pe,lib1897-mp"/>
-      <ecq name="quake" tool="QUAKE_V0.3.4" min_len="70" kmer="25" libs="lib1896-pe1" 
+      <ecq name="sickle_agressive" tool="SICKLE_V1.2" libs="lib1896-pe,lib1897-mp"/>
+      <ecq name="quake" tool="QUAKE_V0.3" libs="lib1896-pe1"
            threads="4" memory="2000"/>
    </mecq>
 

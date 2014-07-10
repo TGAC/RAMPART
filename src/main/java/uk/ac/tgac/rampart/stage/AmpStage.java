@@ -36,7 +36,6 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancer;
 import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancerFactory;
-import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
 import uk.ac.tgac.rampart.stage.util.ReadsInput;
 
 import java.io.File;
@@ -204,27 +203,7 @@ public class AmpStage extends AbstractConanProcess {
                 }
             }
             else {
-                Library modLib = lib.copy();
-
-                AbstractErrorCorrector ec = ecqArgs.makeErrorCorrector(modLib);
-                List<File> files = ec.getArgs().getCorrectedFiles();
-
-                if (modLib.isPairedEnd()) {
-                    if (files.size() < 2 || files.size() > 3) {
-                        throw new IOException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two or three files");
-                    }
-
-                    modLib.setFiles(files.get(0), files.get(1));
-                }
-                else {
-                    if (files.size() != 1) {
-                        throw new IOException("Single end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have one file");
-                    }
-
-                    modLib.setFiles(files.get(0), null);
-                }
-
-                selectedLibs.add(modLib);
+                selectedLibs.add(ecqArgs.getOutputLibrary(lib));
             }
 
             log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq());

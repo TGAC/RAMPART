@@ -112,7 +112,7 @@ public class ReadsInput {
 
         EcqArgs actualEcq = findMecq(allEcqs);
         Library lib = findLibrary(allLibraries);
-        ErrorCorrector ec = new MecqExecutorImpl().makeErrorCorrector(actualEcq, lib, );
+        ErrorCorrector ec = new MecqExecutorImpl().makeReadEnhancer(actualEcq, lib, );
         return ec.getArgs().getCorrectedFiles();
     }
 

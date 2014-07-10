@@ -22,9 +22,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.tgac.conan.process.asm.KmerRange;
+import uk.ac.tgac.rampart.MockedConanProcess;
 import uk.ac.tgac.rampart.stage.MassJob;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.MockedConanProcess;
 import uk.ac.tgac.rampart.stage.util.CoverageRange;
 
 import java.io.File;

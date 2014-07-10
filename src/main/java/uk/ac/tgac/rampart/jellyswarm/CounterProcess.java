@@ -18,7 +18,6 @@
 
 package uk.ac.tgac.rampart.jellyswarm;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.param.*;
@@ -36,7 +35,8 @@ import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.

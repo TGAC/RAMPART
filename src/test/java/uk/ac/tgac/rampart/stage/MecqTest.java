@@ -28,8 +28,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
-import uk.ac.tgac.conan.process.ec.AbstractErrorCorrector;
-import uk.ac.tgac.conan.process.ec.sickle.SickleV11Process;
+import uk.ac.tgac.conan.process.re.GenericReadEnhancerArgs;
+import uk.ac.tgac.conan.process.re.ReadEnhancer;
+import uk.ac.tgac.conan.process.re.ReadEnhancerFactory;
+import uk.ac.tgac.conan.process.re.tools.SickleV12;
 import uk.ac.tgac.rampart.MockedConanProcess;
 
 import java.io.File;
@@ -50,7 +52,7 @@ public class MecqTest extends MockedConanProcess {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Mock
-    private SickleV11Process sickle;
+    private SickleV12 sickle;
 
     @Test
     public void testQT() throws InterruptedException, ProcessExecutionException, IOException, CommandExecutionException, ConanParameterException {
@@ -78,15 +80,21 @@ public class MecqTest extends MockedConanProcess {
 
         Mecq.EcqArgs args = new Mecq.EcqArgs();
 
-        args.setTool("SICKLE_V1.1");
+        args.setTool("SICKLE_V1.2");
         args.setOutputDir(new File("test/"));
 
         Library lib = new Library();
         lib.setFiles(new File("file1.fl"), new File("file2.fl"));
 
-        AbstractErrorCorrector ec = args.makeErrorCorrector(lib);
+        GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
+        genericArgs.setInput(lib);
+        genericArgs.setOutputDir(args.getOutputDir());
+        genericArgs.setThreads(1);
+        genericArgs.setMemoryGb(0);
 
-        List<File> files = args.getOutputFiles(ec);
+        ReadEnhancer ec = ReadEnhancerFactory.create(args.getTool(), genericArgs, null);
+
+        List<File> files = ec.getEnhancedFiles();
 
         assertTrue(files.size() == 3);
     }
