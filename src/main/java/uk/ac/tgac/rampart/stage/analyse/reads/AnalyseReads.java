@@ -1,5 +1,6 @@
 package uk.ac.tgac.rampart.stage.analyse.reads;
 
+import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -271,8 +272,8 @@ public class AnalyseReads extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) throws IOException {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
         }
 
         @Override

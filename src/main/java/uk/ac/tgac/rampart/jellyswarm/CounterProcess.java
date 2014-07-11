@@ -18,6 +18,7 @@
 
 package uk.ac.tgac.rampart.jellyswarm;
 
+import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.param.*;
@@ -272,8 +273,9 @@ public class CounterProcess extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) throws IOException {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
+            Params params = this.getParams();
         }
 
         @Override

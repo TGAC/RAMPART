@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.stage.report;
 
+import org.apache.commons.cli.Options;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessParams;
@@ -52,5 +53,10 @@ public class ReportParams implements ProcessParams {
                 new ConanParameter[]{
                         this.jobDir
                 }));
+    }
+
+    @Override
+    public Options createCommandLineOptions() {
+        return null;
     }
 }

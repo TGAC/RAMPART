@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.stage;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -369,6 +370,14 @@ public class MassJob extends AbstractConanProcess {
         if (!validConfig(asm)) {
             log.warn("Assembler \"" + args.getTool() + "\" does not have a compatible MASS job configuration: \"" + args.getName() + "\"");
             return false;
+        }
+
+        if (args.getCheckedArgs() != null && !args.getCheckedArgs().trim().isEmpty()) {
+            try {
+                asm.getAssemblerArgs().parse(args.getCheckedArgs());
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid or unrecognised checked arguments provided to " + args.tool + " in " + args.name, e);
+            }
         }
 
         if (!asm.isOperational(executionContext)) {
@@ -1234,8 +1243,8 @@ public class MassJob extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
         }
 
         @Override

@@ -18,6 +18,7 @@
 
 package uk.ac.tgac.rampart.jellyswarm;
 
+import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
@@ -238,8 +239,8 @@ public class Jellyswarm {
         }
 
         @Override
-        public void parse(String args) throws IOException {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
         }
 
         @Override

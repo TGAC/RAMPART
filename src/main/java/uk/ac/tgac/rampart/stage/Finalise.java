@@ -1,5 +1,6 @@
 package uk.ac.tgac.rampart.stage;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -369,7 +370,7 @@ public class Finalise extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) throws IOException {
+        public void parseCommandLine(CommandLine cmdLine) {
 
         }
 

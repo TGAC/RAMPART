@@ -1,5 +1,6 @@
 package uk.ac.tgac.rampart.stage.analyse.asm;
 
+import org.apache.commons.cli.CommandLine;
 import org.w3c.dom.Element;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
@@ -159,8 +160,7 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
     }
 
     @Override
-    public void parse(String args) throws IOException {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void parseCommandLine(CommandLine cmdLine) {
     }
 
     @Override

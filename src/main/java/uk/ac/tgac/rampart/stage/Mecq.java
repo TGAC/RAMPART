@@ -17,6 +17,8 @@
  **/
 package uk.ac.tgac.rampart.stage;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -79,100 +81,120 @@ public class Mecq extends AbstractConanProcess {
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
+        try {
+            log.info("Starting MECQ Process");
 
-        log.info("Starting MECQ Process");
+            // Create shortcut to args for convienience
+            Args args = this.getArgs();
 
-        // Create shortcut to args for convienience
-        Args args = this.getArgs();
-
-        // If the output directory doesn't exist then make it
-        if (!args.getMecqDir().exists()) {
-            log.debug("Creating MECQ directory");
-            args.getMecqDir().mkdirs();
-            args.getOutputDir().mkdirs();
-        }
-
-        // Passthrough links for raw libraries to output
-        for(Library lib : args.getLibraries()) {
-            this.createOutputLinks(new File(args.getOutputDir(), "raw"), null, null, lib);
-        }
-
-        List<Integer> jobIds = new ArrayList<>();
-        List<ReadEnhancer> readEnhancers = new ArrayList<>();
-
-        // For each ecq process all libraries
-        for(EcqArgs ecqArgs : args.getEqcArgList()) {
-
-            // Process each lib
-            for(Library lib : ecqArgs.getLibraries()) {
-
-                // Create the output directory
-                File ecqLibDir = new File(ecqArgs.getOutputDir(), lib.getName());
-                ecqLibDir.mkdirs();
-
-                // Create a job name
-                String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
-
-                GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
-                genericArgs.setInput(lib);
-                genericArgs.setOutputDir(ecqLibDir);
-                genericArgs.setThreads(ecqArgs.getThreads());
-                genericArgs.setMemoryGb(ecqArgs.getMemory());
-
-                // Create the actual error corrector from the user provided EcqArgs
-                ReadEnhancer readEnhancer = ReadEnhancerFactory.create(
-                        ecqArgs.getTool(),
-                        genericArgs,
-                        this.conanExecutorService);
-
-                // Add this to the list in case we need it later
-                readEnhancers.add(readEnhancer);
-
-                // Execute this error corrector
-                ExecutionResult result = this.conanExecutorService.executeProcess(
-                        readEnhancer.toConanProcess(),
-                        ecqLibDir,
-                        jobName,
-                        ecqArgs.getThreads(),
-                        ecqArgs.getMemory(),
-                        ecqArgs.isRunParallel() || args.isRunParallel());
-
-                // The job id should be stored in the process if we are using a scheduler, add to the list regardless
-                // in case we need it later
-                jobIds.add(result.getJobId());
-
-                // Create links for outputs from this assembler to known locations
-                this.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), readEnhancer, ecqArgs, lib);
+            // If the output directory doesn't exist then make it
+            if (!args.getMecqDir().exists()) {
+                log.debug("Creating MECQ directory");
+                args.getMecqDir().mkdirs();
+                args.getOutputDir().mkdirs();
             }
 
-            // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
-            // each library processed by this ECQ, then wait here.
-            if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
-                log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
+            // Passthrough links for raw libraries to output
+            for(Library lib : args.getLibraries()) {
+                this.createOutputLinks(new File(args.getOutputDir(), "raw"), null, null, lib);
+            }
+
+            List<Integer> jobIds = new ArrayList<>();
+            List<ReadEnhancer> readEnhancers = new ArrayList<>();
+
+            // For each ecq process all libraries
+            for(EcqArgs ecqArgs : args.getEqcArgList()) {
+
+                // Process each lib
+                for(Library lib : ecqArgs.getLibraries()) {
+
+                    // Create the output directory
+                    File ecqLibDir = new File(ecqArgs.getOutputDir(), lib.getName());
+
+                    if (ecqLibDir.exists()) {
+                        try {
+                            FileUtils.deleteDirectory(ecqLibDir);
+                        } catch (IOException e) {
+                            throw new ProcessExecutionException(2, "Could not delete ecqDir: " + ecqLibDir.getAbsolutePath(), e);
+                        }
+                    }
+                    ecqLibDir.mkdirs();
+
+                    // Create a job name
+                    String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
+
+                    GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
+                    genericArgs.setInput(lib);
+                    genericArgs.setOutputDir(ecqLibDir);
+                    genericArgs.setThreads(ecqArgs.getThreads());
+                    genericArgs.setMemoryGb(ecqArgs.getMemory());
+
+                    // Create the actual error corrector from the user provided EcqArgs
+                    ReadEnhancer readEnhancer = ReadEnhancerFactory.create(
+                            ecqArgs.getTool(),
+                            genericArgs,
+                            this.conanExecutorService);
+
+                    // Configure read enhancer
+                    if (ecqArgs.getCheckedArgs() != null && !ecqArgs.getCheckedArgs().trim().isEmpty()) {
+                        readEnhancer.getReadEnchancerArgs().parse(ecqArgs.getCheckedArgs());
+                    }
+                    readEnhancer.getReadEnchancerArgs().setUncheckedArgs(ecqArgs.getUncheckedArgs());
+                    readEnhancer.setup();
+
+                    // Add this to the list in case we need it later
+                    readEnhancers.add(readEnhancer);
+
+                    // Execute this error corrector
+                    ExecutionResult result = this.conanExecutorService.executeProcess(
+                            readEnhancer.toConanProcess(),
+                            ecqLibDir,
+                            jobName,
+                            ecqArgs.getThreads(),
+                            ecqArgs.getMemory(),
+                            ecqArgs.isRunParallel() || args.isRunParallel());
+
+                    // The job id should be stored in the process if we are using a scheduler, add to the list regardless
+                    // in case we need it later
+                    jobIds.add(result.getJobId());
+
+                    // Create links for outputs from this assembler to known locations
+                    this.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), readEnhancer, ecqArgs, lib);
+                }
+
+                // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
+                // each library processed by this ECQ, then wait here.
+                if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
+                    log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
+                    this.conanExecutorService.executeScheduledWait(
+                            jobIds,
+                            ecqArgs.getJobPrefix() + "*",
+                            ExitStatus.Type.COMPLETED_SUCCESS,
+                            args.getJobPrefix() + "-wait",
+                            ecqArgs.getOutputDir());
+
+                    jobIds.clear();
+                }
+            }
+
+            // If we're using a scheduler and we have been asked to run each MECQ group for each library
+            // in parallel, then we should wait for all those to complete before continueing.
+            if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
+                log.debug("Running all ECQ groups in parallel, waiting for completion");
                 this.conanExecutorService.executeScheduledWait(
                         jobIds,
-                        ecqArgs.getJobPrefix() + "*",
+                        args.getJobPrefix() + "-ecq*",
                         ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
-                        ecqArgs.getOutputDir());
-
-                jobIds.clear();
+                        args.getMecqDir());
             }
+
+            log.info("MECQ Finished");
+        }
+        catch(IOException e) {
+            throw new ProcessExecutionException(2, e);
         }
 
-        // If we're using a scheduler and we have been asked to run each MECQ group for each library
-        // in parallel, then we should wait for all those to complete before continueing.
-        if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
-            log.debug("Running all ECQ groups in parallel, waiting for completion");
-            this.conanExecutorService.executeScheduledWait(
-                    jobIds,
-                    args.getJobPrefix() + "-ecq*",
-                    ExitStatus.Type.COMPLETED_SUCCESS,
-                    args.getJobPrefix() + "-wait",
-                    args.getMecqDir());
-        }
-
-        log.info("MECQ Finished");
 
 
         return true;
@@ -195,6 +217,14 @@ public class Mecq extends AbstractConanProcess {
 
             if (ec == null) {
                 throw new NullPointerException("Unidentified tool requested for MECQ run: " + ecqArgs.getTool());
+            }
+
+            if (ecqArgs.getCheckedArgs() != null && !ecqArgs.getCheckedArgs().trim().isEmpty()) {
+                try {
+                    ec.getReadEnchancerArgs().parse(ecqArgs.getCheckedArgs());
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Invalid or unrecognised checked arguments provided to " + ecqArgs.tool + " in " + ecqArgs.name, e);
+                }
             }
 
             if (!ec.toConanProcess().isOperational(executionContext)) {
@@ -227,45 +257,6 @@ public class Mecq extends AbstractConanProcess {
 
         for(File file : outputs) {
             cps.createLocalSymbolicLink(file, new File(outputDir, file.getName()));
-        }
-    }
-
-
-    /**
-     * Modifies the libraries so that they contain they point to the files generated by the error corrector, rather than
-     * the input files.
-     * @param ec
-     * @param lib
-     * @param ecqArgs
-     * @return
-     * @throws ProcessExecutionException
-     */
-    protected Library modifyLib(ReadEnhancer ec, Library lib, EcqArgs ecqArgs) throws ProcessExecutionException {
-
-        Library modLib = lib.copy();
-
-        List<File> files = ec.getEnhancedFiles();
-
-        try {
-            if (modLib.isPairedEnd()) {
-                if (files.size() < 2 || files.size() > 3) {
-                    throw new IOException("Paired end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have two or three files");
-                }
-
-                modLib.setFiles(files.get(0), files.get(1));
-            }
-            else {
-                if (files.size() != 1) {
-                    throw new IOException("Single end library: " + modLib.getName() + " from " + ecqArgs.getName() + " does not have one file");
-                }
-
-                modLib.setFiles(files.get(0), null);
-            }
-
-            return modLib;
-        }
-        catch(IOException ioe) {
-            throw new ProcessExecutionException(3, ioe);
         }
     }
 
@@ -376,8 +367,9 @@ public class Mecq extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
+            Params params = this.getParams();
         }
 
         @Override
@@ -430,13 +422,15 @@ public class Mecq extends AbstractConanProcess {
 
         // **** Xml Config file property keys ****
 
-        public static final String KEY_ELEM_LIBS = "libs";
+        private static final String KEY_ELEM_LIBS = "libs";
 
-        public static final String KEY_ATTR_NAME = "name";
-        public static final String KEY_ATTR_TOOL = "tool";
-        public static final String KEY_ATTR_THREADS = "threads";
-        public static final String KEY_ATTR_MEMORY = "memory";
-        public static final String KEY_ATTR_PARALLEL = "parallel";
+        private static final String KEY_ATTR_NAME = "name";
+        private static final String KEY_ATTR_TOOL = "tool";
+        private static final String KEY_ATTR_THREADS = "threads";
+        private static final String KEY_ATTR_MEMORY = "memory";
+        private static final String KEY_ATTR_PARALLEL = "parallel";
+        private static final String KEY_ATTR_CHECKED_ARGS = "checked_args";
+        private static final String KEY_ATTR_UNCHECKED_ARGS = "unchecked_args";
 
 
         // **** Default values ****
@@ -458,13 +452,20 @@ public class Mecq extends AbstractConanProcess {
         private List<Library> libraries;
         private File outputDir;
         private String jobPrefix;
+        private String checkedArgs;
+        private String uncheckedArgs;
 
         public EcqArgs() {
             this.name = "";
+            this.tool = "";
             this.threads = DEFAULT_THREADS;
             this.memory = DEFAULT_MEMORY;
             this.runParallel = DEFAULT_RUN_PARALLEL;
             this.libraries = new ArrayList<>();
+            this.outputDir = null;
+            this.jobPrefix = "";
+            this.checkedArgs = null;
+            this.uncheckedArgs = null;
         }
 
 
@@ -489,6 +490,13 @@ public class Mecq extends AbstractConanProcess {
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
             this.runParallel = forceParallel ||
                     ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL;
+            this.checkedArgs = ele.hasAttribute(KEY_ATTR_CHECKED_ARGS) ?
+                    XmlHelper.getTextValue(ele, KEY_ATTR_CHECKED_ARGS) :
+                    null;
+
+            this.uncheckedArgs = ele.hasAttribute(KEY_ATTR_UNCHECKED_ARGS) ?
+                    XmlHelper.getTextValue(ele, KEY_ATTR_UNCHECKED_ARGS) :
+                    null;
 
             // Filter the provided libs
             String libList = XmlHelper.getTextValue(ele, KEY_ELEM_LIBS);
@@ -573,6 +581,22 @@ public class Mecq extends AbstractConanProcess {
             this.jobPrefix = jobPrefix;
         }
 
+        public String getCheckedArgs() {
+            return checkedArgs;
+        }
+
+        public void setCheckedArgs(String checkedArgs) {
+            this.checkedArgs = checkedArgs;
+        }
+
+        public String getUncheckedArgs() {
+            return uncheckedArgs;
+        }
+
+        public void setUncheckedArgs(String uncheckedArgs) {
+            this.uncheckedArgs = uncheckedArgs;
+        }
+
         public Library getOutputLibrary(Library lib) {
 
             GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
@@ -591,8 +615,8 @@ public class Mecq extends AbstractConanProcess {
             List<File> files = re.getEnhancedFiles();
 
             if (modLib.isPairedEnd()) {
-                if (files.size() < 2 || files.size() > 3) {
-                    throw new IllegalArgumentException("Paired end library: " + modLib.getName() + " from " + this.name + " does not have two or three files");
+                if (files.size() < 2) {
+                    throw new IllegalArgumentException("Paired end library: " + modLib.getName() + " from " + this.name + " does not have at least two files");
                 }
 
                 modLib.setFiles(files.get(0), files.get(1));

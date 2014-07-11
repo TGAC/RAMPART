@@ -1,5 +1,6 @@
 package uk.ac.tgac.rampart.stage.analyse.reads;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -582,8 +583,8 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) throws IOException {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
         }
 
         @Override

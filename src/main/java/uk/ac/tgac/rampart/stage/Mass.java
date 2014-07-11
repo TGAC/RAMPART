@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.stage;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -322,8 +323,9 @@ public class Mass extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
+            Params params = this.getParams();
         }
 
         @Override

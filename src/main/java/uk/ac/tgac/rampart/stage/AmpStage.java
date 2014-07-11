@@ -17,6 +17,7 @@
  **/
 package uk.ac.tgac.rampart.stage;
 
+import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -177,6 +178,14 @@ public class AmpStage extends AbstractConanProcess {
         if (proc == null) {
             log.warn("Could not create AMP stage " + args.getIndex() + " for tool: " + args.getTool() + "; Tool not recognised.  Check tool is supported and you have the correct spelling.");
             return false;
+        }
+
+        if (args.getCheckedArgs() != null && !args.getCheckedArgs().trim().isEmpty()) {
+            try {
+                proc.getAssemblyEnhancerArgs().parse(args.getCheckedArgs());
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid or unrecognised checked arguments provided to " + args.tool + " in stage " + args.index, e);
+            }
         }
 
         return proc.isOperational(executionContext);
@@ -432,8 +441,9 @@ public class AmpStage extends AbstractConanProcess {
         }
 
         @Override
-        public void parse(String args) {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void parseCommandLine(CommandLine cmdLine) {
+
+            Params params = this.getParams();
         }
 
         @Override
