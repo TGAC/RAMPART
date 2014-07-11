@@ -251,6 +251,15 @@ public class Finalise extends AbstractConanProcess {
 
             this();
 
+            // Check there's nothing unexpected in this element
+            if (!XmlHelper.validate(element, new String[] {
+                    KEY_ATTR_PREFIX,
+                    KEY_ATTR_MIN_N,
+                    KEY_ATTR_COMPRESS
+            })) {
+                throw new IllegalArgumentException("Found unrecognised element or attribute in Finaliser");
+            }
+
             String shortInstitute = this.getInitials(institution, "_");
             String shortOrg = this.getInitials(organism.getName(), "_");
 

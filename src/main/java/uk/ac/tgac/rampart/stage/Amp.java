@@ -113,52 +113,50 @@ public class Amp extends AbstractConanProcess {
 
         try {
 
-            if (!args.isStatsOnly()) {
+            // Create AMP Pipeline
+            Pipeline ampPipeline = new Pipeline(this.conanExecutorService, args);
 
-                // Create AMP Pipeline
-                Pipeline ampPipeline = new Pipeline(this.conanExecutorService, args);
+            log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
 
-                log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
-
-                // Clear out anything that was here before
-                if (args.getOutputDir().exists()) {
-                    FileUtils.deleteDirectory(args.getOutputDir());
-                }
-
-                // Make sure the output directory exists
-                args.getAssembliesDir().mkdirs();
-
-                // Create link for the reads file
-                this.getConanProcessService().createLocalSymbolicLink(
-                        args.getInputAssembly(),
-                        new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
-
-                // Create a guest user
-                ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
-
-                // Create the AMP task
-                ConanTask<Pipeline> ampTask = new DefaultTaskFactory().createTask(
-                        ampPipeline,
-                        0,
-                        ampPipeline.getArgs().getArgMap(),
-                        ConanTask.Priority.HIGHEST,
-                        rampartUser);
-
-                ampTask.setId("AMP");
-                ampTask.submit();
-
-                // Run the AMP pipeline
-                try {
-                    ampTask.execute(executionContext);
-                } catch (TaskExecutionException e) {
-                    throw new ProcessExecutionException(-1, e);
-                }
-
-                // Create a symbolic link for the final assembly from the final stage
-                this.getConanProcessService().createLocalSymbolicLink(
-                        new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
-                        args.getFinalAssembly());
+            // Clear out anything that was here before
+            if (args.getOutputDir().exists()) {
+                FileUtils.deleteDirectory(args.getOutputDir());
             }
+
+            // Make sure the output directory exists
+            args.getAssembliesDir().mkdirs();
+
+            // Create link for the reads file
+            this.getConanProcessService().createLocalSymbolicLink(
+                    args.getInputAssembly(),
+                    new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
+
+            // Create a guest user
+            ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
+
+            // Create the AMP task
+            ConanTask<Pipeline> ampTask = new DefaultTaskFactory().createTask(
+                    ampPipeline,
+                    0,
+                    ampPipeline.getArgs().getArgMap(),
+                    ConanTask.Priority.HIGHEST,
+                    rampartUser);
+
+            ampTask.setId("AMP");
+            ampTask.submit();
+
+            // Run the AMP pipeline
+            try {
+                ampTask.execute(executionContext);
+            } catch (TaskExecutionException e) {
+                throw new ProcessExecutionException(-1, e);
+            }
+
+            // Create a symbolic link for the final assembly from the final stage
+            this.getConanProcessService().createLocalSymbolicLink(
+                    new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
+                    args.getFinalAssembly());
+
         }
         catch(IOException e) {
             throw new ProcessExecutionException(-1, e);
@@ -226,17 +224,6 @@ public class Amp extends AbstractConanProcess {
         private static final String INPUT_ASSEMBLY = "input";
         private static final String KEY_ELEM_AMP_STAGE = "stage";
 
-        private static final String KEY_ATTR_THREADS = "threads";
-        private static final String KEY_ATTR_MEMORY = "memory";
-        private static final String KEY_ATTR_PARALLEL = "parallel";
-        private static final String KEY_ATTR_STATS_ONLY = "stats_only";
-        private static final String KEY_ATTR_STATS_LEVELS = "stats_levels";
-
-        public static final boolean DEFAULT_STATS_ONLY = false;
-        public static final boolean DEFAULT_RUN_PARALLEL = false;
-        public static final int DEFAULT_THREADS = 1;
-        public static final int DEFAULT_MEMORY = 0;
-
         private File inputAssembly;
         private File bubbleFile;
         private File outputDir;
@@ -245,10 +232,6 @@ public class Amp extends AbstractConanProcess {
         private List<AmpStage.Args> stageArgsList;
         private String jobPrefix;
         private Organism organism;
-        private boolean statsOnly;
-        private int threads;
-        private int memory;
-        private boolean runParallel;
         private ExecutionContext executionContext;
 
 
@@ -261,10 +244,6 @@ public class Amp extends AbstractConanProcess {
             this.allMecqs = new ArrayList<>();
             this.stageArgsList = new ArrayList<>();
             this.jobPrefix = "amp";
-            this.statsOnly = DEFAULT_STATS_ONLY;
-            this.threads = DEFAULT_THREADS;
-            this.memory = DEFAULT_MEMORY;
-            this.runParallel = DEFAULT_RUN_PARALLEL;
         }
 
         public Args(Element ele, File outputDir, String jobPrefix, File inputAssembly, File bubbleFile,
@@ -273,6 +252,13 @@ public class Amp extends AbstractConanProcess {
 
             // Set defaults
             this();
+
+            // Check there's nothing
+            if (!XmlHelper.validate(ele, new String[] {
+                    KEY_ELEM_AMP_STAGE
+            })) {
+                throw new IOException("Found unrecognised element or attribute in AMP");
+            }
 
             // Set args
             this.outputDir = outputDir;
@@ -300,20 +286,6 @@ public class Amp extends AbstractConanProcess {
 
                 this.inputAssembly = stage.getOutputFile();
             }
-
-            // Optional
-
-            this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ?
-                    XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) :
-                    DEFAULT_THREADS;
-
-            this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ?
-                    XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) :
-                    DEFAULT_MEMORY;
-
-            this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
-                    XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
-                    DEFAULT_RUN_PARALLEL;
         }
 
         public File getInputAssembly() {
@@ -382,38 +354,6 @@ public class Amp extends AbstractConanProcess {
 
         public File getAssembliesDir() {
             return new File(this.getOutputDir(), "assemblies");
-        }
-
-        public boolean isStatsOnly() {
-            return statsOnly;
-        }
-
-        public void setStatsOnly(boolean statsOnly) {
-            this.statsOnly = statsOnly;
-        }
-
-        public int getThreads() {
-            return threads;
-        }
-
-        public void setThreads(int threads) {
-            this.threads = threads;
-        }
-
-        public int getMemory() {
-            return memory;
-        }
-
-        public void setMemory(int memory) {
-            this.memory = memory;
-        }
-
-        public boolean isRunParallel() {
-            return runParallel;
-        }
-
-        public void setRunParallel(boolean runParallel) {
-            this.runParallel = runParallel;
         }
 
         public ExecutionContext getExecutionContext() {

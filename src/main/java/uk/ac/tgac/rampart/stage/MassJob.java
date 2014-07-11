@@ -623,10 +623,24 @@ public class MassJob extends AbstractConanProcess {
 
 
         public Args(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel) {
+                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index) {
 
             // Set defaults
             this();
+
+            // Check there's nothing unexpected in this element
+            if (!XmlHelper.validate(ele, new String[] {
+                    KEY_ATTR_NAME,
+                    KEY_ATTR_TOOL,
+                    KEY_ATTR_THREADS,
+                    KEY_ATTR_MEMORY,
+                    KEY_ATTR_PARALLEL,
+                    KEY_ATTR_CHECKED_ARGS,
+                    KEY_ATTR_UNCHECKED_ARGS,
+                    KEY_ELEM_INPUTS
+            })) {
+                throw new IllegalArgumentException("Found unrecognised element or attribute in mass job: " + index);
+            }
 
             // Required Attributes
             if (!ele.hasAttribute(KEY_ATTR_NAME))

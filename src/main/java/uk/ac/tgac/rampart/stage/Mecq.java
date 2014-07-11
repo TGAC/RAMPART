@@ -303,6 +303,14 @@ public class Mecq extends AbstractConanProcess {
             // Set defaults first
             this();
 
+            // Check there's nothing
+            if (!XmlHelper.validate(ele, new String[] {
+                    KEY_ATTR_PARALLEL,
+                    KEY_ELEM_ECQ
+            })) {
+                throw new IOException("Found unrecognised element or attribute in MECQ");
+            }
+
             // Set from parameters
             this.mecqDir = mecqDir;
             this.jobPrefix = jobPrefix;
@@ -314,7 +322,7 @@ public class Mecq extends AbstractConanProcess {
             // All libraries
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
             for(int i = 0; i < nodes.getLength(); i++) {
-                this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, mecqDir, jobPrefix + "-ecq", this.runParallel));
+                this.eqcArgList.add(new EcqArgs((Element)nodes.item(i), libraries, mecqDir, jobPrefix + "-ecq", this.runParallel, i+1));
             }
         }
 
@@ -469,11 +477,25 @@ public class Mecq extends AbstractConanProcess {
         }
 
 
-        public EcqArgs(Element ele, List<Library> allLibraries, File parentOutputDir, String parentJobPrefix, boolean forceParallel)
+        public EcqArgs(Element ele, List<Library> allLibraries, File parentOutputDir, String parentJobPrefix, boolean forceParallel, int index)
                 throws IOException {
 
             // Set defaults
             this();
+
+            // Check there's nothing
+            if (!XmlHelper.validate(ele, new String[] {
+                    KEY_ATTR_NAME,
+                    KEY_ATTR_TOOL,
+                    KEY_ATTR_THREADS,
+                    KEY_ATTR_MEMORY,
+                    KEY_ATTR_PARALLEL,
+                    KEY_ATTR_CHECKED_ARGS,
+                    KEY_ATTR_UNCHECKED_ARGS,
+                    KEY_ELEM_LIBS
+            })) {
+                throw new IOException("Found unrecognised element or attribute in MECQ job: " + index);
+            }
 
             // Required
             if (!ele.hasAttribute(KEY_ATTR_NAME))

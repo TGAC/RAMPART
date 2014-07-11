@@ -219,6 +219,14 @@ public class Mass extends AbstractConanProcess {
             // Set defaults first
             this();
 
+            // Check there's nothing
+            if (!XmlHelper.validate(ele, new String[] {
+                    KEY_ATTR_PARALLEL,
+                    KEY_ELEM_MASS_JOB
+            })) {
+                throw new IOException("Found unrecognised element or attribute in MASS");
+            }
+
             // Set from parameters
             this.outputDir = outputDir;
             this.jobPrefix = jobPrefix;
@@ -239,7 +247,7 @@ public class Mass extends AbstractConanProcess {
                 this.massJobArgList.add(
                         new MassJob.Args(
                                 (Element) nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                                this.allLibraries, this.allMecqs, this.organism, this.runParallel)
+                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1)
                 );
             }
 

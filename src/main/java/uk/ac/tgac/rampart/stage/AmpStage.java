@@ -223,11 +223,11 @@ public class AmpStage extends AbstractConanProcess {
 
     public static class Args extends AbstractProcessArgs {
 
-        private static final String KEY_ELEM_TOOL = "tool";
+        private static final String KEY_ATTR_TOOL = "tool";
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
-        private static final String KEY_ELEM_CHECKED_ARGS = "checked_args";
-        private static final String KEY_ELEM_UNCHECKED_ARGS = "unchecked_args";
+        private static final String KEY_ATTR_CHECKED_ARGS = "checked_args";
+        private static final String KEY_ATTR_UNCHECKED_ARGS = "unchecked_args";
         private static final String KEY_ELEM_INPUTS = "inputs";
         private static final String KEY_ELEM_SINGLE_INPUT = "input";
 
@@ -284,11 +284,23 @@ public class AmpStage extends AbstractConanProcess {
             // Set defaults
             this();
 
-            // Required
-            if (!ele.hasAttribute(KEY_ELEM_TOOL))
-                throw new IOException("Could not find " + KEY_ELEM_TOOL + " attribute in AMP stage element");
+            // Check there's nothing unexpected in this element
+            if (!XmlHelper.validate(ele, new String[] {
+                    KEY_ATTR_TOOL,
+                    KEY_ATTR_THREADS,
+                    KEY_ATTR_MEMORY,
+                    KEY_ATTR_CHECKED_ARGS,
+                    KEY_ATTR_UNCHECKED_ARGS,
+                    KEY_ELEM_INPUTS
+            })) {
+                throw new IllegalArgumentException("Found unrecognised element or attribute in AMP stage: " + index);
+            }
 
-            this.tool = XmlHelper.getTextValue(ele, KEY_ELEM_TOOL);
+            // Required
+            if (!ele.hasAttribute(KEY_ATTR_TOOL))
+                throw new IOException("Could not find " + KEY_ATTR_TOOL + " attribute in AMP stage element");
+
+            this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
             this.inputAssembly = inputAssembly;
             this.bubbleFile = bubbleFile;
 
@@ -302,8 +314,8 @@ public class AmpStage extends AbstractConanProcess {
             // Optional
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
-            this.checkedArgs = ele.hasAttribute(KEY_ELEM_CHECKED_ARGS) ? XmlHelper.getTextValue(ele, KEY_ELEM_CHECKED_ARGS) : null;
-            this.uncheckedArgs = ele.hasAttribute(KEY_ELEM_UNCHECKED_ARGS) ? XmlHelper.getTextValue(ele, KEY_ELEM_UNCHECKED_ARGS) : null;
+            this.checkedArgs = ele.hasAttribute(KEY_ATTR_CHECKED_ARGS) ? XmlHelper.getTextValue(ele, KEY_ATTR_CHECKED_ARGS) : null;
+            this.uncheckedArgs = ele.hasAttribute(KEY_ATTR_UNCHECKED_ARGS) ? XmlHelper.getTextValue(ele, KEY_ATTR_UNCHECKED_ARGS) : null;
 
             // Other args
             this.outputDir = outputDir;
