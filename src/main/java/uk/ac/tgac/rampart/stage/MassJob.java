@@ -744,14 +744,11 @@ public class MassJob extends AbstractConanProcess {
                 if (lib == null) {
                     throw new IllegalArgumentException("Unrecognised library: " + mi.getLib() + "; not processing MASS run: " + name);
                 }
-
-                if (ecqArgs == null) {
-                    if (mi.getEcq().equalsIgnoreCase(Mecq.EcqArgs.RAW)) {
-                        selectedLibs.add(lib);
-                    }
-                    else {
-                        throw new IllegalArgumentException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + name);
-                    }
+                else if (mi.getEcq().equalsIgnoreCase(Mecq.EcqArgs.RAW)) {
+                    selectedLibs.add(lib);
+                }
+                else if (ecqArgs == null) {
+                    throw new IllegalArgumentException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + name);
                 }
                 else {
                     selectedLibs.add(ecqArgs.getOutputLibrary(lib));
@@ -1014,7 +1011,10 @@ public class MassJob extends AbstractConanProcess {
                     String newCheckedArgs = (this.checkedArgs == null ? "" : this.checkedArgs) +
                             " -" + jv.varName + " " + jv.varValue;
 
-                    log.debug("Parsing: " + newCheckedArgs);
+                    // Record that we've done some command line parsing
+                    if (!newCheckedArgs.isEmpty()) {
+                        log.debug("Parsing: " + newCheckedArgs);
+                    }
 
                     // Parse checked args
                     asm.getAssemblerArgs().parse(newCheckedArgs);
