@@ -48,5 +48,17 @@ For LSF, your job may or may not fail if the memory limit is exceeded depending 
 on which your job is running.  The number of threads per process is controlled using the ``-t`` option.  Finally, you can
 k-mer count all samples in parallel by using the
 
+
 Citadel
 -------
+
+Citadel is a perl script that is designed to execute RAMPART on all input samples by using a template configuration file.
+There are also a number of supplementary scripts to aid the analysis of data across all samples and annotation of each
+sample using PROKKA (http://www.vicbioinformatics.com/software.prokka.shtml).  Note that PROKKA is only relevant for prokaryotic
+genomes.
+
+All the scripts were designed for execution on LSF environments, so some modification of the scripts may be necessary
+should you wish to execute in other scheduled environments
+or on unscheduled systems.  Whilst each script comes with it's own help message and man page, we so not provide extensive
+documentation on citadel in this version of RAMPART and leave it to the bioinformatician to tweak or reuse the scripts
+as they see fit.

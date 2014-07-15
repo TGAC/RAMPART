@@ -66,14 +66,17 @@ kmer range (61,71,81,91,101)::
 
 Note: Depending on the assembler used the values specified for the kmer range, the actual assemblies generated may be
 executed with slightly different values.  For example some assemblers do not allow you to use kmers of even value.  Others
-may try to optimise the k parameter automatically and may not let you specify specific k values.  We therefore make a best
-effort to match the requested RAMPART kmer range to the actual kmer range executed by the assembler.
+may try to optimise the k parameter themselves.  We therefore make a best effort to match the requested RAMPART kmer
+range to the actual kmer range executed by the assembler.
+
+Assemblers such as SPAdes and Platanus have their own K optimisation strategies.  In these cases, instead of running
+multiple instances of these assemblers, RAMPART will run a single instance, and translate the kmer range information
+into the parameters suitable for these assemblers.
 
 Some De Bruijn graph assemblers, such as ALLPATHS-LG, recommend that you do not modify the kmer value.  In these cases
-it is permissible to omit the kmer element, and this will simply let the assembler decide how to choose the k value.  If
-the selected assembler does require you to specify a k value, and you omit the kmer element from the config, then RAMPART
-specifies a default kmer spread for you.  This will have a min value of 35, the max is automatically determined from the
-provided libraries as described above, and the step is 10 (MEDIUM).
+RAMPART lets the assembler manage the k value.  If the selected assembler does require you to specify a k value, and
+you omit the kmer element from the config, then RAMPART specifies a default kmer spread for you.  This will have a min
+value of 35, the max is automatically determined from the provided libraries as described above, and the step is 20 (COARSE).
 
 In the future, we  may try to integrate tools such as KmerGenie http://kmergenie.bx.psu.edu/ into RAMPART in order to
 guess the best kmer value prior to assembly, thus allowing the user to skip the computationally expensive process of testing

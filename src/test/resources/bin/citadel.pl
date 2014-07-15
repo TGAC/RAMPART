@@ -19,7 +19,8 @@ GetOptions(
         \%opt,
         'input|i=s',
         'output|o=s',
-	'template|t=s',
+	    'template|t=s',
+	    'lsf_queue|q=s',
         'verbose|v',
         'debug',
         'help|usage|h|?',
@@ -34,6 +35,7 @@ pod2usage( -verbose => 2 ) if $opt{man};
 my $input = $opt{input};
 my $output  = $opt{output};
 my $template = $opt{template};
+my $queue = $opt{lsf_queue};
 my $verbose = $opt{verbose};
 my $debug = $opt{debug};
 
@@ -73,7 +75,7 @@ print("Executing RAMPART for each sample\n");
 foreach(@samples) {
 	
 	my $sample_dir = $output . "/" . $_;
-	system("bsub -oo" . $sample_dir . "/rampart.lsf.log -qProd128 \"java -jar ~/dev/RAMPART/target/rampart-0.7.0.jar run -o " . $sample_dir . " " . $sample_dir . "/rampart.cfg\"");
+	system("bsub -oo" . $sample_dir . "/rampart.lsf.log -q" . $queue . "\"rampart -o " . $sample_dir . " " . $sample_dir . "/rampart.cfg\"");
 
 }
 
@@ -105,6 +107,6 @@ __END__
 
 =head1 DESCRIPTION
 
-  Scans a directory for fastq files.  Tries to group by sample.  For each sample, create a directory and fill in variables within the rampart template.  Then run rampart for each sample.
+  Scans a directory for fastq files.  Tries to group by sample.  For each sample, create a directory and fill in variables within the rampart template.  Then run rampart for each sample.  Uses LSF scheduling system, will need adjustment for use of other schedulers or unscheduled environments
 
 

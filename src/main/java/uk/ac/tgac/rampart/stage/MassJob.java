@@ -701,7 +701,7 @@ public class MassJob extends AbstractConanProcess {
 
             Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
             this.kmerRange = kmerElement != null ?
-                    new KmerRange(kmerElement, 35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.MEDIUM.getStep()) :
+                    new KmerRange(kmerElement, 35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.COARSE.getStep()) :
                     null;
 
             Element cvgElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_CVG_RANGE);
@@ -781,7 +781,7 @@ public class MassJob extends AbstractConanProcess {
                 log.warn("The selected assembler \"" + this.tool + "\" for job \"" + this.name + "\" does not support K parameter");
             }
             else if (kmerRange == null) {
-                this.kmerRange = new KmerRange(35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.MEDIUM);
+                this.kmerRange = new KmerRange(35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.COARSE);
                 log.info("No K-mer range specified for \"" + this.name + "\" running assembler with default range: " + this.kmerRange.toString());
             }
             else if (kmerRange.validate()) {
@@ -897,7 +897,7 @@ public class MassJob extends AbstractConanProcess {
             }
         }
 
-        protected final List<JobVars> createJobVars() {
+        protected final List<JobVars> createJobVars(Assembler.Type asmType) {
 
             int[] cvg = null;
 
@@ -913,7 +913,7 @@ public class MassJob extends AbstractConanProcess {
             }
 
             int[] kmer = null;
-            if (this.kmerRange == null || this.kmerRange.isEmpty()) {
+            if (this.kmerRange == null || this.kmerRange.isEmpty() || asmType == Assembler.Type.DE_BRUIJN_OPTIMISER) {
                 kmer = new int[]{0};
             }
             else {
@@ -960,9 +960,9 @@ public class MassJob extends AbstractConanProcess {
             try {
                 List<Assembler> assemblers = new ArrayList<>();
 
-                List<JobVars> jobs = this.createJobVars();
-
                 Assembler.Type type = this.genericAssembler.getType();
+
+                List<JobVars> jobs = this.createJobVars(type);
 
                 for(JobVars jv : jobs) {
 
@@ -976,7 +976,10 @@ public class MassJob extends AbstractConanProcess {
                     if (!cvgName.isEmpty())     dirNameParts.add(cvgName);
                     if (!kmerName.isEmpty())    dirNameParts.add(kmerName);
                     if (!varName.isEmpty())     dirNameParts.add(varName);
-                    String dirName = StringUtils.join(dirNameParts, "_");
+                    String dirName = dirNameParts.size() == 0 ?
+                            this.name + "_output" :
+                            StringUtils.join(dirNameParts, "_");
+
 
                     // Make sure we have a name to use if the user is doing any parameter optimisation
                     dirName = dirName.isEmpty() ? this.tool.toLowerCase() : dirName;
