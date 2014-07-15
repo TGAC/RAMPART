@@ -533,6 +533,10 @@ public class Mecq extends AbstractConanProcess {
                 }
             }
 
+            if (libIds.length != this.libraries.size()) {
+                throw new IllegalArgumentException("Could not find all the requested libraries for MECQ job: " + this.name);
+            }
+
             // Other args
             this.outputDir = new File(parentOutputDir, name);
             this.jobPrefix = parentJobPrefix + "-name";

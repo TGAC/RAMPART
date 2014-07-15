@@ -224,7 +224,7 @@ The following example demonstrates how to set some checked and unchecked argumen
    <mass>
       <job name="abyss" tool="ABYSS_V1.5" threads="16" memory="16000"
             checked_args="-n 20 -t 250"
-            unchecked_args="p=0.8 q=5 s=300 S=350>
+            unchecked_args="p=0.8 q=5 s=300 S=350">
          <kmer list="83"/>
          <inputs>
             <input ecq="raw" lib="ope1"/>
