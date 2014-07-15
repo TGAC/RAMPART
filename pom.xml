@@ -278,17 +278,28 @@
                 <executions>
                     <execution>
                         <id>add-exeperms-and-res</id>
-                        <phase>package</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <chmod file="${build-dir}/bin/rampart" perm="755"/>
+
+                                <!-- Make config dir and copy across files -->
                                 <mkdir dir="${build-dir}/etc"/>
                                 <copy todir="${build-dir}/etc">
-                                    <fileset dir="${project.basedir}/etc"/>
+                                    <fileset dir="${project.basedir}/src/main/resources/etc"/>
                                 </copy>
+
+                                <!-- copy scripts to bin dir -->
+                                <mkdir dir="${build-dir}/bin"/>
+                                <copy todir="${build-dir}/bin">
+                                    <fileset dir="${project.basedir}/src/main/resources/bin"/>
+                                </copy>
+
+                                <!-- Add executable permission to all executables -->
+                                <chmod file="${build-dir}/bin/*" perm="755"/>
+
                             </target>
                         </configuration>
                     </execution>
@@ -318,6 +329,7 @@
                                     <fileset dir="${project.basedir}/doc/build/man"/>
                                 </copy>
                                 <copy file="${project.basedir}/doc/build/latex/RAMPART.pdf" todir="${build-dir}/doc"/>
+
                             </target>
                         </configuration>
                     </execution>
