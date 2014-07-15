@@ -28,7 +28,7 @@ The genome to assemble
 We recommend the user enters these properties for the genome if known:
 
 * Organism name - this is used for reporting and logging purposes and if a prefix for name standardisation isn't provided initials taken from the name are used in the filename and headers of the final assembly.
-* Genome ploidy - this is required if you choose to run the ALLPATHS-LG assembler, and is useful for calculating kmer counting hash sizes.
+* Genome ploidy - this is required if you choose to run the ALLPATHS-LG assembler, and is useful for calculating kmer counting hash sizes.  If you set to "2", i.e. diploid, then assembly enhancement tools may make use of bubble files if they are available and if the tools are capable.
 * Estimated Genome Size - has many purposes: 1. Can be used to compare how close the assembly size is the genome size and used as an assembly metric for assembly comparison.  2. If Kmer counting, can be used to automatically determine size of the hash table to use.  3. If requested, this can be used to calculate coverage levels for subsampling reads.
 * Estimated GC percentage - Used as an assembly metric to compare assembly GC with the expected GC.
 
@@ -95,7 +95,14 @@ being we request that you enter all these details manually.
 The pipeline
 ------------
 
-The RAMPART pipeline can loosely be separated into the following stages, all of which are optional customisable:
+The RAMPART pipeline can be separated into a number of stages, all of which are optional customisable.
+The pipeline can be controlled in two ways.  The first way is by definition in the job configuration file.  If a
+pipeline stage is not defined it will not be executed. The second way is via a command line option: ``-s``.  By
+specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.
+For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages
+described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does
+not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you
+cannot run the AMP stage, without a selected assembly to work with.
 
 .. toctree::
    
@@ -107,11 +114,5 @@ The RAMPART pipeline can loosely be separated into the following stages, all of 
    finalise
 
 
-The pipeline can be controlled in two ways.  The first way is by definition in the job configuration file.  If a
-pipeline stage is not defined it will not be executed. The second way is via a command line option: ``-s``.  By
-specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.
-For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages
-described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does
-not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you
-cannot run the AMP stage, without a selected assembly to work with.
+
 

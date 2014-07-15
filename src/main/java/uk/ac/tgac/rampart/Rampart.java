@@ -1,4 +1,4 @@
-/**
+/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
  * Copyright (C) 2013  Daniel Mapleson - TGAC
  *
@@ -14,298 +14,479 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
+
 package uk.ac.tgac.rampart;
 
-import org.apache.commons.cli.*;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang.ArrayUtils;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
+import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
+import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
+import uk.ac.ebi.fgpt.conan.core.pipeline.AbstractConanPipeline;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
-import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
-import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.ConanUser;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
+import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
-import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
-import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
-import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
-import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
-import uk.ac.tgac.conan.core.util.JarUtils;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStage;
-import uk.ac.tgac.rampart.tool.pipeline.RampartStageList;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartArgs;
-import uk.ac.tgac.rampart.tool.pipeline.rampart.RampartPipeline;
-import uk.ac.tgac.rampart.util.CommandLineHelper;
+import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
+import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
+import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
+import uk.ac.ebi.fgpt.conan.util.StringJoiner;
+import uk.ac.tgac.conan.core.data.Library;
+import uk.ac.tgac.conan.core.util.AbstractXmlJobConfiguration;
+import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.stage.*;
+import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAmpAssemblies;
+import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseMassAssemblies;
+import uk.ac.tgac.rampart.stage.analyse.reads.AnalyseReads;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * This class handles execution of Rampart in run mode.
+ * Created by maplesod on 08/07/14.
  */
-public class Rampart extends AbstractConanCLI {
+public class Rampart {
 
-    private static Logger log = LoggerFactory.getLogger(Rampart.class);
+    public static class Pipeline extends AbstractConanPipeline {
 
-    public static final File CWD = currentWorkingDir();
+        private Args args;
+        private ConanExecutorService conanExecutorService;
 
-    /**
-     * Environment specific configuration options and resource files are set in the user's home directory
-     */
-    public static final File USER_DIR = new File(System.getProperty("user.home") + "/.tgac/rampart");
+        private static final String NAME = "rampart-pipeline";
+        private static final ConanUser USER = new GuestUser("rampart@tgac.ac.uk");
 
-    /**
-     * Gets the application config directory.  This is really messy way to do it... try to think of a better way later
-     */
-    public static final File APP_DIR = JarUtils.jarForClass(Rampart.class, null) == null ? new File(".") :
-            new File(Rampart.class.getProtectionDomain().getCodeSource().getLocation().getPath())
-                    .getParentFile()
-                    .getParentFile()
-                    .getParentFile()
-                    .getParentFile()
-                    .getParentFile()
-                    .getParentFile()
-                    .getParentFile()
-                    .getParentFile();
+        public Pipeline(Args args, ConanExecutorService ces) throws IOException {
 
-    public static final String APP_NAME = "RAMPART";
-
-    public static final File ETC_DIR = new File(APP_DIR, "etc");
-    //public static final File REPORT_DIR = new File(DATA_DIR, "report");
-
-    // **** Option parameter names ****
-    public static final String OPT_STAGES = "stages";
-    public static final String OPT_RUN_FIRST_HALF = "run_first_half";
-    public static final String OPT_RUN_SECOND_HALF = "run_second_half";
-    public static final String OPT_AMP_INPUT = "amp_input";
-
-    // **** Defaults ****
-
-    public static final File    DEFAULT_SYSTEM_CONAN_FILE = new File(ETC_DIR, "conan.properties");
-    public static final File    DEFAULT_USER_CONAN_FILE = new File(USER_DIR, "conan.properties");
-    public static final File    DEFAULT_CONAN_FILE = DEFAULT_USER_CONAN_FILE.exists() ?
-            DEFAULT_USER_CONAN_FILE : DEFAULT_SYSTEM_CONAN_FILE;
-
-    public static final File    DEFAULT_SYSTEM_LOG_FILE = new File(ETC_DIR, "log4j.properties");
-    public static final File    DEFAULT_USER_LOG_FILE = new File(USER_DIR, "log4j.properties");
-    public static final File    DEFAULT_LOG_FILE = DEFAULT_USER_LOG_FILE.exists() ?
-            DEFAULT_USER_LOG_FILE : DEFAULT_SYSTEM_LOG_FILE;
+            super(NAME, USER, false, false, ces.getConanProcessService());
 
 
+            this.conanExecutorService = ces;
+            this.args = args;
 
-    public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
-
-
-    // **** Options ****
-    private RampartStageList stages;
-    private File ampInput;
-    private File jobConfig;
-
-
-    private RampartArgs args;
-
-    /**
-     * Creates a new RAMPART instance with default arguments
-     */
-    public Rampart() throws IOException {
-
-        super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
-                APP_NAME + createTimestamp(),
-                false,
-                false);
-
-        this.stages             = DEFAULT_STAGES;
-        this.ampInput           = null;
-        this.jobConfig          = null;
-
-        this.args               = null;
-    }
-
-    /**
-     * Creates a new RAMPART instance based on command line arguments
-     * @param args List of command line arguments containing information to setup RAMPART
-     * @throws ParseException Thrown if an invalid command line was encountered
-     */
-    public Rampart(String[] args) throws ParseException, IOException {
-
-        // Creates the instance and parses the command line, setting the class variables
-        super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
-                APP_NAME + createTimestamp(),
-                false,
-                false);
-
-        // Parses the command line using a posix parser and sets all the variables
-        this.parse(new PosixParser().parse(createOptions(), args, true));
-
-        // Only bother doing more if help is not requested
-        if (!this.isHelp()) {
-
-            // Initialise logging and load conan properties
             this.init();
+        }
 
-            // Create RnaSeqEvalArgs based on reads from the command line
-            this.args = new RampartArgs(
-                    this.jobConfig,
-                    this.getOutputDir(),
-                    this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
-                    this.stages,
-                    this.ampInput);
+        public Args getArgs() {
+            return args;
+        }
 
-            // Parse the job config file and set internal variables in RampartArgs
-            this.args.parseXml();
+        public void setArgs(Args args) throws IOException {
+            this.args = args;
 
-            // Create an execution context based on environment information detected or provide by the user
-            this.args.setExecutionContext(this.buildExecutionContext());
+            this.init();
+        }
 
-            // Log setup
 
-            // Override log level to debug if the verbose flag is set
-            if (this.isVerbose()) {
-                LogManager.getRootLogger().setLevel(Level.DEBUG);
-            }
-            log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
-            log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
-            log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
-            log.info("Job Prefix: " + this.args.getJobPrefix());
-            if (ConanProperties.containsKey("externalProcessConfigFile")) {
-                log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
+        public void init() throws IOException {
+
+            // Configure pipeline
+            this.clearProcessList();
+
+            // Create all the processes
+            this.addProcesses(this.args.getStages().createProcesses(this.conanExecutorService));
+
+            // Check all processes in the pipeline are operational, modify execution context to execute unscheduled locally
+            if (this.args.isDoInitialChecks() && !this.isOperational(new DefaultExecutionContext(new Local(), null,
+                    this.args.getExecutionContext().getExternalProcessConfiguration()))) {
+                throw new IOException("RAMPART pipeline contains one or more processes that are not currently operational.  " +
+                        "Please fix before restarting pipeline.");
             }
         }
+
     }
 
 
-    @Override
-    protected void parseExtra(CommandLine commandLine) throws ParseException {
+    public static class Args extends AbstractXmlJobConfiguration implements ProcessArgs {
 
-        this.stages = commandLine.hasOption(OPT_STAGES) ?
-                RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
-                DEFAULT_STAGES;
+        public static final String KEY_ELEM_LIBRARIES       = "libraries";
+        public static final String KEY_ELEM_LIBRARY         = "library";
+        public static final String KEY_ELEM_PIPELINE        = "pipeline";
+        public static final String KEY_ELEM_MECQ            = "mecq";
+        public static final String KEY_ELEM_ANALYSE_READS   = "analyse_reads";
+        public static final String KEY_ELEM_MASS            = "mass";
+        public static final String KEY_ELEM_ANALYSE_MASS    = "analyse_mass";
+        public static final String KEY_ELEM_ANALYSE_AMP     = "analyse_amp";
+        public static final String KEY_ELEM_AMP             = "amp";
+        public static final String KEY_ELEM_FINALISE        = "finalise";
 
-        // If the user hasn't modified the stages then check to see if they've requested any predefined profiles
-        if (stages == DEFAULT_STAGES) {
 
-            if (commandLine.hasOption(OPT_RUN_FIRST_HALF)) {
+        private Params params = new Params();
 
-                RampartStageList firstHalf = new RampartStageList();
-                firstHalf.add(RampartStage.MECQ);
-                firstHalf.add(RampartStage.ANALYSE_READS);
-                firstHalf.add(RampartStage.MASS);
-                firstHalf.add(RampartStage.ANALYSE_ASSEMBLIES);
-                this.stages = firstHalf;
+        private RampartStageList stages;
+        private List<Library> libs;
+        private Mecq.Args mecqArgs;
+        private AnalyseReads.Args analyseReadsArgs;
+        private Mass.Args massArgs;
+        private AnalyseMassAssemblies.Args analyseMassArgs;
+        private File ampInput;
+        private File ampBubble;
+        private Amp.Args ampArgs;
+        private AnalyseAmpAssemblies.Args analyseAmpArgs;
+        private Finalise.Args finaliseArgs;
+        private RampartJobFileSystem rampartJobFileSystem;
+        private ExecutionContext executionContext;
+        private boolean doInitialChecks;
 
-                log.info("Running first half of the RAMPART pipeline only");
+
+
+        public Args(File configFile, File outputDir, String jobPrefix, RampartStageList stages, File ampInput, File ampBubble, boolean doInitialChecks)
+                throws IOException {
+
+            super(configFile, outputDir, jobPrefix);
+
+            this.stages = stages;
+            this.libs = new ArrayList<>();
+            this.mecqArgs = null;
+            this.analyseReadsArgs = null;
+            this.massArgs = null;
+            this.analyseMassArgs = null;
+            this.ampInput = ampInput;
+            this.ampBubble = ampBubble;
+            this.ampArgs = null;
+            this.analyseAmpArgs = null;
+            this.finaliseArgs = null;
+            this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
+            this.doInitialChecks = doInitialChecks;
+        }
+
+
+
+        @Override
+        protected void internalParseXml(Element element) throws IOException {
+
+            // All libraries
+            Element librariesElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_LIBRARIES);
+            NodeList libraries = librariesElement.getElementsByTagName(KEY_ELEM_LIBRARY);
+            this.libs = new ArrayList<>();
+            for(int i = 0; i < libraries.getLength(); i++) {
+                this.libs.add(new Library((Element)libraries.item(i), this.getOutputDir().getAbsoluteFile()));
             }
-            else if (commandLine.hasOption(OPT_RUN_SECOND_HALF)) {
-                RampartStageList secondHalf = new RampartStageList();
-                secondHalf.add(RampartStage.AMP);
-                secondHalf.add(RampartStage.FINALISE);
-                this.stages = secondHalf;
 
-                log.info("Running second half of the RAMPART pipeline only");
+            Element pipelineElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_PIPELINE);
 
-                if (commandLine.hasOption(OPT_AMP_INPUT)) {
-                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT));
+            // MECQ
+            Element mecqElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MECQ);
+            this.mecqArgs = mecqElement == null ? null :
+                    new Mecq.Args(
+                            mecqElement,
+                            this.rampartJobFileSystem.getMeqcDir(),
+                            this.getJobPrefix() + "-mecq",
+                            this.libs);
+
+            this.stages.setArgsIfPresent(RampartStage.MECQ, this.mecqArgs);
+
+
+            // Analyse reads
+            Element analyseReadsElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_READS);
+            this.analyseReadsArgs = analyseReadsElement == null ? null :
+                    new AnalyseReads.Args(
+                            analyseReadsElement,
+                            this.libs,
+                            this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
+                            this.getJobPrefix() + "-analyse_reads",
+                            this.rampartJobFileSystem.getMeqcDir(),
+                            this.rampartJobFileSystem.getAnalyseReadsDir(),
+                            this.getOrganism());
+
+            this.stages.setArgsIfPresent(RampartStage.ANALYSE_READS, this.analyseReadsArgs);
+
+            // MASS
+            Element massElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_MASS);
+            this.massArgs = massElement == null ? null :
+                    new Mass.Args(
+                            massElement,
+                            this.rampartJobFileSystem.getMassDir(),
+                            this.rampartJobFileSystem.getMeqcDir(),
+                            this.getJobPrefix() + "-mass",
+                            this.libs,
+                            this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
+                            this.getOrganism());
+
+            this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
+
+            // Analyse MASS assemblies
+            Element analyseMassElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_MASS);
+            this.analyseMassArgs = analyseMassElement == null ? null :
+                    new AnalyseMassAssemblies.Args(
+                            analyseMassElement,
+                            this.rampartJobFileSystem.getMassDir(),
+                            this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
+                            this.rampartJobFileSystem.getAnalyseMassDir(),
+                            this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
+                            this.getOrganism(),
+                            this.getJobPrefix() + "-analyse_mass");
+
+            this.stages.setArgsIfPresent(RampartStage.ANALYSE_MASS, this.analyseMassArgs);
+
+            // AMP
+            Element ampElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_AMP);
+            this.ampArgs = ampElement == null ? null :
+                    new Amp.Args(
+                            ampElement,
+                            this.rampartJobFileSystem.getAmpDir(),
+                            this.getJobPrefix() + "-amp",
+                            this.ampInput != null ?
+                                    this.ampInput :
+                                    this.rampartJobFileSystem.getSelectedAssemblyFile(),
+                            this.getOrganism().getPloidy() > 1 ?
+                                    this.ampBubble != null ?
+                                            this.ampBubble :
+                                            this.rampartJobFileSystem.getSelectedBubbleFile() :
+                                    null,
+                            this.libs,
+                            this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
+                            this.getOrganism());
+
+            this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
+
+            // Analyse AMP assemblies
+            Element analyseAmpElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_ANALYSE_AMP);
+            this.analyseAmpArgs = analyseAmpElement == null ? null :
+                    new AnalyseAmpAssemblies.Args(
+                            analyseAmpElement,
+                            this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
+                            this.rampartJobFileSystem.getAnalyseAmpDir(),
+                            this.ampArgs == null ? null : this.ampArgs.getStageArgsList(),
+                            this.getOrganism(),
+                            this.getJobPrefix() + "-analyse_amp");
+
+            this.stages.setArgsIfPresent(RampartStage.ANALYSE_AMP, this.analyseAmpArgs);
+
+
+            File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getSelectedAssemblyFile(): this.ampArgs.getFinalAssembly();
+
+            Element finaliseElement = XmlHelper.getDistinctElementByName(pipelineElement, KEY_ELEM_FINALISE);
+            this.finaliseArgs = finaliseElement == null ? null :
+                    new Finalise.Args(
+                            finaliseElement,
+                            finalAssembly,
+                            this.rampartJobFileSystem.getFinalDir(),
+                            this.getJobPrefix() + "-finalise",
+                            this.getOrganism(),
+                            this.getInstitution());
+
+            this.stages.setArgsIfPresent(RampartStage.FINALISE, this.finaliseArgs);
+        }
+
+        public RampartStageList getStages() {
+            return stages;
+        }
+
+        public void setStages(RampartStageList stages) {
+            this.stages = stages;
+        }
+
+        @Override
+        public void parse(String args) {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public String getUncheckedArgs() {
+            return null;
+        }
+
+        @Override
+        public ParamMap getArgMap() {
+
+            ParamMap pvp = new DefaultParamMap();
+
+            if (this.getConfigFile() != null) {
+                pvp.put(params.getConfig(), this.getConfigFile().getAbsolutePath());
+            }
+
+            if (this.getOutputDir() != null) {
+                pvp.put(params.getOutputDir(), this.getOutputDir().getAbsolutePath());
+            }
+
+            if (this.stages != null && this.stages.size() > 0) {
+                pvp.put(params.getStageList(), this.stages.toString());
+            }
+
+            return pvp;
+        }
+
+        @Override
+        public void setFromArgMap(ParamMap pvp) throws IOException, ConanParameterException {
+            for (Map.Entry<ConanParameter, String> entry : pvp.entrySet()) {
+
+                if (!entry.getKey().validateParameterValue(entry.getValue())) {
+                    throw new IllegalArgumentException("Parameter invalid: " + entry.getKey() + " : " + entry.getValue());
+                }
+
+                ConanParameter param = entry.getKey();
+
+                if (param.equals(this.params.getConfig())) {
+                    this.setConfigFile(new File(entry.getValue()));
+                }
+                else if (param.equals(this.params.getOutputDir())) {
+                    this.setOutputDir(new File(entry.getValue()));
+                }
+                else if (param.equals(this.params.getStageList())) {
+                    this.stages = RampartStageList.parse(entry.getValue());
                 }
             }
+
+            this.rampartJobFileSystem = new RampartJobFileSystem(this.getOutputDir());
+
+            this.parseXml();
         }
 
-        // Check for a single arg left on the command line
-        if (commandLine.getArgs().length != 1)
-            throw new ParseException("Unexpected number of arguments on the command line.  Expected 1, found " +
-                    commandLine.getArgs().length);
+        @Override
+        public String toString() {
 
-        // This is the job config file.
-        this.jobConfig = new File(commandLine.getArgs()[0]);
-    }
+            StringJoiner sj = new StringJoiner("\n");
+            sj.add("Job Configuration File: " + this.getConfigFile().getAbsolutePath());
+            sj.add("Output Directory: " + this.getOutputDir().getAbsolutePath());
+            sj.add("Job Prefix: " + this.getJobPrefix());
+            sj.add("Stages: " + ArrayUtils.toString(stages));
 
-
-
-    @Override
-    public void printHelp() {
-        CommandLineHelper.printHelp(
-                System.err,
-                "rampart [options] <job_config_file>\nOptions: ",
-                "RAMPART is a de novo assembly pipeline that makes use of third party-tools and High Performance Computing " +
-                "resources.  It can be used as a single interface to several popular assemblers, and can perform " +
-                "automated comparison and analysis of any generated assemblies.\n\n",
-                createOptions()
-        );
-    }
-
-    @Override
-    protected List<Option> createExtraOptions() {
-
-        // create Options object
-        List<Option> options = new ArrayList<>();
-
-        options.add(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
-                .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));
-
-        options.add(OptionBuilder.withLongOpt(OPT_RUN_FIRST_HALF)
-                .withDescription("Run the first half of the RAMPART pipeline.  This involves running MECQ and MASS and doing any requested analyses.")
-                .create("1"));
-
-        options.add(OptionBuilder.withLongOpt(OPT_RUN_SECOND_HALF)
-                .withDescription("Run the second half of the RAMPART pipeline.  This involves enhancing the selected assembly and doing any requested analyses on the final assembly and finalising the assembly so that it's suitable for distribution.")
-                .create("2"));
-
-        options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_AMP_INPUT).hasArg()
-                .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate assembly to process.  By default the automatically selected assembly is used.")
-                .create("a"));
-
-        return options;
-    }
-
-    @Override
-    protected ParamMap createArgMap() {
-        return this.args.getArgMap();
-    }
-
-    @Override
-    protected ConanPipeline createPipeline() throws IOException {
-
-        return new RampartPipeline(this.args, new DefaultProcessService());
-    }
-
-    public void execute() throws InterruptedException, TaskExecutionException, IOException {
-
-        super.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH, this.args.getExecutionContext());
-    }
-
-
-    /**
-     * The main entry point for RAMPART.  Looks at the first argument to decide which mode to run in.  Execution of each
-     * mode is handled by RampartMode.
-     * @param args Command line arguments
-     */
-    public static void main(String[] args) {
-
-        try {
-
-            Rampart rampart = new Rampart(args);
-
-            if (rampart == null)
-                throw new IllegalArgumentException("Invalid arguments, could not create a valid rampart object.");
-
-            if (rampart.isHelp()) {
-                rampart.printHelp();
-            }
-            else {
-                rampart.execute();
-            }
+            return sj.toString();
         }
-        catch (IllegalArgumentException | ParseException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
+
+        public Amp.Args getAmpArgs() {
+            return ampArgs;
         }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            System.err.println(StringUtils.join(e.getStackTrace(), "\n"));
-            System.exit(2);
+
+        public void setAmpArgs(Amp.Args ampArgs) {
+            this.ampArgs = ampArgs;
+        }
+
+        public Mecq.Args getMecqArgs() {
+            return mecqArgs;
+        }
+
+        public void setMecqArgs(Mecq.Args mecqArgs) {
+            this.mecqArgs = mecqArgs;
+        }
+
+        public AnalyseReads.Args getAnalyseReadsArgs() {
+            return analyseReadsArgs;
+        }
+
+        public void setAnalyseReadsArgs(AnalyseReads.Args analyseReadsArgs) {
+            this.analyseReadsArgs = analyseReadsArgs;
+        }
+
+        public Mass.Args getMassArgs() {
+            return massArgs;
+        }
+
+        public void setMassArgs(Mass.Args massArgs) {
+            this.massArgs = massArgs;
+        }
+
+        public AnalyseMassAssemblies.Args getAnalyseMassArgs() {
+            return analyseMassArgs;
+        }
+
+        public void setAnalyseMassArgs(AnalyseMassAssemblies.Args analyseMassArgs) {
+            this.analyseMassArgs = analyseMassArgs;
+        }
+
+        public AnalyseAmpAssemblies.Args getAnalyseAmpArgs() {
+            return analyseAmpArgs;
+        }
+
+        public void setAnalyseAmpArgs(AnalyseAmpAssemblies.Args analyseAmpArgs) {
+            this.analyseAmpArgs = analyseAmpArgs;
+        }
+
+        public Finalise.Args getFinaliseArgs() {
+            return finaliseArgs;
+        }
+
+        public void setFinaliseArgs(Finalise.Args finaliseArgs) {
+            this.finaliseArgs = finaliseArgs;
+        }
+
+        public List<Library> getLibs() {
+            return libs;
+        }
+
+        public void setLibs(List<Library> libs) {
+            this.libs = libs;
+        }
+
+        public List<ConanProcess> getRequestedTools() {
+            return this.stages.getExternalTools();
+        }
+
+        public ExecutionContext getExecutionContext() {
+            return executionContext;
+        }
+
+        public void setExecutionContext(ExecutionContext executionContext) {
+            this.executionContext = executionContext;
+        }
+
+        public boolean isDoInitialChecks() {
+            return doInitialChecks;
+        }
+
+        public void setDoInitialChecks(boolean doInitialChecks) {
+            this.doInitialChecks = doInitialChecks;
         }
     }
 
+
+    public static class Params extends AbstractProcessParams {
+
+        private ConanParameter config;
+        private ConanParameter outputDir;
+        private ConanParameter stageList;
+
+        public Params() {
+
+            this.config = new PathParameter(
+                    "config",
+                    "The RAMPART configuration file",
+                    false);
+
+            this.outputDir = new PathParameter(
+                    "output",
+                    "The path to the folder where all RAMPART output should be stored",
+                    true);
+
+            this.stageList = new ParameterBuilder()
+                    .longName("stages")
+                    .description("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.")
+                    .argValidator(ArgValidator.OFF)
+                    .create();
+        }
+
+
+
+        public ConanParameter getConfig() {
+            return config;
+        }
+
+        public ConanParameter getOutputDir() {
+            return outputDir;
+        }
+
+        public ConanParameter getStageList() {
+            return stageList;
+        }
+
+        @Override
+        public ConanParameter[] getConanParametersAsArray() {
+            return new ConanParameter[]{
+                    this.config,
+                    this.outputDir,
+                    this.stageList
+            };
+        }
+    }
 }

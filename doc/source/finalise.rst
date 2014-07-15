@@ -26,3 +26,5 @@ depending on how you've setup your job.  The output from this stage will be as f
 * ``<prefix>.agp`` (a description of where the contigs fit into the scaffolds)
 * ``<prefix>.translate`` (how the fasta header names translate back to the input assembly)
 
+All the output files should be compressed into a single tarball by default.  You can turn this functionality off by adding
+the ``compress="false"`` attribute to finaliser.

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This is an example configuration file that is used to demonstrate the functionality and flexibility of RAMPART.  However, it is
+not a file that you should for your own projects as many of the options are redundant or do not make much sense. -->
+<rampart author="Dan Mapleson" collaborator="Someone" institution="Someplace" title="Big assembly project">
+    <organism name="Bacterius maximus" ploidy="1" est_genome_size="2000000" est_gc_percentage="43.0"/>
+    <libraries>
+        <library name="pe1" read_length="101" avg_insert_size="500" insert_err_tolerance="0.3" orientation="FR" type="PE" phred="PHRED_33">
+            <files>
+                <path>lib1_R1.fastq</path>
+                <path>lib1_R2.fastq</path>
+            </files>
+        </library>
+        <library name="mp1" read_length="150" avg_insert_size="4000" insert_err_tolerance="0.3" orientation="RF" uniform="false" type="MP" phred="PHRED_33">
+            <files>
+                <path>lib2_R1.fastq</path>
+                <path>lib2_R2.fastq</path>
+            </files>
+        </library>
+        <library name="ope1" read_length="101" avg_insert_size="180" insert_err_tolerance="0.3" orientation="FR" type="OPE" phred="PHRED_33">
+            <files>
+                <path>lib3_R1.fastq</path>
+                <path>lib3_R2.fastq</path>
+            </files>
+        </library>
+    </libraries>
+    <pipeline>
+        <mecq parallel="true">
+            <ecq name="sickle_aggressive" tool="SICKLE_V1.2" libs="pe1,mp1" parallel="true" checked_args="-l 70 -q 30"/>
+            <ecq name="sickle_lite" tool="SICKLE_V1.2" libs="pe1,ope1" parallel="false" checked_args="-l 90 -q 50"/>
+            <ecq name="quake" tool="QUAKE_V0_3" libs="pe1" threads="4" memory="2000" checked_args="-k 19 -l 70"/>
+            <ecq name="musket" tool="MUSKET_V1.0" libs="pe1" threads="6" memory="16000" checked_args="-k 19 15000000 -maxtrim 30"/>
+        </mecq>
+        <analyse_reads kmer="true" parallel="true" threads="4"/>
+        <mass parallel="true">
+            <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000" parallel="true">
+                <kmer min="61" max="75" step="MEDIUM"/>
+                <inputs>
+                    <input ecq="raw" lib="pe1"/>
+                    <input ecq="raw" lib="mp1"/>
+                </inputs>
+            </job>
+            <job name="abyss-quake-kmer" tool="ABYSS_V1.5" threads="16" memory="4000" parallel="true" checked_args="">
+                <kmer list="61,65,71,75"/>
+                <var name="n" values="10,20,30"/>
+                <inputs>
+                    <input ecq="quake" lib="pe1"/>
+                    <input ecq="sickle_aggressive" lib="mp1"/>
+                </inputs>
+            </job>
+            <job name="allpaths-cvg" tool="ALLPATHSLG_V44837" threads="12" memory="5000" parallel="true">
+                <coverage min="50" max="100" step="MEDIUM"/>
+                <inputs>
+                    <input ecq="raw" lib="ope1"/>
+                    <input ecq="raw" lib="mp1"/>
+                </inputs>
+            </job>
+        </mass>
+        <analyse_mass types="QUAST,KAT" threads="8" parallel="true"/>
+        <amp>
+            <stage tool="SSPACE_Basic_v2.0" threads="16" memory="16000" checked_args="-m 50 -z 500"/>
+            <stage tool="SOAP_GapCloser_V1.12" threads="16" memory="16000" checked_args="-p 27"/>
+        </amp>
+        <analyse_amp types="QUAST,KAT" threads="8" parallel="true"/>
+        <finalise prefix="Bamax_V1" min_n="20" compress="true"/>
+    </pipeline>
+
+</rampart>

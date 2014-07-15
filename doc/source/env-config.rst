@@ -44,24 +44,38 @@ specific to each dependency just prior to it's execution.  Currently known proce
 keys are hard coded, please keep the exact wording as below, even if you are using a different version of the software).
 The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Valid keys::
 
-   Sickle_V1.1
-   Abyss_V1.3.4
-   SSPACE_Basic_v2.0
-   GapCloser_v1.12
-   SoapDeNovo_V2.04
+   # Assemblers
+   Abyss_V1.5
+   AllpathsLg_V44837
+   Platanus_Assemble_V1.2
+   SOAP_Assemble_V2.4
+   Spades_V3.1
+   Velvet_V1.2
+
+   # Dataset improving tools
+   Sickle_V1.2
    Quake_V0.3.4
-   Musket_V1.0.6
+
+   # Assembly improving tools
+   Platanus_Gapclose_V1.2
+   Platanus_Scaffold_V1.2
+   SSPACE_Basic_v2.0
+   SOAP_GapCloser_V1.12
+   SOAP_Scaffold_V2.4
+
+   # Assembly analysis tools
    Quast_V2.2
    Cegma_V2.4
-   Subsampler_V1.0
-   AllpathsLg_V44837
    KAT_Comp_V1.0
    KAT_GCP_V1.0
    KAT_Plot_Density_V1.0
    KAT_Plot_Spectra-CN_V1.0
+
+   # Misc tools
    Jellyfish_Count_V1.1
    Jellyfish_Merge_V1.1
    Jellyfish_Stats_V1.1
+   Subsampler_V1.0
 
 By default RAMPART assumes the tools are all available and properly configured.  So if this applies to your environment
 then you do not need to setup this file.

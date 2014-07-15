@@ -33,6 +33,7 @@ Table of Contents
    installation
    env-config
    running
+   multi-strain
    citing
    license
    contact

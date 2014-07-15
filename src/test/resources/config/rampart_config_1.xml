@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+  ~ Copyright (C) 2013  Daniel Mapleson - TGAC
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<rampart>
+    <author>Dan Mapleson</author>
+    <collaborator>Someone</collaborator>
+    <institution>Someplace</institution>
+    <title>Big assembly project</title>
+    <organism ploidy="1" est_genome_size="500000">
+        <name>Bacterius maximus</name>
+    </organism>
+    <libraries>
+        <library name="lib1896-pe" read_length="101" avg_insert_size="500" insert_err_tolerance="0.3" orientation="FR" type="PE" phred="PHRED_33">
+            <files>
+                <path>LIB1896_R1.r95.fastq</path>
+                <path>LIB1896_R2.r95.fastq</path>
+            </files>
+        </library>
+    </libraries>
+    <pipeline>
+        <mecq parallel="false">
+            <ecq name="sickle_agressive" tool="SICKLE_V1.1" min_len="60" min_qual="30" libs="lib1896-pe"/>
+        </mecq>
+        <analyse_reads kmer="true" parallel="true" threads="4"/>
+        <mass parallel="true">
+            <job name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="8" memory="4000" parallel="true">
+                <kmer min="61" step="COARSE"/>
+                <inputs>
+                    <input ecq="raw" lib="lib1896-pe"/>
+                </inputs>
+            </job>
+            <job name="abyss-sickle-kmer" tool="ABYSS_V1.3" threads="16" memory="4000" parallel="true">
+                <kmer min="61" max="75" step="MEDIUM"/>
+                <inputs>
+                    <input ecq="sickle_agressive" lib="lib1896-pe"/>
+                </inputs>
+            </job>
+            <job name="abyss-raw-cvg" tool="ABYSS_V1.3" threads="16" memory="4000" parallel="true">
+                <coverage list="75"/>
+                <inputs>
+                    <input ecq="raw" lib="lib1896-pe"/>
+                </inputs>
+            </job>
+        </mass>
+        <analyse_mass types="QUAST,KAT" threads="8" parallel="true"/>
+        <!--<amp>
+          <stage tool="SSPACE_Basic_V2.0"/>
+          <stage tool="GapCloser_V1.12"/>
+        </amp>-->
+        <finalise/>
+    </pipeline>
+</rampart>

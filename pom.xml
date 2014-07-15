@@ -5,10 +5,10 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.8.4</version>
+	<version>0.9.0</version>
 	<packaging>jar</packaging>
 
-	<name>Rampart</name>
+    <name>Rampart</name>
 	<url>http://www.tgac.ac.uk</url>
     <description>RAMPART</description>
 
@@ -20,6 +20,7 @@
         <dist-name>${project.artifactId}-${project.version}</dist-name>
         <dist-dir>${project.basedir}/build/dist</dist-dir>
         <build-dir>${project.basedir}/build/${dist-name}</build-dir>
+        <rampart-version>${project.version}</rampart-version>
 	</properties>
 
 	<!-- Licensing -->
@@ -178,10 +179,10 @@
                         <platform>unix</platform>
                     </platforms>
 
-                    <!-- Create a single bin script for rampart -->
+                    <!-- Create executable scripts -->
                     <programs>
                         <program>
-                            <mainClass>uk.ac.tgac.rampart.Rampart</mainClass>
+                            <mainClass>uk.ac.tgac.rampart.RampartCLI</mainClass>
                             <id>rampart</id>
                         </program>
                         <program>
@@ -192,6 +193,10 @@
                             <mainClass>uk.ac.tgac.rampart.util.JobCleaner</mainClass>
                             <id>rampart-clean</id>
                         </program>
+                        <program>
+                            <mainClass>uk.ac.tgac.rampart.jellyswarm.JellyswarmCLI</mainClass>
+                            <id>jellyswarm</id>
+                        </program>
                     </programs>
                 </configuration>
             </plugin>
@@ -199,6 +204,26 @@
 
 
             <!-- Install phase -->
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>write-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>
+                                ${build-dir}/etc/app.properties
+                            </outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
             <!-- Creates a jar file containing the sources -->
             <plugin>
@@ -253,17 +278,28 @@
                 <executions>
                     <execution>
                         <id>add-exeperms-and-res</id>
-                        <phase>package</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <chmod file="${build-dir}/bin/rampart" perm="755"/>
+
+                                <!-- Make config dir and copy across files -->
                                 <mkdir dir="${build-dir}/etc"/>
                                 <copy todir="${build-dir}/etc">
-                                    <fileset dir="${project.basedir}/etc"/>
+                                    <fileset dir="${project.basedir}/src/main/resources/etc"/>
                                 </copy>
+
+                                <!-- copy scripts to bin dir -->
+                                <mkdir dir="${build-dir}/bin"/>
+                                <copy todir="${build-dir}/bin">
+                                    <fileset dir="${project.basedir}/src/main/resources/bin"/>
+                                </copy>
+
+                                <!-- Add executable permission to all executables -->
+                                <chmod file="${build-dir}/bin/*" perm="755"/>
+
                             </target>
                         </configuration>
                     </execution>
@@ -293,6 +329,7 @@
                                     <fileset dir="${project.basedir}/doc/build/man"/>
                                 </copy>
                                 <copy file="${project.basedir}/doc/build/latex/RAMPART.pdf" todir="${build-dir}/doc"/>
+
                             </target>
                         </configuration>
                     </execution>
@@ -333,6 +370,16 @@
                 <version>2.2</version>
             </extension>
         </extensions>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.prop</include>
+                </includes>
+            </resource>
+        </resources>
+
 	</build>
 
 
@@ -391,7 +438,7 @@
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
             <artifactId>tgac-conan-process-wrappers</artifactId>
-            <version>0.8.4</version>
+            <version>0.9.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-cli</groupId>
@@ -419,6 +466,6 @@
         </dependency>
 
 
-	</dependencies>
+    </dependencies>
 
 </project>
