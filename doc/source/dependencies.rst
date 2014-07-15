@@ -9,7 +9,7 @@ In order to do useful work RAMPART can call out to a number of third party tools
 
 Assemblers (RAMPART is not an assembler itself so you should have at least one of these installed to do useful work):
 
-* Abyss V1.3
+* Abyss V1.5
 * ALLPATHS-LG V44837
 * Platanus V1.2
 * SOAPdenovo V2
@@ -17,7 +17,7 @@ Assemblers (RAMPART is not an assembler itself so you should have at least one o
 
 Dataset improvement tools:
 
-* Sickle V1.1
+* Sickle V1.2
 * Quake V0.3
 * Musket V1.0
 
@@ -53,11 +53,11 @@ Project URLs:
 * Musket          - http://musket.sourceforge.net/homepage.htm#latest
 * Quake           - http://www.cbcb.umd.edu/software/quake/
 * Quast           - http://bioinf.spbau.ru/quast
-* Platanus        - http://........
+* Platanus        - http://http://platanus.bio.titech.ac.jp/platanus-assembler/
 * Sickle          - https://github.com/najoshi/sickle
 * SoapDeNovo      - http://soap.genomics.org.cn/soapdenovo.html
 * SOAP_GapCloser  - http://soap.genomics.org.cn/soapdenovo.html
 * SSPACE_Basic    - http://www.baseclear.com/landingpages/basetools-a-wide-range-of-bioinformatics-solutions/sspacev12/
 * Subsampler      - https://github.com/homonecloco/subsampler
-* Velvet          - http://......
+* Velvet          - https://www.ebi.ac.uk/~zerbino/velvet/
 

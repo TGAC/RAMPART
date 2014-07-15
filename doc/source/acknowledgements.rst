@@ -9,7 +9,7 @@ Acknowledgements
 * Ricardo Ramirez (TGAC)
 * Purnima Pachori (TGAC)
 * Mark McCullen (TGAC)
-* Ram ...
+* Ram Krishna Shrestha
 * And everyone who contributed to making the tools RAMPART depends on!
 
 

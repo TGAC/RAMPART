@@ -126,7 +126,7 @@ public class Amp extends AbstractConanProcess {
             // Make sure the output directory exists
             args.getAssembliesDir().mkdirs();
 
-            // Create link for the reads file
+            // Create link for the initial input file
             this.getConanProcessService().createLocalSymbolicLink(
                     args.getInputAssembly(),
                     new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));

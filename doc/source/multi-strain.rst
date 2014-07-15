@@ -11,10 +11,10 @@ help the bioinformatician manage these projects and produce reasonable results i
 
 The logic we use to approach multi-strain projects is as follows:
 
-1 Use jellyswarm to assess all samples based on their distinct kmer count after rare kmers (sequencing errors) are excluded.  If there is little agreement between samples then more analysis is required.  If there is good agreement then carry on to 2.
-2 Exclude outlier samples.  These must be assembled and analysed separately.
-3 Use the abyss and/or velvet assembler (or any other assembler that runs quickly and is suitable for assembling data from the species in question) via RAMPART on a few of the more typical strains (strains where distinct kmer count is close to the mean) to attempt to identify optimal parameters, particularly the k parameter.  If there is little agreement in parameters between samples then all strains must be looked at in isolation.  If there is good agreement carry on to 4.
-4 Create a template RAMPART configuration file containing the optimal assembler and settings and then use the citadel script to execute for all strains.
+1. Use jellyswarm to assess all samples based on their distinct kmer count after rare kmers (sequencing errors) are excluded.  If there is little agreement between samples then more analysis is required.  If there is good agreement then carry on to 2.
+2. Exclude outlier samples.  These must be assembled and analysed separately.
+3. Use the abyss and/or velvet assembler (or any other assembler that runs quickly and is suitable for assembling data from the species in question) via RAMPART on a few of the more typical strains (strains where distinct kmer count is close to the mean) to attempt to identify optimal parameters, particularly the k parameter.  If there is little agreement in parameters between samples then all strains must be looked at in isolation.  If there is good agreement carry on to 4.
+4. Create a template RAMPART configuration file containing the optimal assembler and settings and then use the citadel script to execute for all strains.
 
 Note: This is by no means the only way to approach these projects, nor will it necessarily give the best results, but it
 should allow a single bioinformatician to produce reasonable assemblies for a project with 100s of samples within a week,

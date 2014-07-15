@@ -45,7 +45,7 @@ keys are hard coded, please keep the exact wording as below, even if you are usi
 The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Valid keys::
 
    # Assemblers
-   Abyss_V1.3
+   Abyss_V1.5
    AllpathsLg_V44837
    Platanus_Assemble_V1.2
    SOAP_Assemble_V2.4
@@ -53,7 +53,7 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
    Velvet_V1.2
 
    # Dataset improving tools
-   Sickle_V1.1
+   Sickle_V1.2
    Quake_V0.3.4
 
    # Assembly improving tools
