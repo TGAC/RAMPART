@@ -42,7 +42,7 @@
 
             <!-- Creates a new dataset called "sickle_aggressive" by running sickle over the raw data for lib1896-pe, using
                  the specified settings. -->
-            <ecq name="sickle_aggressive" tool="SICKLE_V1.1" min_len="70" min_qual="20" libs="lib1896-pe"/>
+            <ecq name="sickle_aggressive" tool="SICKLE_V1.2" libs="lib1896-pe" checked_args="-q 20 -l 70"/>
 
         </mecq>
 
@@ -62,12 +62,12 @@
                  kmer range of between 61 and 75, using a medium step, this means an increment of 5 in kmer value between
                  assemblies.  These assemblies are set to all run in parallel using 16 threads, requesting 4GB from the
                  scheduler. -->
-            <single_mass name="abyss-raw-kmer" tool="ABYSS_V1.3.4" memory="4000" threads="16" parallel="true">
+            <job name="abyss-raw-kmer" tool="ABYSS_V1.5" memory="4000" threads="16" parallel="true">
                 <kmer min="61" max="75" step="MEDIUM"/>
                 <inputs>
                     <input ecq="raw" lib="lib1896-pe"/>
                 </inputs>
-            </single_mass>
+            </job>
 
             <!-- This step doesn't really make sense in practice, but I've included it here to show that another set of
                  abyss assemblies can be executed, but this time with alternate coverage levels.  Specifically, this block
@@ -91,14 +91,14 @@
              statistic but the user can specify a custom set of weights here if they prefer.  RAMPART considers the
              assembly with the highest score the best assembly, and by default this selected assembly is used as input to
              the next step.-->
-        <analyse_asms types="QUAST,KAT" threads="8" parallel="true" weightings_file="path_to_custom_weights"/>
+        <analyse_mass types="QUAST,KAT" threads="8" parallel="true" weightings_file="path_to_custom_weights"/>
 
         <!-- Stages in this section are applied to the selected assembly from the MASS step, in an attempt to improve
              the selected assembly further.  Each stage specified below will be executed in sequence. -->
         <amp>
 
             <!-- Run SSPACE -->
-            <stage tool="SSPACE_Basic_V2.0"/>
+            <stage tool="SOAP_Scaffold_V2.4" threads="16" memory="16000" checked_args="-K 51 -F"/>
 
         </amp>
 

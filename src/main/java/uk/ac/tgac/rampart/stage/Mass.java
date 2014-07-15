@@ -38,6 +38,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.conan.process.asm.Assembler;
 
 import java.io.File;
 import java.io.IOException;
@@ -129,6 +130,18 @@ public class Mass extends AbstractConanProcess {
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
                         args.getOutputDir());
+            }
+
+            // For each MASS job to check an output file exist
+            for(MassJob.Args singleMassArgs : args.getMassJobArgList())  {
+                for(Assembler asm : singleMassArgs.getAssemblers()) {
+
+                    if (    (asm.makesScaffolds() && !asm.getScaffoldsFile().exists()) ||
+                            (asm.makesContigs() && !asm.getContigsFile().exists()) ||
+                            (asm.makesUnitigs() && !asm.getUnitigsFile().exists())) {
+                        throw new ProcessExecutionException(2, "MASS job \"" + singleMassArgs.getName() + "\" did not produce any output files");
+                    }
+                }
             }
 
             log.info("MASS complete");

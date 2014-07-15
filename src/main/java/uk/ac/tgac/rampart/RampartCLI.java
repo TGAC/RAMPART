@@ -19,6 +19,7 @@ package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -346,6 +347,8 @@ public class RampartCLI extends AbstractConanCLI {
         try {
 
             RampartCLI rampartCLI = new RampartCLI(args);
+            StopWatch stopwatch = new StopWatch();
+            stopwatch.start();
 
             if (rampartCLI == null)
                 throw new IllegalArgumentException("Invalid arguments, could not create a valid rampart object.");
@@ -359,6 +362,9 @@ public class RampartCLI extends AbstractConanCLI {
             else {
                 rampartCLI.initialise();
                 rampartCLI.execute();
+
+                stopwatch.stop();
+                System.out.println("Total runtime (wall clock): " + stopwatch.toString());
             }
         }
         catch (ParseException e) {

@@ -53,13 +53,12 @@
                                                     <xs:extension base="xs:string">
                                                         <xs:attribute type="xs:string" name="name" use="required"/>
                                                         <xs:attribute type="xs:string" name="tool" use="required"/>
-                                                        <xs:attribute type="xs:byte" name="min_len" use="optional"/>
-                                                        <xs:attribute type="xs:byte" name="min_qual" use="optional"/>
                                                         <xs:attribute type="xs:string" name="libs" use="optional"/>
                                                         <xs:attribute type="xs:string" name="parallel" use="optional"/>
-                                                        <xs:attribute type="xs:byte" name="kmer" use="optional"/>
                                                         <xs:attribute type="xs:byte" name="threads" use="optional"/>
                                                         <xs:attribute type="xs:short" name="memory" use="optional"/>
+                                                        <xs:attribute type="xs:string" name="checked_args" use="optional"/>
+                                                        <xs:attribute type="xs:string" name="unchecked_args" use="optional"/>
                                                     </xs:extension>
                                                 </xs:simpleContent>
                                             </xs:complexType>
@@ -78,7 +77,7 @@
                             <xs:element name="mass" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="single_mass" maxOccurs="unbounded" minOccurs="1">
+                                        <xs:element name="job" maxOccurs="unbounded" minOccurs="1">
                                             <xs:complexType>
                                                 <xs:sequence>
                                                     <xs:element name="kmer" minOccurs="0">
@@ -127,15 +126,15 @@
                                                 <xs:attribute type="xs:byte" name="threads" use="optional"/>
                                                 <xs:attribute type="xs:short" name="memory" use="optional"/>
                                                 <xs:attribute type="xs:string" name="parallel" use="optional"/>
-                                                <xs:attribute type="xs:string" name="stats_only" use="optional"/>
+                                                <xs:attribute type="xs:string" name="checked_args" use="optional"/>
+                                                <xs:attribute type="xs:string" name="unchecked_args" use="optional"/>
                                             </xs:complexType>
                                         </xs:element>
                                     </xs:sequence>
                                     <xs:attribute type="xs:string" name="parallel" use="optional"/>
-                                    <xs:attribute type="xs:string" name="stats_only" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="analyse_asms" maxOccurs="1" minOccurs="0">
+                            <xs:element name="analyse_mass" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:attribute type="xs:string" name="types" use="required"/>
                                     <xs:attribute type="xs:byte" name="threads" use="optional"/>
@@ -150,7 +149,10 @@
                                                 <xs:simpleContent>
                                                     <xs:extension base="xs:string">
                                                         <xs:attribute type="xs:string" name="tool" use="required"/>
-                                                        <xs:attribute type="xs:string" name="extra_args" use="optional"/>
+                                                        <xs:attribute type="xs:byte" name="threads" use="optional"/>
+                                                        <xs:attribute type="xs:short" name="memory" use="optional"/>
+                                                        <xs:attribute type="xs:string" name="checked_args" use="optional"/>
+                                                        <xs:attribute type="xs:string" name="unchecked_args" use="optional"/>
                                                     </xs:extension>
                                                 </xs:simpleContent>
                                             </xs:complexType>
@@ -158,9 +160,18 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
+                            <xs:element name="analyse_amp" maxOccurs="1" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:attribute type="xs:string" name="types" use="required"/>
+                                    <xs:attribute type="xs:byte" name="threads" use="optional"/>
+                                    <xs:attribute type="xs:string" name="parallel" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="finalise" maxOccurs="1" minOccurs="0">
                                 <xs:complexType>
                                     <xs:attribute type="xs:string" name="prefix" use="optional"/>
+                                    <xs:attribute type="xs:short" name="min_n" use="optional"/>
+                                    <xs:attribute type="xs:string" name="compress" use="optional"/>
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>

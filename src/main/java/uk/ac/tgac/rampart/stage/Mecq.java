@@ -189,6 +189,18 @@ public class Mecq extends AbstractConanProcess {
                         args.getMecqDir());
             }
 
+
+            // For each ecq check all output files exist
+            for(EcqArgs ecqArgs : args.getEqcArgList())  {
+                for(Library lib : ecqArgs.getOutputLibraries()) {
+                    for (File file : lib.getFiles()) {
+                        if (!file.exists()) {
+                            throw new ProcessExecutionException(2, "MECQ job \"" + ecqArgs.name + "\" did not produce the expected output file: " + file.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+
             log.info("MECQ Finished");
         }
         catch(IOException e) {

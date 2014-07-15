@@ -120,6 +120,10 @@ public class AmpStage extends AbstractConanProcess {
             // Execute the AMP stage
             ampProc.execute(ecCopy);
 
+            if (!ampProc.getOutputFile().exists()) {
+                throw new ProcessExecutionException(2, "AMP stage " + args.index + "\" did not produce an output file");
+            }
+
             // Create links for outputs from this assembler to known locations
             this.getConanProcessService().createLocalSymbolicLink(ampProc.getOutputFile(), args.getOutputFile());
 
