@@ -48,8 +48,9 @@ public class VariableRange {
     }
 
     /**
-     * Generate a coverage range from a comma separated list
-     * @param list Coverage values separated by commas.  Whitespace is tolerated.
+     * Generate a variable range from a comma separated list
+     * @param name The variable name
+     * @param list Variable values separated by commas.  Whitespace is tolerated.
      */
     public VariableRange(String name, String list) {
         this();
@@ -59,7 +60,7 @@ public class VariableRange {
 
     /**
      * Create a coverage range from an Xml element
-     * @param ele
+     * @param ele An XML element describing the variable range
      */
     public VariableRange(Element ele) {
 

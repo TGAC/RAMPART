@@ -21,10 +21,11 @@ http://rampart.readthedocs.org/en/latest/index.html
 Installation
 ============
 
-There are two ways to install RAMPART, the easiest and quickest way is from a distribute tarball.  The other is from
+There are two ways to install RAMPART, the easiest and quickest way is from a distributable tarball.  The other is from
 source.
 
-From tarball it is simply a matter of extracting to a directory of your choice: ``tar -xvf <name_of_tarball>``.
+To acquire the tarball please go to the releases section of the RAMPART github page: ``https://github.com/TGAC/RAMPART/releases``   
+Then extract to a directory of your choice: ``tar -xvf <name_of_tarball>``.
 
 From source, you will first need the following dependencies installed:
 

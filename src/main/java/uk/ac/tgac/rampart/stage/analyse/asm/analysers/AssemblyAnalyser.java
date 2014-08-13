@@ -23,30 +23,37 @@ public interface AssemblyAnalyser extends Service {
 
     /**
      * Checks whether or not this assembly analyser looks properly configured for the system
-     * @param executionContext
-     * @return
+     * @param executionContext The environment in which to check if the process is operational
+     * @return True if analyser is operational, false otherwise
      */
     boolean isOperational(ExecutionContext executionContext);
 
     /**
      * Execute this assembly analysis
-     * @param args
-     * @param ces
+     * @param assemblies The list of assemblies to analyse
+     * @param outputDir The output directory in which to produce files
+     * @param jobPrefix The prefix to apply to any scheduled jobs executed as part of this analysis
+     * @param args The args describing how to analyse the provided assemblies
+     * @param ces The conan execution service
      * @return A list of job ids from the executed jobs
-     * @throws InterruptedException
-     * @throws ProcessExecutionException
-     * @throws ConanParameterException
-     * @throws IOException
+     * @throws InterruptedException Thrown if user has interrupted the process during execution
+     * @throws ProcessExecutionException Thrown if there is an issue during execution of an external process
+     * @throws ConanParameterException Thrown if there was an issue configuring the parameters for the external process
+     * @throws IOException Thrown if there was an issue handling files before or after the external process is run
      */
     List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException;
 
     /**
      * Updates the provided table with information from this analysis
-     * @param table
-     * @throws IOException
+     * @param table The table to update with new information
+     * @param assemblies The analysed assemblies
+     * @param reportDir The location in which reports from this analysis might be located
+     * @param subGroup Information about the subgroup of assemblies analysed... only used for error messages if problems occur
+     * @throws IOException Thrown if there we issues accessing all the necessary files
      */
-    void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) throws IOException;
+    void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup)
+            throws IOException;
 
     /**
      * If this assembly analysis runs quickly, then we might to this information to consider doing more work with it.

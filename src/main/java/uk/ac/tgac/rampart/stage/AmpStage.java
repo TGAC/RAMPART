@@ -73,10 +73,9 @@ public class AmpStage extends AbstractConanProcess {
     /**
      * Dispatches amp stage to the specified environments
      *
-     * @param executionContext The environment to dispatch jobs too
-     * @throws IllegalArgumentException
-     * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
-     * @throws InterruptedException
+     * @param executionContext The environment to dispatch jobs to
+     * @throws ProcessExecutionException Thrown if there is an issue during execution of an external process
+     * @throws InterruptedException Thrown if user has interrupted the process during execution
      */
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {

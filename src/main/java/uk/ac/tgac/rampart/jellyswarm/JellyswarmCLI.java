@@ -175,8 +175,8 @@ public class JellyswarmCLI extends AbstractConanCLI
 
 
     /**
-     * Extra Options
-     * @return
+     * Extra command line options specific to jellyswarm
+     * @return Extra Options
      */
     @Override
     protected List<Option> createExtraOptions() {

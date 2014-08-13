@@ -343,7 +343,7 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
 
     /**
      * Gets all the FastA files in the directory specified by the user.
-     * @param inputDir
+     * @param inputDir The input directory containing assemblies
      * @return A list of fasta files in the user specified directory
      */
     public static List<File> assembliesFromDir(File inputDir) {

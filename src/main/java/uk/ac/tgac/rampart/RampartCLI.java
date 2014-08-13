@@ -118,6 +118,7 @@ public class RampartCLI extends AbstractConanCLI {
 
     /**
      * Creates a new RAMPART instance with default arguments
+     * @throws IOException Thrown if there is an error initialising this RAMPART instance.
      */
     public RampartCLI() throws IOException {
         super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
@@ -137,6 +138,7 @@ public class RampartCLI extends AbstractConanCLI {
      * Creates a new RAMPART instance based on command line arguments
      * @param args List of command line arguments containing information to setup RAMPART
      * @throws ParseException Thrown if an invalid command line was encountered
+     * @throws IOException Thrown if there is an error initialising this RAMPART instance.
      */
     public RampartCLI(String[] args) throws ParseException, IOException {
 
@@ -341,6 +343,7 @@ public class RampartCLI extends AbstractConanCLI {
      * The main entry point for RAMPART.  Looks at the first argument to decide which mode to run in.  Execution of each
      * mode is handled by RampartMode.
      * @param args Command line arguments
+     * @throws IOException Thrown if there was an error printing the help message
      */
     public static void main(String[] args) throws IOException {
 

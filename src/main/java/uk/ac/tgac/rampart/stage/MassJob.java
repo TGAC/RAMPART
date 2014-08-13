@@ -83,11 +83,9 @@ public class MassJob extends AbstractConanProcess {
     /**
      * Dispatches assembly jobs to the specified environments
      *
-     * @param executionContext The environment to dispatch jobs too
-     * @throws IOException
-     * @throws IllegalArgumentException
-     * @throws ProcessExecutionException
-     * @throws InterruptedException
+     * @param executionContext The environment to dispatch jobs to
+     * @throws ProcessExecutionException Thrown if there is an issue during execution of an external process
+     * @throws InterruptedException Thrown if user has interrupted the process during execution
      */
     @Override
     public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
@@ -285,7 +283,7 @@ public class MassJob extends AbstractConanProcess {
 
     /**
      * Create output directories that contain symbolic links to to all the assemblies generated during this run
-     * @param assembler
+     * @param assembler The assembler for which to create support directories
      */
     protected void createSupportDirectories(Assembler assembler) {
 
@@ -323,29 +321,6 @@ public class MassJob extends AbstractConanProcess {
         }
 
         return null;
-    }
-
-    /**
-     * Gets all the CEGMA files in the directory specified by the user.
-     * @param cegmaDir
-     * @return A list of CEGMA files in the current directory
-     */
-    protected List<File> getCegmaFiles(File cegmaDir) {
-
-        if (cegmaDir == null || !cegmaDir.exists())
-            return null;
-
-        List<File> fileList = new ArrayList<>();
-
-        Collection<File> fileCollection = FileUtils.listFiles(cegmaDir, new String[]{"cegma"}, true);
-
-        for(File file : fileCollection) {
-            fileList.add(file);
-        }
-
-        Collections.sort(fileList);
-
-        return fileList;
     }
 
 

@@ -17,8 +17,9 @@ From tarball
 ------------
 
 RAMPART is available as a distributable tarball.  The installation process is simply involves unpacking the compressed
-tarball to a directory of your choice: ``tar -xvf <name_of_tarball>``.  This will create a directory called
-``rampart-<version>`` and in there should be the following sub-directories:
+tarball, available from the RAMPART github page: ``https://github.com/TGAC/RAMPART/releases``, to a directory of your
+choice: ``tar -xvf <name_of_tarball>``.  This will create a directory called ``rampart-<version>`` and in there should
+be the following sub-directories:
 
 * bin - contains the main rampart script and other utility scripts
 * doc - a html and pdf copy of this manual
@@ -40,7 +41,8 @@ installed:
 * GIT
 * Maven 3
 * JDK v1.7+
-* Sphinx and texlive (If you would like to compile this documentation.  If these are not installed you must comment out the create-manual execution element from the pom.xml file.)
+* Sphinx and texlive (If you would like to compile this documentation.  If these are not installed you must comment out
+the create-manual execution element from the pom.xml file.)
 
 You also need to make sure that the system to are compiling on has internet access, as it will try to automatically
 incorporate any required java dependencies via maven.  Now type the following::

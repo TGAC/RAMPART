@@ -327,7 +327,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
      * Hopefully this is a conservative estimate for most projects.  We ignore very low count kmers so hopefully this
      * size just needs to accomodate genuine kmers, and should therefore be roughly equivalent to genomesize * ploidy.
      * We multiply by 5 to be on the safe side and make sure we can handle some sequencing errors.
-     * @param organism
+     * @param organism Details about the organism's genome (specifically the genome size and ploidy)
      * @return An overestimate of the expected jellyfish hash size
      */
     public static long guessJellyfishHashSize(Organism organism) {
@@ -573,10 +573,10 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         }
 
         /**
-         * This actually scans the disk for real files.
+         * This actually scans the output directory for jellyfish hash files that contain the provided ecq name.
          *
-         * @param ecqName
-         * @return
+         * @param ecqName The ecq name to search for
+         * @return A list of jellyfish hash files
          */
         public Collection<File> getJellyfishHashes(String ecqName) {
             return FileUtils.listFiles(new File(this.getOutputDir(), ecqName), new String[]{".jf31_0"}, false);

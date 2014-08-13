@@ -306,10 +306,6 @@ public class Mecq extends AbstractConanProcess {
             this.jobPrefix = "qt-" + dateTime;
         }
 
-        /**
-         * Set from element and
-         * @param ele
-         */
         public Args(Element ele, File mecqDir, String jobPrefix, List<Library> libraries) throws IOException {
 
             // Set defaults first
