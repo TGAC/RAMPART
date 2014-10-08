@@ -18,16 +18,16 @@ supported by RAMPART:
 A simple MASS job might be configured as follows::
 
    <mass>
+      <kmergenie threads="16" memory="4000"/>
       <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
-         <kmer list="75"/>
          <inputs>
             <input ecq="raw" lib="pe1"/>
          </inputs>
       </job>
    </mass>
 
-This instructs RAMPART to run a single Abyss assembly using 16 threads, requesting 4GB RAM, with kmer value 75 on the
-raw pe1 dataset.
+This instructs RAMPART to run a single Abyss assembly using 16 threads, requesting 4GB RAM, using the optimal kmer value
+determined by kmer genie on the raw pe1 dataset.
 
 
 Varying kmers for De Bruijn Graph assemblers
@@ -35,9 +35,18 @@ Varying kmers for De Bruijn Graph assemblers
 
 Many DeBruijn graph assemblers require you to specify a parameter that defines the kmer size to use in the graph.  It is
 not obvious before running the assembly which kmer value will work best and so a common approach to the problem is to
-try many kmers to "optimise" to the kmer parameter.  RAMPART allows the user to define the range of kmer values that should
- be tried.
+try many kmers to "optimise" to the kmer parameter.  RAMPART allows the user to do this in two different ways.
 
+First, RAMPART supports kmergenie.  If the user enters the kmergenie element in the mass element then kmer genie is used
+to determine the best kmer values to use for each distinct mass configuration.  For example, if the same single dataset is used
+for each mass job then kmergeneie is run once, and that optimal kmer value is passed on to each mass job.  If different
+datasets are used for building contigs in different mass jobs then RAMPART will automatically work out in which combinations
+of kmer genie need to be run to drive the pipeline.
+
+The alternative way is to manually specify which kmer to use or to request a kmer spread, i.e. to define the range of kmer
+values that should be tried.  This maybe necessary, if for example you would like to do your own analysis of the resultant
+assemblies, or if kmer genie fails on your dataset.  If the user specifies both kmergenie and a manual kmer spread, then
+the manual kmer spread will override the kmergenie recommendation.
 The snippet below shows how to run Abyss using a spread of kmer values::
 
    <mass>
@@ -78,9 +87,6 @@ RAMPART lets the assembler manage the k value.  If the selected assembler does r
 you omit the kmer element from the config, then RAMPART specifies a default kmer spread for you.  This will have a min
 value of 35, the max is automatically determined from the provided libraries as described above, and the step is 20 (COARSE).
 
-In the future, we  may try to integrate tools such as KmerGenie http://kmergenie.bx.psu.edu/ into RAMPART in order to
-guess the best kmer value prior to assembly, thus allowing the user to skip the computationally expensive process of testing
-multiple kmer values.
 
 
 Varying coverage

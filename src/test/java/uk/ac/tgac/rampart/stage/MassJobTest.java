@@ -65,7 +65,7 @@ public class MassJobTest extends MockedConanProcess {
         args.setKmerRange(new KmerRange(51, 65, KmerRange.StepSize.MEDIUM));
         args.setJobPrefix("testExecuteAbyss");
         args.setOutputDir(outputDir);
-        args.initialise();
+        args.initialise(false);
 
         MassJob massJob = new MassJob(conanExecutorService, args);
         MassJob spy = Mockito.spy(massJob);
@@ -98,7 +98,7 @@ public class MassJobTest extends MockedConanProcess {
         args.setCoverageRange(new CoverageRange(50, 100, CoverageRange.StepSize.COARSE, true));
         args.setJobPrefix("testExecuteSoap");
         args.setOutputDir(outputDir);
-        args.initialise();
+        args.initialise(false);
 
         MassJob massJob = new MassJob(conanExecutorService, args);
         MassJob spy = Mockito.spy(massJob);
@@ -131,7 +131,7 @@ public class MassJobTest extends MockedConanProcess {
         args.setVariableRange(new VariableRange("cov_cutoff", "2,5,10"));
         args.setJobPrefix("testExecuteVelvet");
         args.setOutputDir(outputDir);
-        args.initialise();
+        args.initialise(false);
 
         MassJob massJob = new MassJob(conanExecutorService, args);
         MassJob spy = Mockito.spy(massJob);

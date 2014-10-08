@@ -4,7 +4,16 @@ AMP - Assembly Improver
 =======================
 
 This stage takes a single assembly as input and tries to improve it.  For example, additional scaffolding, gap
-filling can be performed at this stage.  AMP stages accept ``threads`` and ``memory`` attributes just like MASS and MECQ.
+filling can be performed at this stage.  Currently, AMP supports the following tools:
+
+* Platanus_Scaffold_V1.2
+* SSPACE_Basic_V2.0
+* SOAP_Scaffold_V2.4
+* Platanus_Gapclose_V1.2
+* SOAP_GapCloser_V1.12
+* Reapr_V1
+
+AMP stages accept ``threads`` and ``memory`` attributes just like MASS and MECQ.
 A simple XML snippet describing a scaffolding and gap closing process is shown below::
 
    <amp>

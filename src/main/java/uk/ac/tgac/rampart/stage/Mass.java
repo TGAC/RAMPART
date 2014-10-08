@@ -39,12 +39,14 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.KmerRange;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: maplesod
@@ -82,10 +84,16 @@ public class Mass extends AbstractConanProcess {
 
         Args args = (Args) this.getProcessArgs();
 
-        for(MassJob.Args singleMassArgs : args.getMassJobArgList()) {
-            if (!new MassJob(this.conanExecutorService, singleMassArgs).isOperational(executionContext)) {
-                log.warn("MASS stage is NOT operational.");
+        for(MassJob.Args massJobArgs : args.getMassJobArgList()) {
+            if (!new MassJob(this.conanExecutorService, massJobArgs).isOperational(executionContext)) {
+                log.warn("A MASS job is NOT operational.");
                 return false;
+            }
+        }
+
+        if (args.kmerCalcArgs != null) {
+            if (!new CalcOptimalKmer(this.conanExecutorService).isOperational(executionContext)) {
+                log.warn("Optimal Kmer Calculation is NOT operational.");
             }
         }
 
@@ -109,16 +117,40 @@ public class Mass extends AbstractConanProcess {
             Args args = (Args) this.getProcessArgs();
 
             List<Integer> jobIds = new ArrayList<>();
+            Map<String,Integer> optimalKmerMap = null;
 
-            for (MassJob.Args singleMassArgs : args.getMassJobArgList()) {
+            // Work out kmer genie configs and how they relate to mass jobs
+            if (args.kmerCalcArgs != null) {
+
+                log.info("Derived " + args.kmerCalcArgs.getNbKmerGenieConfigs() + " distinct kmer genie runs to be executed from configuration");
+
+                CalcOptimalKmer calcOptimalKmer = new CalcOptimalKmer(this.conanExecutorService, args.kmerCalcArgs);
+                calcOptimalKmer.execute(executionContext);
+                optimalKmerMap = calcOptimalKmer.getOptimalKmerMap();
+            }
+
+
+            log.info("Starting MASS jobs");
+
+            for (MassJob.Args massJobArgs : args.getMassJobArgList()) {
 
                 // Ensure output directory for this MASS run exists
-                if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
+                if (!massJobArgs.getOutputDir().exists() && !massJobArgs.getOutputDir().mkdirs()) {
                     throw new IOException("Couldn't create directory for MASS");
                 }
 
+                // Get auto kmer setting if required
+                if (args.kmerCalcArgs != null && optimalKmerMap != null) {
+                    if (optimalKmerMap.containsKey(massJobArgs.getName())) {
+                        int kmerVal = optimalKmerMap.get(massJobArgs.getName());
+
+                        log.info("Using automatically determined optimal kmer value (" + kmerVal + ") for " + massJobArgs.getName());
+                        massJobArgs.setKmerRange(new KmerRange(Integer.toString(kmerVal)));
+                    }
+                }
+
                 // Execute the mass job and record any job ids
-                jobIds.addAll(this.executeMassJob(singleMassArgs, executionContext));
+                jobIds.addAll(this.executeMassJob(massJobArgs, executionContext));
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
@@ -153,8 +185,11 @@ public class Mass extends AbstractConanProcess {
         return true;
     }
 
+
+
     protected List<Integer> executeMassJob(MassJob.Args massJobArgs, ExecutionContext executionContext)
             throws InterruptedException, ProcessExecutionException {
+        massJobArgs.initialise(false, false);
         MassJob massJob = new MassJob(this.conanExecutorService, massJobArgs);
         massJob.execute(executionContext);
         return massJob.getJobIds();
@@ -177,11 +212,14 @@ public class Mass extends AbstractConanProcess {
         }
     }
 
+
+
     public static class Args extends AbstractProcessArgs implements RampartStageArgs {
 
         // Keys for config file
         private static final String KEY_ATTR_PARALLEL = "parallel";
         private static final String KEY_ELEM_MASS_JOB = "job";
+        private static final String KEY_ELEM_KMER_CALC = "kmercalc";
 
         // Constants
         public static final int DEFAULT_CVG_CUTOFF = -1;
@@ -195,6 +233,7 @@ public class Mass extends AbstractConanProcess {
         // Rampart vars
         private String jobPrefix;
         private File outputDir;
+        private CalcOptimalKmer.Args kmerCalcArgs;
         private List<MassJob.Args> massJobArgList;    // List of MASS groups to run separately
         private List<Library> allLibraries;           // All allLibraries available in this job
         private List<Mecq.EcqArgs> allMecqs;          // All mecq configurations
@@ -223,6 +262,7 @@ public class Mass extends AbstractConanProcess {
 
             this.organism = null;
             this.runParallel = DEFAULT_RUN_PARALLEL;
+            this.kmerCalcArgs = null;
             this.massJobArgList = new ArrayList<>();
         }
 
@@ -235,7 +275,8 @@ public class Mass extends AbstractConanProcess {
             // Check there's nothing
             if (!XmlHelper.validate(ele, new String[] {
                     KEY_ATTR_PARALLEL,
-                    KEY_ELEM_MASS_JOB
+                    KEY_ELEM_MASS_JOB,
+                    KEY_ELEM_KMER_CALC
             })) {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
@@ -254,16 +295,40 @@ public class Mass extends AbstractConanProcess {
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                     DEFAULT_RUN_PARALLEL;
 
+
+            // Check whether or not to use auto kmer calculation (kmer genie)
+            boolean kmercalc = false;
+            NodeList kgNodes = ele.getElementsByTagName(KEY_ELEM_KMER_CALC);
+            if (kgNodes.getLength() > 1) {
+                throw new IOException("Found more than one kmercalc entry in MASS");
+            }
+            else if (kgNodes.getLength() == 1) {
+                kmercalc = true;
+            }
+
             // All single mass args
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_MASS_JOB);
             for(int i = 0; i < nodes.getLength(); i++) {
                 this.massJobArgList.add(
                         new MassJob.Args(
                                 (Element) nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1)
+                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1, kmercalc)
                 );
             }
 
+            // If doing kmer calculation setup arguments
+            if (kmercalc) {
+                if (this.organism.getPloidy() > 2) {
+                    throw new IOException("Can't use kmer genie for this project because organism's ploidy is > 2");
+                }
+                this.kmerCalcArgs = new CalcOptimalKmer.Args(
+                        (Element)kgNodes.item(0),
+                        new File(outputDir, "kmercalc"),
+                        this.jobPrefix + "-kmercalc",
+                        this.runParallel,
+                        organism.getPloidy(),
+                        this.massJobArgList);
+            }
         }
 
         protected Params getParams() {
@@ -325,6 +390,14 @@ public class Mass extends AbstractConanProcess {
 
         public void setMassJobArgList(List<MassJob.Args> massJobArgList) {
             this.massJobArgList = massJobArgList;
+        }
+
+        public CalcOptimalKmer.Args getKmerCalcArgs() {
+            return kmerCalcArgs;
+        }
+
+        public void setKmerCalcArgs(CalcOptimalKmer.Args kmerCalcArgs) {
+            this.kmerCalcArgs = kmerCalcArgs;
         }
 
         public List<Mecq.EcqArgs> getAllMecqs() {

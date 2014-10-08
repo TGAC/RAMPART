@@ -5,6 +5,7 @@ Acknowledgements
 
 * Bernardo Clavijo (TGAC)
 * Robert Davey (TGAC)
+* Sarah Bastkowski (TGAC)
 * Tony Burdett (EBI)
 * Ricardo Ramirez (TGAC)
 * Purnima Pachori (TGAC)

@@ -54,7 +54,7 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
 
    # Dataset improving tools
    Sickle_V1.2
-   Quake_V0.3.4
+   Quake_V0.3
 
    # Assembly improving tools
    Platanus_Gapclose_V1.2

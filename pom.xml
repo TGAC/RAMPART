@@ -8,7 +8,7 @@
 	<version>0.9.1</version>
 	<packaging>jar</packaging>
 
-    <name>Rampart</name>
+    <name>RAMPART</name>
 	<url>http://www.tgac.ac.uk</url>
     <description>RAMPART</description>
 
@@ -181,7 +181,7 @@
 
                     <!-- This is only really required on high core systems (i.e. >100 cores), as otherwise the java process
                      will reserve silly amounts of memory for each GC thread.  Having said that it doesn't do much harm
-                     on regular systems as non-of the processes created here are going to be GC heavy. -->
+                     on regular systems as none of the processes created here are going to be GC heavy. -->
                     <extraJvmArguments>-XX:+UseSerialGC</extraJvmArguments>
 
                     <!-- Create executable scripts -->
@@ -281,6 +281,18 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.7</version>
                 <executions>
+                    <execution>
+                        <id>clean-docs</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <delete dir="${project.basedir}/doc/build"/>
+                            </target>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>add-exeperms-and-res</id>
                         <phase>install</phase>

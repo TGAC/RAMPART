@@ -33,7 +33,6 @@ import uk.ac.tgac.rampart.util.JobOutputList;
 import uk.ac.tgac.rampart.util.JobOutputMap;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 /**

@@ -55,7 +55,10 @@ import uk.ac.tgac.rampart.stage.util.VariableRange;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MassJob extends AbstractConanProcess {
 
@@ -98,7 +101,6 @@ public class MassJob extends AbstractConanProcess {
             log.info("Starting Single MASS run for \"" + args.getName() + "\"");
 
             Assembler genericAssembler = args.getGenericAssembler();
-            Assembler.Type type = genericAssembler.getType();
 
             // Create any required directories for this job
             this.createSupportDirectories(genericAssembler);
@@ -371,9 +373,9 @@ public class MassJob extends AbstractConanProcess {
         Args args = this.getArgs();
 
         if (asm.getType() == Assembler.Type.DE_BRUIJN || asm.getType() == Assembler.Type.DE_BRUIJN_OPTIMISER) {
-            if (args.getKmerRange() == null) {
+            /*if (args.getKmerRange() == null) {
                 throw new IllegalArgumentException("MASS job \"" + args.getName() + "\" is a De Bruijn graph assembler (or optimiser) but you have not specified a Kmer range to process in this MASS job.");
-            }
+            }*/
         }
         else if (asm.getType() == Assembler.Type.DE_BRUIJN_AUTO || asm.getType() == Assembler.Type.OVERLAP_LAYOUT_CONSENSUS) {
             if (args.getKmerRange() != null) {
@@ -573,7 +575,7 @@ public class MassJob extends AbstractConanProcess {
             this.jobPrefix = "";
 
             this.tool = AbyssV15.NAME;
-            this.kmerRange = new KmerRange();
+            this.kmerRange = null;
             this.coverageRange = new CoverageRange();
             this.variableRange = null;
             this.organism = null;
@@ -598,7 +600,7 @@ public class MassJob extends AbstractConanProcess {
 
 
         public Args(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index) {
+                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index, boolean kmercalc) {
 
             // Set defaults
             this();
@@ -689,14 +691,14 @@ public class MassJob extends AbstractConanProcess {
                     new VariableRange(varElement) :
                     null;
 
-            this.initialise(false);
+            this.initialise(false, kmercalc);
         }
 
-        public final void initialise() {
-            this.initialise(true);
+        public final void initialise(boolean kmercalc) {
+            this.initialise(true, kmercalc);
         }
 
-        protected final void initialise(boolean createGenericAssembler) {
+        protected final void initialise(boolean createGenericAssembler, boolean kmercalc) {
 
             if (createGenericAssembler) {
                 // Setup input and generic assembler
@@ -705,7 +707,7 @@ public class MassJob extends AbstractConanProcess {
                 this.genericAssembler.setLibraries(this.selectedLibs);
             }
 
-            this.validateKmerRange();
+            this.validateKmerRange(kmercalc);
             this.validateCoverageRange();
             this.validateVarRange();
 
@@ -749,15 +751,20 @@ public class MassJob extends AbstractConanProcess {
             return selectedLibs;
         }
 
-        protected final void validateKmerRange() {
+        protected final void validateKmerRange(boolean kmercalc) {
 
             if (genericAssembler.getType() != Assembler.Type.DE_BRUIJN && genericAssembler.getType() != Assembler.Type.DE_BRUIJN_OPTIMISER) {
                 this.kmerRange = null;  // Force to null
                 log.warn("The selected assembler \"" + this.tool + "\" for job \"" + this.name + "\" does not support K parameter");
             }
             else if (kmerRange == null) {
-                this.kmerRange = new KmerRange(35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.COARSE);
-                log.info("No K-mer range specified for \"" + this.name + "\" running assembler with default range: " + this.kmerRange.toString());
+                if (kmercalc) {
+                    log.info("Will calculate optimal kmer for: " + this.name);
+                }
+                else {
+                    this.kmerRange = new KmerRange(35, KmerRange.getLastKmerFromLibs(selectedLibs), KmerRange.StepSize.COARSE);
+                    log.info("No K-mer range specified for \"" + this.name + "\" and optimal kmer calculation was not requested, running assembler with default range: " + this.kmerRange.toString());
+                }
             }
             else if (kmerRange.validate()) {
                 log.info("K-mer range for \"" + this.name + "\" validated: " + kmerRange.toString());

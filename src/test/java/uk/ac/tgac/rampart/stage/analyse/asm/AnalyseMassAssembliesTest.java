@@ -53,7 +53,7 @@ public class AnalyseMassAssembliesTest extends MockedConanProcess {
         mjArgs.setName("mj1");
         mjArgs.setKmerRange(new KmerRange(31, 51, 10));
         mjArgs.setCoverageRange(new CoverageRange("-1"));
-        mjArgs.initialise();
+        mjArgs.initialise(false);
 
         List<MassJob.Args> massJobs = new ArrayList<>();
         massJobs.add(mjArgs);

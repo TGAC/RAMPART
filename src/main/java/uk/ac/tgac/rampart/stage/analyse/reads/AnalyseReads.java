@@ -21,7 +21,6 @@ import uk.ac.tgac.rampart.stage.Mecq;
 import uk.ac.tgac.rampart.stage.RampartStageArgs;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

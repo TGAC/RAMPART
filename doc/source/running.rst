@@ -101,7 +101,7 @@ pipeline stage is not defined it will not be executed. The second way is via a c
 specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.
 For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages
 described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does
-not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you
+not work.  Also you must ensure that each stage has it's pre-requisites fulfilled before starting.  For example, you
 cannot run the AMP stage, without a selected assembly to work with.
 
 .. toctree::
@@ -113,6 +113,10 @@ cannot run the AMP stage, without a selected assembly to work with.
    amp
    finalise
 
+
+
+Relative runtimes
+-----------------
 
 
 

@@ -253,11 +253,11 @@ public class RampartCLI extends AbstractConanCLI {
                 log.info("Running second half of the RAMPART pipeline only");
 
                 if (commandLine.hasOption(OPT_AMP_INPUT)) {
-                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT));
+                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT)).getAbsoluteFile();
                 }
 
                 if (commandLine.hasOption(OPT_AMP_BUBBLE_INPUT)) {
-                    this.ampBubble = new File(commandLine.getOptionValue(OPT_AMP_BUBBLE_INPUT));
+                    this.ampBubble = new File(commandLine.getOptionValue(OPT_AMP_BUBBLE_INPUT)).getAbsoluteFile();
                 }
             }
         }
@@ -279,7 +279,7 @@ public class RampartCLI extends AbstractConanCLI {
                 System.err,
                 "rampart [options] <job_config_file>\nOptions: ",
                 "RAMPART is a de novo assembly workflow creation tool.  It allows you to construct assembly " +
-                "workflows built using third party-tools and High Performance Computing resources.  It can be " +
+                "workflows (or recipes) built using third party-tools and High Performance Computing resources.  It can be " +
                 "used as a single interface to several popular assemblers, and can perform automated comparison " +
                 "and analysis of any generated assemblies.\n\nOptions:\n",
                 createOptions()
