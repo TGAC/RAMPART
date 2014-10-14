@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Level;
@@ -34,6 +35,28 @@ import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
 import uk.ac.tgac.conan.core.util.JarUtils;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV24;
+import uk.ac.tgac.conan.process.asm.stats.KmerGenieV16;
+import uk.ac.tgac.conan.process.asm.stats.QuastV22;
+import uk.ac.tgac.conan.process.asm.tools.*;
+import uk.ac.tgac.conan.process.asmIO.corrector.ReaprV1;
+import uk.ac.tgac.conan.process.asmIO.gapclose.PlatanusGapCloseV12;
+import uk.ac.tgac.conan.process.asmIO.gapclose.SoapGapCloserV112;
+import uk.ac.tgac.conan.process.asmIO.scaffold.PlatanusScaffoldV12;
+import uk.ac.tgac.conan.process.asmIO.scaffold.SSpaceBasicV2;
+import uk.ac.tgac.conan.process.asmIO.scaffold.SoapScaffolderV24;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishStatsV11;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatGcpV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatPlotDensityV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
+import uk.ac.tgac.conan.process.misc.FastXRC_V0013;
+import uk.ac.tgac.conan.process.re.tools.MusketV10;
+import uk.ac.tgac.conan.process.re.tools.QuakeV03;
+import uk.ac.tgac.conan.process.re.tools.SickleV12;
+import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
 import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
@@ -104,6 +127,37 @@ public class RampartCLI extends AbstractConanCLI {
     public static final File    PROPERTIES_FILE = new File(ETC_DIR, "app.properties");
 
     public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
+
+    private static String[] externalProcNames = new String[] {
+            new MusketV10().getName(),
+            new SickleV12().getName(),
+            new QuakeV03().getName(),
+            new JellyfishCountV11().getName(),
+            new KatCompV1().getName(),
+            new KatGcpV1().getName(),
+            new KmerGenieV16().getName(),
+            new AbyssV15().getName(),
+            new VelvetV12().getName(),
+            new SpadesV31().getName(),
+            new AllpathsLgV50().getName(),
+            new PlatanusAssembleV12().getName(),
+            new PlatanusScaffoldV12().getName(),
+            new PlatanusGapCloseV12().getName(),
+            new SoapAssemblerArgsV24().getName(),
+            new SoapScaffolderV24().getName(),
+            new SoapGapCloserV112().getName(),
+            new SSpaceBasicV2().getName(),
+            new TgacSubsamplerV1().getName(),
+            new ReaprV1().getName(),
+            new FastXRC_V0013().getName(),
+            new QuastV22().getName(),
+            new CegmaV24().getName(),
+            new KatPlotDensityV1().getName(),
+            new KatPlotSpectraCnV1().getName(),
+            new JellyfishCountV11().getName(),
+            new JellyfishMergeV11().getName(),
+            new JellyfishStatsV11().getName()
+    };
 
 
     // **** Options ****
@@ -178,7 +232,12 @@ public class RampartCLI extends AbstractConanCLI {
         log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
         log.info("Job Prefix: " + this.args.getJobPrefix());
         if (ConanProperties.containsKey("externalProcessConfigFile")) {
-            log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
+
+            File externalProcsFile = new File(ConanProperties.getProperty("externalProcessConfigFile"));
+            log.info("External process config file detected: " + externalProcsFile.getAbsolutePath());
+
+            this.validateExternalProcs(externalProcsFile, externalProcNames);
+            log.info("External process config file validated");
         }
 
         // Parse the job config file and set internal variables in RampartArgs
@@ -188,6 +247,8 @@ public class RampartCLI extends AbstractConanCLI {
         // Create an execution context based on environment information detected or provide by the user
         this.args.setExecutionContext(this.buildExecutionContext());
     }
+
+
 
     private static String loadVersion() throws IOException {
         Properties properties = new Properties();

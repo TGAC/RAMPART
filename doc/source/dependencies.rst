@@ -46,7 +46,8 @@ To save time finding all these tools on the internet RAMPART provides two option
 to download a compressed tarball of all supported versions of the tools, which is available on the github releases page:
 ``https://github.com/TGAC/RAMPART/releases``.  The second option is to download them all to a directory of your
 choice.  The one exception to this is SSPACE, which requires you to fill out a form prior to download.  RAMPART can help
-with this.  After the core RAMPART pipeline is compiled, type: ``rampart-download-deps <dir>``.  Note that executing this
+with this.  After the core RAMPART pipeline is compiled, type: ``rampart-download-deps <dir>``.  The tool will place all
+downloaded packages in a sub-directory called "rampart_dependencies" off of the specified directory.  Note that executing this
 command does not try to install the tools, as this can be a complex process and you may wish to run a custom installation
 in order to compile and configure the tools in a way that is optimal for your environment.
 

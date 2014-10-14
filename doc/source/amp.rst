@@ -39,9 +39,9 @@ specify that SSPACE should use PE reads to extend into gaps and to cap min conti
             <input name="mp1" ecq="raw"/>
          </inputs>
       </stage>
-      <stage tool="SOAP_GapCloser_V1.12">
+      <stage tool="SOAP_GapCloser_V1.12" threads="6" memory="8000">
          <inputs>
-            <input name="pe1" ecq="raw" threads="6" memory="8000"/>
+            <input name="pe1" ecq="raw"/>
          </inputs>
       </stage>
    </amp>

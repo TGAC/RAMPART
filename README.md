@@ -47,16 +47,54 @@ specific URLs.
 Assuming there were no compilation errors. The build can be found in ./build/rampart-<version>. There should also be a
 dist sub directory which will contain a tarball suitable for installing RAMPART on other systems.
 
-Next RAMPART's dependencies must be installed. To assist with this RAMPART provides a dependency downloader tool.
-To use this, after the core RAMPART pipeline is compiled and configured (see below for more information on that, then
-type): ``rampart-download-deps <dir>``
+Next RAMPART's dependencies must be installed. To save time finding all these tools on the internet RAMPART provides two options.  The first and recommended approach is
+to download a compressed tarball of all supported versions of the tools, which is available on the github releases page:
+``https://github.com/TGAC/RAMPART/releases``.  The second option is to download them all to a directory of your
+choice.  The one exception to this is SSPACE, which requires you to fill out a form prior to download.  RAMPART can help
+with this.  After the core RAMPART pipeline is compiled, type: ``rampart-download-deps <dir>``.  The tool will place all
+downloaded packages in a sub-directory called "rampart_dependencies" off of the specified directory.  Note that executing this
+command does not try to install the tools, as this can be a complex process and you may wish to run a custom installation
+in order to compile and configure the tools in a way that is optimal for your environment.
+
+
+Common installation problems
+----------------------------
+
+Some common errors the user may encounter, and steps necessary to fix the, during the installation procedure follow:
+
+1. Old Java Runtime Environment (JRE) installed:
+
+``Exception in thread "main" java.lang.UnsupportedClassVersionError: uk/ac/tgac/rampart/RampartCLI : Unsupported major.minor version 51.0``
+
+This occurs When trying to run RAMPART, or any associated tools, with an old JRE version.  If you see this, install or load
+JRE V1.7 or later and try again.  Note that if you are trying to compile RAMPART you will need JDK (Java Development Kit)
+V1.7 or higher as well.
+
+2. Incorrect sphinx configuration:
+
+If you are compiling RAMPART from source, if you encounter a problem when creating the documention with sphinx it maybe
+that your sphinx version is different from what is expected.  Specifically please check that your sphinx configuration
+provides a tool called ``sphinx_build`` and that tool is available on the PATH.  Some sphinx configurations may have
+an executable named like this ``sphinx_build_<version>``.  If this is the case you can try making a copy of this executable
+and remove the version suffix from it.  Alternatively if you do not wish to compile the documentation just remove it
+by commenting out the ``create-manual`` element from the pom.xml file.
+
+3. Texlive not installed:
+
+``“[ERROR] Failed to execute goal org.apache.maven.plugins:maven-antrun-plugin:1.7:run (create-manual) on project rampart: An Ant BuildException has occured: Warning: Could not find file RAMPART.pdf to copy.” Creating an empty RAMPART.pdf file in the specified directory fixed this issue, allowing RAMPART to successfully build``
+
+This error occurs because the RAMPART.pdf file was not created when trying to compile the documentation.  RAMPART.pdf is created from the documentation via sphinx and texlive.
+If you see this error then probably sphinx is working fine but texlive is not installed.  Properly installing and configuring 
+texlive so it's available on your path should fix this issue.  Alternatively if you
+do not wish to compile the documentation just remove it by commenting out the ``create-manual`` element from the pom.xml file.
+
 
 
 More Information
 ================
 
-Now that RAMPART is installed you can consult the full manual for details on how to install dependencies, configure
-RAMPART and start running jobs.  This manual can be found in the ``doc`` directory in the build, or online at::
+Now that RAMPART is installed you can consult the manual for details on how to install dependencies, configure
+RAMPART and start running jobs.  This manual can be found in the ``doc`` subdirectory, or online at::
 
    http://rampart.readthedocs.org/en/latest/index.html
 
@@ -80,14 +118,17 @@ Email: daniel.mapleson@tgac.ac.uk
 
 
 
-
 Acknowledgements
 ================
 
-* Bernardo Clavijo (TGAC)
-* Robert Davey (TGAC)
-* Tony Burdett (EBI)
-* Ricardo Ramirez (TGAC)
 * Nizar Drou (Formerly TGAC)
 * David Swarbreck (TGAC)
+* Bernardo Clavijo (TGAC)
+* Robert Davey (TGAC)
+* Sarah Bastkowski (TGAC)
+* Tony Burdett (EBI)
+* Ricardo Ramirez (TGAC)
+* Purnima Pachori (TGAC)
+* Mark McCullen (TGAC)
+* Ram Krishna Shrestha
 * And everyone who contributed to making the tools RAMPART depends on!

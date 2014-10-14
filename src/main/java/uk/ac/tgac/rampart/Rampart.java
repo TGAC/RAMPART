@@ -109,7 +109,12 @@ public class Rampart {
 
     public static class Args extends AbstractXmlJobConfiguration implements ProcessArgs {
 
+        public static final String KEY_ATTR_AUTHOR          = "author";
+        public static final String KEY_ATTR_COLLABORATOR    = "collaborator";
+        public static final String KEY_ATTR_INSTITUTION     = "institution";
+        public static final String KEY_ATTR_TITLE           = "title";
         public static final String KEY_ELEM_LIBRARIES       = "libraries";
+        public static final String KEY_ELEM_ORGANISM        = "organism";
         public static final String KEY_ELEM_LIBRARY         = "library";
         public static final String KEY_ELEM_PIPELINE        = "pipeline";
         public static final String KEY_ELEM_MECQ            = "mecq";
@@ -164,6 +169,24 @@ public class Rampart {
 
         @Override
         protected void internalParseXml(Element element) throws IOException {
+
+            // Check there's nothing
+            if (!XmlHelper.validate(element,
+                    new String[0],
+                    new String[]{
+                            KEY_ATTR_AUTHOR,
+                            KEY_ATTR_COLLABORATOR,
+                            KEY_ATTR_INSTITUTION,
+                            KEY_ATTR_TITLE
+                    },
+                    new String[]{
+                            KEY_ELEM_LIBRARIES,
+                            KEY_ELEM_PIPELINE,
+                            KEY_ELEM_ORGANISM
+                    },
+                    new String[0])) {
+                throw new IllegalArgumentException("Found unrecognised element or attribute in Library");
+            }
 
             // All libraries
             Element librariesElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_LIBRARIES);

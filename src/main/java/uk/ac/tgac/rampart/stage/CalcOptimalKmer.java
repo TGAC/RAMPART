@@ -240,10 +240,15 @@ public class CalcOptimalKmer extends AbstractConanProcess {
             this();
 
             // Check there's nothing
-            if (!XmlHelper.validate(ele, new String[]{
-                    KEY_ATTR_THREADS,
-                    KEY_ATTR_MEMORY
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[0],
+                    new String[]{
+                        KEY_ATTR_THREADS,
+                        KEY_ATTR_MEMORY
+                    },
+                    new String[0],
+                    new String[0]
+                    )) {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
 

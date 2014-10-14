@@ -273,11 +273,17 @@ public class Mass extends AbstractConanProcess {
             this();
 
             // Check there's nothing
-            if (!XmlHelper.validate(ele, new String[] {
-                    KEY_ATTR_PARALLEL,
-                    KEY_ELEM_MASS_JOB,
-                    KEY_ELEM_KMER_CALC
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[0],
+                    new String[]{
+                            KEY_ATTR_PARALLEL
+                    },
+                    new String[]{
+                            KEY_ELEM_MASS_JOB
+                    },
+                    new String[] {
+                            KEY_ELEM_KMER_CALC
+                    })) {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
 

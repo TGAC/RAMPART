@@ -13,7 +13,7 @@ RAMPART currently offers 3 assembly analysis options:
 These can be identified using the following comma separated values in an attribute called ``types`` in either the
 ``analyse_mass`` or ``analyse_amp`` pipeline element.  The available options for the list are: QUAST,KAT,CEGMA.
 
-QUAST, compares the assemblies from a contuiguity perspective.  This tool runs really fast, and produces statistics such
+QUAST, compares the assemblies from a contiguity perspective.  This tool runs really fast, and produces statistics such
 as the N50, assembly size, max sequence length.  It also produces a nice html report showing cumulative length
 distribution curves for each assembly and GC content curves.
 

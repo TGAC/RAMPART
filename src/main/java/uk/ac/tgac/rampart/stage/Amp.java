@@ -254,9 +254,13 @@ public class Amp extends AbstractConanProcess {
             this();
 
             // Check there's nothing
-            if (!XmlHelper.validate(ele, new String[] {
-                    KEY_ELEM_AMP_STAGE
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[0],
+                    new String[0],
+                    new String[] {
+                            KEY_ELEM_AMP_STAGE
+                    },
+                    new String[0])) {
                 throw new IOException("Found unrecognised element or attribute in AMP");
             }
 

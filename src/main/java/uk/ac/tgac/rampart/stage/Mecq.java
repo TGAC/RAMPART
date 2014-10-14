@@ -312,10 +312,15 @@ public class Mecq extends AbstractConanProcess {
             this();
 
             // Check there's nothing
-            if (!XmlHelper.validate(ele, new String[] {
-                    KEY_ATTR_PARALLEL,
-                    KEY_ELEM_ECQ
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[0],
+                    new String[]{
+                            KEY_ATTR_PARALLEL
+                    },
+                    new String[]{
+                            KEY_ELEM_ECQ
+                    },
+                    new String[0])) {
                 throw new IOException("Found unrecognised element or attribute in MECQ");
             }
 
@@ -492,16 +497,22 @@ public class Mecq extends AbstractConanProcess {
             this();
 
             // Check there's nothing
-            if (!XmlHelper.validate(ele, new String[] {
-                    KEY_ATTR_NAME,
-                    KEY_ATTR_TOOL,
-                    KEY_ATTR_THREADS,
-                    KEY_ATTR_MEMORY,
-                    KEY_ATTR_PARALLEL,
-                    KEY_ATTR_CHECKED_ARGS,
-                    KEY_ATTR_UNCHECKED_ARGS,
-                    KEY_ELEM_LIBS
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[] {
+                            KEY_ATTR_NAME,
+                            KEY_ATTR_TOOL
+                    },
+                    new String[] {
+                            KEY_ATTR_THREADS,
+                            KEY_ATTR_MEMORY,
+                            KEY_ATTR_PARALLEL,
+                            KEY_ATTR_CHECKED_ARGS,
+                            KEY_ATTR_UNCHECKED_ARGS
+                    },
+                    new String[]{
+                            KEY_ELEM_LIBS
+                    },
+                    new String[0])) {
                 throw new IOException("Found unrecognised element or attribute in MECQ job: " + index);
             }
 

@@ -252,11 +252,15 @@ public class Finalise extends AbstractConanProcess {
             this();
 
             // Check there's nothing unexpected in this element
-            if (!XmlHelper.validate(element, new String[] {
-                    KEY_ATTR_PREFIX,
-                    KEY_ATTR_MIN_N,
-                    KEY_ATTR_COMPRESS
-            })) {
+            if (!XmlHelper.validate(element,
+                    new String[0],
+                    new String[] {
+                        KEY_ATTR_PREFIX,
+                        KEY_ATTR_MIN_N,
+                        KEY_ATTR_COMPRESS
+                    },
+                    new String[0],
+                    new String[0])) {
                 throw new IllegalArgumentException("Found unrecognised element or attribute in Finaliser");
             }
 

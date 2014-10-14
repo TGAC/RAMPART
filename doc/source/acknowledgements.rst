@@ -3,6 +3,8 @@
 Acknowledgements
 ================
 
+* Nizar Drou (Formerly TGAC)
+* David Swarbreck (TGAC)
 * Bernardo Clavijo (TGAC)
 * Robert Davey (TGAC)
 * Sarah Bastkowski (TGAC)
