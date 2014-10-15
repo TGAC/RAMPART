@@ -18,7 +18,6 @@
 package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Level;
@@ -37,7 +36,7 @@ import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
 import uk.ac.tgac.conan.core.util.JarUtils;
 import uk.ac.tgac.conan.process.asm.stats.CegmaV24;
 import uk.ac.tgac.conan.process.asm.stats.KmerGenieV16;
-import uk.ac.tgac.conan.process.asm.stats.QuastV22;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.conan.process.asm.tools.*;
 import uk.ac.tgac.conan.process.asmIO.corrector.ReaprV1;
 import uk.ac.tgac.conan.process.asmIO.gapclose.PlatanusGapCloseV12;
@@ -150,7 +149,7 @@ public class RampartCLI extends AbstractConanCLI {
             new TgacSubsamplerV1().getName(),
             new ReaprV1().getName(),
             new FastXRC_V0013().getName(),
-            new QuastV22().getName(),
+            new QuastV23().getName(),
             new CegmaV24().getName(),
             new KatPlotDensityV1().getName(),
             new KatPlotSpectraCnV1().getName(),

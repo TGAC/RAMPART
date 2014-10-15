@@ -10,7 +10,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.stats.QuastV22;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAssembliesArgs;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
@@ -38,7 +38,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        return new QuastV22(this.conanExecutorService).isOperational(executionContext);
+        return new QuastV23(this.conanExecutorService).isOperational(executionContext);
     }
 
     @Override
@@ -55,10 +55,11 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         // Add quast job id to list
         List<Integer> jobIds = new ArrayList<>();
 
-        QuastV22 quastProcess = this.makeQuast(
+        QuastV23 quastProcess = this.makeQuast(
                 assemblies,
                 outputDir,
                 args.getOrganism().getEstGenomeSize(),
+                args.getOrganism().getPloidy() > 1,
                 args.getThreadsPerProcess(),
                 false // Assume all sequences are not scaffolds... I don't like this options much in Quast.
         );
@@ -81,8 +82,8 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         File quastReportFile = new File(reportDir, QUAST_REPORT_NAME);
         if (quastReportFile.exists()) {
-            QuastV22.Report quastReport = new QuastV22.Report(quastReportFile);
-            for(QuastV22.AssemblyStats qStats : quastReport.getStatList()) {
+            QuastV23.Report quastReport = new QuastV23.Report(quastReportFile);
+            for(QuastV23.AssemblyStats qStats : quastReport.getStatList()) {
 
                 if (!qStats.getName().endsWith("broken")) {
 
@@ -105,6 +106,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                     stats.setNbBases(qStats.getTotalLengthGt0());
                     stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
                     stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
+                    stats.setNbGenes(qStats.getNbGenes());
                 }
             }
         }
@@ -124,14 +126,16 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
 
-    protected QuastV22 makeQuast(List<File> assemblies, File outputDir, long genomeSize, int threads, boolean scaffolds) {
-        QuastV22.Args quastArgs = new QuastV22.Args();
+    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, int threads, boolean scaffolds) {
+        QuastV23.Args quastArgs = new QuastV23.Args();
         quastArgs.setInputFiles(assemblies);
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
         quastArgs.setEstimatedGenomeSize(genomeSize);
+        quastArgs.setFindGenes(true);
+        quastArgs.setEukaryote(eukaryote);
         quastArgs.setThreads(threads);
         quastArgs.setScaffolds(scaffolds);
 
-        return new QuastV22(this.conanExecutorService, quastArgs);
+        return new QuastV23(this.conanExecutorService, quastArgs);
     }
 }

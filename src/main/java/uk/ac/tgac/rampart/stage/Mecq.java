@@ -443,7 +443,7 @@ public class Mecq extends AbstractConanProcess {
 
         // **** Xml Config file property keys ****
 
-        private static final String KEY_ELEM_LIBS = "libs";
+        private static final String KEY_ATTR_LIBS = "libs";
 
         private static final String KEY_ATTR_NAME = "name";
         private static final String KEY_ATTR_TOOL = "tool";
@@ -500,7 +500,8 @@ public class Mecq extends AbstractConanProcess {
             if (!XmlHelper.validate(ele,
                     new String[] {
                             KEY_ATTR_NAME,
-                            KEY_ATTR_TOOL
+                            KEY_ATTR_TOOL,
+                            KEY_ATTR_LIBS
                     },
                     new String[] {
                             KEY_ATTR_THREADS,
@@ -509,9 +510,7 @@ public class Mecq extends AbstractConanProcess {
                             KEY_ATTR_CHECKED_ARGS,
                             KEY_ATTR_UNCHECKED_ARGS
                     },
-                    new String[]{
-                            KEY_ELEM_LIBS
-                    },
+                    new String[0],
                     new String[0])) {
                 throw new IOException("Found unrecognised element or attribute in MECQ job: " + index);
             }
@@ -540,7 +539,7 @@ public class Mecq extends AbstractConanProcess {
                     null;
 
             // Filter the provided libs
-            String libList = XmlHelper.getTextValue(ele, KEY_ELEM_LIBS);
+            String libList = XmlHelper.getTextValue(ele, KEY_ATTR_LIBS);
             String[] libIds = libList.split(",");
 
             for(String libId : libIds) {

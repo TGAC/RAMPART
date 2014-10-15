@@ -621,7 +621,11 @@ public class MassJob extends AbstractConanProcess {
                     new String[]{
                             KEY_ELEM_INPUTS
                     },
-                    new String[0])) {
+                    new String[] {
+                            KEY_ELEM_KMER_RANGE,
+                            KEY_ELEM_CVG_RANGE,
+                            KEY_ELEM_VAR_RANGE
+                    })) {
                 throw new IllegalArgumentException("Found unrecognised element or attribute in mass job: " + index);
             }
 

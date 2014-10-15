@@ -35,14 +35,15 @@ public class AssemblyStatsMatrixRow {
     public static final int IDX_L_50 = 6;
     public static final int IDX_GC_PERC = 7;
     public static final int IDX_N_PERC = 8;
-    public static final int IDX_COMPLETENESS = 9;
+    public static final int IDX_NB_GENES = 9;
+    public static final int IDX_COMPLETENESS = 10;
 
 
 
     private double[] stats;
 
     public AssemblyStatsMatrixRow() {
-        this(new double[10]);
+        this(new double[11]);
     }
 
     public AssemblyStatsMatrixRow(double[] stats) {
@@ -64,6 +65,7 @@ public class AssemblyStatsMatrixRow {
         this.stats[IDX_L_50] = assemblyStats.getL50();
         this.stats[IDX_GC_PERC] = assemblyStats.getGcPercentage();
         this.stats[IDX_N_PERC] = assemblyStats.getNPercentage();
+        this.stats[IDX_NB_GENES] = assemblyStats.getNbGenes();
         this.stats[IDX_COMPLETENESS] = assemblyStats.getCompletenessPercentage();
     }
 

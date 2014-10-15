@@ -47,8 +47,8 @@ weightings file the XML snippet may look like this::
 
 The format of the weightings file is a pipe separated table as follows::
 
-   nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness
-   0.05|0.1|0.05|0.05|0.05|0.2|0.05|0.05|0.1|0.3
+   nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|nb_genes|completeness
+   0.05|0.1|0.05|0.05|0.05|0.2|0.05|0.05|0.1|0.5|0.25
 
 All the metrics are derived from Quast results, except for the last one.
 
