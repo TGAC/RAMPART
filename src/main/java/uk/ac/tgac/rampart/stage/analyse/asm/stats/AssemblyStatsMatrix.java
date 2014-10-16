@@ -70,9 +70,9 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
 
             double delta = assemblyStatsMatrixRow.getAt(index) - min;
 
-            double norm = delta / max;
-
             double diff = max - min;
+
+            double norm = delta / diff;
 
             double newVal = diff == 0.0 ? 0.5 : norm;
 
@@ -82,13 +82,22 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
 
     public void deviationScale(int index, double mean) {
 
+        double max = 0.0;
+
         for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
 
-            double dev = assemblyStatsMatrixRow.getAt(index) - mean;
+            double dev = Math.abs(assemblyStatsMatrixRow.getAt(index) - mean);
 
-            double norm = Math.abs(dev) / mean;
+            max = Math.max(max, dev);
+        }
 
-            assemblyStatsMatrixRow.setAt(index, norm);
+        for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
+
+            double dev = Math.abs(assemblyStatsMatrixRow.getAt(index) - mean);
+
+            double norm = 1.0 - (dev / max);
+
+            assemblyStatsMatrixRow.setAt(index, 1.0 - norm);
         }
     }
 

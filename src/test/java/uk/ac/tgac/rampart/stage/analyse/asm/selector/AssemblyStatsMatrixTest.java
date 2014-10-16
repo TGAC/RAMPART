@@ -62,7 +62,7 @@ public class AssemblyStatsMatrixTest {
 
         matrix.deviationScale(AssemblyStatsMatrixRow.IDX_NB_BASES, 352155917.0);
 
-        assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_BASES) == 0.13346361009745578);
+        assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_BASES) == 0.7139892568315214);
     }
 
     @Test
