@@ -729,7 +729,7 @@ public class MassJob extends AbstractConanProcess {
             Assembler genericAssembler = AssemblerFactory.createGenericAssembler(this.tool);
 
             if (genericAssembler == null)
-                throw new IllegalArgumentException("Could not find assembler: " + this.tool);
+                throw new IllegalArgumentException("Could not find assembler: " + this.tool + "; in MASS job: " + this.name);
 
             return genericAssembler;
         }

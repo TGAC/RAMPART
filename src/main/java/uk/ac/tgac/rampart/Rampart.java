@@ -196,6 +196,17 @@ public class Rampart {
                 this.libs.add(new Library((Element)libraries.item(i), this.getOutputDir().getAbsoluteFile()));
             }
 
+            // Check all library files exist on the file system
+            for(Library lib : this.libs) {
+                if (!lib.getFile1().exists()) {
+                    throw new IOException("Could not locate file 1 from library: " + lib.getName() + "; " + lib.getFile1().getAbsolutePath());
+                }
+
+                if (lib.isPairedEnd() && !lib.getFile2().exists()) {
+                    throw new IOException("Could not locate file 2 from library: " + lib.getName() + "; " + lib.getFile2().getAbsolutePath());
+                }
+            }
+
             Element pipelineElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_PIPELINE);
 
             // MECQ

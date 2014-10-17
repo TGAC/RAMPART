@@ -525,6 +525,13 @@ public class Mecq extends AbstractConanProcess {
             this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
             this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
 
+            // Check tool is recognised
+            ReadEnhancer ec = ReadEnhancerFactory.create(this.tool, null);
+
+            if (ec == null) {
+                throw new IOException("Did not recognise tool name: " + this.tool + "; in ecq: " + this.name);
+            }
+
             // Optional
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
