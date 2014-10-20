@@ -325,13 +325,13 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     /**
      * Hopefully this is a conservative estimate for most projects.  We ignore very low count kmers so hopefully this
      * size just needs to accomodate genuine kmers, and should therefore be roughly equivalent to genomesize * ploidy.
-     * We multiply by 5 to be on the safe side and make sure we can handle some sequencing errors.
+     * We multiply by 10 to be on the safe side and make sure we can handle some sequencing errors.
      * @param organism Details about the organism's genome (specifically the genome size and ploidy)
      * @return An overestimate of the expected jellyfish hash size
      */
     public static long guessJellyfishHashSize(Organism organism) {
 
-        long hashSize = organism.getEstGenomeSize() * organism.getPloidy() * 5;
+        long hashSize = organism.getEstGenomeSize() * organism.getPloidy() * 10;
 
         // Check to make sure we don't have anything weird... if we do use a default of 5 billion (this should be enough
         // for most organisms running through RAMPART, although it might still fail on low mem systems.  Need to think
