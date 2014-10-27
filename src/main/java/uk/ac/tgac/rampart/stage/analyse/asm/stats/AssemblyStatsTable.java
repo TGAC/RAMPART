@@ -135,4 +135,28 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         return null;
     }
 
+    public List<File> getAssemblies() {
+
+        List<File> assemblies = new ArrayList<>();
+
+        for(AssemblyStats as : this) {
+            assemblies.add(new File(as.getFilePath()));
+        }
+
+        return assemblies;
+    }
+
+    public AssemblyStats findStatsByFilename(String asmName) throws IOException {
+
+        for(AssemblyStats stats : this) {
+
+            String statsAsmName = stats.getDataset() + "-" + stats.getDesc();
+
+            if (statsAsmName.equalsIgnoreCase(asmName)) {
+                return stats;
+            }
+        }
+
+        return null;
+    }
 }

@@ -16,8 +16,6 @@ import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAssembliesArgs;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.util.JobOutput;
-import uk.ac.tgac.rampart.util.JobOutputList;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +35,8 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
 
     private static Logger log = LoggerFactory.getLogger(KatAsmAnalyser.class);
 
+    private AnalyseAssembliesArgs.ToolArgs args;
+
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
         boolean jellyfish = new JellyfishCountV11(this.conanExecutorService).isOperational(executionContext);
@@ -53,10 +53,16 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
     }
 
     @Override
-    public List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
+    public void setArgs(AnalyseAssembliesArgs.ToolArgs args) {
+        this.args = args;
+    }
+
+    @Override
+    public List<ExecutionResult> execute(List<File> assemblies, File outputDir, String jobPrefix, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
-        List<Integer> jobIds = new ArrayList<>();
+        List<ExecutionResult> jobResults = new ArrayList<>();
+        List<ExecutionResult> allJobResults = new ArrayList<>();
         List<File> jellyfishHashes = new ArrayList<>();
 
 
@@ -89,7 +95,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             jellyfishArgs.setHashSize(args.getOrganism().getEstGenomeSize() * args.getOrganism().getPloidy() * 10);
             jellyfishArgs.setMerLength(31);       // 31 should be more than sufficient for all organisms (even wheat)
             jellyfishArgs.setBothStrands(true);
-            jellyfishArgs.setThreads(args.getThreadsPerProcess());
+            jellyfishArgs.setThreads(args.getThreads());
             jellyfishArgs.setCounterLength(32); // This is probably overkill... consider changing this later (or using jellyfish
             // 2 which auto adjusts this figure)
             jellyfishArgs.setInputFile(f.getAbsolutePath());
@@ -97,18 +103,19 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             JellyfishCountV11 jellyfishProcess = new JellyfishCountV11(this.conanExecutorService, jellyfishArgs);
 
             // Execute kmer count and comparison
-            ExecutionResult resultCount = ces.executeProcess(
+            ExecutionResult result = ces.executeProcess(
                     jellyfishProcess,
                     new File(outputPrefix).getParentFile(),
                     jfJobName,
-                    args.getThreadsPerProcess(),
-                    0,  //TODO Probably should work out something sensible to put here
+                    args.getThreads(),
+                    args.getMemory(),
                     args.isRunParallel());
 
             jellyfishHashes.add(new File(outputPrefix + "_0"));
 
             // Add job id to list
-            jobIds.add(resultCount.getJobId());
+            jobResults.add(result);
+            allJobResults.add(result);
         }
 
         // If we're using a scheduler and we have been asked to run each MECQ group for each library
@@ -116,18 +123,16 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         if (ces.usingScheduler() && args.isRunParallel()) {
             log.debug("Analysing assemblies using kmers in parallel, waiting for completion");
             ces.executeScheduledWait(
-                    jobIds,
+                    jobResults,
                     args.getJobPrefix() + "-kmer-count-*",
                     ExitStatus.Type.COMPLETED_ANY,
                     args.getJobPrefix() + "-k-count-wait",
                     args.getOutputDir());
         }
 
-        jobIds.clear();
+        jobResults.clear();
 
-        JobOutputList outputList = new JobOutputList();
-
-        Collection<File> readCounts = FileUtils.listFiles(args.getAnalyseReadsDir(), new String[] {"jf31_0"}, true);
+        Collection<File> readCounts = FileUtils.listFiles(args.getReadsAnalysisDir(), new String[] {"jf31_0"}, true);
 
         // Loop through jellyfish hashes
         i = 1;
@@ -145,20 +150,37 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
                 katCompArgs.setJellyfishHash1(readCount);
                 katCompArgs.setJellyfishHash2(jfHash);
                 katCompArgs.setOutputPrefix(new File(jfHash.getParentFile(), outputPrefix).getAbsolutePath());
-                katCompArgs.setThreads(args.getThreadsPerProcess());
+                katCompArgs.setThreads(args.getThreads());
 
                 KatCompV1 katCompProcess = new KatCompV1(katCompArgs);
+
+                File matrixFile = new File(katCompArgs.getOutputPrefix() + "_main.mx");
+
+                // Setup kat comp
+                KatPlotSpectraCnV1.Args katPlotSpectraCnArgs = new KatPlotSpectraCnV1.Args();
+                katPlotSpectraCnArgs.setInput(matrixFile);
+                katPlotSpectraCnArgs.setOutput(new File(matrixFile.getAbsolutePath() + ".png"));
+                katPlotSpectraCnArgs.setUncheckedArgs("--x_max=200");
+
+                KatPlotSpectraCnV1 katPlotSpectraCnProcess = new KatPlotSpectraCnV1(katPlotSpectraCnArgs);
+
+                // Add the plot command to the kat-comp command, to save some scheduling hassle
+                katCompProcess.addPostCommand(katPlotSpectraCnProcess.getCommand());
 
                 ExecutionResult result = ces.executeProcess(
                         katCompProcess,
                         jfHash.getParentFile(),
                         jobName,
-                        args.getThreadsPerProcess(),
-                        0,
+                        args.getThreads(),
+                        args.getMemory(),
                         args.isRunParallel());
 
-                outputList.add(new JobOutput(result.getJobId(), new File(katCompArgs.getOutputPrefix() + "_main.mx")));
+                // Add job id to list
+                jobResults.add(result);
+                allJobResults.add(result);
+                j++;
             }
+            i++;
         }
 
 
@@ -167,45 +189,29 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         if (ces.usingScheduler() && args.isRunParallel()) {
             log.debug("Analysing assemblies using kmers in parallel, waiting for completion");
             ces.executeScheduledWait(
-                    outputList.getJobIds(),
+                    jobResults,
                     args.getJobPrefix() + "-katcomp*",
                     ExitStatus.Type.COMPLETED_ANY,
                     args.getJobPrefix() + "-katcomp-wait",
                     args.getOutputDir());
         }
 
-        // Create plots
-        i = 1;
-        for(File matrix : outputList.getFiles()) {
-            // Setup kat comp
-            KatPlotSpectraCnV1.Args katPlotSpectraCnArgs = new KatPlotSpectraCnV1.Args();
-            katPlotSpectraCnArgs.setInput(matrix);
-            katPlotSpectraCnArgs.setOutput(new File(matrix.getAbsolutePath() + ".png"));
-
-            KatPlotSpectraCnV1 katPlotSpectraCnProcess = new KatPlotSpectraCnV1(katPlotSpectraCnArgs);
-
-            ExecutionResult result = ces.executeProcess(
-                    katPlotSpectraCnProcess,
-                    matrix.getParentFile(),
-                    args.getJobPrefix() + "-kat-plot-spectra-cn-" + i++,
-                    1,
-                    0,
-                    args.isRunParallel());
-        }
-
-        // Just let these run.  They shouldn't take long and no processes are dependent on them downstream
-
-        return new ArrayList<>();
+        return allJobResults;
     }
 
     @Override
-    public void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) {
-
+    public void updateTable(AssemblyStatsTable table, File reportDir) {
+        log.info("Currently KAT data cannot be used for updating the stats table");
     }
 
     @Override
     public boolean isFast() {
         return false;
+    }
+
+    @Override
+    public void setConanExecutorService(ConanExecutorService ces) {
+        this.conanExecutorService = ces;
     }
 
     @Override

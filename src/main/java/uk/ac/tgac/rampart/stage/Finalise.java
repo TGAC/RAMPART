@@ -2,9 +2,11 @@ package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
 import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
@@ -13,6 +15,8 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -89,7 +93,10 @@ public class Finalise extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         this.scaffoldId = 0;
         this.contigId = 0;
@@ -155,6 +162,7 @@ public class Finalise extends AbstractConanProcess {
         }
 
         //TODO Just compresses the assembly for now... may want to include plots and results too maybe....
+        ExecutionResult result = null;
         if (args.compress) {
 
             log.info("Compressing output");
@@ -170,12 +178,23 @@ public class Finalise extends AbstractConanProcess {
                     args.getTranslationFile().getName() + "; " +
                     "cd " + pwd;
 
-            this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, false);
+            result = this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, false);
 
             log.info("Output compressed to: " + args.getCompressedFile().getAbsolutePath());
         }
 
-        return true;
+        stopWatch.stop();
+
+        return new DefaultExecutionResult(
+                "rampart-finalise",
+                0,
+                new String[] {},
+                null,
+                -1,
+                new ResourceUsage(
+                        result != null && result.getResourceUsage() != null ? result.getResourceUsage().getMaxMem() : 0,
+                        stopWatch.getTime() / 1000,
+                        result != null && result.getResourceUsage() != null ? result.getResourceUsage().getCpuTime() : 0));
     }
 
     private void processObject(String currentHeader, String currentContig) {

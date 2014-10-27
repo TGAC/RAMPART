@@ -19,14 +19,15 @@
 package uk.ac.tgac.rampart.jellyswarm;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -63,9 +64,12 @@ public class CounterProcess extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
             // Make a shortcut to the args
             Args args = (Args) this.getProcessArgs();
@@ -75,7 +79,7 @@ public class CounterProcess extends AbstractConanProcess {
 
             log.info("Found " + files.size() + " samples to process.");
 
-            List<Integer> jobIds = new ArrayList<>();
+            List<ExecutionResult> jobResults = new ArrayList<>();
 
             // Make the output directory for this child job (delete the directory if it already exists)
             args.getOutputDir().mkdirs();
@@ -107,7 +111,7 @@ public class CounterProcess extends AbstractConanProcess {
                         args.isRunParallel());
 
                 // Add assembler id to list
-                jobIds.add(result.getJobId());
+                jobResults.add(result);
 
                 i++;
             }
@@ -116,16 +120,26 @@ public class CounterProcess extends AbstractConanProcess {
             if (executionContext.usingScheduler() && args.isRunParallel()) {
                 log.debug("Jellyfish counter jobs were executed in parallel, waiting for all to complete");
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        jobResults,
                         args.getJobPrefix() + "-group*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
                         args.getOutputDir());
 
-                jobIds.clear();
+                jobResults.clear();
             }
 
-            return true;
+            stopWatch.stop();
+
+            TaskResult taskResult = new DefaultTaskResult("citadel-jellyswarm-count", true, jobResults, stopWatch.getTime() / 1000L);
+
+            return new DefaultExecutionResult(
+                    taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
         }
         catch(IOException e) {
             throw new ProcessExecutionException(-1, e);

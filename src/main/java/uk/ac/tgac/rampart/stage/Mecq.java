@@ -19,17 +19,18 @@ package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -60,6 +61,7 @@ import java.util.List;
 public class Mecq extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(Mecq.class);
+    private TaskResult taskResult;
 
     public Mecq() {
         this(null);
@@ -79,9 +81,13 @@ public class Mecq extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+
             log.info("Starting MECQ Process");
 
             // Create shortcut to args for convienience
@@ -99,8 +105,9 @@ public class Mecq extends AbstractConanProcess {
                 this.createOutputLinks(new File(args.getOutputDir(), "raw"), null, null, lib);
             }
 
-            List<Integer> jobIds = new ArrayList<>();
             List<ReadEnhancer> readEnhancers = new ArrayList<>();
+            List<ExecutionResult> finalResults = new ArrayList<>();
+            List<ExecutionResult> results = new ArrayList<>();
 
             // For each ecq process all libraries
             for(EcqArgs ecqArgs : args.getEqcArgList()) {
@@ -121,7 +128,8 @@ public class Mecq extends AbstractConanProcess {
                     ecqLibDir.mkdirs();
 
                     // Create a job name
-                    String jobName = ecqArgs.getJobPrefix() + "_" + ecqArgs.getName() + "_" + lib.getName();
+                    String title = ecqArgs.getName() + "_" + lib.getName();
+                    String jobName = ecqArgs.getJobPrefix() + "_" + title;
 
                     GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
                     genericArgs.setInput(lib);
@@ -154,9 +162,9 @@ public class Mecq extends AbstractConanProcess {
                             ecqArgs.getMemory(),
                             ecqArgs.isRunParallel() || args.isRunParallel());
 
-                    // The job id should be stored in the process if we are using a scheduler, add to the list regardless
-                    // in case we need it later
-                    jobIds.add(result.getJobId());
+                    result.setName(title);
+                    results.add(result);
+                    finalResults.add(result);
 
                     // Create links for outputs from this assembler to known locations
                     this.createOutputLinks(new File(args.getOutputDir(), ecqArgs.getName()), readEnhancer, ecqArgs, lib);
@@ -165,24 +173,24 @@ public class Mecq extends AbstractConanProcess {
                 // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
                 // each library processed by this ECQ, then wait here.
                 if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
-                    log.debug("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
-                    this.conanExecutorService.executeScheduledWait(
-                            jobIds,
+                    log.info("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
+                    MultiWaitResult mrw = this.conanExecutorService.executeScheduledWait(
+                            results,
                             ecqArgs.getJobPrefix() + "*",
                             ExitStatus.Type.COMPLETED_SUCCESS,
                             args.getJobPrefix() + "-wait",
                             ecqArgs.getOutputDir());
 
-                    jobIds.clear();
+                    results.clear();
                 }
             }
 
             // If we're using a scheduler and we have been asked to run each MECQ group for each library
             // in parallel, then we should wait for all those to complete before continueing.
             if (executionContext.usingScheduler() && args.isRunParallel() && !args.getEqcArgList().isEmpty()) {
-                log.debug("Running all ECQ groups in parallel, waiting for completion");
-                this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                log.info("Running all ECQ groups in parallel, waiting for completion");
+                MultiWaitResult mrw = this.conanExecutorService.executeScheduledWait(
+                        results,
                         args.getJobPrefix() + "-ecq*",
                         ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
@@ -202,14 +210,25 @@ public class Mecq extends AbstractConanProcess {
             }
 
             log.info("MECQ Finished");
+
+            stopWatch.stop();
+
+            this.taskResult = new DefaultTaskResult("rampart-mecq", true, finalResults, stopWatch.getTime() / 1000L);
+
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getMecqDir(), args.getJobPrefix() + ".summary"), this.taskResult.getOutput());
+
+            return new DefaultExecutionResult(
+                    this.taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(this.taskResult.getMaxMemUsage(), this.taskResult.getActualTotalRuntime(), this.taskResult.getTotalExternalCputime()));
         }
         catch(IOException e) {
             throw new ProcessExecutionException(2, e);
         }
-
-
-
-        return true;
     }
 
 

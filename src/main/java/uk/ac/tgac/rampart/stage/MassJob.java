@@ -21,20 +21,20 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
-import uk.ac.ebi.fgpt.conan.model.context.SchedulerArgs;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
@@ -64,7 +64,8 @@ public class MassJob extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(MassJob.class);
 
-    private List<Integer> jobIds;
+    private List<ExecutionResult> jobResults;
+    private TaskResult taskResult;
 
     public MassJob() {
         this(null);
@@ -76,11 +77,15 @@ public class MassJob extends AbstractConanProcess {
 
     public MassJob(ConanExecutorService ces, Args args) {
         super("", args, new Params(), ces);
-        this.jobIds = new ArrayList<>();
+        this.jobResults = new ArrayList<>();
     }
 
     public Args getArgs() {
         return (Args)this.getProcessArgs();
+    }
+
+    public TaskResult getTaskResult() {
+        return taskResult;
     }
 
     /**
@@ -91,9 +96,12 @@ public class MassJob extends AbstractConanProcess {
      * @throws InterruptedException Thrown if user has interrupted the process during execution
      */
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
             // Make a shortcut to the args
             Args args = this.getArgs();
@@ -106,9 +114,10 @@ public class MassJob extends AbstractConanProcess {
             this.createSupportDirectories(genericAssembler);
             log.debug("Created directories in: \"" + args.getOutputDir() + "\"");
 
-            jobIds.clear();
+            jobResults.clear();
 
             Map<Integer, List<Integer>> ssResults = new HashMap<>();
+            List<ExecutionResult> results = new ArrayList<>();
 
             // Iterate over coverage range, and do subsampling if required
             for (Integer cvg : args.getCoverageRange()) {
@@ -123,6 +132,8 @@ public class MassJob extends AbstractConanProcess {
                 AbstractAssemblerArgs asmArgs = assembler.getAssemblerArgs();
                 File outputDir = asmArgs.getOutputDir();
 
+                String title = args.getName() + "-" + outputDir.getName();
+
                 log.debug("Starting '" + args.getTool() + "' in \"" + outputDir.getAbsolutePath() + "\"");
 
                 // Make the output directory for this child job (delete the directory if it already exists)
@@ -132,59 +143,60 @@ public class MassJob extends AbstractConanProcess {
                 outputDir.mkdirs();
 
                 // Execute the assembler
-                ExecutionResult result = this.executeAssembler(assembler, args.getJobPrefix() +
-                        "-assembly-" + outputDir.getName(), args.isRunParallel(), ssResults.get(asmArgs.getDesiredCoverage()));
+                assembler.setup();
+                ExecutionResult result = this.executeAssembler(
+                        assembler,
+                        args.getJobPrefix() + "-assembly-" + outputDir.getName(),
+                        ssResults.get(asmArgs.getDesiredCoverage()));
 
                 // Add assembler id to list
-                jobIds.add(result.getJobId());
+                result.setName(title);
+                jobResults.add(result);
 
                 // Create links for outputs from this assembler to known locations
-                this.createAssemblyLinks(assembler, args, args.getName() + "-" + outputDir.getName());
+                this.createAssemblyLinks(assembler, args, title);
             }
 
             // Check to see if we should run each MASS group in parallel, if not wait here until each MASS group has completed
             if (executionContext.usingScheduler() && !args.isMassParallel() && args.isRunParallel()) {
-                log.debug("Waiting for completion of: " + args.getName());
+                log.info("Waiting for completion of: " + args.getName());
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        jobResults,
                         args.getJobPrefix() + "-mass-*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
                         args.getOutputDir());
             }
 
-
             // Finish
             log.info("Finished MASS group: \"" + args.getName() + "\"");
+
+            stopWatch.stop();
+
+            this.taskResult = new DefaultTaskResult("rampart-mass-" + args.name, true, this.jobResults, stopWatch.getTime() / 1000L);
+
+            return new DefaultExecutionResult(
+                    this.taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(this.taskResult.getMaxMemUsage(), this.taskResult.getActualTotalRuntime(), this.taskResult.getTotalExternalCputime()));
 
         } catch (IOException | ConanParameterException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
-
-        return true;
     }
-
 
     public List<Integer> getJobIds() {
-        return this.jobIds;
-    }
 
-    private class SubsamplingResult {
-        private List<Library> libraries;
-        private List<Integer> jobIds;
+        List<Integer> ids = new ArrayList<>();
 
-        private SubsamplingResult(List<Library> libraries, List<Integer> jobIds) {
-            this.libraries = libraries;
-            this.jobIds = jobIds;
+        for(ExecutionResult res : this.jobResults) {
+            ids.add(res.getJobId());
         }
 
-        public List<Library> getLibraries() {
-            return libraries;
-        }
-
-        public List<Integer> getJobIds() {
-            return jobIds;
-        }
+        return ids;
     }
 
 
@@ -305,6 +317,8 @@ public class MassJob extends AbstractConanProcess {
         if (assembler.makesScaffolds()) {
             args.getScaffoldsDir().mkdir();
         }
+
+        args.getLongestDir().mkdir();
     }
 
 
@@ -420,47 +434,26 @@ public class MassJob extends AbstractConanProcess {
         return Long.parseLong(lines.get(0).trim());
     }
 
-    public ExecutionResult executeAssembler(Assembler assembler, String jobName, boolean runParallel, List<Integer> jobIds)
+    public ExecutionResult executeAssembler(Assembler assembler, String jobName, List<Integer> jobIds)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         // Important that this happens after directory cleaning.
         assembler.setup();
 
-        AbstractAssemblerArgs asmArgs = assembler.getAssemblerArgs();
+        Args args = this.getArgs();
 
-        ConanProcessService cps = this.conanExecutorService.getConanProcessService();
-
-        // Create execution context
-        ExecutionContext executionContextCopy = this.conanExecutorService.getExecutionContext().copy();
-        executionContextCopy.setContext(
+        return this.conanExecutorService.executeProcess(
+                assembler,
+                assembler.getAssemblerArgs().getOutputDir(),
                 jobName,
-                executionContextCopy.usingScheduler() ? !runParallel : true,
-                new File(assembler.getAssemblerArgs().getOutputDir(), jobName + ".log"));
-
-        // Modify the scheduling settings if present
-        if (this.conanExecutorService.usingScheduler()) {
-
-            SchedulerArgs schArgs = executionContextCopy.getScheduler().getArgs();
-
-            schArgs.setThreads(asmArgs.getThreads());
-            schArgs.setMemoryMB(asmArgs.getMaxMemUsageMB());
-
-            // Add wait condition for subsampling jobs (or any other jobs that must finish first), assuming there are any
-            if (jobIds != null && !jobIds.isEmpty()) {
-                schArgs.setWaitCondition(executionContextCopy.getScheduler().createWaitCondition(
-                        ExitStatus.Type.COMPLETED_ANY, jobIds));
-            }
-
-            if (assembler.usesOpenMpi() && asmArgs.getThreads() > 1) {
-                schArgs.setOpenmpi(true);
-            }
-        }
-
-        // Create process
-        return cps.execute(assembler, executionContextCopy);
+                args.getThreads(),
+                args.getMemory(),
+                args.isRunParallel(),
+                jobIds,
+                assembler.usesOpenMpi());
     }
 
-    public void createAssemblyLinks(Assembler assembler, Args smArgs, String jobName)
+    public void createAssemblyLinks(Assembler assembler, Args jobArgs, String jobName)
             throws ProcessExecutionException, InterruptedException {
 
         ExecutionContext linkingExecutionContext = new DefaultExecutionContext(
@@ -473,20 +466,24 @@ public class MassJob extends AbstractConanProcess {
         if (assembler.makesUnitigs()) {
             compoundLinkCmdLine.add(
                     cps.makeLinkCommand(assembler.getUnitigsFile(),
-                            new File(smArgs.getUnitigsDir(), jobName + "-unitigs.fa")));
+                            new File(jobArgs.getUnitigsDir(), jobName + "-unitigs.fa")));
         }
 
         if (assembler.makesContigs()) {
             compoundLinkCmdLine.add(
                     cps.makeLinkCommand(assembler.getContigsFile(),
-                            new File(smArgs.getContigsDir(), jobName + "-contigs.fa")));
+                            new File(jobArgs.getContigsDir(), jobName + "-contigs.fa")));
         }
 
         if (assembler.makesScaffolds()) {
             compoundLinkCmdLine.add(
                     cps.makeLinkCommand(assembler.getScaffoldsFile(),
-                            new File(smArgs.getScaffoldsDir(), jobName + "-scaffolds.fa")));
+                            new File(jobArgs.getScaffoldsDir(), jobName + "-scaffolds.fa")));
         }
+
+        compoundLinkCmdLine.add(
+                cps.makeLinkCommand(assembler.getScaffoldsFile(),
+                        new File(jobArgs.getLongestDir(), jobName + ".fa")));
 
         cps.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
     }
@@ -546,6 +543,7 @@ public class MassJob extends AbstractConanProcess {
         private Organism organism;
         private String checkedArgs;
         private String uncheckedArgs;
+        private boolean kmerCalc;
 
         // Inputs
         private File mecqDir;
@@ -581,6 +579,7 @@ public class MassJob extends AbstractConanProcess {
             this.organism = null;
             this.checkedArgs = null;
             this.uncheckedArgs = null;
+            this.kmerCalc = false;
 
             this.mecqDir = null;
             this.inputs = new ArrayList<>();
@@ -600,7 +599,7 @@ public class MassJob extends AbstractConanProcess {
 
 
         public Args(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index, boolean kmercalc) {
+                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index, boolean kmerCalc) {
 
             // Set defaults
             this();
@@ -642,6 +641,7 @@ public class MassJob extends AbstractConanProcess {
             this.assemblers = new ArrayList<>();
             this.multiCoverageJob = false;
             this.multiKmerJob = false;
+            this.kmerCalc = kmerCalc;
 
             // Required Elements
             Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
@@ -700,15 +700,13 @@ public class MassJob extends AbstractConanProcess {
             this.variableRange = varElement != null ?
                     new VariableRange(varElement) :
                     null;
-
-            this.initialise(false, kmercalc);
         }
 
-        public final void initialise(boolean kmercalc) {
-            this.initialise(true, kmercalc);
+        public final void initialise() {
+            this.initialise(true);
         }
 
-        protected final void initialise(boolean createGenericAssembler, boolean kmercalc) {
+        protected final void initialise(boolean createGenericAssembler) {
 
             if (createGenericAssembler) {
                 // Setup input and generic assembler
@@ -717,7 +715,7 @@ public class MassJob extends AbstractConanProcess {
                 this.genericAssembler.setLibraries(this.selectedLibs);
             }
 
-            this.validateKmerRange(kmercalc);
+            this.validateKmerRange();
             this.validateCoverageRange();
             this.validateVarRange();
 
@@ -761,14 +759,14 @@ public class MassJob extends AbstractConanProcess {
             return selectedLibs;
         }
 
-        protected final void validateKmerRange(boolean kmercalc) {
+        protected final void validateKmerRange() {
 
             if (genericAssembler.getType() != Assembler.Type.DE_BRUIJN && genericAssembler.getType() != Assembler.Type.DE_BRUIJN_OPTIMISER) {
                 this.kmerRange = null;  // Force to null
                 log.warn("The selected assembler \"" + this.tool + "\" for job \"" + this.name + "\" does not support K parameter");
             }
             else if (kmerRange == null) {
-                if (kmercalc) {
+                if (this.kmerCalc) {
                     log.info("Will calculate optimal kmer for: " + this.name);
                 }
                 else {
@@ -1083,6 +1081,14 @@ public class MassJob extends AbstractConanProcess {
             this.kmerRange = kmerRange;
         }
 
+        public boolean isKmerCalc() {
+            return kmerCalc;
+        }
+
+        public void setKmerCalc(boolean kmerCalc) {
+            this.kmerCalc = kmerCalc;
+        }
+
         public CoverageRange getCoverageRange() {
             return coverageRange;
         }
@@ -1197,6 +1203,10 @@ public class MassJob extends AbstractConanProcess {
 
         public File getScaffoldsDir() {
             return new File(this.getOutputDir(), "scaffolds");
+        }
+
+        public File getLongestDir() {
+            return new File(this.getOutputDir(), "longest");
         }
 
         public Assembler getGenericAssembler() {

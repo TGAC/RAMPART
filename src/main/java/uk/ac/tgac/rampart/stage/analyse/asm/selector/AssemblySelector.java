@@ -3,8 +3,6 @@ package uk.ac.tgac.rampart.stage.analyse.asm.selector;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
-import java.io.File;
-
 /**
  * Created with IntelliJ IDEA.
  * User: maplesod
@@ -17,6 +15,5 @@ public interface AssemblySelector {
     AssemblyStats selectAssembly(
                         AssemblyStatsTable table,
                         long estimatedGenomeSize,
-                        double estimatedGcPercentage,
-                        File massDir);
+                        double estimatedGcPercentage);
 }

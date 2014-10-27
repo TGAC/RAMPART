@@ -20,14 +20,15 @@ package uk.ac.tgac.rampart.jellyswarm;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -68,9 +69,12 @@ public class StatsProcess extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
             // Make a shortcut to the args
             Args args = (Args)this.getProcessArgs();
@@ -78,7 +82,8 @@ public class StatsProcess extends AbstractConanProcess {
             // Gets jellyfish count files
             List<File> countFiles = this.findFiles(args.getInputDir(), "_0");
 
-            List<Integer> jobIds = new ArrayList<>();
+            List<ExecutionResult> jobResults = new ArrayList<>();
+            List<ExecutionResult> allJobResults = new ArrayList<>();
 
             log.debug("Found " + countFiles.size() + " jellyfish stats files to process");
 
@@ -110,7 +115,8 @@ public class StatsProcess extends AbstractConanProcess {
                             args.isRunParallel());
 
                     // Add assembler id to list
-                    jobIds.add(result.getJobId());
+                    jobResults.add(result);
+                    allJobResults.add(result);
 
                     i++;
                 }
@@ -120,13 +126,13 @@ public class StatsProcess extends AbstractConanProcess {
             if (executionContext.usingScheduler() && args.isRunParallel()) {
                 log.debug("Jellyfish stats jobs were executed in parallel, waiting for all to complete");
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        jobResults,
                         args.getJobPrefix() + "-group*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
                         args.getOutputDir());
 
-                jobIds.clear();
+                jobResults.clear();
             }
 
             // Aggregates stats files
@@ -144,7 +150,17 @@ public class StatsProcess extends AbstractConanProcess {
 
             this.createDistinctStatsFile(statsFiles, new File(args.getOutputDir(), "summary.tab"));
 
-            return true;
+            stopWatch.stop();
+
+            TaskResult taskResult = new DefaultTaskResult("citadel-jellyswarm-stats", true, allJobResults, stopWatch.getTime() / 1000L);
+
+            return new DefaultExecutionResult(
+                    taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
         }
         catch(IOException e) {
             throw new ProcessExecutionException(-1, e);

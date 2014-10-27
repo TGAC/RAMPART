@@ -34,8 +34,10 @@ public class RampartJobFileSystem {
     // Directories
     private File meqcDir;
     private File analyseReadsDir;
+    private File kmerCalcDir;
     private File massDir;
     private File analyseMassDir;
+    private File selectMassDir;
     private File ampDir;
     private File ampAssembliesDir;
     private File analyseAmpDir;
@@ -63,28 +65,30 @@ public class RampartJobFileSystem {
     protected final void setupFileStructure(File jobDir) {
 
         // Record all important directories and make sure they exist
-        this.meqcDir = new File(jobDir, "mecq");
-        this.analyseReadsDir = new File(jobDir, "reads-analyses");
-        this.massDir = new File(jobDir, "mass");
-        this.analyseMassDir = new File(jobDir, "mass-analyses");
-        this.ampDir = new File(jobDir, "amp");
+        this.meqcDir = new File(jobDir, "1-mecq");
+        this.analyseReadsDir = new File(jobDir, "2-reads-analyses");
+        this.kmerCalcDir = new File(jobDir, "3-kmer-calc");
+        this.massDir = new File(jobDir, "4-mass");
+        this.analyseMassDir = new File(jobDir, "5-mass-analyses");
+        this.selectMassDir = new File(jobDir, "6-mass-select");
+        this.ampDir = new File(jobDir, "7-amp");
         this.ampAssembliesDir = new File(ampDir, "assemblies");
-        this.analyseAmpDir = new File(jobDir, "amp-analyses");
+        this.analyseAmpDir = new File(jobDir, "8-amp-analyses");
         this.reportDir = new File(jobDir, "report");
         this.reportImagesDir = new File(reportDir, "images");
-        this.finalDir = new File(jobDir, "final");
+        this.finalDir = new File(jobDir, "9-final");
 
         this.qtLogFile = new File(this.meqcDir + "/qt.log");
-        this.massPlotsFile = new File(this.analyseMassDir.getPath() + "/plots.pdf");
-        this.massStatsFile = new File(this.analyseMassDir.getPath() + "/score.tab");
-        this.massLogFile = new File(this.massDir.getPath() + "/mass.settings");
-        this.selectedAssemblyFile = new File(this.analyseMassDir.getPath() + "/best.fa");
-        this.selectedBubbleFile = new File(this.analyseMassDir.getPath() + "/best_bubbles.fa");
-        this.ampPlotsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.pdf");
-        this.ampStatsFile = new File(this.ampAssembliesDir.getPath() + "/analyser.txt");
-        this.ampLogFile = new File(this.ampDir.getPath() + "/amp.log");
-        this.reportTemplateFile = new File(this.reportDir.getPath() + "/template.tex");
-        this.reportMergedFile = new File(this.reportDir.getPath() + "/report.tex");
+        this.massPlotsFile = new File(this.analyseMassDir, "plots.pdf");
+        this.massStatsFile = new File(this.analyseMassDir, "score.tab");
+        this.massLogFile = new File(this.massDir, "mass.settings");
+        this.selectedAssemblyFile = new File(this.selectMassDir, "best.fa");
+        this.selectedBubbleFile = new File(this.selectMassDir, "best_bubbles.fa");
+        this.ampPlotsFile = new File(this.ampAssembliesDir, "analyser.pdf");
+        this.ampStatsFile = new File(this.ampAssembliesDir, "analyser.txt");
+        this.ampLogFile = new File(this.ampDir, "amp.log");
+        this.reportTemplateFile = new File(this.reportDir, "template.tex");
+        this.reportMergedFile = new File(this.reportDir, "report.tex");
     }
 
 
@@ -101,12 +105,20 @@ public class RampartJobFileSystem {
         return analyseReadsDir;
     }
 
+    public File getKmerCalcDir() {
+        return kmerCalcDir;
+    }
+
     public File getMassDir() {
         return massDir;
     }
 
     public File getAnalyseMassDir() {
         return analyseMassDir;
+    }
+
+    public File getSelectMassDir() {
+        return selectMassDir;
     }
 
     public File getAmpDir() {

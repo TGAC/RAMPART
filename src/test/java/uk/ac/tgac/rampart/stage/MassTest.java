@@ -70,7 +70,7 @@ public class MassTest extends MockedConanProcess {
         Mass multiMass = new Mass(this.conanExecutorService, args);
         Mass spy = spy(multiMass);
 
-        doReturn(new ArrayList<Integer>()).when(spy).executeMassJob((MassJob.Args) anyObject(), (ExecutionContext) anyObject());
+        doReturn(new Mass.MassJobResult()).when(spy).executeMassJob((MassJob.Args) anyObject(), (ExecutionContext) anyObject());
 
         ReflectionTestUtils.setField(multiMass, "conanExecutorService", conanExecutorService);
 

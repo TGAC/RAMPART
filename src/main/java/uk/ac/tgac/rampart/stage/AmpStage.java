@@ -18,14 +18,18 @@
 package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -78,9 +82,12 @@ public class AmpStage extends AbstractConanProcess {
      * @throws InterruptedException Thrown if user has interrupted the process during execution
      */
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
             // Make a shortcut to the args
             Args args = this.getArgs();
@@ -117,7 +124,7 @@ public class AmpStage extends AbstractConanProcess {
             ampProc.setup();
 
             // Execute the AMP stage
-            ampProc.execute(ecCopy);
+            ExecutionResult result = ampProc.execute(ecCopy);
 
             if (!ampProc.getOutputFile().exists()) {
                 throw new ProcessExecutionException(2, "AMP stage " + args.index + "\" did not produce an output file");
@@ -126,13 +133,23 @@ public class AmpStage extends AbstractConanProcess {
             // Create links for outputs from this assembler to known locations
             this.getConanProcessService().createLocalSymbolicLink(ampProc.getOutputFile(), args.getOutputFile());
 
+            stopWatch.stop();
+
             log.info("Finished AMP stage " + args.getIndex());
+
+            return new DefaultExecutionResult(
+                    Integer.toString(args.index) + "-" + args.tool,
+                    0,
+                    result.getOutput(),
+                    null,
+                    -1,
+                    new ResourceUsage(result.getResourceUsage() == null ? 0 : result.getResourceUsage().getMaxMem(),
+                            stopWatch.getTime() / 1000,
+                            result.getResourceUsage() == null ? 0 : result.getResourceUsage().getCpuTime()));
         }
         catch (IOException | ConanParameterException e) {
             throw new ProcessExecutionException(-1, e);
         }
-
-        return true;
     }
 
     protected AssemblyEnhancer makeStage(Args args, List<Library> libs) throws IOException {
@@ -405,7 +422,7 @@ public class AmpStage extends AbstractConanProcess {
         }
 
         public File getOutputFile() {
-            return new File(this.assembliesDir, "amp-stage-" + this.index + "-scaffolds.fa");
+            return new File(this.assembliesDir, "amp-stage-" + this.index + ".fa");
         }
 
 

@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 
 import java.io.File;
@@ -40,9 +41,9 @@ public class FinaliseTest {
 
         Finalise process = new Finalise(null, args);
 
-        boolean result = process.execute(new DefaultExecutionContext());
+        ExecutionResult result = process.execute(new DefaultExecutionContext());
 
-        assertTrue(result);
+        assertTrue(result.getExitCode() == 0);
         //assertTrue(new File(outputDir, "TGAC_TS_V1.tar.gz").exists());
     }
 }

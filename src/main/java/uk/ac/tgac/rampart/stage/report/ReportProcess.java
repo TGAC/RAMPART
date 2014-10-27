@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.service.VelocityMergerService;
 
@@ -55,7 +56,7 @@ public class ReportProcess extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         // Make a shortcut to the args
         ReportArgs args = (ReportArgs) this.getProcessArgs();
@@ -111,6 +112,6 @@ public class ReportProcess extends AbstractConanProcess {
             throw new ProcessExecutionException(-1, "Report Generation Failed", e);
         }
 
-        return true;
+        return null;
     }
 }

@@ -4,11 +4,13 @@ import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -83,12 +85,14 @@ public class AnalyseReads extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         log.info("Starting Read Analysis");
 
         // Create shortcut to args for convenience
         Args args = this.getArgs();
+
+        ExecutionResult executionResult = null;
 
         // Check what analyses are requested and check if those are operational
         if (args.isKmerAnalysis()) {
@@ -104,10 +108,25 @@ public class AnalyseReads extends AbstractConanProcess {
             kmerArgs.setRunParallel(args.isRunParallel());
 
             KmerAnalysisReads proc = new KmerAnalysisReads(this.conanExecutorService, kmerArgs);
-            proc.execute(executionContext);
+            executionResult = proc.execute(executionContext);
         }
 
-        return true;
+        if (executionResult == null) {
+            return new DefaultExecutionResult(
+                    "rampart-analyse_reads",
+                    0
+            );
+        }
+        else {
+            return new DefaultExecutionResult(
+                    "rampart-analyse_reads",
+                    0,
+                    executionResult.getOutput(),
+                    null,
+                    -1,
+                    executionResult.getResourceUsage()
+            );
+        }
     }
 
     public static class Args extends AbstractProcessArgs implements RampartStageArgs {

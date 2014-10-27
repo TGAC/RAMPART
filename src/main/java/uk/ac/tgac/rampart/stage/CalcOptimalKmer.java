@@ -19,14 +19,17 @@
 package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.ConanProcess;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -73,7 +76,7 @@ public class CalcOptimalKmer extends AbstractConanProcess {
 
     @Override
     public String getName() {
-        return "MASS-calckmer";
+        return "kmer_calc";
     }
 
     @Override
@@ -90,15 +93,19 @@ public class CalcOptimalKmer extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext)
+    public ExecutionResult execute(ExecutionContext executionContext)
             throws InterruptedException, ProcessExecutionException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+
             log.info("Starting Optimal Kmer calculations");
 
             Args args = this.getArgs();
 
-            List<Integer> jobIds = new ArrayList<>();
+            List<ExecutionResult> results = new ArrayList<>();
 
             Map<String, File> kg2FileMap = new HashMap<>();
             this.mass2OptimalKmerMap.clear();
@@ -116,14 +123,16 @@ public class CalcOptimalKmer extends AbstractConanProcess {
                     throw new IOException("Couldn't create kmer genie output directory at: " + kgOutputDir.getAbsolutePath());
                 }
 
-                jobIds.add(this.executeKmerGenie(kgOutputDir, kgOutputFile, entry.getValue()).getJobId());
+                ExecutionResult result = this.executeKmerGenie(kgOutputDir, kgOutputFile, entry.getValue());
+                result.setName("kmergenie-" + entry.getKey());
+                results.add(result);
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Kmer Genie jobs were executed in parallel, waiting for all to complete");
+                log.info("Kmer Genie jobs were executed in parallel, waiting for all to complete");
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        results,
                         args.getJobPrefix() + "-*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
@@ -148,13 +157,50 @@ public class CalcOptimalKmer extends AbstractConanProcess {
                 }
             }
 
+            List<String> kmerMapLines = new ArrayList<>();
+
+            for(Map.Entry<String, Integer> bestKmerEntry : this.mass2OptimalKmerMap.entrySet()) {
+                kmerMapLines.add(bestKmerEntry.getKey() + "\t" + bestKmerEntry.getValue());
+            }
+
+            FileUtils.writeLines(args.getResultFile(), kmerMapLines);
+            log.info("Written kmer calculations to: " + args.getResultFile().getAbsolutePath());
+
+            stopWatch.stop();
+
+            TaskResult tr = new DefaultTaskResult("rampart-mass-kmercalc", true, results, stopWatch.getTime() / 1000L);
+
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), tr.getOutput());
+
             log.info("Optimal Kmer calculations complete");
+
+            return new DefaultExecutionResult(
+                    tr.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(tr.getMaxMemUsage(), tr.getActualTotalRuntime(), tr.getTotalExternalCputime()));
         }
         catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
+    }
 
-        return true;
+    public static Map<String, Integer> loadOptimalKmerMap(File resultsFile) throws IOException {
+
+        List<String> lines = FileUtils.readLines(resultsFile);
+
+        Map<String, Integer> optMap = new HashMap<>();
+
+        for(String line : lines) {
+            String[] parts = line.split("\t");
+
+            optMap.put(parts[0], Integer.parseInt(parts[1]));
+        }
+
+        return optMap;
     }
 
     public Map<String, Integer> getOptimalKmerMap() {
@@ -193,7 +239,7 @@ public class CalcOptimalKmer extends AbstractConanProcess {
                 args.runParallel);
     }
 
-    public static class Args extends AbstractProcessArgs {
+    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
 
         // Keys for config file
         private static final String KEY_ATTR_THREADS = "threads";
@@ -234,7 +280,7 @@ public class CalcOptimalKmer extends AbstractConanProcess {
             this.kg2inputsMap = new HashMap<>();
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, boolean runParallel, int ploidy, List<MassJob.Args> massJobArgList) throws IOException {
+        public Args(Element ele, File outputDir, String jobPrefix, int ploidy) throws IOException {
 
             // Set defaults first
             this();
@@ -254,7 +300,6 @@ public class CalcOptimalKmer extends AbstractConanProcess {
 
             this.outputDir = outputDir;
             this.jobPrefix = jobPrefix;
-            this.massJobArgList = massJobArgList;
 
             if (ploidy > 2) {
                 throw new IOException("Can't run kmer optimisation because kmer genie cannot handle genomes with ploidy > 2");
@@ -277,34 +322,48 @@ public class CalcOptimalKmer extends AbstractConanProcess {
                     runParallel;
 
 
-            // Setup mass job to kmergenie config maps
-            for (MassJob.Args singleMassArgs : this.massJobArgList) {
 
-                if (    (singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN ||
-                        singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN_OPTIMISER) &&
-                        singleMassArgs.getKmerRange() == null) {
+        }
 
-                    StringBuilder sb = new StringBuilder();
-                    int i = 0;
-                    for(ReadsInput input : singleMassArgs.getInputs()) {
+        public void initialise() {
 
-                        if (i > 0) {
-                            sb.append("_");
+            if (this.massJobArgList != null) {
+                // Setup mass job to kmergenie config maps
+                for (MassJob.Args singleMassArgs : this.massJobArgList) {
+
+                    if ((singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN ||
+                            singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN_OPTIMISER) &&
+                            singleMassArgs.getKmerRange() == null) {
+
+                        StringBuilder sb = new StringBuilder();
+                        int i = 0;
+                        for (ReadsInput input : singleMassArgs.getInputs()) {
+
+                            if (i > 0) {
+                                sb.append("_");
+                            }
+                            sb.append(input.getEcq()).append("-").append(input.getLib());
+                            i++;
                         }
-                        sb.append(input.getEcq()).append("-").append(input.getLib());
-                        i++;
-                    }
 
-                    String kgSetName = sb.toString();
+                        String kgSetName = sb.toString();
 
-                    mass2kgMap.put(singleMassArgs.getName(), kgSetName);
-                    kg2massMap.put(kgSetName, singleMassArgs.getName());
+                        mass2kgMap.put(singleMassArgs.getName(), kgSetName);
+                        kg2massMap.put(kgSetName, singleMassArgs.getName());
 
-                    if (!kg2inputsMap.containsKey(kgSetName)) {
-                        kg2inputsMap.put(kgSetName, singleMassArgs.getSelectedLibs());
+                        if (!kg2inputsMap.containsKey(kgSetName)) {
+                            kg2inputsMap.put(kgSetName, singleMassArgs.getSelectedLibs());
+                        }
                     }
                 }
             }
+            else {
+                throw new IllegalStateException("Require MASS job information to be set in order to determine which libraries to combine for optimal kmer calculation");
+            }
+        }
+
+        public File getResultFile() {
+            return new File(this.outputDir, "kmermap.tsv");
         }
 
         public String getJobPrefix() {
@@ -404,6 +463,11 @@ public class CalcOptimalKmer extends AbstractConanProcess {
 
         @Override
         public ParamMap getArgMap() {
+            return null;
+        }
+
+        @Override
+        public List<ConanProcess> getExternalProcesses() {
             return null;
         }
     }

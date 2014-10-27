@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
@@ -38,6 +39,9 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
 import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -106,7 +110,7 @@ public class Amp extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
 
         // Short cut to arguments
         Args args = this.getArgs();
@@ -129,7 +133,7 @@ public class Amp extends AbstractConanProcess {
             // Create link for the initial input file
             this.getConanProcessService().createLocalSymbolicLink(
                     args.getInputAssembly(),
-                    new File(args.getAssembliesDir(), "amp-stage-0-scaffolds.fa"));
+                    new File(args.getAssembliesDir(), "amp-stage-0.fa"));
 
             // Create a guest user
             ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -146,24 +150,32 @@ public class Amp extends AbstractConanProcess {
             ampTask.submit();
 
             // Run the AMP pipeline
+            TaskResult result;
             try {
-                ampTask.execute(executionContext);
+                result = ampTask.execute(executionContext);
             } catch (TaskExecutionException e) {
                 throw new ProcessExecutionException(-1, e);
             }
 
             // Create a symbolic link for the final assembly from the final stage
             this.getConanProcessService().createLocalSymbolicLink(
-                    new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + "-scaffolds.fa"),
+                    new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + ".fa"),
                     args.getFinalAssembly());
 
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), result.getOutput());
+
+            return new DefaultExecutionResult(
+                    "rampart-amp",
+                    0,
+                    result.getOutput().toArray(new String[result.getOutput().size()]),
+                    null,
+                    -1,
+                    new ResourceUsage(result.getMaxMemUsage(), result.getActualTotalRuntime(), result.getTotalExternalCputime()));
         }
         catch(IOException e) {
             throw new ProcessExecutionException(-1, e);
         }
-
-
-        return true;
     }
 
     public static class Pipeline extends AbstractConanPipeline {

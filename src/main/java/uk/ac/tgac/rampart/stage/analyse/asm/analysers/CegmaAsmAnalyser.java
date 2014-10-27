@@ -34,6 +34,8 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
     private static Logger log = LoggerFactory.getLogger(CegmaAsmAnalyser.class);
 
+    private AnalyseAssembliesArgs.ToolArgs args;
+
     public static final String CEGMA_DIR_NAME = "cegma";
 
     @Override
@@ -42,11 +44,11 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
+    public List<ExecutionResult> execute(List<File> assemblies, File outputDir, String jobPrefix, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         // Add quast job id to list
-        List<Integer> jobIds = new ArrayList<>();
+        List<ExecutionResult> jobResults = new ArrayList<>();
 
         if (outputDir.exists()) {
             FileUtils.deleteDirectory(outputDir);
@@ -64,37 +66,45 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
             }
             cegOutputDir.mkdirs();
 
-            CegmaV24 cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreadsPerProcess());
+            CegmaV24 cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreads());
             ExecutionResult result = ces.executeProcess(
                     cegmaProc,
                     cegOutputDir,
                     cegmaJobName,
-                    args.getThreadsPerProcess(),
-                    0,
-                    args.isRunParallel());
+                    args.getThreads(),
+                    args.getMemory(),
+                    false);
 
-            jobIds.add(result.getJobId());
+            jobResults.add(result);
 
             // Create symbolic links to completeness_reports
             File sourceFile = new File(((CegmaV24.Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
                     ".completeness_report");
+
             File destFile = new File(cegOutputDir, f.getName() + ".cegma");
 
             ces.getConanProcessService().createLocalSymbolicLink(sourceFile, destFile);
         }
 
-        return jobIds;
+        return jobResults;
     }
 
     @Override
-    public void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) throws IOException {
+    public void setArgs(AnalyseAssembliesArgs.ToolArgs args) {
+        this.args = args;
+    }
 
+    @Override
+    public void updateTable(AssemblyStatsTable table, File reportDir) throws IOException {
+
+        log.info("Extracting stats from CEGMA runs stored in: " + reportDir.getCanonicalPath());
 
         Collection<File> cegmaFiles = FileUtils.listFiles(reportDir, new String[]{"cegma"}, false);
 
-        for(File asm : assemblies) {
+        for(AssemblyStats stats : table) {
 
             File c = null;
+            File asm = new File(stats.getFilePath());
 
             for(File cf : cegmaFiles) {
                 if (FilenameUtils.getBaseName(asm.getName()).equals(FilenameUtils.getBaseName(cf.getName()))) {
@@ -111,12 +121,6 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
             CegmaV24.Report cegmaReport = new CegmaV24.Report(c);
 
-            AssemblyStats stats = table.findStats(subGroup, asm.getName());
-
-            if (stats == null) {
-                throw new IOException("Couldn't find assembly stats entry for " + subGroup + ", " + asm.getName());
-            }
-
             stats.setCompletenessPercentage(cegmaReport.getPcComplete());
         }
 
@@ -125,6 +129,11 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     @Override
     public boolean isFast() {
         return false;
+    }
+
+    @Override
+    public void setConanExecutorService(ConanExecutorService ces) {
+        this.conanExecutorService = ces;
     }
 
     @Override
