@@ -117,7 +117,6 @@ public class MassJob extends AbstractConanProcess {
             jobResults.clear();
 
             Map<Integer, List<Integer>> ssResults = new HashMap<>();
-            List<ExecutionResult> results = new ArrayList<>();
 
             // Iterate over coverage range, and do subsampling if required
             for (Integer cvg : args.getCoverageRange()) {
@@ -143,7 +142,6 @@ public class MassJob extends AbstractConanProcess {
                 outputDir.mkdirs();
 
                 // Execute the assembler
-                assembler.setup();
                 ExecutionResult result = this.executeAssembler(
                         assembler,
                         args.getJobPrefix() + "-assembly-" + outputDir.getName(),
@@ -448,7 +446,7 @@ public class MassJob extends AbstractConanProcess {
                 jobName,
                 args.getThreads(),
                 args.getMemory(),
-                args.isRunParallel(),
+                args.isMassParallel() || args.isRunParallel(),
                 jobIds,
                 assembler.usesOpenMpi());
     }
@@ -482,7 +480,7 @@ public class MassJob extends AbstractConanProcess {
         }
 
         compoundLinkCmdLine.add(
-                cps.makeLinkCommand(assembler.getScaffoldsFile(),
+                cps.makeLinkCommand(assembler.getBestAssembly(),
                         new File(jobArgs.getLongestDir(), jobName + ".fa")));
 
         cps.execute(compoundLinkCmdLine.toString(), linkingExecutionContext);
