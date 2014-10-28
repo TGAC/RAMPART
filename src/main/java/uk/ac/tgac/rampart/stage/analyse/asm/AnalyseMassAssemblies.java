@@ -124,6 +124,8 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
             // Loop through MASS groups to get assemblies
             for (MassJob.Args jobArgs : args.getMassJobs()) {
 
+                jobArgs.initialise();
+
                 String massGroup = jobArgs.getName();
 
                 File inputDir = new File(args.getMassDir(), massGroup);

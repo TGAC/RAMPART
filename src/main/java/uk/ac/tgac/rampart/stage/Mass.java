@@ -100,12 +100,6 @@ public class Mass extends AbstractConanProcess {
             }
         }
 
-        if (args.kmerCalcArgs != null) {
-            if (!new CalcOptimalKmer(this.conanExecutorService).isOperational(executionContext)) {
-                log.warn("Optimal Kmer Calculation is NOT operational.");
-            }
-        }
-
         log.info("MASS stage is operational.");
 
         return true;
