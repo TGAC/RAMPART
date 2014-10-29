@@ -279,14 +279,15 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         }
 
         public Args(Element element, File analyseReadsDir, File outputDir, List<AmpStage.Args> ampStages,
-                               Organism organism, String jobPrefix) throws IOException {
+                               Organism organism, String jobPrefix, boolean doingReadKmerAnalysis) throws IOException {
 
             super(  new Params(),
                     element,
                     analyseReadsDir,
                     outputDir,
                     organism,
-                    jobPrefix
+                    jobPrefix,
+                    doingReadKmerAnalysis
                     );
 
             this.analyseAll = element.hasAttribute(KEY_ATTR_ALL) ?

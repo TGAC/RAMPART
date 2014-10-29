@@ -100,8 +100,10 @@ public class JobCleaner {
 
         FileUtils.deleteDirectory(jobFs.getMeqcDir());
         FileUtils.deleteDirectory(jobFs.getAnalyseReadsDir());
+        FileUtils.deleteDirectory(jobFs.getKmerCalcDir());
         FileUtils.deleteDirectory(jobFs.getMassDir());
         FileUtils.deleteDirectory(jobFs.getAnalyseMassDir());
+        FileUtils.deleteDirectory(jobFs.getSelectMassDir());
         FileUtils.deleteDirectory(jobFs.getAmpDir());
         FileUtils.deleteDirectory(jobFs.getAnalyseAmpDir());
         FileUtils.deleteDirectory(jobFs.getReportDir());

@@ -61,7 +61,7 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
     }
 
     public AnalyseAssembliesArgs(AnalyseAssembliesParams params, Element element, File analyseReadsDir, File outputDir,
-                                 Organism organism, String jobPrefix) throws IOException {
+                                 Organism organism, String jobPrefix, boolean doingReadKmerAnalysis) throws IOException {
 
         this(params);
 
@@ -91,7 +91,7 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         // All libraries
         NodeList nodes = element.getElementsByTagName(KEY_ELEM_TOOL);
         for (int i = 0; i < nodes.getLength(); i++) {
-            this.tools.add(new ToolArgs((Element) nodes.item(i), outputDir, analyseReadsDir, organism, jobPrefix, this.runParallel));
+            this.tools.add(new ToolArgs((Element) nodes.item(i), outputDir, analyseReadsDir, organism, jobPrefix, this.runParallel, doingReadKmerAnalysis));
         }
 
         for(AnalyseAssembliesArgs.ToolArgs requestedService : this.tools) {
@@ -236,7 +236,8 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         }
 
 
-        public ToolArgs(Element ele, File outputDir, File readsAnalysisDir, Organism organism, String jobPrefix, boolean forceParallel)
+        public ToolArgs(Element ele, File outputDir, File readsAnalysisDir, Organism organism, String jobPrefix, boolean forceParallel,
+                        boolean doingReadKmerAnalysis)
                 throws IOException {
 
             // Set defaults
@@ -262,6 +263,10 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
                 throw new IOException("Could not find " + KEY_ATTR_NAME + " attribute in analyse_mass tool.");
 
             this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
+
+            if (this.name.equalsIgnoreCase("KAT") && !doingReadKmerAnalysis) {
+                throw new IOException("You have requested to do a KAT analysis of your assemblies but have not requested a kmer analysis of your reads.  Either remove the KAT assembly analysis request or add a read kmer analysis request to your configuration file.");
+            }
 
             // Optional
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;

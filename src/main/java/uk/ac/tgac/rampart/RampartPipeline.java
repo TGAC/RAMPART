@@ -267,7 +267,8 @@ public class RampartPipeline extends AbstractConanPipeline {
                             this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
                             this.organism,
                             this.jobPrefix + "-analyse_mass",
-                            this.kmerCalcArgs == null ? null : this.kmerCalcArgs.getResultFile());
+                            this.kmerCalcArgs == null ? null : this.kmerCalcArgs.getResultFile(),
+                            this.analyseReadsArgs.isKmerAnalysis());
 
             this.stages.setArgsIfPresent(RampartStage.ANALYSE_MASS, this.analyseMassArgs);
 
@@ -316,7 +317,8 @@ public class RampartPipeline extends AbstractConanPipeline {
                             this.rampartJobFileSystem.getAnalyseAmpDir(),
                             this.ampArgs == null ? null : this.ampArgs.getStageArgsList(),
                             this.organism,
-                            this.jobPrefix + "-analyse_amp");
+                            this.jobPrefix + "-analyse_amp",
+                            this.analyseReadsArgs.isKmerAnalysis());
 
             this.stages.setArgsIfPresent(RampartStage.ANALYSE_AMP, this.analyseAmpArgs);
 

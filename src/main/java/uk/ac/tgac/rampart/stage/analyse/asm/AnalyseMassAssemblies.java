@@ -310,14 +310,15 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
         }
 
         public Args(Element element, File massDir, File analyseReadsDir, File outputDir, List<MassJob.Args> massJobs,
-                               Organism organism, String jobPrefix, File kmerCalcResults) throws IOException {
+                               Organism organism, String jobPrefix, File kmerCalcResults, boolean doingReadKmerAnalysis) throws IOException {
 
             super(  new Params(),
                     element,
                     analyseReadsDir,
                     outputDir,
                     organism,
-                    jobPrefix
+                    jobPrefix,
+                    doingReadKmerAnalysis
                     );
 
             this.massDir = massDir;
