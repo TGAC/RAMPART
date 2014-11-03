@@ -1027,6 +1027,25 @@ public class MassJob extends AbstractConanProcess {
                     // Add unchecked args
                     asm.getAssemblerArgs().setUncheckedArgs(this.uncheckedArgs);
 
+                    // Do a special check for ALLPATHs to ensure it has an overlapping paired end library provided
+                    if (asm.getName().startsWith("AllpathsLg")) {
+                        boolean foundFrag = false;
+                        boolean foundJump = false;
+
+                        for(Library lib : libs) {
+                            if (lib.getType() == Library.Type.OVERLAPPING_PAIRED_END) {
+                                foundFrag = true;
+                            }
+                            else if (lib.getType() == Library.Type.PAIRED_END || lib.getType() == Library.Type.MATE_PAIR) {
+                                foundJump = true;
+                            }
+                        }
+
+                        if (!foundFrag || !foundJump) {
+                            throw new IOException("You requested an ALLPATHS run but it appears you do not have the correct kind of input data to drive it.  ALLPATHS requires at least one fragment (overlapping paired end) library and at least one jumping (paired end or mate pair) library.");
+                        }
+                    }
+
                     // Record assembler in list
                     assemblers.add(asm);
                 }
