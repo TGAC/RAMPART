@@ -39,7 +39,7 @@ public class DependencyDownloader {
         this.help = false;
     }
 
-    public DependencyDownloader(String[] args) throws ParseException {
+    public DependencyDownloader(String[] args) throws ParseException, IOException {
 
         // Parse the command line arguments
         CommandLine cmdLine = new PosixParser().parse(createOptions(), args, true);
@@ -50,7 +50,7 @@ public class DependencyDownloader {
 
         // If there's a remaining argument then this will be the target directory, if not then assume the user wants
         // to download packages into the current working directory
-        this.targetDir = cmdLine.getArgList().isEmpty() ? new File("") : new File((String)cmdLine.getArgList().get(0));
+        this.targetDir = cmdLine.getArgList().isEmpty() ? new File("").getCanonicalFile() : new File((String)cmdLine.getArgList().get(0)).getCanonicalFile();
     }
 
 
@@ -225,12 +225,12 @@ public class DependencyDownloader {
         createDir(kmerDir);
 
         downloadFromUrl(
-                new URL("https://github.com/TGAC/KAT/releases/download/V1.0.5/kat-1.0.5.tar.gz"),
-                new File(kmerDir, "kat-1.0.5.tar.gz"));
+                new URL("https://github.com/TGAC/KAT/releases/download/Release-1.0.6/kat-1.0.6.tar.gz"),
+                new File(kmerDir, "kat-1.0.6.tar.gz"));
 
         downloadFromUrl(
-                new URL("http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.10.tar.gz"),
-                new File(kmerDir, "jellyfish-1.1.10.tar.gz"));
+                new URL("http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz"),
+                new File(kmerDir, "jellyfish-1.1.11.tar.gz"));
 
         downloadFromUrl(
                 new URL("http://packages.seqan.de/seqan-src/seqan-src-1.4.1.tar.gz"),
