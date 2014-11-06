@@ -334,7 +334,17 @@ public class AmpStage extends AbstractConanProcess {
             Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
             NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
             for(int i = 0; i < actualInputs.getLength(); i++) {
-                this.inputs.add(new ReadsInput((Element) actualInputs.item(i)));
+                ReadsInput ri = new ReadsInput((Element) actualInputs.item(i));
+
+                if (!foundInLibs(ri.getLib(), allLibraries)) {
+                    throw new IOException("Could not find library \"" + ri.getLib() + "\" in defined libraries");
+                }
+
+                if (!foundInMecq(ri.getEcq(), allMecqs)) {
+                    throw new IOException("Could not find ECQ \"" + ri.getEcq() + "\" in defined set of ECQs");
+                }
+
+                this.inputs.add(ri);
             }
 
             // Optional
@@ -351,6 +361,32 @@ public class AmpStage extends AbstractConanProcess {
             this.allMecqs = allMecqs;
             this.organism = organism;
             this.index = index;
+        }
+
+        private boolean foundInLibs(String libName, List<Library> ll) {
+
+            for(Library s : ll) {
+                if (libName.equalsIgnoreCase(s.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private boolean foundInMecq(String ecqName, List<Mecq.EcqArgs> ll) {
+
+            if (ecqName.equalsIgnoreCase("raw")) {
+                return true;
+            }
+
+            for(Mecq.EcqArgs s : ll) {
+                if (ecqName.equalsIgnoreCase(s.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Params getParams() {
