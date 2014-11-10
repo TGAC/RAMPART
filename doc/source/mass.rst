@@ -17,8 +17,8 @@ supported by RAMPART:
 
 A simple MASS job might be configured as follows::
 
+   <kmer_calc threads="32" memory="20000"/>
    <mass>
-      <kmergenie threads="16" memory="4000"/>
       <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
          <inputs>
             <input ecq="raw" lib="pe1"/>
@@ -27,7 +27,8 @@ A simple MASS job might be configured as follows::
    </mass>
 
 This instructs RAMPART to run a single Abyss assembly using 16 threads, requesting 4GB RAM, using the optimal kmer value
-determined by kmer genie on the raw pe1 dataset.
+determined by kmer genie on the raw pe1 dataset.  The kmer_calc stage looks ahead to run on dataset configurations for
+each MASS job.
 
 
 Varying kmers for De Bruijn Graph assemblers

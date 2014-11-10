@@ -62,6 +62,8 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
    SSPACE_Basic_v2.0
    SOAP_GapCloser_V1.12
    SOAP_Scaffold_V2.4
+   Reapr_V1
+   FastXRC_V0013
 
    # Assembly analysis tools
    Quast_V2.2
@@ -76,6 +78,7 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
    Jellyfish_Merge_V1.1
    Jellyfish_Stats_V1.1
    Subsampler_V1.0
+   KmerGenie_V1.6
 
 By default RAMPART assumes the tools are all available and properly configured.  So if this applies to your environment
 then you do not need to setup this file.
