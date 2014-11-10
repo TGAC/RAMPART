@@ -60,7 +60,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
             String cegmaJobName = jobPrefix + "-" + i++;
 
-            File cegOutputDir = new File(outputDir, f.getName());
+            File cegOutputDir = new File(outputDir, f.getName().substring(0, f.getName().length() - 3));
             if (cegOutputDir.exists()) {
                 FileUtils.deleteDirectory(cegOutputDir);
             }
@@ -99,31 +99,20 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         log.info("Extracting stats from CEGMA runs stored in: " + reportDir.getCanonicalPath());
 
-        Collection<File> cegmaFiles = FileUtils.listFiles(reportDir, new String[]{"cegma"}, false);
+        Collection<File> cegmaFiles = FileUtils.listFiles(reportDir, new String[]{"completeness_report"}, true);
 
-        for(AssemblyStats stats : table) {
+        for(File cf : cegmaFiles) {
 
-            File c = null;
-            File asm = new File(stats.getFilePath());
+            String asmName = cf.getName().substring(0, cf.getName().length() - 23);
 
-            for(File cf : cegmaFiles) {
-                if (FilenameUtils.getBaseName(asm.getName()).equals(FilenameUtils.getBaseName(cf.getName()))) {
-                    c = cf;
-                    break;
-                }
-            }
+            log.info("Extracting CEGMA report from: " + cf.getCanonicalPath() + "; using assembly name: " + asmName);
 
-            if (c == null || !c.exists())
-                throw new IllegalStateException("Could not find cegma output file");
+            AssemblyStats stats = table.findStatsByFilename(asmName);
 
-            if (!asm.exists())
-                throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
-
-            CegmaV24.Report cegmaReport = new CegmaV24.Report(c);
+            CegmaV24.Report cegmaReport = new CegmaV24.Report(cf);
 
             stats.setCompletenessPercentage(cegmaReport.getPcComplete());
         }
-
     }
 
     @Override
