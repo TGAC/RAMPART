@@ -50,7 +50,7 @@ public class AssemblyStatsMatrixTest {
 
         assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_SEQS) == 851620.0);
 
-        matrix.standardNormalise(AssemblyStatsMatrixRow.IDX_NB_SEQS, true);
+        matrix.standardScale(AssemblyStatsMatrixRow.IDX_NB_SEQS, true);
 
         assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_SEQS) == 0.0);
     }
@@ -60,9 +60,9 @@ public class AssemblyStatsMatrixTest {
 
         assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_BASES) == 399155917.0);
 
-        matrix.deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES, 352155917.0);
+        matrix.deviationScale(AssemblyStatsMatrixRow.IDX_NB_BASES, 352155917.0);
 
-        assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_BASES) == 0.13346361009745578);
+        assertTrue(matrix.get(0).getAt(AssemblyStatsMatrixRow.IDX_NB_BASES) == 0.7139892568315214);
     }
 
     @Test

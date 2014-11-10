@@ -2,14 +2,19 @@ package uk.ac.tgac.rampart.stage.analyse.asm;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
@@ -71,15 +76,15 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
 
         // Create the requested subset of services
-        for(String requestedService : this.getArgs().getAsmAnalyses()) {
+        for(AnalyseAssembliesArgs.ToolArgs requestedService : this.getArgs().getTools()) {
 
-            if (!this.assemblyAnalyserFactory.serviceAvailable(requestedService)) {
+            if (!this.assemblyAnalyserFactory.serviceAvailable(requestedService.getName())) {
 
                 log.error("Could not find the specified assembly analysis service: " + requestedService);
                 return false;
             }
             else {
-                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
+                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService.getName(), this.conanExecutorService));
             }
         }
 
@@ -95,7 +100,10 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         log.info("Starting Analysis of AMP assemblies");
 
@@ -107,11 +115,13 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
         // Create requested services
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
-        for(String requestedService : this.getArgs().getAsmAnalyses()) {
-            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
+        for(AnalyseAssembliesArgs.ToolArgs requestedService : this.getArgs().getTools()) {
+            AssemblyAnalyser aa = this.assemblyAnalyserFactory.create(requestedService.getName(), this.conanExecutorService);
+            aa.setArgs(requestedService);
+            requestedServices.add(aa);
         }
 
-        List<Integer> jobIds = new ArrayList<>();
+        List<ExecutionResult> jobResults = new ArrayList<>();
 
         // Just loop through all requested stats levels and execute each.
         // Each stage is processed linearly
@@ -122,26 +132,9 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
                 File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
                 String jobPrefix = this.getArgs().getJobPrefix() + "-" + analyser.getName().toLowerCase();
 
-                jobIds.addAll(analyser.execute(assemblies, outputDir, jobPrefix, args, this.conanExecutorService));
+                jobResults.addAll(analyser.execute(assemblies, outputDir, jobPrefix, this.conanExecutorService));
             }
 
-            // If we're using a scheduler and we have been asked to run
-            // in parallel, then we should wait for all those to complete before continueing.
-            if (this.conanExecutorService.usingScheduler() && args.isRunParallel() && !jobIds.isEmpty()) {
-                log.debug("Analysing assemblies in parallel, waiting for completion");
-                this.conanExecutorService.executeScheduledWait(
-                        jobIds,
-                        args.getJobPrefix() + "-*",
-                        ExitStatus.Type.COMPLETED_ANY,
-                        args.getJobPrefix() + "-cont-wait",
-                        args.getOutputDir());
-            }
-        } catch (ConanParameterException | IOException e) {
-            throw new ProcessExecutionException(4, e);
-        }
-
-
-        try {
             // Create the stats table with information derived from the configuration file.
             AssemblyStatsTable table = this.createTable();
 
@@ -151,19 +144,38 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
                 List<File> assemblies = this.findAssemblies(analyser);
                 File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
 
-                analyser.updateTable(table, assemblies, outputDir, "amp");
+                Map<String, String> asm2GroupMap = new HashMap<>();
+                for(File b : assemblies) {
+                    asm2GroupMap.put(b.getName(), "amp");
+                }
+
+                analyser.updateTable(table, outputDir);
             }
 
             // Save table to disk
             File finalFile = new File(args.getOutputDir(), "scores.tab");
             table.save(finalFile);
             log.debug("Saved final results to disk at: " + finalFile.getAbsolutePath());
+
+            stopWatch.stop();
+
+            TaskResult taskResult = new DefaultTaskResult("rampart-amp_analysis", true, jobResults, stopWatch.getTime() / 1000L);
+
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), taskResult.getOutput());
+
+            return new DefaultExecutionResult(
+                    taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
         }
-        catch(IOException ioe) {
+        catch(ConanParameterException | IOException ioe) {
             throw new ProcessExecutionException(5, ioe);
         }
 
-        return true;
     }
 
     protected AssemblyStatsTable createTable() {
@@ -226,7 +238,7 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
     /**
      * Gets all the FastA files in the directory specified by the user.
-     * @param inputDir
+     * @param inputDir The input directory containing assemblies
      * @return A list of fasta files in the user specified directory
      */
     public static List<File> assembliesFromDir(File inputDir) {
@@ -267,14 +279,15 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         }
 
         public Args(Element element, File analyseReadsDir, File outputDir, List<AmpStage.Args> ampStages,
-                               Organism organism, String jobPrefix) {
+                               Organism organism, String jobPrefix, boolean doingReadKmerAnalysis) throws IOException {
 
             super(  new Params(),
                     element,
                     analyseReadsDir,
                     outputDir,
                     organism,
-                    jobPrefix
+                    jobPrefix,
+                    doingReadKmerAnalysis
                     );
 
             this.analyseAll = element.hasAttribute(KEY_ATTR_ALL) ?

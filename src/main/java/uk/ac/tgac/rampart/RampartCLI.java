@@ -18,6 +18,7 @@
 package uk.ac.tgac.rampart;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.log4j.Level;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
 import uk.ac.ebi.fgpt.conan.service.DefaultExecutorService;
@@ -34,6 +36,28 @@ import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
 import uk.ac.ebi.fgpt.conan.util.AbstractConanCLI;
 import uk.ac.tgac.conan.core.util.JarUtils;
+import uk.ac.tgac.conan.process.asm.stats.CegmaV24;
+import uk.ac.tgac.conan.process.asm.stats.KmerGenieV16;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
+import uk.ac.tgac.conan.process.asm.tools.*;
+import uk.ac.tgac.conan.process.asmIO.corrector.ReaprV1;
+import uk.ac.tgac.conan.process.asmIO.gapclose.PlatanusGapCloseV12;
+import uk.ac.tgac.conan.process.asmIO.gapclose.SoapGapCloserV112;
+import uk.ac.tgac.conan.process.asmIO.scaffold.PlatanusScaffoldV12;
+import uk.ac.tgac.conan.process.asmIO.scaffold.SSpaceBasicV2;
+import uk.ac.tgac.conan.process.asmIO.scaffold.SoapScaffolderV24;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishStatsV11;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatGcpV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatPlotDensityV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
+import uk.ac.tgac.conan.process.misc.FastXRC_V0013;
+import uk.ac.tgac.conan.process.re.tools.MusketV10;
+import uk.ac.tgac.conan.process.re.tools.QuakeV03;
+import uk.ac.tgac.conan.process.re.tools.SickleV12;
+import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
 import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
@@ -105,6 +129,37 @@ public class RampartCLI extends AbstractConanCLI {
 
     public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
 
+    private static String[] externalProcNames = new String[] {
+            new MusketV10().getName(),
+            new SickleV12().getName(),
+            new QuakeV03().getName(),
+            new JellyfishCountV11().getName(),
+            new KatCompV1().getName(),
+            new KatGcpV1().getName(),
+            new KmerGenieV16().getName(),
+            new AbyssV15().getName(),
+            new VelvetV12().getName(),
+            new SpadesV31().getName(),
+            new AllpathsLgV50().getName(),
+            new PlatanusAssembleV12().getName(),
+            new PlatanusScaffoldV12().getName(),
+            new PlatanusGapCloseV12().getName(),
+            new SoapAssemblerArgsV24().getName(),
+            new SoapScaffolderV24().getName(),
+            new SoapGapCloserV112().getName(),
+            new SSpaceBasicV2().getName(),
+            new TgacSubsamplerV1().getName(),
+            new ReaprV1().getName(),
+            new FastXRC_V0013().getName(),
+            new QuastV23().getName(),
+            new CegmaV24().getName(),
+            new KatPlotDensityV1().getName(),
+            new KatPlotSpectraCnV1().getName(),
+            new JellyfishCountV11().getName(),
+            new JellyfishMergeV11().getName(),
+            new JellyfishStatsV11().getName()
+    };
+
 
     // **** Options ****
     private RampartStageList stages;
@@ -114,10 +169,11 @@ public class RampartCLI extends AbstractConanCLI {
     private boolean skipChecks;
     private boolean version;
 
-    private Rampart.Args args;
+    private RampartConfig args;
 
     /**
      * Creates a new RAMPART instance with default arguments
+     * @throws IOException Thrown if there is an error initialising this RAMPART instance.
      */
     public RampartCLI() throws IOException {
         super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
@@ -137,6 +193,7 @@ public class RampartCLI extends AbstractConanCLI {
      * Creates a new RAMPART instance based on command line arguments
      * @param args List of command line arguments containing information to setup RAMPART
      * @throws ParseException Thrown if an invalid command line was encountered
+     * @throws IOException Thrown if there is an error initialising this RAMPART instance.
      */
     public RampartCLI(String[] args) throws ParseException, IOException {
 
@@ -157,7 +214,7 @@ public class RampartCLI extends AbstractConanCLI {
         this.init();
 
         // Create RnaSeqEvalArgs based on reads from the command line
-        this.args = new Rampart.Args(
+        this.args = new RampartConfig(
                 this.jobConfig,
                 this.getOutputDir(),
                 this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
@@ -176,8 +233,14 @@ public class RampartCLI extends AbstractConanCLI {
         log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
         log.info("Job Prefix: " + this.args.getJobPrefix());
         if (ConanProperties.containsKey("externalProcessConfigFile")) {
-            log.info("External process config file detected: " + new File(ConanProperties.getProperty("externalProcessConfigFile")).getAbsolutePath());
+
+            File externalProcsFile = new File(ConanProperties.getProperty("externalProcessConfigFile"));
+            log.info("External process config file detected: " + externalProcsFile.getAbsolutePath());
+
+            this.validateExternalProcs(externalProcsFile, externalProcNames);
+            log.info("External process config file validated");
         }
+        log.info("Executing the following stages: " + this.stages.toString());
 
         // Parse the job config file and set internal variables in RampartArgs
         log.info("Parsing configuration file: " + this.jobConfig.getAbsolutePath());
@@ -186,6 +249,8 @@ public class RampartCLI extends AbstractConanCLI {
         // Create an execution context based on environment information detected or provide by the user
         this.args.setExecutionContext(this.buildExecutionContext());
     }
+
+
 
     private static String loadVersion() throws IOException {
         Properties properties = new Properties();
@@ -209,7 +274,7 @@ public class RampartCLI extends AbstractConanCLI {
         this.skipChecks = skipChecks;
     }
 
-    public Rampart.Args getArgs() {
+    public RampartConfig getArgs() {
         return args;
     }
 
@@ -235,8 +300,10 @@ public class RampartCLI extends AbstractConanCLI {
                 RampartStageList firstHalf = new RampartStageList();
                 firstHalf.add(RampartStage.MECQ);
                 firstHalf.add(RampartStage.ANALYSE_READS);
+                firstHalf.add(RampartStage.KMER_CALC);
                 firstHalf.add(RampartStage.MASS);
                 firstHalf.add(RampartStage.ANALYSE_MASS);
+                firstHalf.add(RampartStage.SELECT_MASS);
                 this.stages = firstHalf;
 
                 log.info("Running first half of the RAMPART pipeline only");
@@ -251,11 +318,11 @@ public class RampartCLI extends AbstractConanCLI {
                 log.info("Running second half of the RAMPART pipeline only");
 
                 if (commandLine.hasOption(OPT_AMP_INPUT)) {
-                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT));
+                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT)).getAbsoluteFile();
                 }
 
                 if (commandLine.hasOption(OPT_AMP_BUBBLE_INPUT)) {
-                    this.ampBubble = new File(commandLine.getOptionValue(OPT_AMP_BUBBLE_INPUT));
+                    this.ampBubble = new File(commandLine.getOptionValue(OPT_AMP_BUBBLE_INPUT)).getAbsoluteFile();
                 }
             }
         }
@@ -277,7 +344,7 @@ public class RampartCLI extends AbstractConanCLI {
                 System.err,
                 "rampart [options] <job_config_file>\nOptions: ",
                 "RAMPART is a de novo assembly workflow creation tool.  It allows you to construct assembly " +
-                "workflows built using third party-tools and High Performance Computing resources.  It can be " +
+                "workflows (or recipes) built using third party-tools and High Performance Computing resources.  It can be " +
                 "used as a single interface to several popular assemblers, and can perform automated comparison " +
                 "and analysis of any generated assemblies.\n\nOptions:\n",
                 createOptions()
@@ -320,20 +387,25 @@ public class RampartCLI extends AbstractConanCLI {
 
     @Override
     protected ParamMap createArgMap() {
-        return this.args.getArgMap();
+        return this.args.getPipelineArgs().getArgMap();
     }
 
     @Override
     protected ConanPipeline createPipeline() throws IOException {
 
-        return new Rampart.Pipeline(this.args, new DefaultExecutorService(
-                new DefaultProcessService(),
-                this.args.getExecutionContext()));
+        return new RampartPipeline(this.args.getPipelineArgs(),
+                new DefaultExecutorService(
+                    new DefaultProcessService(),
+                    this.args.getExecutionContext()));
     }
 
     public void execute() throws InterruptedException, TaskExecutionException, IOException {
 
-        super.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH, this.args.getExecutionContext());
+        // Run the pipeline as described by the user
+        TaskResult result = super.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH, this.args.getExecutionContext());
+
+        // Output the resource usage to file
+        FileUtils.writeLines(new File(this.args.getOutputDir(), this.args.getJobPrefix() + ".summary"), result.getOutput());
     }
 
 
@@ -341,6 +413,7 @@ public class RampartCLI extends AbstractConanCLI {
      * The main entry point for RAMPART.  Looks at the first argument to decide which mode to run in.  Execution of each
      * mode is handled by RampartMode.
      * @param args Command line arguments
+     * @throws IOException Thrown if there was an error printing the help message
      */
     public static void main(String[] args) throws IOException {
 

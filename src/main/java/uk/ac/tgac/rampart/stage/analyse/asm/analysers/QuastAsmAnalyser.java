@@ -10,7 +10,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.asm.stats.QuastV22;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAssembliesArgs;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
@@ -18,7 +18,9 @@ import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,17 +34,26 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
     private static Logger log = LoggerFactory.getLogger(QuastAsmAnalyser.class);
 
+    private AnalyseAssembliesArgs.ToolArgs args;
+
+    private Map<String, File> assemblies;
+
     public static final String QUAST_DIR_NAME = "quast";
     public static final String QUAST_REPORT_NAME = "report.txt";
 
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        return new QuastV22(this.conanExecutorService).isOperational(executionContext);
+        return new QuastV23(this.conanExecutorService).isOperational(executionContext);
     }
 
     @Override
-    public List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
+    public void setArgs(AnalyseAssembliesArgs.ToolArgs args) {
+         this.args = args;
+    }
+
+    @Override
+    public List<ExecutionResult> execute(List<File> assemblies, File outputDir, String jobPrefix, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         if (outputDir.exists()) {
@@ -51,15 +62,23 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
         outputDir.mkdirs();
 
+        // Create mapping between quast assembly name and actual file path
+        this.assemblies = new HashMap<>();
+
+        for(File assembly : assemblies) {
+            this.assemblies.put(assembly.getName().substring(0, assembly.getName().length() - 3), assembly.getCanonicalFile());
+        }
 
         // Add quast job id to list
-        List<Integer> jobIds = new ArrayList<>();
+        List<ExecutionResult> jobResults = new ArrayList<>();
 
-        QuastV22 quastProcess = this.makeQuast(
+
+        QuastV23 quastProcess = this.makeQuast(
                 assemblies,
                 outputDir,
                 args.getOrganism().getEstGenomeSize(),
-                args.getThreadsPerProcess(),
+                args.getOrganism().getPloidy() > 1,
+                args.getThreads(),
                 false // Assume all sequences are not scaffolds... I don't like this options much in Quast.
         );
 
@@ -67,32 +86,31 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 quastProcess,
                 outputDir,
                 jobPrefix,
-                args.getThreadsPerProcess(),
-                0,
-                args.isRunParallel());
+                args.getThreads(),
+                args.getMemory(),
+                false);
 
-        jobIds.add(result.getJobId());
+        jobResults.add(result);
 
-        return jobIds;
+        return jobResults;
     }
 
     @Override
-    public void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) throws IOException {
+    public void updateTable(AssemblyStatsTable table, File reportDir) throws IOException {
 
         File quastReportFile = new File(reportDir, QUAST_REPORT_NAME);
+
         if (quastReportFile.exists()) {
-            QuastV22.Report quastReport = new QuastV22.Report(quastReportFile);
-            for(QuastV22.AssemblyStats qStats : quastReport.getStatList()) {
+            QuastV23.Report quastReport = new QuastV23.Report(quastReportFile);
+            for(QuastV23.AssemblyStats qStats : quastReport.getStatList()) {
 
                 if (!qStats.getName().endsWith("broken")) {
 
-                    String desc = qStats.getName().substring(subGroup.length() + 1, qStats.getName().lastIndexOf("-"));
-
-                    AssemblyStats stats = table.findStats(subGroup, desc);
+                    AssemblyStats stats = table.findStatsByFilename(qStats.getName());
 
                     // If not found then create a new entry
                     if (stats == null) {
-                        throw new IOException("Couldn't find assembly stats entry for " + subGroup + " " + desc);
+                        throw new IOException("Couldn't find assembly stats entry for " + qStats.getName());
                     }
 
                     // Override attributes
@@ -105,11 +123,12 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                     stats.setNbBases(qStats.getTotalLengthGt0());
                     stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
                     stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
+                    stats.setNbGenes(qStats.getNbGenes());
                 }
             }
         }
         else {
-            log.warn("Could not find Quast report file at: " + quastReportFile.getAbsolutePath() + "; possibly one of the assemblies does not contain valid contigs.  Skipping quast result integration for this group.");
+            log.warn("Could not find Quast report file at: " + quastReportFile.getCanonicalPath() + "; possibly one of the assemblies does not contain valid contigs.  Skipping quast result integration for this group.");
         }
     }
 
@@ -119,19 +138,26 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
+    public void setConanExecutorService(ConanExecutorService ces) {
+        this.conanExecutorService = ces;
+    }
+
+    @Override
     public String getName() {
         return "QUAST";
     }
 
 
-    protected QuastV22 makeQuast(List<File> assemblies, File outputDir, long genomeSize, int threads, boolean scaffolds) {
-        QuastV22.Args quastArgs = new QuastV22.Args();
+    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, int threads, boolean scaffolds) {
+        QuastV23.Args quastArgs = new QuastV23.Args();
         quastArgs.setInputFiles(assemblies);
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
         quastArgs.setEstimatedGenomeSize(genomeSize);
+        quastArgs.setFindGenes(true);
+        quastArgs.setEukaryote(eukaryote);
         quastArgs.setThreads(threads);
         quastArgs.setScaffolds(scaffolds);
 
-        return new QuastV22(this.conanExecutorService, quastArgs);
+        return new QuastV23(this.conanExecutorService, quastArgs);
     }
 }

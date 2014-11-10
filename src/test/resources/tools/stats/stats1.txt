@@ -1,4 +1,4 @@
-index|desc|dataset|asm_file|bubble_file|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness|score
-81|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/81/Abyss-mpi-k81-scaffolds.fa||369177|350000|444872696|440000000|692110|25884|100000|43.0|0.41|85.0|94.5
-85|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/85/Abyss-mpi-k85-scaffolds.fa||338632|330000|429668001|420000000|643913|23327|99000|44.1|0.71|86.0|87.2
-91|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/91/Abyss-mpi-k91-scaffolds.fa||316465|310000|367915081|360000000|344797|6208|97000|45.0|2.45|85.5|65.1
+index|desc|dataset|asm_file|bubble_file|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|nb_genes|completeness|score
+81|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/81/Abyss-mpi-k81-scaffolds.fa||369177|350000|444872696|440000000|692110|25884|100000|43.0|0.41|500|85.0|94.5
+85|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/85/Abyss-mpi-k85-scaffolds.fa||338632|330000|429668001|420000000|643913|23327|99000|44.1|0.71|600|86.0|87.2
+91|null|sickle|/data/workarea/maplesod/CCC/CCC-15/mass/raw/91/Abyss-mpi-k91-scaffolds.fa||316465|310000|367915081|360000000|344797|6208|97000|45.0|2.45|700|85.5|65.1

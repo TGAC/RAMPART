@@ -34,6 +34,8 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
     private static Logger log = LoggerFactory.getLogger(CegmaAsmAnalyser.class);
 
+    private AnalyseAssembliesArgs.ToolArgs args;
+
     public static final String CEGMA_DIR_NAME = "cegma";
 
     @Override
@@ -42,11 +44,11 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
     @Override
-    public List<Integer> execute(List<File> assemblies, File outputDir, String jobPrefix, AnalyseAssembliesArgs args, ConanExecutorService ces)
+    public List<ExecutionResult> execute(List<File> assemblies, File outputDir, String jobPrefix, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         // Add quast job id to list
-        List<Integer> jobIds = new ArrayList<>();
+        List<ExecutionResult> jobResults = new ArrayList<>();
 
         if (outputDir.exists()) {
             FileUtils.deleteDirectory(outputDir);
@@ -58,73 +60,69 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
             String cegmaJobName = jobPrefix + "-" + i++;
 
-            File cegOutputDir = new File(outputDir, f.getName());
+            File cegOutputDir = new File(outputDir, f.getName().substring(0, f.getName().length() - 3));
             if (cegOutputDir.exists()) {
                 FileUtils.deleteDirectory(cegOutputDir);
             }
             cegOutputDir.mkdirs();
 
-            CegmaV24 cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreadsPerProcess());
+            CegmaV24 cegmaProc = this.makeCegmaProcess(f, cegOutputDir, args.getThreads());
             ExecutionResult result = ces.executeProcess(
                     cegmaProc,
                     cegOutputDir,
                     cegmaJobName,
-                    args.getThreadsPerProcess(),
-                    0,
-                    args.isRunParallel());
+                    args.getThreads(),
+                    args.getMemory(),
+                    false);
 
-            jobIds.add(result.getJobId());
+            jobResults.add(result);
 
             // Create symbolic links to completeness_reports
             File sourceFile = new File(((CegmaV24.Args)cegmaProc.getProcessArgs()).getOutputPrefix().getAbsolutePath() +
                     ".completeness_report");
+
             File destFile = new File(cegOutputDir, f.getName() + ".cegma");
 
             ces.getConanProcessService().createLocalSymbolicLink(sourceFile, destFile);
         }
 
-        return jobIds;
+        return jobResults;
     }
 
     @Override
-    public void updateTable(AssemblyStatsTable table, List<File> assemblies, File reportDir, String subGroup) throws IOException {
+    public void setArgs(AnalyseAssembliesArgs.ToolArgs args) {
+        this.args = args;
+    }
 
+    @Override
+    public void updateTable(AssemblyStatsTable table, File reportDir) throws IOException {
 
-        Collection<File> cegmaFiles = FileUtils.listFiles(reportDir, new String[]{"cegma"}, false);
+        log.info("Extracting stats from CEGMA runs stored in: " + reportDir.getCanonicalPath());
 
-        for(File asm : assemblies) {
+        Collection<File> cegmaFiles = FileUtils.listFiles(reportDir, new String[]{"completeness_report"}, true);
 
-            File c = null;
+        for(File cf : cegmaFiles) {
 
-            for(File cf : cegmaFiles) {
-                if (FilenameUtils.getBaseName(asm.getName()).equals(FilenameUtils.getBaseName(cf.getName()))) {
-                    c = cf;
-                    break;
-                }
-            }
+            String asmName = cf.getName().substring(0, cf.getName().length() - 23);
 
-            if (c == null || !c.exists())
-                throw new IllegalStateException("Could not find cegma output file");
+            log.info("Extracting CEGMA report from: " + cf.getCanonicalPath() + "; using assembly name: " + asmName);
 
-            if (!asm.exists())
-                throw new IllegalStateException("Could not find assembly associated with cegma file: " + asm.getAbsolutePath());
+            AssemblyStats stats = table.findStatsByFilename(asmName);
 
-            CegmaV24.Report cegmaReport = new CegmaV24.Report(c);
-
-            AssemblyStats stats = table.findStats(subGroup, asm.getName());
-
-            if (stats == null) {
-                throw new IOException("Couldn't find assembly stats entry for " + subGroup + ", " + asm.getName());
-            }
+            CegmaV24.Report cegmaReport = new CegmaV24.Report(cf);
 
             stats.setCompletenessPercentage(cegmaReport.getPcComplete());
         }
-
     }
 
     @Override
     public boolean isFast() {
         return false;
+    }
+
+    @Override
+    public void setConanExecutorService(ConanExecutorService ces) {
+        this.conanExecutorService = ces;
     }
 
     @Override

@@ -61,7 +61,7 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         return max;
     }
 
-    public void standardNormalise(int index, boolean invert) {
+    public void standardScale(int index, boolean invert) {
 
         double min = this.getMin(index);
         double max = this.getMax(index);
@@ -70,9 +70,9 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
 
             double delta = assemblyStatsMatrixRow.getAt(index) - min;
 
-            double norm = delta / max;
-
             double diff = max - min;
+
+            double norm = delta / diff;
 
             double newVal = diff == 0.0 ? 0.5 : norm;
 
@@ -80,19 +80,28 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         }
     }
 
-    public void deviationNormalise(int index, double mean) {
+    public void deviationScale(int index, double mean) {
+
+        double max = 0.0;
 
         for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
 
-            double dev = assemblyStatsMatrixRow.getAt(index) - mean;
+            double dev = Math.abs(assemblyStatsMatrixRow.getAt(index) - mean);
 
-            double norm = Math.abs(dev) / mean;
+            max = Math.max(max, dev);
+        }
 
-            assemblyStatsMatrixRow.setAt(index, norm);
+        for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
+
+            double dev = Math.abs(assemblyStatsMatrixRow.getAt(index) - mean);
+
+            double norm = 1.0 - (dev / max);
+
+            assemblyStatsMatrixRow.setAt(index, 1.0 - norm);
         }
     }
 
-    public void percentageNormalise(int index, boolean invert) {
+    public void percentageScale(int index, boolean invert) {
 
         for (AssemblyStatsMatrixRow assemblyStatsMatrixRow : this) {
 
@@ -106,27 +115,28 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
     public void normalise(long estimatedGenomeSize, double estimatedGCPercentage) {
 
         // Standard variables
-        standardNormalise(AssemblyStatsMatrixRow.IDX_NB_SEQS, true);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_NB_SEQS_GT_1K, true);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_MAX_LEN, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_N_50, false);
-        standardNormalise(AssemblyStatsMatrixRow.IDX_L_50, true);
+        standardScale(AssemblyStatsMatrixRow.IDX_NB_SEQS, true);
+        standardScale(AssemblyStatsMatrixRow.IDX_NB_SEQS_GT_1K, true);
+        standardScale(AssemblyStatsMatrixRow.IDX_MAX_LEN, false);
+        standardScale(AssemblyStatsMatrixRow.IDX_N_50, false);
+        standardScale(AssemblyStatsMatrixRow.IDX_L_50, true);
+        standardScale(AssemblyStatsMatrixRow.IDX_NB_GENES, false);
 
         // Percentage variables
-        percentageNormalise(AssemblyStatsMatrixRow.IDX_COMPLETENESS, false);
-        percentageNormalise(AssemblyStatsMatrixRow.IDX_N_PERC, true);
+        percentageScale(AssemblyStatsMatrixRow.IDX_COMPLETENESS, false);
+        percentageScale(AssemblyStatsMatrixRow.IDX_N_PERC, true);
 
         // Deviation variables
         if (estimatedGCPercentage != 0.0) {
-            deviationNormalise(AssemblyStatsMatrixRow.IDX_GC_PERC, estimatedGCPercentage);
+            deviationScale(AssemblyStatsMatrixRow.IDX_GC_PERC, estimatedGCPercentage);
         }
         else {
             setColumn(AssemblyStatsMatrixRow.IDX_GC_PERC, 0.0);
         }
 
         if (estimatedGenomeSize != 0L) {
-            deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES, (double)estimatedGenomeSize);
-            deviationNormalise(AssemblyStatsMatrixRow.IDX_NB_BASES_GT_1K, (double)estimatedGenomeSize);
+            deviationScale(AssemblyStatsMatrixRow.IDX_NB_BASES, (double) estimatedGenomeSize);
+            deviationScale(AssemblyStatsMatrixRow.IDX_NB_BASES_GT_1K, (double) estimatedGenomeSize);
         }
         else {
             setColumn(AssemblyStatsMatrixRow.IDX_NB_BASES, 0.0);

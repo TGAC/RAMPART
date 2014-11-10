@@ -1,5 +1,7 @@
 package uk.ac.tgac.rampart.util;
 
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+
 import java.io.File;
 
 /**
@@ -10,16 +12,20 @@ import java.io.File;
  * To change this template use File | Settings | File Templates.
  */
 public class JobOutput {
-    private int jobId;
+    private ExecutionResult result;
     private File outputFile;
 
-    public JobOutput(int jobId, File outputFile) {
-        this.jobId = jobId;
+    public JobOutput(ExecutionResult result, File outputFile) {
+        this.result = result;
         this.outputFile = outputFile;
     }
 
+    public ExecutionResult getResult() {
+        return result;
+    }
+
     public int getJobId() {
-        return jobId;
+        return this.result.getJobId();
     }
 
     public File getOutputFile() {

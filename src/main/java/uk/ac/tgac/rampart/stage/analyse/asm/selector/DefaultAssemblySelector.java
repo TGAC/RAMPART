@@ -48,8 +48,7 @@ public class DefaultAssemblySelector implements AssemblySelector {
     @Override
     public AssemblyStats selectAssembly(AssemblyStatsTable table,
                                long estimatedGenomeSize,
-                               double estimatedGcPercentage,
-                               File massDir) {
+                               double estimatedGcPercentage) {
 
         // Normalise merged table
         AssemblyStatsMatrix matrix = table.generateStatsMatrix();

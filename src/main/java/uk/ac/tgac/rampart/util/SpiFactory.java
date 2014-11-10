@@ -22,8 +22,8 @@ public class SpiFactory<T extends Service> {
 
     /**
      * This default method accepts an identifier if it equals the service's name, or if it matches the class names.
-     * @param identifier
-     * @param service
+     * @param identifier The identifier of the service
+     * @param service The service to be checked
      * @return Whether the service accepts the given identifier
      */
     protected boolean acceptsIdentifier(String identifier, T service) {
@@ -34,7 +34,7 @@ public class SpiFactory<T extends Service> {
 
     /**
      * Creates a new instance of the service with the specified name if it can be found, otherwise return null
-     * @param name
+     * @param name The identifier name for the service to create
      * @return A new service
      */
     public T create(String name) {
@@ -51,8 +51,9 @@ public class SpiFactory<T extends Service> {
 
     /**
      * Creates a new instance of the service with the specified name if it can be found, otherwise return null
-     * @param name
-     * @return A new service
+     * @param name The identifier name for the service to create
+     * @param ces The conan executor service which should be injected into the created service
+     * @return A new service, with conan executor service injected inside it
      */
     public T create(String name, ConanExecutorService ces) {
 

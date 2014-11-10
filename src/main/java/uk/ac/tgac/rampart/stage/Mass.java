@@ -18,17 +18,20 @@
 package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -39,12 +42,14 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.conan.process.asm.KmerRange;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: maplesod
@@ -54,6 +59,8 @@ import java.util.List;
 public class Mass extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(Mass.class);
+
+    private TaskResult taskResult;
 
     public Mass() {
         this(null);
@@ -65,6 +72,10 @@ public class Mass extends AbstractConanProcess {
 
     public Mass(ConanExecutorService ces, Args args) {
         super("", args, new Params(), ces);
+    }
+
+    public TaskResult getTaskResult() {
+        return taskResult;
     }
 
     @Override
@@ -82,9 +93,9 @@ public class Mass extends AbstractConanProcess {
 
         Args args = (Args) this.getProcessArgs();
 
-        for(MassJob.Args singleMassArgs : args.getMassJobArgList()) {
-            if (!new MassJob(this.conanExecutorService, singleMassArgs).isOperational(executionContext)) {
-                log.warn("MASS stage is NOT operational.");
+        for(MassJob.Args massJobArgs : args.getMassJobArgList()) {
+            if (!new MassJob(this.conanExecutorService, massJobArgs).isOperational(executionContext)) {
+                log.warn("A MASS job is NOT operational.");
                 return false;
             }
         }
@@ -100,32 +111,53 @@ public class Mass extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+
             log.info("Starting MASS");
 
             // Get shortcut to the args
             Args args = (Args) this.getProcessArgs();
 
-            List<Integer> jobIds = new ArrayList<>();
+            List<ExecutionResult> results = new ArrayList<>();
+            List<ExecutionResult> allResults = new ArrayList<>();
+            List<TaskResult> massJobResults = new ArrayList<>();
+            Map<String,Integer> optimalKmerMap = null;
 
-            for (MassJob.Args singleMassArgs : args.getMassJobArgList()) {
+            // Work out kmer genie configs and how they relate to mass jobs
+            if (args.kmerCalcArgs != null) {
+                setKmerValues(args.kmerCalcArgs.getResultFile(), args.getMassJobArgList());
+                log.info("Loaded optimal kmer values");
+            }
+
+            log.info("Starting MASS jobs");
+
+            for (MassJob.Args massJobArgs : args.getMassJobArgList()) {
 
                 // Ensure output directory for this MASS run exists
-                if (!singleMassArgs.getOutputDir().exists() && !singleMassArgs.getOutputDir().mkdirs()) {
+                if (!massJobArgs.getOutputDir().exists() && !massJobArgs.getOutputDir().mkdirs()) {
                     throw new IOException("Couldn't create directory for MASS");
                 }
 
                 // Execute the mass job and record any job ids
-                jobIds.addAll(this.executeMassJob(singleMassArgs, executionContext));
+                MassJobResult mjr = this.executeMassJob(massJobArgs, executionContext);
+                massJobResults.add(mjr.getAllResults());
+            }
+
+            for(TaskResult mjr : massJobResults) {
+                results.addAll(mjr.getProcessResults());
+                allResults.addAll(mjr.getProcessResults());
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Single MASS jobs were executed in parallel, waiting for all to complete");
+                log.info("MASS jobs were executed in parallel, waiting for all to complete");
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        results,
                         args.getJobPrefix() + "-mass-*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-wait",
@@ -146,18 +178,82 @@ public class Mass extends AbstractConanProcess {
 
             log.info("MASS complete");
 
+            stopWatch.stop();
+
+            this.taskResult = new DefaultTaskResult("rampart-mass", true, allResults, stopWatch.getTime() / 1000L);
+
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), this.taskResult.getOutput());
+
+            return new DefaultExecutionResult(
+                    this.taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(this.taskResult.getMaxMemUsage(), this.taskResult.getActualTotalRuntime(), this.taskResult.getTotalExternalCputime()));
+
         } catch (IOException ioe) {
             throw new ProcessExecutionException(-1, ioe);
         }
-
-        return true;
     }
 
-    protected List<Integer> executeMassJob(MassJob.Args massJobArgs, ExecutionContext executionContext)
+    protected static class MassJobResult {
+        private ExecutionResult result;
+        private List<Integer> jobIds;
+        private TaskResult allResults;
+
+        public MassJobResult() {
+            this(new DefaultExecutionResult("test", 0), new ArrayList<Integer>(), new DefaultTaskResult("test", false, new ArrayList<ExecutionResult>(), 0L));
+        }
+
+        public MassJobResult(ExecutionResult result, List<Integer> jobIds, TaskResult allResults) {
+            this.result = result;
+            this.jobIds = jobIds;
+            this.allResults = allResults;
+        }
+
+        public ExecutionResult getResult() {
+            return result;
+        }
+
+        public List<Integer> getJobIds() {
+            return jobIds;
+        }
+
+        public TaskResult getAllResults() {
+            return allResults;
+        }
+    }
+
+    public Args getArgs() {
+        return (Args)this.getProcessArgs();
+    }
+
+    public static void setKmerValues(File kmerMapFile, List<MassJob.Args> massJobArgList) throws IOException {
+
+        Map<String, Integer> optimalKmerMap = CalcOptimalKmer.loadOptimalKmerMap(kmerMapFile);
+        log.info("Loaded optimal kmer values");
+
+        // Get auto kmer setting if required
+        for(MassJob.Args massJobArgs : massJobArgList) {
+            if (optimalKmerMap.containsKey(massJobArgs.getName())) {
+                int kmerVal = optimalKmerMap.get(massJobArgs.getName());
+
+                log.info("Using automatically determined optimal kmer value (" + kmerVal + ") for " + massJobArgs.getName());
+                massJobArgs.setKmerRange(new KmerRange(Integer.toString(kmerVal)));
+            }
+        }
+    }
+
+    protected MassJobResult executeMassJob(MassJob.Args massJobArgs, ExecutionContext executionContext)
             throws InterruptedException, ProcessExecutionException {
+
+        massJobArgs.initialise(false);
         MassJob massJob = new MassJob(this.conanExecutorService, massJobArgs);
-        massJob.execute(executionContext);
-        return massJob.getJobIds();
+        ExecutionResult result = massJob.execute(executionContext);
+
+        return new MassJobResult(result, massJob.getJobIds(), massJob.getTaskResult());
     }
 
     public static enum OutputLevel {
@@ -177,6 +273,8 @@ public class Mass extends AbstractConanProcess {
         }
     }
 
+
+
     public static class Args extends AbstractProcessArgs implements RampartStageArgs {
 
         // Keys for config file
@@ -195,6 +293,7 @@ public class Mass extends AbstractConanProcess {
         // Rampart vars
         private String jobPrefix;
         private File outputDir;
+        private CalcOptimalKmer.Args kmerCalcArgs;
         private List<MassJob.Args> massJobArgList;    // List of MASS groups to run separately
         private List<Library> allLibraries;           // All allLibraries available in this job
         private List<Mecq.EcqArgs> allMecqs;          // All mecq configurations
@@ -223,6 +322,7 @@ public class Mass extends AbstractConanProcess {
 
             this.organism = null;
             this.runParallel = DEFAULT_RUN_PARALLEL;
+            this.kmerCalcArgs = null;
             this.massJobArgList = new ArrayList<>();
         }
 
@@ -233,10 +333,15 @@ public class Mass extends AbstractConanProcess {
             this();
 
             // Check there's nothing
-            if (!XmlHelper.validate(ele, new String[] {
-                    KEY_ATTR_PARALLEL,
-                    KEY_ELEM_MASS_JOB
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[0],
+                    new String[]{
+                            KEY_ATTR_PARALLEL
+                    },
+                    new String[]{
+                            KEY_ELEM_MASS_JOB
+                    },
+                    new String[0])) {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
 
@@ -260,10 +365,15 @@ public class Mass extends AbstractConanProcess {
                 this.massJobArgList.add(
                         new MassJob.Args(
                                 (Element) nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1)
+                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1, this.kmerCalcArgs != null)
                 );
             }
+        }
 
+        public void initialise() {
+            for(MassJob.Args jobArgs : this.massJobArgList) {
+                jobArgs.initialise(false);
+            }
         }
 
         protected Params getParams() {
@@ -325,6 +435,14 @@ public class Mass extends AbstractConanProcess {
 
         public void setMassJobArgList(List<MassJob.Args> massJobArgList) {
             this.massJobArgList = massJobArgList;
+        }
+
+        public CalcOptimalKmer.Args getKmerCalcArgs() {
+            return kmerCalcArgs;
+        }
+
+        public void setKmerCalcArgs(CalcOptimalKmer.Args kmerCalcArgs) {
+            this.kmerCalcArgs = kmerCalcArgs;
         }
 
         public List<Mecq.EcqArgs> getAllMecqs() {

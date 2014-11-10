@@ -42,6 +42,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     private long l50;
     private double gcPercentage;
     private double nPercentage;
+    private int nbGenes;
     private double completenessPercentage;
     private double score;
 
@@ -61,6 +62,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.l50 = 0L;
         this.gcPercentage = 0.0;
         this.nPercentage = 0.0;
+        this.nbGenes = 0;
         this.completenessPercentage = 0.0;
         this.score = 0.0;
     }
@@ -81,6 +83,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.l50 = Long.parseLong(stats[i++]);
         this.gcPercentage = Double.parseDouble(stats[i++]);
         this.nPercentage = Double.parseDouble(stats[i++]);
+        this.nbGenes = Integer.parseInt(stats[i++]);
         this.completenessPercentage = Double.parseDouble(stats[i++]);
         this.score = Double.parseDouble(stats[i++]);
     }
@@ -158,20 +161,20 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.nbBasesGt1K = nbBasesGt1K;
     }
 
-    public double getnPercentage() {
-        return nPercentage;
-    }
-
-    public void setnPercentage(double nPercentage) {
-        this.nPercentage = nPercentage;
-    }
-
     public double getNPercentage() {
         return nPercentage;
     }
 
     public void setNPercentage(double nPercentage) {
         this.nPercentage = nPercentage;
+    }
+
+    public int getNbGenes() {
+        return nbGenes;
+    }
+
+    public void setNbGenes(int nbGenes) {
+        this.nbGenes = nbGenes;
     }
 
     public long getMaxLen() {
@@ -223,7 +226,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     }
 
     public static String getStatsFileHeader() {
-        return "index|desc|dataset|asm_path|bubble_path|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|completeness|score";
+        return "index|desc|dataset|asm_path|bubble_path|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|nb_genes|completeness|score";
     }
 
 
@@ -246,6 +249,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         sj.add(this.getL50());
         sj.add(this.getGcPercentage());
         sj.add(this.getNPercentage());
+        sj.add(this.getNbGenes());
         sj.add(this.getCompletenessPercentage());
         sj.add(this.getScore());
 

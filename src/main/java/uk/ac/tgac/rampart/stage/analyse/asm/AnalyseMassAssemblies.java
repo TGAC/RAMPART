@@ -2,27 +2,28 @@ package uk.ac.tgac.rampart.stage.analyse.asm;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.Assembler;
+import uk.ac.tgac.rampart.stage.Mass;
 import uk.ac.tgac.rampart.stage.MassJob;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
-import uk.ac.tgac.rampart.stage.analyse.asm.selector.AssemblySelector;
-import uk.ac.tgac.rampart.stage.analyse.asm.selector.DefaultAssemblySelector;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
-import uk.ac.tgac.rampart.util.SpiFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +40,6 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
 
     private static Logger log = LoggerFactory.getLogger(AnalyseMassAssemblies.class);
 
-    SpiFactory<AssemblyAnalyser> assemblyAnalyserFactory;
 
     public AnalyseMassAssemblies() {
         this(null);
@@ -51,8 +51,6 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
 
     public AnalyseMassAssemblies(ConanExecutorService ces, Args args) {
         super("", args, new Params(), ces);
-
-        this.assemblyAnalyserFactory = new SpiFactory<>(AssemblyAnalyser.class);
     }
 
     public Args getArgs() {
@@ -67,22 +65,10 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        List<String> serviceNames = this.assemblyAnalyserFactory.listServices();
-
-        // By using a set then we essentially ignore any duplications in the users input string
-        Set<AssemblyAnalyser> requestedServices = new HashSet<>();
-
-        // Create the requested subset of services
-        for(String requestedService : this.getArgs().getAsmAnalyses()) {
-
-            if (!this.assemblyAnalyserFactory.serviceAvailable(requestedService)) {
-
-                log.error("Could not find the specified assembly analysis service: " + requestedService);
-                return false;
-            }
-            else {
-                requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
-            }
+        // Create requested services
+        Set<AssemblyAnalyser> requestedServices = this.getArgs().getAssemblyAnalysers();
+        for(AssemblyAnalyser requestedService : requestedServices) {
+            requestedService.setConanExecutorService(this.conanExecutorService);
         }
 
         for(AssemblyAnalyser analyser : requestedServices) {
@@ -97,253 +83,194 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
-        log.info("Starting Analysis of MASS assemblies");
-
-        Args args = this.getArgs();
-
-        if (!args.getOutputDir().exists()) {
-            args.getOutputDir().mkdirs();
-        }
-
-        // Create requested services
-        Set<AssemblyAnalyser> requestedServices = new HashSet<>();
-        for(String requestedService : this.getArgs().getAsmAnalyses()) {
-            requestedServices.add(this.assemblyAnalyserFactory.create(requestedService, this.conanExecutorService));
-        }
-
-        // Just loop through all requested stats levels and execute each.
-        // Each stage is processed linearly
         try {
 
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+
+            log.info("Starting Analysis of MASS assemblies");
+
+            Args args = this.getArgs();
+
+            if (!args.getOutputDir().exists()) {
+                args.getOutputDir().mkdirs();
+            }
+
+            // Create requested services
+            Set<AssemblyAnalyser> requestedServices = args.getAssemblyAnalysers();
+            for(AssemblyAnalyser requestedService : requestedServices) {
+                requestedService.setConanExecutorService(this.conanExecutorService);
+            }
+
             // Keep a list of all job ids
-            List<Integer> jobIds = new ArrayList<>();
+            List<ExecutionResult> jobResults = new ArrayList<>();
+
+            List<File> unitigAssemblies = new ArrayList<>();
+            List<File> contigAssemblies = new ArrayList<>();
+            List<File> scaffoldAssemblies = new ArrayList<>();
+            List<File> bestAssemblies = new ArrayList<>();
+            List<File> bubbles = new ArrayList<>();
+            List<String> mappings = new ArrayList<>();
+
+            int index = 1;
+
+            // Update mass job values with kmer genie info if required
+            if (args.kmerCalcResults != null && args.kmerCalcResults.exists()) {
+                Mass.setKmerValues(args.getKmerCalcResults(), args.getMassJobs());
+            }
+
+            // Loop through MASS groups to get assemblies
+            for (MassJob.Args jobArgs : args.getMassJobs()) {
+
+                jobArgs.initialise();
+
+                String massGroup = jobArgs.getName();
+
+                File inputDir = new File(args.getMassDir(), massGroup);
+
+                if (!inputDir.exists()) {
+                    throw new ProcessExecutionException(-1, "Could not find output from mass group: " + massGroup + "; at: " + inputDir.getAbsolutePath());
+                }
+
+                final File unitigsDir = jobArgs.getUnitigsDir();
+                final File contigsDir = jobArgs.getContigsDir();
+                final File scaffoldsDir = jobArgs.getScaffoldsDir();
+                final File longestDir = jobArgs.getLongestDir();
+
+                if (unitigsDir.exists()) {
+                    unitigAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(unitigsDir));
+                }
+
+                if (contigsDir.exists()) {
+                    contigAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(contigsDir));
+                }
+
+                if (scaffoldsDir.exists()) {
+                    scaffoldAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(scaffoldsDir));
+                }
+
+                bestAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(longestDir));
+
+
+                for (Assembler assembler : jobArgs.getAssemblers()) {
+
+                    File assembly = assembler.getBestAssembly();
+
+                    if (assembler.getBubbleFile() != null) {
+                        bubbles.add(assembler.getBubbleFile());
+                    }
+
+                    String run = assembler.getAssemblerArgs().getOutputDir().getName();
+
+                    String line = Integer.toString(index) + "\t" + massGroup + "\t" + run + "\t" + assembly.getAbsolutePath() + "\t" +
+                            (assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "NA");
+
+                    mappings.add(line);
+
+                    index++;
+                }
+            }
+
+            // Make symbolic links for easy access
+            File unitigsDir = new File(args.getAssembliesDir(), "unitigs");
+            File contigsDir = new File(args.getAssembliesDir(), "contigs");
+            File scaffoldsDir = new File(args.getAssembliesDir(), "scaffolds");
+            File bestDir = new File(args.getAssembliesDir(), "longest");
+            File bubblesDir = new File(args.getAssembliesDir(), "bubbles");
+
+            this.makeLinks(unitigAssemblies, unitigsDir);
+            this.makeLinks(contigAssemblies, contigsDir);
+            this.makeLinks(scaffoldAssemblies, scaffoldsDir);
+            this.makeLinks(bestAssemblies, bestDir);
+            this.makeLinks(bubbles, bubblesDir);
+
+            // Write out linkage file
+            FileUtils.writeLines(args.getAssemblyLinkageFile(), mappings);
 
             for(AssemblyAnalyser analyser : requestedServices) {
 
-                // Loop through MASS groups
-                for(MassJob.Args singleMassArgs : args.getMassJobs()) {
+                File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
+                String jobPrefix = this.getArgs().getJobPrefix() + "-" + analyser.getName().toLowerCase();
 
-                    String massGroup = singleMassArgs.getName();
+                // Run analysis for each assembly grouping if fast.  Otherwise just do the highest order assemblies.
+                if (analyser.isFast()) {
 
-                    File inputDir = new File(args.getMassDir(), massGroup);
-
-                    if (!inputDir.exists()) {
-                        throw new ProcessExecutionException(-1, "Could not find output from mass group: " + massGroup + "; at: " + inputDir.getAbsolutePath());
+                    if (!unitigAssemblies.isEmpty()) {
+                        jobResults.addAll(analyser.execute(
+                                unitigAssemblies,
+                                new File(outputDir, "unitigs"),
+                                jobPrefix + "-unitigs",
+                                this.conanExecutorService
+                        ));
                     }
 
-                    File unitigsDir = new File(inputDir, "unitigs");
-                    File contigsDir = new File(inputDir, "contigs");
-                    File scaffoldsDir = new File(inputDir, "scaffolds");
-
-                    File outputDir = new File(args.getOutputDir(), massGroup + "/" + analyser.getName().toLowerCase());
-                    String jobPrefix = this.getArgs().getJobPrefix() + "-" + massGroup + "-" + analyser.getName().toLowerCase();
-
-                    if (analyser.isFast()) {
-
-                        if (unitigsDir.exists()) {
-                            jobIds.addAll(analyser.execute(
-                                    AnalyseMassAssemblies.assembliesFromDir(unitigsDir),
-                                    new File(outputDir, "unitigs"),
-                                    jobPrefix + "-unitigs",
-                                    this.getArgs(),
-                                    this.conanExecutorService
-                            ));
-                        }
-
-                        if (contigsDir.exists()) {
-                            jobIds.addAll(analyser.execute(
-                                    AnalyseMassAssemblies.assembliesFromDir(contigsDir),
-                                    new File(outputDir, "contigs"),
-                                    jobPrefix + "-contigs",
-                                    this.getArgs(),
-                                    this.conanExecutorService
-                            ));
-                        }
-
-                        if (scaffoldsDir.exists()) {
-                            jobIds.addAll(analyser.execute(
-                                    AnalyseMassAssemblies.assembliesFromDir(scaffoldsDir),
-                                    new File(outputDir, "scaffolds"),
-                                    jobPrefix + "-scaffolds",
-                                    this.getArgs(),
-                                    this.conanExecutorService
-                            ));
-                        }
+                    if (!contigAssemblies.isEmpty()) {
+                        jobResults.addAll(analyser.execute(
+                                contigAssemblies,
+                                new File(outputDir, "contigs"),
+                                jobPrefix + "-contigs",
+                                this.conanExecutorService
+                        ));
                     }
-                    else {
-                        File seqDir = null;
 
-                        // We only do the longest sequence types for slow processes
-                        if (scaffoldsDir.exists()) {
-                            seqDir = scaffoldsDir;
-                        }
-                        else if (contigsDir.exists()) {
-                            seqDir = contigsDir;
-                        }
-                        else if (unitigsDir.exists()) {
-                            seqDir = unitigsDir;
-                        }
-                        else {
-                            throw new ProcessExecutionException(-2, "Could not find any output sequences for this mass group: " + massGroup);
-                        }
-
-                        jobIds.addAll(analyser.execute(
-                                AnalyseMassAssemblies.assembliesFromDir(seqDir),
-                                outputDir,
-                                jobPrefix,
-                                this.getArgs(),
+                    if (!scaffoldAssemblies.isEmpty()) {
+                        jobResults.addAll(analyser.execute(
+                                scaffoldAssemblies,
+                                new File(outputDir, "scaffolds"),
+                                jobPrefix + "-scaffolds",
                                 this.conanExecutorService
                         ));
                     }
                 }
 
+                File bestOutDir = analyser.isFast() ? new File(outputDir, "longest") : outputDir;
+
+                jobResults.addAll(analyser.execute(
+                        bestAssemblies,
+                        bestOutDir,
+                        jobPrefix,
+                        this.conanExecutorService
+                ));
             }
 
-            // If we're using a scheduler and we have been asked to run
-            // in parallel, then we should wait for all those to complete before continueing.
-            if (this.conanExecutorService.usingScheduler() && args.isRunParallel() && !jobIds.isEmpty()) {
-                log.debug("Analysing assemblies in parallel, waiting for completion");
-                this.conanExecutorService.executeScheduledWait(
-                        jobIds,
-                        args.getJobPrefix() + "-*",
-                        ExitStatus.Type.COMPLETED_ANY,
-                        args.getJobPrefix() + "-cont-wait",
-                        args.getOutputDir());
-            }
+            stopWatch.stop();
+
+            TaskResult taskResult = new DefaultTaskResult("rampart-mass_analysis", true, jobResults, stopWatch.getTime() / 1000L);
+
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), taskResult.getOutput());
+
+            return new DefaultExecutionResult(
+                    taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
 
         } catch (ConanParameterException | IOException e) {
             throw new ProcessExecutionException(4, e);
         }
-
-
-        try {
-
-            // Create the stats table with information derived from the configuration file.
-            AssemblyStatsTable table = this.createTable();
-
-            // Merge all the results
-            for(AssemblyAnalyser analyser : requestedServices) {
-
-                // Loop through MASS groups
-                for(MassJob.Args jobArgs : args.getMassJobs()) {
-
-                    String massGroup = jobArgs.getName();
-                    File asmDir = this.getAssemblyDir(new File(args.getMassDir(), massGroup));
-                    File reportDir = new File(args.getOutputDir(), massGroup + "/" + analyser.getName().toLowerCase());
-
-                    analyser.updateTable(
-                            table,
-                            assembliesFromDir(asmDir),
-                            analyser.isFast() ? new File(reportDir, asmDir.getName()) : reportDir,
-                            massGroup
-                            );
-                }
-            }
-
-            // Select the assembly
-            AssemblySelector assemblySelector = new DefaultAssemblySelector(args.getWeightings());
-            AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
-                    table,
-                    args.getOrganism().getEstGenomeSize(),
-                    args.getOrganism().getEstGcPercentage(),
-                    args.getMassDir());
-
-            File massGroupDir = new File(args.getMassDir(), selectedAssembly.getDataset());
-
-            File bestAssembly = new File(selectedAssembly.getFilePath());
-            File bubbles = new File(selectedAssembly.getBubblePath());
-
-            File bestAssemblyLink = new File(args.getOutputDir(), "best.fa");
-            File bubblesLink = new File(args.getOutputDir(), "best_bubbles.fa");
-
-            log.info("Best assembly path: " + bestAssembly.getAbsolutePath());
-
-            // Create link to "best" assembly in stats dir
-            this.getConanProcessService().createLocalSymbolicLink(bestAssembly, bestAssemblyLink);
-            if (bubbles != null && bubbles.exists()) {
-                this.getConanProcessService().createLocalSymbolicLink(bubbles, bubblesLink);
-            }
-
-            // Save table to disk
-            File finalFile = new File(args.getOutputDir(), "scores.tab");
-            table.save(finalFile);
-            log.debug("Saved final results to disk at: " + finalFile.getAbsolutePath());
-        }
-        catch(IOException ioe) {
-            throw new ProcessExecutionException(5, ioe);
-        }
-
-        return true;
     }
 
-    protected AssemblyStatsTable createTable() {
+    protected void makeLinks(List<File> assemblies, File dir) throws InterruptedException, ProcessExecutionException {
 
-        Args args = this.getArgs();
-
-        AssemblyStatsTable table = new AssemblyStatsTable();
-
-        int index = 0;
-        for(MassJob.Args jobArgs : args.getMassJobs()) {
-
-            File asmDir = this.getAssemblyDir(new File(args.getMassDir(), jobArgs.getName()));
-
-            for(Assembler assembler : jobArgs.getAssemblers()) {
-
-                AssemblyStats stats = new AssemblyStats();
-                stats.setIndex(index++);
-                stats.setDataset(jobArgs.getName());
-                stats.setDesc(assembler.getAssemblerArgs().getOutputDir().getName());
-                stats.setFilePath(this.getAssemblyFile(assembler, asmDir).getAbsolutePath());
-                stats.setBubblePath(assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
-                table.add(stats);
-            }
+        if (dir.exists()) {
+            dir.delete();
         }
+        dir.mkdirs();
 
-        return table;
-    }
-
-    protected File getAssemblyFile(Assembler assembler, File assemblyDir) {
-        if (assemblyDir.getName().equals("scaffolds")) {
-            return assembler.getScaffoldsFile().getAbsoluteFile();
-        }
-        else if (assemblyDir.getName().equals("contigs")) {
-            return assembler.getContigsFile().getAbsoluteFile();
-        }
-        else if (assemblyDir.getName().equals("unitigs")) {
-            return assembler.getUnitigsFile().getAbsoluteFile();
-        }
-        else {
-            throw new IllegalStateException("Could not find any output sequences for this directory: " + assemblyDir.getName());
+        for(File asm : assemblies) {
+            this.conanExecutorService.getConanProcessService().createLocalSymbolicLink(asm.getAbsoluteFile(), new File(dir, asm.getName()));
         }
     }
 
-    protected File getAssemblyDir(File massGroupDir) {
-        File aUnitigsDir = new File(massGroupDir, "unitigs");
-        File aContigsDir = new File(massGroupDir, "contigs");
-        File aScaffoldsDir = new File(massGroupDir, "scaffolds");
-
-        File asmDir = null;
-        if (aScaffoldsDir.exists()) {
-            asmDir = aScaffoldsDir;
-        }
-        else if (aContigsDir.exists()) {
-            asmDir = aContigsDir;
-        }
-        else if (aUnitigsDir.exists()) {
-            asmDir = aUnitigsDir;
-        }
-        else {
-            throw new IllegalStateException("Could not find any output sequences for this mass group: " + massGroupDir.getName());
-        }
-
-        return asmDir;
-    }
 
     /**
      * Gets all the FastA files in the directory specified by the user.
-     * @param inputDir
+     * @param inputDir The input directory containing assemblies
      * @return A list of fasta files in the user specified directory
      */
     public static List<File> assembliesFromDir(File inputDir) {
@@ -369,33 +296,42 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
 
         private File massDir;
         private List<MassJob.Args> massJobs;
+        private File kmerCalcResults;
+
 
         public Args() {
             super(new Params());
 
             this.massDir = null;
             this.massJobs = null;
+            this.kmerCalcResults = null;
 
-            this.setJobPrefix("mass-analyses");
+            this.setJobPrefix("analyse_mass");
         }
 
         public Args(Element element, File massDir, File analyseReadsDir, File outputDir, List<MassJob.Args> massJobs,
-                               Organism organism, String jobPrefix) {
+                               Organism organism, String jobPrefix, File kmerCalcResults, boolean doingReadKmerAnalysis) throws IOException {
 
             super(  new Params(),
                     element,
                     analyseReadsDir,
                     outputDir,
                     organism,
-                    jobPrefix
+                    jobPrefix,
+                    doingReadKmerAnalysis
                     );
 
             this.massDir = massDir;
             this.massJobs = massJobs;
+            this.kmerCalcResults = kmerCalcResults;
         }
 
         public Params getParams() {
             return (Params)this.params;
+        }
+
+        public File getAssemblyLinkageFile() {
+            return new File(this.getOutputDir(), "assembly_linkage.txt");
         }
 
         public File getMassDir() {
@@ -414,6 +350,13 @@ public class AnalyseMassAssemblies extends AbstractConanProcess {
             this.massJobs = massJobs;
         }
 
+        public File getKmerCalcResults() {
+            return kmerCalcResults;
+        }
+
+        public void setKmerCalcResults(File kmerCalcResults) {
+            this.kmerCalcResults = kmerCalcResults;
+        }
     }
 
 

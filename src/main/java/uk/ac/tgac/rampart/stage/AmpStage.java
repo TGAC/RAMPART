@@ -18,14 +18,18 @@
 package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -73,15 +77,17 @@ public class AmpStage extends AbstractConanProcess {
     /**
      * Dispatches amp stage to the specified environments
      *
-     * @param executionContext The environment to dispatch jobs too
-     * @throws IllegalArgumentException
-     * @throws uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException
-     * @throws InterruptedException
+     * @param executionContext The environment to dispatch jobs to
+     * @throws ProcessExecutionException Thrown if there is an issue during execution of an external process
+     * @throws InterruptedException Thrown if user has interrupted the process during execution
      */
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
             // Make a shortcut to the args
             Args args = this.getArgs();
@@ -118,7 +124,7 @@ public class AmpStage extends AbstractConanProcess {
             ampProc.setup();
 
             // Execute the AMP stage
-            ampProc.execute(ecCopy);
+            ExecutionResult result = ampProc.execute(ecCopy);
 
             if (!ampProc.getOutputFile().exists()) {
                 throw new ProcessExecutionException(2, "AMP stage " + args.index + "\" did not produce an output file");
@@ -127,13 +133,23 @@ public class AmpStage extends AbstractConanProcess {
             // Create links for outputs from this assembler to known locations
             this.getConanProcessService().createLocalSymbolicLink(ampProc.getOutputFile(), args.getOutputFile());
 
+            stopWatch.stop();
+
             log.info("Finished AMP stage " + args.getIndex());
+
+            return new DefaultExecutionResult(
+                    Integer.toString(args.index) + "-" + args.tool,
+                    0,
+                    result.getOutput(),
+                    null,
+                    -1,
+                    new ResourceUsage(result.getResourceUsage() == null ? 0 : result.getResourceUsage().getMaxMem(),
+                            stopWatch.getTime() / 1000,
+                            result.getResourceUsage() == null ? 0 : result.getResourceUsage().getCpuTime()));
         }
         catch (IOException | ConanParameterException e) {
             throw new ProcessExecutionException(-1, e);
         }
-
-        return true;
     }
 
     protected AssemblyEnhancer makeStage(Args args, List<Library> libs) throws IOException {
@@ -289,14 +305,20 @@ public class AmpStage extends AbstractConanProcess {
             this();
 
             // Check there's nothing unexpected in this element
-            if (!XmlHelper.validate(ele, new String[] {
-                    KEY_ATTR_TOOL,
-                    KEY_ATTR_THREADS,
-                    KEY_ATTR_MEMORY,
-                    KEY_ATTR_CHECKED_ARGS,
-                    KEY_ATTR_UNCHECKED_ARGS,
-                    KEY_ELEM_INPUTS
-            })) {
+            if (!XmlHelper.validate(ele,
+                    new String[] {
+                            KEY_ATTR_TOOL
+                    },
+                    new String[]{
+                            KEY_ATTR_THREADS,
+                            KEY_ATTR_MEMORY,
+                            KEY_ATTR_CHECKED_ARGS,
+                            KEY_ATTR_UNCHECKED_ARGS
+                    },
+                    new String[]{
+                            KEY_ELEM_INPUTS
+                    },
+                    new String[0])) {
                 throw new IllegalArgumentException("Found unrecognised element or attribute in AMP stage: " + index);
             }
 
@@ -312,7 +334,17 @@ public class AmpStage extends AbstractConanProcess {
             Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
             NodeList actualInputs = inputElements.getElementsByTagName(KEY_ELEM_SINGLE_INPUT);
             for(int i = 0; i < actualInputs.getLength(); i++) {
-                this.inputs.add(new ReadsInput((Element) actualInputs.item(i)));
+                ReadsInput ri = new ReadsInput((Element) actualInputs.item(i));
+
+                if (!foundInLibs(ri.getLib(), allLibraries)) {
+                    throw new IOException("Could not find library \"" + ri.getLib() + "\" in defined libraries");
+                }
+
+                if (!foundInMecq(ri.getEcq(), allMecqs)) {
+                    throw new IOException("Could not find ECQ \"" + ri.getEcq() + "\" in defined set of ECQs");
+                }
+
+                this.inputs.add(ri);
             }
 
             // Optional
@@ -329,6 +361,32 @@ public class AmpStage extends AbstractConanProcess {
             this.allMecqs = allMecqs;
             this.organism = organism;
             this.index = index;
+        }
+
+        private boolean foundInLibs(String libName, List<Library> ll) {
+
+            for(Library s : ll) {
+                if (libName.equalsIgnoreCase(s.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private boolean foundInMecq(String ecqName, List<Mecq.EcqArgs> ll) {
+
+            if (ecqName.equalsIgnoreCase("raw")) {
+                return true;
+            }
+
+            for(Mecq.EcqArgs s : ll) {
+                if (ecqName.equalsIgnoreCase(s.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Params getParams() {
@@ -400,7 +458,7 @@ public class AmpStage extends AbstractConanProcess {
         }
 
         public File getOutputFile() {
-            return new File(this.assembliesDir, "amp-stage-" + this.index + "-scaffolds.fa");
+            return new File(this.assembliesDir, "amp-stage-" + this.index + ".fa");
         }
 
 

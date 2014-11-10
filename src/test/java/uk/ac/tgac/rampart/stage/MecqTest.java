@@ -24,6 +24,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.ebi.fgpt.conan.utils.CommandExecutionException;
@@ -66,13 +67,13 @@ public class MecqTest extends MockedConanProcess {
 
         Mecq mecq = new Mecq(this.conanExecutorService, mecqArgs);
 
-        when(conanExecutorService.getConanProcessService().execute(sickle, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
+        when(conanExecutorService.getConanProcessService().execute(sickle, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
 
         ReflectionTestUtils.setField(mecq, "conanExecutorService", conanExecutorService);
 
-        boolean success = mecq.execute(ec);
+        ExecutionResult result = mecq.execute(ec);
 
-        assertTrue(success);
+        assertTrue(result.getExitCode() == 0);
     }
 
     @Test

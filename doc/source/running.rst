@@ -16,10 +16,11 @@ definition of a job involves supplying information about 3 topics: the organism'
 pipeline should execute.  In addition, we recommend the user specifies some metadata about this job for posterity and
 for reporting reasons.
 
-The job configuration file must be specifed in XML format.  Creating a configuration file from scratch can be daunting,
-particularly if the user isn't familier with XML or other markup languages, so to make this process easier for the user
+The job configuration file must be specified in XML format.  Creating a configuration file from scratch can be daunting,
+particularly if the user isn't familiar with XML or other markup languages, so to make this process easier for the user
 we provide a number of example configuration files which can be modified and extended as appropriate.  These can be
-found in the ``etc/example_job_configs`` directory.
+found in the ``etc/example_job_configs`` directory.  Specifically the file named ``ecoli_full_job.xml`` provides a
+working example configuration file once you download the raw reads from: ``http://www.ebi.ac.uk/ena/data/view/DRR015910``.
 
 
 The genome to assemble
@@ -59,7 +60,7 @@ Ideally you should specify the following information as well if you want RAMPART
 * Attribute "orientation" - If this is a paired end or mate pair library, the orientation of the reads.  For example, paired end libraries are often created using "forward reverse" orientation, and often long mate pairs use "reverse forward" orientation.  The user should specify either "FR" or "RF" for this property.
 * Attribute "type" - The kind of library this is.  Valid options: "SE" - single end; "OPE" - overlapping paired end; "PE" - paired end; "MP" - mate pair.
 * Attribute "phred" - The ascii offset to apply to the quality scores in the library.  Valid options: "PHRED_33" (Sanger / Illumina 1.8+); "PHRED_64" (Illumina 1.3 - 1.7).
-
+* Attribute "uniform" - Whether or not the reads have uniform length.  This is set to true by default.  This property is used to work out the fastest way to calculate the number of bases present in the library for downsampling, should that be requested.
 
 An example XML snippet of a set of NGS datasets for an assembly project are shown below::
 
@@ -72,7 +73,7 @@ An example XML snippet of a set of NGS datasets for an assembly project are show
             </files>
         </library>
         <library name="mp1" read_length="150" avg_insert_size="4000" insert_err_tolerance="0.3" 
-                 orientation="RF" type="MP" phred="PHRED_64">
+                 orientation="RF" type="MP" uniform="false" phred="PHRED_64">
             <files>
                 <path>lib2_R1.fastq</path>
                 <path>lib2_R2.fastq</path>
@@ -101,7 +102,7 @@ pipeline stage is not defined it will not be executed. The second way is via a c
 specifying which stages you wish to execute here you can run specific stage of the pipeline in isolation, or as a group.
 For example by typing: ``rampart -s MECQ,MASS job.cfg``, you instruct RAMPART to run only the MECQ and MASS stages
 described in the job.cfg file.  A word of caution here, requesting stages not defined in the configuration file does
-not work.  Also you must ensure that each stage has it's pre-requisites fullfilled before starting.  For example, you
+not work.  Also you must ensure that each stage has it's pre-requisites fulfilled before starting.  For example, you
 cannot run the AMP stage, without a selected assembly to work with.
 
 .. toctree::
@@ -112,6 +113,35 @@ cannot run the AMP stage, without a selected assembly to work with.
    analyse_assemblies
    amp
    finalise
+
+
+
+Potential runtime problems
+--------------------------
+
+There are a few issues that can occur during execution of RAMPART which may prevent your jobs from completing successfully.
+This part of the documentation attempts to list common problems and suggests workarounds or solutions:
+
+* Quake fails
+
+In this case, if you have set the quake k value high you should try reducing it, probably to the default value unless you
+know what you are doing.  Also Quake can only work successfully if you have sufficient sequencing depth in your dataset.
+If this is not the case then you should either obtain a new dataset or remove quake error correction from your RAMPART
+configuration and try again.
+
+* Kmergenie fails
+
+Often this occurs for the same reasons as Quake, i.e. inadequate coverage.  Check that you have correct set the ploidy value
+for your organism in the configuration file (Kmer genie only support haploid or diploid (i.e. 1 or 2), for polyploid
+genomes you are on your own!) Also keep in mind that should you remove kmer genie from your pipeline and manually set a
+kmer value for an assembler, it is unlikely that your assembly will be very contiguous but RAMPART allows you to try things
+out and you maybe able to assemble some useful data.
+
+* Pipeline failed at a random point during execution of one of the external tools
+
+In this case check your system.  Ensure that the computing systems are all up and running, that there have been no power
+outages and you have plenty of spare disk space.  RAMPART can produce a lot of data for non-trivial genomes so please
+you have plenty of spare disk space before starting a job.
 
 
 

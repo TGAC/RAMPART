@@ -20,7 +20,7 @@ import static junit.framework.TestCase.assertTrue;
  * Time: 16:31
  * To change this template use File | Settings | File Templates.
  */
-public class RampartTest {
+public class RampartConfigTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -33,7 +33,7 @@ public class RampartTest {
         File outDir = temp.newFolder("configTest");
         String jobPrefix = "configTestJob";
 
-        Rampart.Args args = new Rampart.Args(cfgFile, outDir, jobPrefix, RampartStageList.parse("ALL"), null, null, true);
+        RampartConfig args = new RampartConfig(cfgFile, outDir, jobPrefix, RampartStageList.parse("ALL"), null, null, true);
 
         Assert.assertTrue(true);
     }
@@ -41,7 +41,7 @@ public class RampartTest {
     @Test
     public void setupTest() throws IOException, TaskExecutionException, InterruptedException {
 
-        File testFile = FileUtils.toFile(RampartTest.class.getResource("/config/rampart_config_1.xml"));
+        File testFile = FileUtils.toFile(RampartConfigTest.class.getResource("/config/rampart_config_1.xml"));
 
         /*RampartCLI rampart = new RampartCLI();
         rampart.setJobConfig(testFile);

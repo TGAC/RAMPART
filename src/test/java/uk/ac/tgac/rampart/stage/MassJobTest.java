@@ -39,7 +39,8 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -72,10 +73,10 @@ public class MassJobTest extends MockedConanProcess {
 
         AbstractConanProcess smParent = massJob;
 
-        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        doReturn(new DefaultExecutionResult(0, null, null, -1))
+        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
+        doReturn(new DefaultExecutionResult("test", 0, null, null, -1))
                 .when(spy)
-                .executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>) any());
+                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any());
 
 
         ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);
@@ -105,10 +106,10 @@ public class MassJobTest extends MockedConanProcess {
 
         AbstractConanProcess smParent = massJob;
 
-        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        doReturn(new DefaultExecutionResult(0, null, null, -1))
+        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
+        doReturn(new DefaultExecutionResult("test", 0, null, null, -1))
                 .when(spy)
-                .executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>) any());
+                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any());
 
 
         ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);
@@ -138,10 +139,10 @@ public class MassJobTest extends MockedConanProcess {
 
         AbstractConanProcess smParent = massJob;
 
-        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult(0, null, null, -1));
-        doReturn(new DefaultExecutionResult(0, null, null, -1))
+        when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
+        doReturn(new DefaultExecutionResult("test", 0, null, null, -1))
                 .when(spy)
-                .executeAssembler((Assembler) any(), anyString(), anyBoolean(), (List<Integer>) any());
+                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any());
 
 
         ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);

@@ -3,15 +3,17 @@ package uk.ac.tgac.rampart.stage.analyse.reads;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
-import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
-import uk.ac.ebi.fgpt.conan.model.context.ExitStatus;
+import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -29,7 +31,6 @@ import uk.ac.tgac.conan.process.kmer.kat.KatPlotDensityV1;
 import uk.ac.tgac.rampart.stage.Mecq;
 import uk.ac.tgac.rampart.stage.RampartStageArgs;
 import uk.ac.tgac.rampart.util.JobOutput;
-import uk.ac.tgac.rampart.util.JobOutputList;
 import uk.ac.tgac.rampart.util.JobOutputMap;
 
 import java.io.File;
@@ -64,9 +65,12 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     }
 
     @Override
-    public boolean execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
 
         try {
+
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
             log.info("Starting Kmer Counting on all Reads");
 
@@ -77,7 +81,8 @@ public class KmerAnalysisReads extends AbstractConanProcess {
             args.getOutputDir().mkdirs();
 
             JobOutputMap jfCountOutputs = new JobOutputMap();
-            List<Integer> jobIds = new ArrayList<>();
+            List<ExecutionResult> jobResults = new ArrayList<>();
+            List<ExecutionResult> allJobResults = new ArrayList<>();
 
             // Create the output directory for the RAW datasets
             File rawOutputDir = new File(args.getOutputDir(), "raw");
@@ -91,7 +96,8 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
                 // Execute jellyfish and add id to list of job ids
                 JobOutput jfOut = this.executeJellyfishCount(args, "raw", args.getOutputDir(), lib);
-                jobIds.add(jfOut.getJobId());
+                jobResults.add(jfOut.getResult());
+                allJobResults.add(jfOut.getResult());
                 jfCountOutputs.updateTracker("raw", jfOut.getOutputFile());
             }
 
@@ -110,19 +116,21 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
                         // Add jellyfish id to list of job ids
                         JobOutput jfOut = this.executeJellyfishCount(args, ecqArgs.getName(), args.getOutputDir(), lib);
-                        jobIds.add(jfOut.getJobId());
+
+                        jobResults.add(jfOut.getResult());
+                        allJobResults.add(jfOut.getResult());
                         jfCountOutputs.updateTracker(ecqArgs.getName(), jfOut.getOutputFile());
                     }
                 }
             }
 
 
-            // If we're using a scheduler and we have been asked to run each MECQ group for each library
+            // If we're using a scheduler and we have been asked to run each job
             // in parallel, then we should wait for all those to complete before continueing.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Kmer counting all ECQ groups in parallel, waiting for completion");
+                log.info("Kmer counting all ECQ groups in parallel, waiting for completion");
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        jobResults,
                         args.getJobPrefix() + "-count-*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-kmer-count-wait",
@@ -130,7 +138,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
             }
 
             // Waiting point... clear job ids.
-            jobIds.clear();
+            jobResults.clear();
 
             JobOutputMap mergedOutputs = new JobOutputMap();
 
@@ -144,22 +152,26 @@ public class KmerAnalysisReads extends AbstractConanProcess {
                 if (fileSet.size() > 1) {
                     JobOutput jfOut = this.executeJellyfishMerger(args, ecqName, fileSet, new File(args.getOutputDir(), ecqName));
 
-                    jobIds.add(jfOut.getJobId());
+                    jobResults.add(jfOut.getResult());
+                    allJobResults.add(jfOut.getResult());
                     mergedOutputs.updateTracker(ecqName, jfOut.getOutputFile());
                 }
             }
 
-            // If we're using a scheduler and we have been asked to run each MECQ group for each library
+            // If we're using a scheduler and we have been asked to run each job
             // in parallel, then we should wait for all those to complete before continueing.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Creating merged kmer counts for all ECQ groups in parallel, waiting for completion");
+                log.info("Creating merged kmer counts for all ECQ groups in parallel, waiting for completion");
                 this.conanExecutorService.executeScheduledWait(
-                        jobIds,
+                        jobResults,
                         args.getJobPrefix() + "-merge-*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-kmer-merge-wait",
                         args.getOutputDir());
             }
+
+            // Waiting point... clear job ids.
+            jobResults.clear();
 
             // Combine all jellyfish out maps
             jfCountOutputs.combine(mergedOutputs);
@@ -167,92 +179,86 @@ public class KmerAnalysisReads extends AbstractConanProcess {
             String katGcpJobPrefix = args.getJobPrefix() + "-kat-gcp";
 
             // Run KAT GCP on everything
-            JobOutputList katGcpFiles = this.executeKatGcp(jfCountOutputs, katGcpJobPrefix, args.getThreadsPerProcess(), args.getMemoryPerProcess(), args.isRunParallel());
+            List<ExecutionResult> katGcpResults = this.executeKatGcp(jfCountOutputs, katGcpJobPrefix, args.getThreadsPerProcess(), args.getMemoryPerProcess(), args.isRunParallel());
 
-            // If we're using a scheduler and we have been asked to run each MECQ group for each library
+            for(ExecutionResult result : katGcpResults) {
+                result.setName(result.getName().substring(args.getJobPrefix().length()+1));
+                jobResults.add(result);
+                allJobResults.add(result);
+            }
+
+            // If we're using a scheduler and we have been asked to run each job
             // in parallel, then we should wait for all those to complete before continueing.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Creating merged kmer counts for all ECQ groups in parallel, waiting for completion");
+                log.info("Running \"kat gcp\" for all ECQ groups in parallel, waiting for completion");
                 this.conanExecutorService.executeScheduledWait(
-                        katGcpFiles.getJobIds(),
+                        jobResults,
                         katGcpJobPrefix + "*",
                         ExitStatus.Type.COMPLETED_ANY,
                         args.getJobPrefix() + "-kat-gcp-wait",
                         args.getOutputDir());
             }
 
-            // Run KAT plot density on everything (just use default values)
-            String katPlotDensityJobPrefix = args.getJobPrefix() + "-kat-plot-density";
-
-            JobOutputList katPlotFiles = this.executeKatPlotDensity(katGcpFiles.getFiles(), katPlotDensityJobPrefix, args.isRunParallel());
-
-            // Don't worry about waiting for the plot files to finish... they should be quick and we don't need them for anything.
-
+            // Waiting point... clear job ids.
+            jobResults.clear();
 
             log.info("Kmer counting of all reads finished.");
+
+            stopWatch.stop();
+
+            TaskResult taskResult = new DefaultTaskResult("rampart-read_analysis-kmer", true, allJobResults, stopWatch.getTime() / 1000L);
+
+            // Output the resource usage to file
+            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), taskResult.getOutput());
+
+            return new DefaultExecutionResult(
+                    taskResult.getTaskName(),
+                    0,
+                    new String[] {},
+                    null,
+                    -1,
+                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
         }
-        catch(ConanParameterException e) {
+        catch(ConanParameterException | IOException e) {
             throw new ProcessExecutionException(-1, e);
         }
-
-        return true;
-    }
-
-    private JobOutputList executeKatPlotDensity(List<File> files, String jobPrefix, boolean runInParallel)
-        throws InterruptedException, ProcessExecutionException, ConanParameterException {
-
-        JobOutputList output = new JobOutputList();
-
-        for(File inputFile : files) {
-
-            File outputFile = new File(inputFile.getAbsolutePath() + ".png");
-
-            KatPlotDensityV1 katPlotDensityProc = this.makeKatPlotDensityProc(inputFile, outputFile);
-
-            int jobId = this.conanExecutorService.executeProcess(
-                    katPlotDensityProc,
-                    inputFile.getParentFile(),
-                    jobPrefix + "-" + inputFile.getName(),
-                    1,
-                    0,
-                    runInParallel).getJobId();
-
-            output.add(new JobOutput(jobId, outputFile));
-        }
-
-        return output;
     }
 
     private KatPlotDensityV1 makeKatPlotDensityProc(File inputFile, File outputFile) {
         KatPlotDensityV1.Args katPlotDensityArgs = new KatPlotDensityV1.Args();
         katPlotDensityArgs.setOutput(outputFile);
         katPlotDensityArgs.setInput(inputFile);
+        katPlotDensityArgs.setUncheckedArgs("--x_max=200");
 
         return new KatPlotDensityV1(katPlotDensityArgs);
     }
 
-    private JobOutputList executeKatGcp(JobOutputMap jfCountOutputs, String jobPrefix, int threads, int memory, boolean runInParallel)
+    private List<ExecutionResult> executeKatGcp(JobOutputMap jfCountOutputs, String jobPrefix, int threads, int memory, boolean runInParallel)
             throws InterruptedException, ProcessExecutionException, ConanParameterException {
 
-        JobOutputList output = new JobOutputList();
+        List<ExecutionResult> output = new ArrayList<>();
 
         for(Map.Entry<String, Set<File>> entry : jfCountOutputs.entrySet()) {
 
             for(File inputFile : entry.getValue()) {
 
                 File outputPrefix = new File(inputFile.getAbsolutePath() + ".kat-gcp");
+                File matrixFile = new File(outputPrefix + ".mx");
+                File plotFile = new File(matrixFile.getAbsolutePath() + ".png");
 
                 KatGcpV1 katGcpProc = this.makeKatGcpProc(inputFile, outputPrefix, threads);
+                KatPlotDensityV1 katPlotDensityProc = this.makeKatPlotDensityProc(matrixFile, plotFile);
+                katGcpProc.addPostCommand(katPlotDensityProc.getCommand());
 
-                int jobId = this.conanExecutorService.executeProcess(
+                ExecutionResult result = this.conanExecutorService.executeProcess(
                         katGcpProc,
                         inputFile.getParentFile(),
                         jobPrefix + "-" + inputFile.getName(),
                         threads,
                         memory,
-                        runInParallel).getJobId();
+                        runInParallel);
 
-                output.add(new JobOutput(jobId, new File(outputPrefix + ".mx")));
+                output.add(result);
             }
         }
 
@@ -268,7 +274,6 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
         return new KatGcpV1(katGcpArgs);
     }
-
 
     protected JobOutput executeJellyfishCount(Args args, String ecqName, File outputDir, Library lib)
             throws ProcessExecutionException, InterruptedException, ConanParameterException {
@@ -287,13 +292,15 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         String jobName = args.getJobPrefix() + "-count-" + suffix;
 
         // Start jellyfish
-        final int id = this.conanExecutorService.executeProcess(
+        final ExecutionResult id = this.conanExecutorService.executeProcess(
                 jellyfishProcess,
                 args.getOutputDir(),
                 jobName,
                 args.getThreadsPerProcess(),
                 args.getMemoryPerProcess(),
-                args.isRunParallel()).getJobId();
+                args.isRunParallel());
+
+        id.setName("count-" + suffix);
 
         return new JobOutput(id, outputFile);
     }
@@ -312,13 +319,15 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
         JellyfishMergeV11 jellyfishMerge = this.makeJellyfishMerge(files, outputFile, args.getOrganism());
 
-        int id = this.conanExecutorService.executeProcess(
+        ExecutionResult id = this.conanExecutorService.executeProcess(
                 jellyfishMerge,
                 args.getOutputDir(),
                 jobName,
                 args.getThreadsPerProcess(),
                 args.getMemoryPerProcess(),
-                args.isRunParallel()).getJobId();
+                args.isRunParallel());
+
+        id.setName("merge-" + suffix);
 
         return new JobOutput(id, outputFile);
     }
@@ -326,13 +335,13 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     /**
      * Hopefully this is a conservative estimate for most projects.  We ignore very low count kmers so hopefully this
      * size just needs to accomodate genuine kmers, and should therefore be roughly equivalent to genomesize * ploidy.
-     * We multiply by 5 to be on the safe side and make sure we can handle some sequencing errors.
-     * @param organism
+     * We multiply by 10 to be on the safe side and make sure we can handle some sequencing errors.
+     * @param organism Details about the organism's genome (specifically the genome size and ploidy)
      * @return An overestimate of the expected jellyfish hash size
      */
     public static long guessJellyfishHashSize(Organism organism) {
 
-        long hashSize = organism.getEstGenomeSize() * organism.getPloidy() * 5;
+        long hashSize = organism.getEstGenomeSize() * organism.getPloidy() * 10;
 
         // Check to make sure we don't have anything weird... if we do use a default of 5 billion (this should be enough
         // for most organisms running through RAMPART, although it might still fail on low mem systems.  Need to think
@@ -573,10 +582,10 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         }
 
         /**
-         * This actually scans the disk for real files.
+         * This actually scans the output directory for jellyfish hash files that contain the provided ecq name.
          *
-         * @param ecqName
-         * @return
+         * @param ecqName The ecq name to search for
+         * @return A list of jellyfish hash files
          */
         public Collection<File> getJellyfishHashes(String ecqName) {
             return FileUtils.listFiles(new File(this.getOutputDir(), ecqName), new String[]{".jf31_0"}, false);

@@ -82,7 +82,7 @@ public class CoverageRange extends ArrayList<Integer> {
 
     /**
      * Create a coverage range from an Xml element
-     * @param ele
+     * @param ele An XML element describing this coverage range
      */
     public CoverageRange(Element ele) {
 
@@ -157,6 +157,7 @@ public class CoverageRange extends ArrayList<Integer> {
 
     /**
      * Determines whether or not the supplied kmer range in this object is valid.  Throws an IllegalArgumentException if not.
+     * @return True if the coverage range is valid, false otherwise
      */
     public boolean validate() {
 

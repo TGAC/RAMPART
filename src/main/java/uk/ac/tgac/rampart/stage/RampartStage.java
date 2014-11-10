@@ -69,6 +69,23 @@ public enum RampartStage {
             return new AnalyseReads(ces, (AnalyseReads.Args)this.getArgs());
         }
     },
+    KMER_CALC {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new CalcOptimalKmer.Params().getConanParameters();
+        }
+
+        @Override
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), CalcOptimalKmer.Args.class);
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces) {
+            return new CalcOptimalKmer(ces, (CalcOptimalKmer.Args)this.getArgs());
+        }
+    },
     MASS {
 
         @Override
@@ -101,6 +118,22 @@ public enum RampartStage {
         @Override
         public AbstractConanProcess create(ConanExecutorService ces) {
             return new AnalyseMassAssemblies(ces, (AnalyseMassAssemblies.Args)this.getArgs());
+        }
+    },
+    SELECT_MASS {
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new Select.Params().getConanParameters();
+        }
+
+        @Override
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), Select.Args.class);
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces) {
+            return new Select(ces, (Select.Args)this.getArgs());
         }
     },
     AMP {
