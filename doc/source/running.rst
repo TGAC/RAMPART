@@ -115,8 +115,33 @@ cannot run the AMP stage, without a selected assembly to work with.
 
 
 
-Relative runtimes
------------------
+Potential runtime problems
+--------------------------
+
+There are a few issues that can occur during execution of RAMPART which may prevent your jobs from completing successfully.
+This part of the documentation attempts to list common problems and suggests workarounds or solutions:
+
+* Quake fails
+
+In this case, if you have set the quake k value high you should try reducing it, probably to the default value unless you
+know what you are doing.  Also Quake can only work successfully if you have sufficient sequencing depth in your dataset.
+If this is not the case then you should either obtain a new dataset or remove quake error correction from your RAMPART
+configuration and try again.
+
+* Kmergenie fails
+
+Often this occurs for the same reasons as Quake, i.e. inadequate coverage.  Check that you have correct set the ploidy value
+for your organism in the configuration file (Kmer genie only support haploid or diploid (i.e. 1 or 2), for polyploid
+genomes you are on your own!) Also keep in mind that should you remove kmer genie from your pipeline and manually set a
+kmer value for an assembler, it is unlikely that your assembly will be very contiguous but RAMPART allows you to try things
+out and you maybe able to assemble some useful data.
+
+* Pipeline failed at a random point during execution of one of the external tools
+
+In this case check your system.  Ensure that the computing systems are all up and running, that there have been no power
+outages and you have plenty of spare disk space.  RAMPART can produce a lot of data for non-trivial genomes so please
+you have plenty of spare disk space before starting a job.
+
 
 
 
