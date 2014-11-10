@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+  ~ Copyright (C) 2013  Daniel Mapleson - TGAC
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!-- This is an example job configuration file assembling the Ecoli genome.  To acquire the raw reads please go to
+     http://www.ebi.ac.uk/ena/data/view/DRR015910 -->
+<rampart author="dan" collaborator="someone" institution="tgac" title="EColi assembly of simulated reads">
+    	<organism name="ecoli" ploidy="1" est_genome_size="4600000"/>
+
+    	<libraries>
+        	<library name="ecoli" read_length="95" type="PE" avg_insert_size="600" insert_err_tolerance="0.3" orientation="FR"  phred="PHRED_33">
+            		<files>
+                		<path><!-- path to ... -->DRR015910_1.fastq</path>
+                		<path><!-- path to ... -->DRR015910_2.fastq</path>
+            		</files>
+        	</library>        
+    	</libraries>
+    	<pipeline>
+        	<mecq parallel="false">
+            		<ecq name="quake" tool="Quake_V0.3" libs="ecoli" threads="32" memory="60000" parallel="false"/>
+        	</mecq>
+        	<analyse_reads kmer="true" parallel="true" threads="32" memory="60000"/>
+        	<kmer_calc threads="32" memory="20000"/>
+        	<mass parallel="true">
+            		<job name="abyss-raw" tool="ABYSS_V1.5" threads="32" memory="60000" parallel="true">
+                		<inputs>
+                    			<input ecq="raw" lib="ecoli"/>
+                		</inputs>
+            		</job>
+            		<job name="abyss-quake" tool="ABYSS_V1.5" threads="32" memory="60000" parallel="true">
+                		<inputs>
+                    			<input ecq="quake" lib="ecoli"/>
+                		</inputs>
+            		</job>
+            		<job name="velvet-raw" tool="Velvet_V1.2" threads="32" memory="60000" parallel="true">
+                		<inputs>
+                    			<input ecq="raw" lib="ecoli"/>
+                		</inputs>
+            		</job>
+            		<job name="velvet-quake" tool="Velvet_V1.2" threads="32" memory="60000" parallel="true">
+                		<inputs>
+                    			<input ecq="quake" lib="ecoli"/>
+                		</inputs>
+            		</job>
+            		<job name="spades" tool="SPAdes_V3.1" threads="32" memory="60000" parallel="true">
+                		<inputs>
+                    			<input ecq="raw" lib="ecoli"/>
+                		</inputs>
+            		</job>
+            		
+        	</mass>
+        	<analyse_mass parallel="true">
+        		<tool name="QUAST" threads="32" memory="10000"/>
+        		<tool name="KAT" threads="32" memory="100000"/>
+        	</analyse_mass>
+        	<select_mass/>
+        	<amp>
+		        <stage tool="SOAP_Scaffold_V2.4" threads="32" memory="60000">
+                        	<inputs>
+                                	<input ecq="quake" lib="ecoli"/>
+                                </inputs>
+                        </stage>
+
+		        <stage tool="SOAP_GapCloser_V1.12" threads="32" memory="60000">
+                        	<inputs>
+                                	<input ecq="quake" lib="ecoli"/>
+                                </inputs>
+                        </stage>
+        	</amp>
+        	<analyse_amp>
+        		<tool name="QUAST" threads="32" memory="10000"/>
+        	</analyse_amp>
+        	<finalise prefix="EcoliK12_V1"/>
+    	</pipeline>
+
+</rampart>

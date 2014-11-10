@@ -89,6 +89,14 @@ texlive so it's available on your path should fix this issue.  Alternatively if 
 do not wish to compile the documentation just remove it by commenting out the ``create-manual`` element from the pom.xml file.
 
 
+Quick(ish) Start
+================
+
+To fully understand how RAMPART works and how to drive it you will need to read the documentation (see below).  However,
+you can get up and running quickly by using the job configuration file named ``ecoli_full_job.xml``, which can be found
+in the ``etc`` subdirectory.  This example configuration file provides a working example configuration file once you 
+download the raw reads from: ``http://www.ebi.ac.uk/ena/data/view/DRR015910``.
+
 
 More Information
 ================

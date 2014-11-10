@@ -19,7 +19,8 @@ for reporting reasons.
 The job configuration file must be specified in XML format.  Creating a configuration file from scratch can be daunting,
 particularly if the user isn't familiar with XML or other markup languages, so to make this process easier for the user
 we provide a number of example configuration files which can be modified and extended as appropriate.  These can be
-found in the ``etc/example_job_configs`` directory.
+found in the ``etc/example_job_configs`` directory.  Specifically the file named ``ecoli_full_job.xml`` provides a
+working example configuration file once you download the raw reads from: ``http://www.ebi.ac.uk/ena/data/view/DRR015910``.
 
 
 The genome to assemble

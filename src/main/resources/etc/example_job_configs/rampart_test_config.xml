@@ -2,13 +2,7 @@
 
 
 <!-- This file demonstrates how to configure a relatively simple RAMPART job. -->
-<rampart>
-
-    <!-- Some metadata for use in reports and logging later -->
-    <author>Someone</author>
-    <collaborator>Someone else</collaborator>
-    <institution>Someplace</institution>
-    <title>A relatively simple bacteria assembly project</title>
+<rampart author="Someone" collaborator="Someone else" institution="Someplace" title="A relatively simple bacteria assembly project">
 
     <!-- It is important that you specify what is known about the organism, whose data you are trying to assemble.  Some
          assemblers and other tools require that you specify the ploidy and estimated genome size.  For example an estimated
