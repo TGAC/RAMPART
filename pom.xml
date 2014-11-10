@@ -5,7 +5,7 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.10.0</version>
+	<version>0.10.1</version>
 	<packaging>jar</packaging>
 
     <name>RAMPART</name>
