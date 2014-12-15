@@ -119,8 +119,10 @@ public class AssemblyStatsMatrix extends ArrayList<AssemblyStatsMatrixRow> {
         standardScale(AssemblyStatsMatrixRow.IDX_NB_SEQS_GT_1K, true);
         standardScale(AssemblyStatsMatrixRow.IDX_MAX_LEN, false);
         standardScale(AssemblyStatsMatrixRow.IDX_N_50, false);
+        standardScale(AssemblyStatsMatrixRow.IDX_NA_50, false);
         standardScale(AssemblyStatsMatrixRow.IDX_L_50, true);
         standardScale(AssemblyStatsMatrixRow.IDX_NB_GENES, false);
+        standardScale(AssemblyStatsMatrixRow.IDX_NB_MA_REF, true);
 
         // Percentage variables
         percentageScale(AssemblyStatsMatrixRow.IDX_COMPLETENESS, false);

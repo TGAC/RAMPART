@@ -39,10 +39,12 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     private long nbBasesGt1K;
     private long maxLen;
     private long n50;
+    private long na50;
     private long l50;
     private double gcPercentage;
     private double nPercentage;
     private int nbGenes;
+    private int nbMisassembliesFromRef;
     private double completenessPercentage;
     private double score;
 
@@ -59,10 +61,12 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.nbBasesGt1K = 0L;
         this.maxLen = 0L;
         this.n50 = 0L;
+        this.na50 = 0L;
         this.l50 = 0L;
         this.gcPercentage = 0.0;
         this.nPercentage = 0.0;
         this.nbGenes = 0;
+        this.nbMisassembliesFromRef = 0;
         this.completenessPercentage = 0.0;
         this.score = 0.0;
     }
@@ -80,10 +84,12 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.nbBasesGt1K = Long.parseLong(stats[i++]);
         this.maxLen = Long.parseLong(stats[i++]);
         this.n50 = Long.parseLong(stats[i++]);
+        this.na50 = Long.parseLong(stats[i++]);
         this.l50 = Long.parseLong(stats[i++]);
         this.gcPercentage = Double.parseDouble(stats[i++]);
         this.nPercentage = Double.parseDouble(stats[i++]);
         this.nbGenes = Integer.parseInt(stats[i++]);
+        this.nbMisassembliesFromRef = Integer.parseInt(stats[i++]);
         this.completenessPercentage = Double.parseDouble(stats[i++]);
         this.score = Double.parseDouble(stats[i++]);
     }
@@ -193,6 +199,14 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.n50 = n50;
     }
 
+    public long getNA50() {
+        return na50;
+    }
+
+    public void setNA50(long na50) {
+        this.na50 = na50;
+    }
+
     public long getL50() {
         return l50;
     }
@@ -207,6 +221,14 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
 
     public void setGcPercentage(double gcPercentage) {
         this.gcPercentage = gcPercentage;
+    }
+
+    public int getNbMisassembliesFromRef() {
+        return nbMisassembliesFromRef;
+    }
+
+    public void setNbMisassembliesFromRef(int nbMisassembliesFromRef) {
+        this.nbMisassembliesFromRef = nbMisassembliesFromRef;
     }
 
     public double getCompletenessPercentage() {
@@ -226,7 +248,7 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     }
 
     public static String getStatsFileHeader() {
-        return "index|desc|dataset|asm_path|bubble_path|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|nb_genes|completeness|score";
+        return "index|desc|dataset|asm_path|bubble_path|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|na50|l50|gc%|n%|nb_genes|nb_ma_ref|completeness|score";
     }
 
 
@@ -246,10 +268,12 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         sj.add(this.getNbBasesGt1K());
         sj.add(this.getMaxLen());
         sj.add(this.getN50());
+        sj.add(this.getNA50());
         sj.add(this.getL50());
         sj.add(this.getGcPercentage());
         sj.add(this.getNPercentage());
         sj.add(this.getNbGenes());
+        sj.add(this.getNbMisassembliesFromRef());
         sj.add(this.getCompletenessPercentage());
         sj.add(this.getScore());
 

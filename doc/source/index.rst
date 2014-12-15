@@ -5,7 +5,7 @@
 
 .. image:: RAMPART-logo.png
 
-RAMPART is a de novo assembly pipeline that makes use of third party-tools and High Performance Computing resources.  It
+RAMPART is a *de novo* assembly pipeline that makes use of third party-tools and High Performance Computing resources.  It
 can be used as a single interface to several popular assemblers, and can perform automated comparison and analysis of
 any generated assemblies.
 

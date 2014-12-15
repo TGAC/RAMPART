@@ -10,6 +10,7 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAssembliesArgs;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
@@ -78,6 +79,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 outputDir,
                 args.getOrganism().getEstGenomeSize(),
                 args.getOrganism().getPloidy() > 1,
+                args.getOrganism().getReference().getPath(),
                 args.getThreads(),
                 false // Assume all sequences are not scaffolds... I don't like this options much in Quast.
         );
@@ -124,6 +126,8 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                     stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
                     stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
                     stats.setNbGenes(qStats.getNbGenes());
+                    stats.setNA50(qStats.getNA50());
+                    stats.setNbMisassembliesFromRef(qStats.getNbMisassemblies());
                 }
             }
         }
@@ -148,11 +152,13 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
 
-    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, int threads, boolean scaffolds) {
+    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, File reference, int threads, boolean scaffolds) {
+
         QuastV23.Args quastArgs = new QuastV23.Args();
         quastArgs.setInputFiles(assemblies);
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
         quastArgs.setEstimatedGenomeSize(genomeSize);
+        quastArgs.setReference(reference);
         quastArgs.setFindGenes(true);
         quastArgs.setEukaryote(eukaryote);
         quastArgs.setThreads(threads);

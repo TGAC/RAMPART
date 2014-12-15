@@ -21,7 +21,9 @@ KAT, performs a kmer count on the assembly using Jellyfish, and, assuming kmer c
 previously, will use the Kmer Analysis Toolkit (KAT) to create a comparison matrix comparing kmer counts in the reads to
 the assembly.  This can be visualised later using KAT to show how much of the content in the reads has been assembled
 and how repetitive the assembly is.  Repetition could be due to heterozygosity in the diploid genomes so please read the
-KAT manual and walkthrough guide to get a better understanding of how to interpret this data.
+KAT manual and walkthrough guide to get a better understanding of how to interpret this data.   Note that information
+for KAT is not automatically used for selecting the best assembly at present.  See next section for more information about
+automatic assembly selection.
 
 CEGMA aligns highly conserved eukaryotic genes to the assembly.  CEGMA produces a statistic which represents an estimate
 of gene completeness in the assembly.  i.e. if we see CEGMA maps 95% of the conserved genes to the assembly we can
@@ -70,18 +72,45 @@ weightings file the XML snippet may look like this::
 
 The format of the weightings file is a pipe separated table as follows::
 
-   nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|nb_genes|completeness
-   0.05|0.1|0.05|0.05|0.05|0.2|0.05|0.05|0.1|0.5|0.25
+   nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|na50|l50|gc%|n%|nb_genes|nb_ma_ref|completeness
+   0.05|0.1|0.05|0.05|0.05|0.15|0.05|0.05|0.05|0.1|0.1|0.1|0.1
 
-All the metrics are derived from Quast results, except for the last one.
-
+All the metrics are derived from Quast results, except for the last one, which is from CEGMA.  Note, that some metrics
+from quast will only be used in certain circumstances.  For example, the na50 and nb_ma_ref metrics are only used if a
+reference is supplied in the organism element of the configuration file.  Additionally, the nb_bases, nb_bases_gt_1k and
+the gc% metrics are used only if the user has supplied either a reference, or has provided estimated size and / or estimated
+gc% for the organism respectively.
 
 TODO: Currently the kmer metric, is not included.  In the future this will offer an alternate means of assessing the
 assembly completeness.
 
-The file best.fa is particularly important as this is the assembly that will be taken forward to the AMP / FINALISE
-stage.  If you are not happy with RAMPART's choice of assembly you should replace best.fa with your selection and re-run
-the rampart pipeline from the AMP stage: ``rampart -s AMP,FINALISE job.cfg``.
+The file best.fa is particularly important as this is the assembly that will be taken forward to the second half of the pipeline
+(from the AMP stage).  Although we have found that scoring system to be generally quite useful, we strongly recommend users
+to make their own assessment as to which assembly to take forward as we acknowledge that the scoring system is biased by
+outlier assemblies.  For example, consider three assemblies with an N50 of 1000, 1100 and 1200 bp, with scaled scores of
+0, 0.5 and 1. We add a third assembly, which does poorly and is disregarded by the user, with an N50 of 200 bp. Now the
+weighted N50 scores of the assemblies are 0, 0.8, 0.9 and 1. Even though the user has no intention of using that poor
+assembly, the effective weight of the N50 metric of the three good assemblies has decreased drastically by a factor of
+(1 - 0) / (1 - 0.8) = 5.  It's possible that the assembly selected as the best would change by adding an irrelevant assembly.
+For example consider two metrics, a and b, with even weights of 0.5 for three assemblies, and then again for four assemblies
+after adding a fourth irrelevant assembly, which performs worst in both metrics. By adding a fourth irrelevant assembly,
+the choice of the best assembly has changed.
+
+Three assemblies:
+a = {1000, 1100, 1200}, b = {0, 10, 8}
+sa = {0, 0.5, 1}, sb = {0, 1, 0.8}
+fa = {0, 0.75, 0.9}
+best = 0.9, the assembly with a = 1200
+
+Four assemblies:
+a = {200, 1000, 1100, 1200}, b = {0, 0, 10, 8}
+sa = {0, 0.8, 0.9, 1}, sb = {0, 0, 1, 0.8}
+fa = {0, 0.4, 0.95, 0.9}
+best = 0.95, the assembly with a = 1100
+
+To reiterate, we recommend that the user double check the results provided by RAMPART and if necessary overrule the choice
+of assembly selected for further processing.  This can be done, i.e. starting from the AMP stage with a user selected
+assembly, by using the following command: ``rampart -2 -a <path_to_assembly> <path_to_job_config>``.
 
 
 Analysing assemblies produced by AMP

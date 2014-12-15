@@ -32,18 +32,20 @@ public class AssemblyStatsMatrixRow {
     public static final int IDX_NB_BASES_GT_1K = 3;
     public static final int IDX_MAX_LEN = 4;
     public static final int IDX_N_50 = 5;
-    public static final int IDX_L_50 = 6;
-    public static final int IDX_GC_PERC = 7;
-    public static final int IDX_N_PERC = 8;
-    public static final int IDX_NB_GENES = 9;
-    public static final int IDX_COMPLETENESS = 10;
+    public static final int IDX_NA_50 = 6;
+    public static final int IDX_L_50 = 7;
+    public static final int IDX_GC_PERC = 8;
+    public static final int IDX_N_PERC = 9;
+    public static final int IDX_NB_GENES = 10;
+    public static final int IDX_NB_MA_REF = 11;
+    public static final int IDX_COMPLETENESS = 12;
 
 
 
     private double[] stats;
 
     public AssemblyStatsMatrixRow() {
-        this(new double[11]);
+        this(new double[13]);
     }
 
     public AssemblyStatsMatrixRow(double[] stats) {
@@ -62,10 +64,12 @@ public class AssemblyStatsMatrixRow {
         this.stats[IDX_NB_BASES_GT_1K] = assemblyStats.getNbBasesGt1K();
         this.stats[IDX_MAX_LEN] = assemblyStats.getMaxLen();
         this.stats[IDX_N_50] = assemblyStats.getN50();
+        this.stats[IDX_NA_50] = assemblyStats.getNA50();
         this.stats[IDX_L_50] = assemblyStats.getL50();
         this.stats[IDX_GC_PERC] = assemblyStats.getGcPercentage();
         this.stats[IDX_N_PERC] = assemblyStats.getNPercentage();
         this.stats[IDX_NB_GENES] = assemblyStats.getNbGenes();
+        this.stats[IDX_NB_MA_REF] = assemblyStats.getNbMisassembliesFromRef();
         this.stats[IDX_COMPLETENESS] = assemblyStats.getCompletenessPercentage();
     }
 

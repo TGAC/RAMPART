@@ -9,8 +9,20 @@ dependencies are required to install and run RAMPART:
 
 * Java Runtime Environment (JRE) V1.7+
 
-RAMPART can be installed either from a distributable tarball, or from source via a ``git clone``.  These steps are
+RAMPART can be installed either from a distributable tarball, from source via a ``git clone``, or via homebrew.  These steps are
 described below.  Before that however, here are a few things to keep in mind during the installation process:
+
+
+Quick start
+-----------
+
+To get a bare bones version of RAMPART up and running quickly, we recommend installation via Homebrew.  This requires you
+to first install homebrew and tap homebrew/science.  On Mac you can access homebrew from ``http://brew.sh`` and linuxbrew
+for linux from ``https://github.com/Homebrew/linuxbrew``.  Once installed make sure to tap homebrew science with
+``brew tap homebrew/science``.  Then, as discussed above, please ensure you have JRE V1.7+ installed.  Finally, to install
+RAMPART simply type ``brew install rampart``.  This will install RAMPART into your homebrew cellar, with the bare minimum
+of dependencies: Quake, Kmergenie, ABySS, Velvet, Quast, KAT.
+
 
 
 From tarball
@@ -30,6 +42,9 @@ be the following sub-directories:
 
 Should you want to run the tools without referring to their paths, you should ensure the 'bin' sub-directory is on your
 PATH environment variable.
+
+Also please note that this method does not install any dependencies automatically.  You must do this before trying to
+run RAMPART.
 
 
 From source
