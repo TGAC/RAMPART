@@ -57,16 +57,16 @@ this complication away from the user as all input and output between each tool i
 RAMPART offers more support for HPC environments, making it easier to parallelize steps in the pipeline.  Managing this
 manually is difficult and time consuming.
 
-**Galaxy** This is a platform for chaining together tools in such a way as to promote reproducible analyses for biomedical
-research.  It also has support for HPC environments.  However, it is a heavy weight solution, and is not trivial to install
+**Galaxy** This is a platform for chaining together tools in such a way as to promote reproducible analyses.  It also
+has support for HPC environments.  However, it is a heavy weight solution, and is not trivial to install
 and configure locally.  RAMPART itself is lightweight in comparison, and ignoring dependencies, much easier to install.  In
 addition, galaxy is not designed with *de novo* genome assembly specifically in mind, whereas RAMPART
-does.  RAMPART places more constraints in the workflow design process as well as more checks initially before the
+is.  RAMPART places more constraints in the workflow design process as well as more checks initially before the
 workflow is started.  In addition, as mentioned above RAMPART will automatically manage interoperability between tools, which
 will likely save the user time debugging workflows and writing their own scripts to manage specific tool interaction issues.
 
 **A5-miseq** and **BugBuilder** Both are domain specific pipeline for automating assembly of microbial organisms.
-They are are designed specifically with microbial genomes in mind and keep their interfaces simple and easy to use.  RAMPART,
+They are designed specifically with microbial genomes in mind and keep their interfaces simple and easy to use.  RAMPART,
 while more complex to use, is far more configurable as a result.  RAMPART also allows users to tackle eukaryote assembly projects.
 
 **iMetAMOS** This is a configurable pipeline for isolate genome assembly and annotation.  One distinct advantage of iMetAMOS is
