@@ -114,6 +114,8 @@ public class Select extends AbstractConanProcess {
             // Create the stats table with information derived from the configuration file.
             AssemblyStatsTable table = this.createTable();
 
+            boolean cegmaSelected = false;
+
             for(AssemblyAnalyser analyser : args.analysers) {
 
                 File reportDir = new File(args.getMassAnalysisDir(), analyser.getName().toLowerCase());
@@ -122,14 +124,19 @@ public class Select extends AbstractConanProcess {
                         table,
                         analyser.isFast() ? new File(reportDir, "longest") : reportDir
                 );
+
+                if (analyser.getName().equalsIgnoreCase("CEGMA")) {
+                    cegmaSelected = true;
+                }
             }
 
             // Select the assembly
             AssemblySelector assemblySelector = new DefaultAssemblySelector(args.getWeightingsFile());
             AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
                     table,
-                    args.getOrganism().getEstGenomeSize(),
-                    args.getOrganism().getEstGcPercentage());
+                    args.getOrganism(),
+                    cegmaSelected
+                    );
 
             File bestAssembly = new File(selectedAssembly.getFilePath());
 
@@ -150,9 +157,14 @@ public class Select extends AbstractConanProcess {
             }
 
             // Save table to disk
-            File finalFile = new File(args.getOutputDir(), "scores.tab");
-            table.save(finalFile);
-            log.debug("Saved final results to disk at: " + finalFile.getAbsolutePath());
+            File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
+            table.saveTsv(finalTSVFile);
+            log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
+
+            File finalSummaryFile = new File(args.getOutputDir(), "scores.tsv");
+            table.saveSummary(finalSummaryFile);
+            log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
+
 
             stopWatch.stop();
 

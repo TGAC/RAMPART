@@ -28,11 +28,9 @@ import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAssembliesArgs;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
+import uk.ac.tgac.rampart.stage.analyse.asm.stats.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -134,18 +132,24 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                     }
 
                     // Override attributes
-                    stats.setN50(qStats.getN50());
-                    stats.setL50(qStats.getL50());
-                    stats.setMaxLen(qStats.getLargestContig());
-                    stats.setGcPercentage(qStats.getGcPc());
-                    stats.setNbSeqs(qStats.getNbContigsGt0());
-                    stats.setNbSeqsGt1K(qStats.getNbContigsGt1k());
-                    stats.setNbBases(qStats.getTotalLengthGt0());
-                    stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
-                    stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
-                    stats.setNbGenes(qStats.getNbGenes());
-                    stats.setNA50(qStats.getNA50());
-                    stats.setNbMisassembliesFromRef(qStats.getNbMisassemblies());
+                    ContiguityMetrics contiguity = stats.getContiguity();
+
+                    contiguity.setN50(qStats.getN50());
+                    contiguity.setL50(qStats.getL50());
+                    contiguity.setMaxLen(qStats.getLargestContig());
+                    contiguity.setNbSeqs(qStats.getNbContigsGt0());
+                    contiguity.setNbSeqsGt1K(qStats.getNbContigsGt1k());
+                    contiguity.setNA50(qStats.getNA50());
+
+                    ProblemMetrics problems = stats.getProblems();
+                    problems.setnPercentage(qStats.getNsPer100k() / 1000.0);
+                    problems.setNbMisassembliesFromRef(qStats.getNbMisassemblies());
+
+                    ConservationMetrics conservation = stats.getConservation();
+                    conservation.setGcPercentage(qStats.getGcPc());
+                    conservation.setNbBases(qStats.getTotalLengthGt0());
+                    conservation.setNbBasesGt1K(qStats.getTotalLengthGt1k());
+                    conservation.setNbGenes(qStats.getNbGenes());
                 }
             }
         }

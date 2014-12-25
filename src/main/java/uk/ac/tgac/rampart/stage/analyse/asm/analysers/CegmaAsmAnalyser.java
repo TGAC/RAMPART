@@ -19,7 +19,6 @@
 package uk.ac.tgac.rampart.stage.analyse.asm.analysers;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,7 +128,7 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
 
             CegmaV24.Report cegmaReport = new CegmaV24.Report(cf);
 
-            stats.setCompletenessPercentage(cegmaReport.getPcComplete());
+            stats.getConservation().setCegComplete(cegmaReport.getPcComplete());
         }
     }
 

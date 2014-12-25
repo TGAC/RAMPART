@@ -1,2 +1,31 @@
-nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|na50|l50|gc%|n%|nb_genes|nb_ma_ref|completeness
-0.05|0.1|0.05|0.05|0.05|0.15|0.05|0.05|0.05|0.1|0.1|0.1|0.1
+# This is the weightings file.  The user can adjust these settings (or make a copy of this file and use that instead) to
+# alter the way RAMPART scores and ranks assemblies.  Changing the settings here affects the impact that metric has when
+# contributing the overall score.  Higher weighting equals more impact.  The metrics are also grouped into 3 different
+# categories.  The weightings for the categories can also be adjusted giving the user higher-level control.
+# Note that the user may not use all metrics in their assembly experiments.  In these cases those metrics do not contribute
+# to the overall score and its weighting is distributed to the remaining metrics in the group, retaining their existing
+# weighting balance in the group.
+
+# Groupings (should add up to 1.0)
+contiguity = 0.4
+problems = 0.3
+conservation = 0.3
+
+# Contiguity (should add up to 1.0)
+nb_seqs = 0.1               # Number of sequences in the assembly
+nb_seqs_gt_1k = 0.1         # Number of sequences in the assembly that are > 1kb
+max_len = 0.1               # Length of the longest sequence in the assembly
+n50 = 0.3                   # Measure of average sequence length
+na50 = 0.3                  # Measure of average sequence length taking into account misassemblies (requires reference)
+l50 = 0.1                   # Index of the N50 sequence
+
+# Problems (should add up to 1.0)
+n% = 0.4                    # Percentage of assembly made of gaps
+nb_ma_ref = 0.6             # Number of misassemblies found when compared to a reference genome (requires reference)
+
+# Conservation (should add up to 1.0)
+nb_bases = 0.1              # Total size of assembly (requires estimated genome size)
+nb_bases_gt_1k = 0.1        # Size of assembly from contigs > 1kb (requires estimated genome size)
+gc% = 0.1                   # GC percentage (requires estimated gc%)
+nb_genes = 0.2              # Number of genes estimated to be in assembly from Quast (requires estimated number of genes)
+ceg_completeness = 0.5      # Percentage of conserved genes found in assembly (requires CEGMA)

@@ -68,7 +68,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
             String trimmedLine = line.trim();
 
             if (!trimmedLine.isEmpty()) {
-                String[] parts = trimmedLine.split("\\|");
+                String[] parts = trimmedLine.split("\t");
 
                 AssemblyStats stats = new AssemblyStats(parts);
 
@@ -77,34 +77,42 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         }
     }
 
-    public void save(File outputFile) throws IOException {
+    public void saveTsv(File outputFile) throws IOException {
 
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
 
         // Add the header line
-        lines.add(AssemblyStats.getStatsFileHeader());
+        lines.add(new AssemblyStats().getStatsFileHeader());
 
         // Add the data
         for(AssemblyStats stats : this) {
-            lines.add(stats.toString());
+            lines.add(stats.toTabString());
         }
 
         // Write data to disk
         FileUtils.writeLines(outputFile, lines);
     }
 
-    public AssemblyStatsMatrix generateStatsMatrix() {
 
-        AssemblyStatsMatrix matrix = new AssemblyStatsMatrix(this);
+    public void saveSummary(File outputFile) throws IOException {
 
-        return matrix;
+        List<String> lines = new ArrayList<>();
+
+        // Add the data
+        for(AssemblyStats stats : this) {
+            lines.add(stats.toString() + "\n");
+        }
+
+        // Write data to disk
+        FileUtils.writeLines(outputFile, lines);
     }
+
 
     public void addScores(double[] scores) {
 
         int i = 0;
         for(AssemblyStats stats : this) {
-            stats.setScore(scores[i++]);
+            stats.setFinalScore(scores[i++]);
         }
     }
 
@@ -115,9 +123,9 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
 
         for(AssemblyStats stats : this) {
 
-            if (stats.getScore() > max) {
+            if (stats.getFinalScore() > max) {
                 best = stats;
-                max = stats.getScore();
+                max = stats.getFinalScore();
             }
         }
 
@@ -159,4 +167,5 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
 
         return null;
     }
+
 }

@@ -17,41 +17,52 @@
  */
 package uk.ac.tgac.rampart.stage.analyse.asm.selector;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
+import uk.ac.tgac.rampart.stage.analyse.asm.stats.Scaling;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * User: maplesod
- * Date: 25/04/13
- * Time: 18:34
+ * Date: 26/04/13
+ * Time: 10:57
  */
-public class AssemblyStatsTableTest {
-
-    private File statsFile1 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats1.txt"));
-    private File statsFile2 = FileUtils.toFile(this.getClass().getResource("/tools/stats/stats2.txt"));
-
+public class ScalingTest {
 
     @Test
-    public void testAssemblyStatsTable() throws IOException {
+    public void testStandardNormalise() throws IOException {
 
-        List<File> statsFiles = new ArrayList<>();
-        statsFiles.add(statsFile1);
-        statsFiles.add(statsFile2);
+        double[] a = new double[] {
+                851620,
+                746981,
+                637136,
+                581571,
+                521126,
+                485352
+        };
 
+        Scaling.standardScale(a, true);
 
-        AssemblyStatsTable table = new AssemblyStatsTable(statsFile1);
-
-        AssemblyStats bestStats = table.getBest();
-
-        assertTrue(bestStats.getFinalScore() == 94.5);
+        assertTrue(a[0] == 0.0);
     }
+
+    @Test
+    public void testDeviationNormalise0() throws IOException {
+
+        double[] a = new double[] {
+                399155917,
+                400283582,
+                402925744,
+                404793555,
+                408730927,
+                411925857
+        };
+
+        Scaling.deviationScale(a, 352155917.0);
+
+        assertTrue(a[0] == 0.7863484554275946);
+    }
+
 }

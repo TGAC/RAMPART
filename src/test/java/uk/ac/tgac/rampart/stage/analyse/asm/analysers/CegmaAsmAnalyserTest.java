@@ -18,14 +18,11 @@
 
 package uk.ac.tgac.rampart.stage.analyse.asm.analysers;
 
-import org.junit.Test;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
 import java.io.File;
 import java.io.IOException;
-
-import static org.junit.Assert.*;
 
 public class CegmaAsmAnalyserTest {
 

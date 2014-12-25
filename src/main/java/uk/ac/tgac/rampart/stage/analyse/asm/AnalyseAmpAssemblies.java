@@ -171,9 +171,13 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
             }
 
             // Save table to disk
-            File finalFile = new File(args.getOutputDir(), "scores.tab");
-            table.save(finalFile);
-            log.debug("Saved final results to disk at: " + finalFile.getAbsolutePath());
+            File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
+            table.saveTsv(finalTSVFile);
+            log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
+
+            File finalSummaryFile = new File(args.getOutputDir(), "scores.tsv");
+            table.saveSummary(finalSummaryFile);
+            log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
 
             stopWatch.stop();
 

@@ -18,6 +18,7 @@
 
 package uk.ac.tgac.rampart.stage.analyse.asm.selector;
 
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
@@ -31,7 +32,7 @@ import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 public interface AssemblySelector {
 
     AssemblyStats selectAssembly(
-                        AssemblyStatsTable table,
-                        long estimatedGenomeSize,
-                        double estimatedGcPercentage);
+            AssemblyStatsTable table,
+            Organism organism,
+            boolean cegmaEnabled);
 }

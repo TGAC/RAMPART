@@ -123,10 +123,10 @@
             <tool name="KAT" threads="16" memory="20000"/>
         </analyse_mass>
 
-        <!-- This step produces a score for each assembly, which is based on the normalised and weighted
+        <!-- This step produces a finalScore for each assembly, which is based on the normalised and weighted
              statistics calculated from the specified types.  RAMPART has its own weighting matrix for weighting each
              statistic but the user can specify a custom set of weights here if they prefer.  RAMPART considers the
-             assembly with the highest score the best assembly, and by default this selected assembly is used as input to
+             assembly with the highest finalScore the best assembly, and by default this selected assembly is used as input to
              the next step. -->
         <select_mass weightings_file="path_to_custom_weights" />
 

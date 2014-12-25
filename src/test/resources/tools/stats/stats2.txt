@@ -1,13 +1,13 @@
-index|desc|dataset|asm_file|bubble_file|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|na50|l50|gc%|n%|nb_genes|nb_ma_ref|completeness|score
-41|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k41-contigs.fa||851620|850000|399155917|380000000|128370|13090|0|15000|52.0|0.24|500|0|86.0|0.0
-45|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k45-contigs.fa||746981|740000|400283582|380000000|158191|15352|0|15000|52.0|0.21|500|0|86.0|0.0
-51|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k51-contigs.fa||637136|630000|402925744|390000000|188039|17257|0|15000|52.0|0.18|500|0|86.0|0.0
-55|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k55-contigs.fa||581571|580000|404793555|400000000|300013|17982|0|15000|52.0|0.18|500|0|86.0|0.0
-61|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k61-contigs.fa||521126|521000|408730927|400000000|506350|18256|0|15000|52.0|0.18|500|0|86.0|0.0
-65|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k65-contigs.fa||485352|480000|411925857|405000000|372023|18168|0|15000|52.0|0.18|500|0|86.0|0.0
-71|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k71-contigs.fa||440635|435000|416017994|410000000|366644|16826|0|15000|52.0|0.20|500|0|86.0|0.0
-75|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k75-contigs.fa||411628|400000|417983238|410000000|366643|14853|0|15000|52.0|0.21|500|0|86.0|0.0
-81|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k81-contigs.fa||383710|380000|412474855|405000000|503803|9186|0|15000|52.0|0.22|500|0|86.0|0.0
-85|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k85-contigs.fa||381628|380000|398394502|380000000|643510|5301|0|15000|52.0|0.33|500|0|86.0|0.0
-91|k|raw|/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k91-contigs.fa||423808|410000|296036544|290000000|643513|1432|0|15000|52.0|2.10|500|0|86.0|0.0
+index	desc	dataset	asm_file	bubble_file	nb_seqs	nb_seqs_gt_1k	nb_bases	nb_bases_gt_1k	max_len	n50	na50	l50	gc%	n%	nb_genes	nb_ma_ref	completeness	finalScore
+1	41k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k41-contigs.fa		851620	850000	399155917	380000000	128370	13090	0	15000	52.0	0.24	500	0	86.0	0.0
+2	45k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k45-contigs.fa		746981	740000	400283582	380000000	158191	15352	0	15000	52.0	0.21	500	0	86.0	0.0
+3	51k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k51-contigs.fa		637136	630000	402925744	390000000	188039	17257	0	15000	52.0	0.18	500	0	86.0	0.0
+4	55k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k55-contigs.fa		581571	580000	404793555	400000000	300013	17982	0	15000	52.0	0.18	500	0	86.0	0.0
+5	61k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k61-contigs.fa		521126	521000	408730927	400000000	506350	18256	0	15000	52.0	0.18	500	0	86.0	0.0
+6	65k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k65-contigs.fa		485352	480000	411925857	405000000	372023	18168	0	15000	52.0	0.18	500	0	86.0	0.0
+7	71k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k71-contigs.fa		440635	435000	416017994	410000000	366644	16826	0	15000	52.0	0.20	500	0	86.0	0.0
+8	75k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k75-contigs.fa		411628	400000	417983238	410000000	366643	14853	0	15000	52.0	0.21	500	0	86.0	0.0
+9	81k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k81-contigs.fa		383710	380000	412474855	405000000	503803	9186	0	15000	52.0	0.22	500	0	86.0	0.0
+10	85k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k85-contigs.fa		381628	380000	398394502	380000000	643510	5301	0	15000	52.0	0.33	500	0	86.0	0.0
+11	91k	raw	/data/workarea/maplesod/CCC/CCC-15/mass/qt/contigs/k91-contigs.fa		423808	410000	296036544	290000000	643513	1432	0	15000	52.0	2.10	500	0	86.0	0.0
 
