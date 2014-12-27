@@ -55,12 +55,15 @@ Note that you can apply ``parallel`` attributes to both the ``analyse_mass`` and
 Selecting the best assembly
 ---------------------------
 
-Assuming at least one analysis option is selected, RAMPART will produce a table listing each assembly as a row, with each
-column representing an assembly metric.  The user can specify a weighting file when running RAMPART to assign the
-weights to each metric.  Each assembly is then assigned a score, based on the weighted mean of the metrics, and the
+Assuming at least one analysis option is selected, RAMPART will produce a summary file and a tab separated value file listing
+metrics for each assembly, along with scores relating to the contiguity, conservation and problem metrics, and a final overall score
+for each assembly.  Each score is given a value between 0.0 and 1.0, where higher values represent better assemblies.  The
 assembly with the highest score is then automatically selected as the **best** assembly to be used downstream.
+The group scores and the final scores are derived from underlying metrics and can be adjusted to have
+different weightings applied to them. This is done by specifying a weighting file to use in the RAMPART pipeline.
 
-To use these default weightings simply add the following element to the pipeline::
+By default RAMPART applies its own weightings, which can be found at ``<rampart_dir>/etc/weightings.tab``, so to run the
+assembly selection stage with default settings the user simply needs add the following element to the pipeline::
 
   <select_mass/>
 
@@ -70,13 +73,9 @@ weightings file the XML snippet may look like this::
 
    <select_mass weightings_file="~/.tgac/rampart/custom_weightings.tab"/>
 
-The format of the weightings file is a pipe separated table as follows::
-
-   nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|na50|l50|gc%|n%|nb_genes|nb_ma_ref|completeness
-   0.05|0.1|0.05|0.05|0.05|0.15|0.05|0.05|0.05|0.1|0.1|0.1|0.1
-
-All the metrics are derived from Quast results, except for the last one, which is from CEGMA.  Note, that some metrics
-from quast will only be used in certain circumstances.  For example, the na50 and nb_ma_ref metrics are only used if a
+The format of the weightings key value pair file separated by '=' character.  Comment lines can start using '#'.
+Most metrics are derived from Quast results, except for the core eukaryote genes detection score which is gathered from CEGMA.  Note, that some metrics
+from Quast will only be used in certain circumstances.  For example, the na50 and nb_ma_ref metrics are only used if a
 reference is supplied in the organism element of the configuration file.  Additionally, the nb_bases, nb_bases_gt_1k and
 the gc% metrics are used only if the user has supplied either a reference, or has provided estimated size and / or estimated
 gc% for the organism respectively.
