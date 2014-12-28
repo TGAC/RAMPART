@@ -44,6 +44,7 @@ import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.stage.analyse.asm.selector.AssemblySelector;
@@ -53,6 +54,7 @@ import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -116,6 +118,29 @@ public class Select extends AbstractConanProcess {
 
             boolean cegmaSelected = false;
 
+            QuastV23.AssemblyStats refStats = null;
+
+            // If we have a reference run quast on it to get some stats
+            if (args.getOrganism().getReference() != null && args.getOrganism().getReference().getPath() != null) {
+
+                File refOutDir = new File(args.getOutputDir(), "ref_quast");
+                List<File> inputFiles = new ArrayList<>();
+                inputFiles.add(args.getOrganism().getReference().getPath());
+                QuastV23.Args refArgs = new QuastV23.Args();
+                refArgs.setInputFiles(inputFiles);
+                refArgs.setFindGenes(true);
+                refArgs.setThreads(1);
+                refArgs.setEukaryote(args.getOrganism().getPloidy() > 1);
+                refArgs.setOutputDir(refOutDir);
+
+                QuastV23 refQuast = new QuastV23(this.conanExecutorService, refArgs);
+
+                ExecutionResult res = this.conanExecutorService.executeProcess(refQuast, refOutDir, args.jobPrefix + "-refquast", 1, 2000, false);
+
+                QuastV23.Report report = new QuastV23.Report(new File(refOutDir, "latest/report.txt"));
+                refStats = report.getAssemblyStats(0);
+            }
+
             for(AssemblyAnalyser analyser : args.analysers) {
 
                 File reportDir = new File(args.getMassAnalysisDir(), analyser.getName().toLowerCase());
@@ -135,6 +160,7 @@ public class Select extends AbstractConanProcess {
             AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
                     table,
                     args.getOrganism(),
+                    refStats,
                     cegmaSelected
                     );
 

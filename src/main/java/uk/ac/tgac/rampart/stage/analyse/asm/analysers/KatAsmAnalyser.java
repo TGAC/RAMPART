@@ -110,7 +110,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
             jellyfishArgs.setOutputPrefix(outputPrefix);
             jellyfishArgs.setLowerCount(0);  // Count everything!
-            jellyfishArgs.setHashSize(args.getOrganism().getEstGenomeSize() * args.getOrganism().getPloidy() * 10);
+            jellyfishArgs.setHashSize(args.getOrganism().getGenomeSize() * args.getOrganism().getPloidy() * 10);
             jellyfishArgs.setMerLength(31);       // 31 should be more than sufficient for all organisms (even wheat)
             jellyfishArgs.setBothStrands(true);
             jellyfishArgs.setThreads(args.getThreads());

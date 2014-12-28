@@ -24,6 +24,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.*;
 
 import java.io.File;
@@ -60,15 +61,20 @@ public class DefaultAssemblySelector implements AssemblySelector {
     @Override
     public AssemblyStats selectAssembly(AssemblyStatsTable table,
                                Organism organism,
+                               QuastV23.AssemblyStats refStats,
                                boolean cegmaEnabled) {
 
-        boolean referenceProvided = organism.getReference() != null && organism.getReference().getPath() != null;
+        boolean referenceProvided = refStats != null;
+        boolean estimatesProvided = organism.getEstimated() != null;
 
         // Acquire metric groups
         ContiguityMetrics.Matrix contiguity = new ContiguityMetrics.Matrix(table, referenceProvided);
         ProblemMetrics.Matrix problems = new ProblemMetrics.Matrix(table, referenceProvided);
         ConservationMetrics.Matrix conservation = new ConservationMetrics.Matrix(table,
-                organism.getEstGenomeSize(), organism.getEstGcPercentage(), organism.getEstNbGenes(), cegmaEnabled);
+                referenceProvided ? refStats.getTotalLengthGt0() : estimatesProvided ? organism.getEstimated().getEstGenomeSize() : 0,
+                referenceProvided ? refStats.getGcPc() : estimatesProvided ? organism.getEstimated().getEstGcPercentage() : 0.0,
+                referenceProvided ? refStats.getNbGenes() : estimatesProvided ? organism.getEstimated().getEstNbGenes() : 0,
+                cegmaEnabled);
         log.debug("Acquired metrics");
 
         // Normalise matrices

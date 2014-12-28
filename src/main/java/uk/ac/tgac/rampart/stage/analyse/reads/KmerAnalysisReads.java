@@ -294,7 +294,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     }
 
     protected JobOutput executeJellyfishCount(Args args, String ecqName, File outputDir, Library lib)
-            throws ProcessExecutionException, InterruptedException, ConanParameterException {
+            throws ProcessExecutionException, InterruptedException, ConanParameterException, IOException {
         String suffix = "jellyfish_" + ecqName + "_" + lib.getName() + ".jf31";
 
         // Create the process
@@ -324,7 +324,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     }
 
     protected JobOutput executeJellyfishMerger(Args args, String ecqName, Set<File> fileSet, File outputDir)
-            throws InterruptedException, ProcessExecutionException, ConanParameterException {
+            throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
         String suffix = "jellyfish_" + ecqName + "_all.jf31_0";
 
@@ -357,9 +357,9 @@ public class KmerAnalysisReads extends AbstractConanProcess {
      * @param organism Details about the organism's genome (specifically the genome size and ploidy)
      * @return An overestimate of the expected jellyfish hash size
      */
-    public static long guessJellyfishHashSize(Organism organism) {
+    public static long guessJellyfishHashSize(Organism organism) throws IOException {
 
-        long hashSize = organism.getEstGenomeSize() * organism.getPloidy() * 10;
+        long hashSize = organism.getGenomeSize() * organism.getPloidy() * 10;
 
         // Check to make sure we don't have anything weird... if we do use a default of 5 billion (this should be enough
         // for most organisms running through RAMPART, although it might still fail on low mem systems.  Need to think
@@ -367,7 +367,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         return hashSize < 0 ? 5000000000L : hashSize;
     }
 
-    protected JellyfishCountV11 makeJellyfishCount(String inputFilesStr, String outputPrefix, Organism organism, int threads) throws ProcessExecutionException {
+    protected JellyfishCountV11 makeJellyfishCount(String inputFilesStr, String outputPrefix, Organism organism, int threads) throws ProcessExecutionException, IOException {
 
         JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
         jellyfishArgs.setOutputPrefix(outputPrefix);
@@ -383,7 +383,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         return new JellyfishCountV11(this.conanExecutorService, jellyfishArgs);
     }
 
-    protected JellyfishMergeV11 makeJellyfishMerge(List<File> inputFiles, File outputFile, Organism organism) {
+    protected JellyfishMergeV11 makeJellyfishMerge(List<File> inputFiles, File outputFile, Organism organism) throws IOException {
 
         // Setup jellyfish for merging all the reads for this mass run
         JellyfishMergeV11.Args mergeArgs = new JellyfishMergeV11.Args();

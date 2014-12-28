@@ -89,13 +89,17 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         // Add quast job id to list
         List<ExecutionResult> jobResults = new ArrayList<>();
 
+        File reference = args.getOrganism().getReference() != null ? args.getOrganism().getReference().getPath() : null;
+
+        long estGenomeSize = reference != null ? 0 : args.getOrganism().getGenomeSize();
+
 
         QuastV23 quastProcess = this.makeQuast(
                 assemblies,
                 outputDir,
-                args.getOrganism().getEstGenomeSize(),
+                estGenomeSize,
                 args.getOrganism().getPloidy() > 1,
-                args.getOrganism().getReference().getPath(),
+                reference,
                 args.getThreads(),
                 false // Assume all sequences are not scaffolds... I don't like this options much in Quast.
         );

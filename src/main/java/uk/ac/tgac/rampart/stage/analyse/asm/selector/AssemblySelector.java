@@ -19,6 +19,7 @@
 package uk.ac.tgac.rampart.stage.analyse.asm.selector;
 
 import uk.ac.tgac.conan.core.data.Organism;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
@@ -34,5 +35,6 @@ public interface AssemblySelector {
     AssemblyStats selectAssembly(
             AssemblyStatsTable table,
             Organism organism,
+            QuastV23.AssemblyStats refStats,
             boolean cegmaEnabled);
 }
