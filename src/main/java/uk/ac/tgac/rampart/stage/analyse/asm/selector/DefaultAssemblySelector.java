@@ -30,6 +30,7 @@ import uk.ac.tgac.rampart.stage.analyse.asm.stats.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -75,30 +76,64 @@ public class DefaultAssemblySelector implements AssemblySelector {
                 referenceProvided ? refStats.getGcPc() : estimatesProvided ? organism.getEstimated().getEstGcPercentage() : 0.0,
                 referenceProvided ? refStats.getNbGenes() : estimatesProvided ? organism.getEstimated().getEstNbGenes() : 0,
                 cegmaEnabled);
-        log.debug("Acquired metrics");
+        log.info("Acquired metrics");
+
+        log.debug("Contiguity");
+        log.debug(contiguity.toString());
+
+        log.debug("Problems");
+        log.debug(problems.toString());
+
+        log.debug("Conservation");
+        log.debug(conservation.toString());
 
         // Normalise matrices
         contiguity.normalise();
         problems.normalise();
         conservation.normalise();
-        log.debug("Scaled metrics");
+        log.info("Scaled metrics");
+
+        log.debug("Contiguity");
+        log.debug(contiguity.toString());
+
+        log.debug("Problems");
+        log.debug(problems.toString());
+
+        log.debug("Conservation");
+        log.debug(conservation.toString());
+
 
         // Apply weightings
         contiguity.weight(contiguityWeightings);
         problems.weight(problemWeightings);
         conservation.weight(conservationWeightings);
-        log.debug("Applied weightings");
+        log.info("Applied weightings");
+
+        log.debug("Contiguity");
+        log.debug(contiguity.toString());
+
+        log.debug("Problems");
+        log.debug(problems.toString());
+
+        log.debug("Conservation");
+        log.debug(conservation.toString());
 
         // Calc scores for groups
         double[] contiguityScores = contiguity.calcScores();
         double[] problemScores = problems.calcScores();
         double[] conservationsScores = conservation.calcScores();
-        log.debug("Calculated scores for each metric group");
+        log.info("Calculated scores for each metric group");
+
+        log.debug("Contiguity: " + Arrays.toString(contiguityScores));
+        log.debug("Problems: " + Arrays.toString(problemScores));
+        log.debug("Conservation: " + Arrays.toString(conservationsScores));
+
+        table.addGroupScores(contiguityScores, problemScores, conservationsScores);
 
         AssemblyGroupStats.Matrix finalScores = new AssemblyGroupStats.Matrix(contiguityScores, problemScores, conservationsScores);
         finalScores.weight(groupWeightings);
         double[] scores = finalScores.calcScores();
-        log.debug("Weightings applied to group scores.  Final scores calculated.");
+        log.info("Weightings applied to group scores.  Final scores calculated.");
 
         // Save merged matrix with added scores
         table.addScores(scores);
@@ -142,6 +177,11 @@ public class DefaultAssemblySelector implements AssemblySelector {
         this.conservationWeightings = new ConservationMetrics.Matrix(1).parseWeightings(kvps);
         this.groupWeightings = new AssemblyGroupStats.Matrix(1).parseWeightings(kvps);
 
+        log.debug("Loaded weightings from: " + weightingsFile.getAbsolutePath());
+        log.debug("Contiguity weightings: " + Arrays.toString(this.contiguityWeightings));
+        log.debug("Problem weightings: " + Arrays.toString(this.problemWeightings));
+        log.debug("Conservation weightings: " + Arrays.toString(this.conservationWeightings));
+        log.debug("Group weightings: " + Arrays.toString(this.groupWeightings));
     }
 
 }

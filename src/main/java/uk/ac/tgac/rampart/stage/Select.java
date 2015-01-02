@@ -137,8 +137,12 @@ public class Select extends AbstractConanProcess {
 
                 ExecutionResult res = this.conanExecutorService.executeProcess(refQuast, refOutDir, args.jobPrefix + "-refquast", 1, 2000, false);
 
-                QuastV23.Report report = new QuastV23.Report(new File(refOutDir, "latest/report.txt"));
+                QuastV23.Report report = new QuastV23.Report(new File(refOutDir, "report.txt"));
                 refStats = report.getAssemblyStats(0);
+
+                log.info("Reference genome size: " + refStats.getTotalLengthGt0());
+                log.info("Reference GC%: " + refStats.getGcPc());
+                log.info("Reference # Genes: " + refStats.getNbGenes());
             }
 
             for(AssemblyAnalyser analyser : args.analysers) {
@@ -187,7 +191,7 @@ public class Select extends AbstractConanProcess {
             table.saveTsv(finalTSVFile);
             log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
 
-            File finalSummaryFile = new File(args.getOutputDir(), "scores.tsv");
+            File finalSummaryFile = new File(args.getOutputDir(), "scores.txt");
             table.saveSummary(finalSummaryFile);
             log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
 

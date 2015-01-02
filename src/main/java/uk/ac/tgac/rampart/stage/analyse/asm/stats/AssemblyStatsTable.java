@@ -107,6 +107,16 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         FileUtils.writeLines(outputFile, lines);
     }
 
+    public void addGroupScores(double[] contiguity, double[] problems, double[] conservation) {
+
+        int i = 0;
+        for(AssemblyStats stats : this) {
+            stats.getContiguity().setScore(contiguity[i]);
+            stats.getProblems().setScore(problems[i]);
+            stats.getConservation().setScore(conservation[i]);
+            i++;
+        }
+    }
 
     public void addScores(double[] scores) {
 
@@ -118,7 +128,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
 
     public AssemblyStats getBest() {
 
-        double max = 0.0;
+        double max = -1.0;
         AssemblyStats best = null;
 
         for(AssemblyStats stats : this) {

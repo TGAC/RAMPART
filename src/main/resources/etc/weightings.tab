@@ -7,8 +7,8 @@
 # weighting balance in the group.
 
 # Groupings (should add up to 1.0)
-contiguity = 0.4
-problems = 0.3
+contiguity = 0.5
+problems = 0.2
 conservation = 0.3
 
 # Contiguity (should add up to 1.0)

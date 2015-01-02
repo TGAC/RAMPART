@@ -20,6 +20,7 @@ package uk.ac.tgac.rampart.stage.analyse.asm.stats;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 /**
@@ -62,7 +63,7 @@ public abstract class MetricMatrix {
 
         for (int i = 0; i < this.nbEntries; i++) {
             for (int j = 0; j < this.nbMetrics; j++) {
-                this.matrix[this.nbMetrics][i] = this.matrix[j][i];
+                this.matrix[this.nbMetrics][i] += this.matrix[j][i];
             }
         }
 
@@ -70,4 +71,20 @@ public abstract class MetricMatrix {
     }
 
     public abstract double[] parseWeightings(List<Pair<String, Double>> list);
+
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        for(int i = 0; i < this.nbEntries; i++) {
+            for(int j = 0; j < this.nbMetrics; j++) {
+                sb.append(new DecimalFormat("0.###").format(this.matrix[j][i]));
+                sb.append("\t");
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
 }

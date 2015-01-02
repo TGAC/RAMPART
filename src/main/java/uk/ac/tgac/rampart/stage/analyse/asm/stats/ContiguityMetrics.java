@@ -261,6 +261,5 @@ public class ContiguityMetrics extends MetricGroup {
             return weightings;
         }
 
-
     }
 }

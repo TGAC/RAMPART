@@ -263,7 +263,7 @@ texinfo_documents = [
 epub_title = u'RAMPART'
 epub_author = u'Daniel Mapleson, Nizar Drou, David Swarbreck'
 epub_publisher = u'Daniel Mapleson, Nizar Drou, David Swarbreck'
-epub_copyright = u'2014, The Genome Analysis Centre'
+epub_copyright = u'2015, The Genome Analysis Centre'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = u'RAMPART'
