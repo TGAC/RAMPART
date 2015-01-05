@@ -1,3 +1,21 @@
+/*
+ * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package uk.ac.tgac.rampart.stage.analyse.asm.analysers;
 
 import org.apache.commons.io.FileUtils;
@@ -92,7 +110,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
             jellyfishArgs.setOutputPrefix(outputPrefix);
             jellyfishArgs.setLowerCount(0);  // Count everything!
-            jellyfishArgs.setHashSize(args.getOrganism().getEstGenomeSize() * args.getOrganism().getPloidy() * 10);
+            jellyfishArgs.setHashSize(args.getOrganism().getGenomeSize() * args.getOrganism().getPloidy() * 10);
             jellyfishArgs.setMerLength(31);       // 31 should be more than sufficient for all organisms (even wheat)
             jellyfishArgs.setBothStrands(true);
             jellyfishArgs.setThreads(args.getThreads());

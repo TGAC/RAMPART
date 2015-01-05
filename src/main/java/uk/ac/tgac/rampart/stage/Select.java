@@ -1,6 +1,6 @@
 /*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
- * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.RampartCLI;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.stage.analyse.asm.selector.AssemblySelector;
@@ -53,6 +54,7 @@ import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -114,6 +116,35 @@ public class Select extends AbstractConanProcess {
             // Create the stats table with information derived from the configuration file.
             AssemblyStatsTable table = this.createTable();
 
+            boolean cegmaSelected = false;
+
+            QuastV23.AssemblyStats refStats = null;
+
+            // If we have a reference run quast on it to get some stats
+            if (args.getOrganism().getReference() != null && args.getOrganism().getReference().getPath() != null) {
+
+                File refOutDir = new File(args.getOutputDir(), "ref_quast");
+                List<File> inputFiles = new ArrayList<>();
+                inputFiles.add(args.getOrganism().getReference().getPath());
+                QuastV23.Args refArgs = new QuastV23.Args();
+                refArgs.setInputFiles(inputFiles);
+                refArgs.setFindGenes(true);
+                refArgs.setThreads(1);
+                refArgs.setEukaryote(args.getOrganism().getPloidy() > 1);
+                refArgs.setOutputDir(refOutDir);
+
+                QuastV23 refQuast = new QuastV23(this.conanExecutorService, refArgs);
+
+                ExecutionResult res = this.conanExecutorService.executeProcess(refQuast, refOutDir, args.jobPrefix + "-refquast", 1, 2000, false);
+
+                QuastV23.Report report = new QuastV23.Report(new File(refOutDir, "report.txt"));
+                refStats = report.getAssemblyStats(0);
+
+                log.info("Reference genome size: " + refStats.getTotalLengthGt0());
+                log.info("Reference GC%: " + refStats.getGcPc());
+                log.info("Reference # Genes: " + refStats.getNbGenes());
+            }
+
             for(AssemblyAnalyser analyser : args.analysers) {
 
                 File reportDir = new File(args.getMassAnalysisDir(), analyser.getName().toLowerCase());
@@ -122,14 +153,20 @@ public class Select extends AbstractConanProcess {
                         table,
                         analyser.isFast() ? new File(reportDir, "longest") : reportDir
                 );
+
+                if (analyser.getName().equalsIgnoreCase("CEGMA")) {
+                    cegmaSelected = true;
+                }
             }
 
             // Select the assembly
             AssemblySelector assemblySelector = new DefaultAssemblySelector(args.getWeightingsFile());
             AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
                     table,
-                    args.getOrganism().getEstGenomeSize(),
-                    args.getOrganism().getEstGcPercentage());
+                    args.getOrganism(),
+                    refStats,
+                    cegmaSelected
+                    );
 
             File bestAssembly = new File(selectedAssembly.getFilePath());
 
@@ -150,9 +187,14 @@ public class Select extends AbstractConanProcess {
             }
 
             // Save table to disk
-            File finalFile = new File(args.getOutputDir(), "scores.tab");
-            table.save(finalFile);
-            log.debug("Saved final results to disk at: " + finalFile.getAbsolutePath());
+            File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
+            table.saveTsv(finalTSVFile);
+            log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
+
+            File finalSummaryFile = new File(args.getOutputDir(), "scores.txt");
+            table.saveSummary(finalSummaryFile);
+            log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
+
 
             stopWatch.stop();
 

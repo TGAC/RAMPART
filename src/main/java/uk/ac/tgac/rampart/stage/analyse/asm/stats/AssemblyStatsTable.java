@@ -1,6 +1,6 @@
-/**
+/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
- * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 package uk.ac.tgac.rampart.stage.analyse.asm.stats;
 
 import org.apache.commons.io.FileUtils;
@@ -68,7 +68,7 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
             String trimmedLine = line.trim();
 
             if (!trimmedLine.isEmpty()) {
-                String[] parts = trimmedLine.split("\\|");
+                String[] parts = trimmedLine.split("\t");
 
                 AssemblyStats stats = new AssemblyStats(parts);
 
@@ -77,47 +77,65 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
         }
     }
 
-    public void save(File outputFile) throws IOException {
+    public void saveTsv(File outputFile) throws IOException {
 
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
 
         // Add the header line
-        lines.add(AssemblyStats.getStatsFileHeader());
+        lines.add(new AssemblyStats().getStatsFileHeader());
 
         // Add the data
         for(AssemblyStats stats : this) {
-            lines.add(stats.toString());
+            lines.add(stats.toTabString());
         }
 
         // Write data to disk
         FileUtils.writeLines(outputFile, lines);
     }
 
-    public AssemblyStatsMatrix generateStatsMatrix() {
 
-        AssemblyStatsMatrix matrix = new AssemblyStatsMatrix(this);
+    public void saveSummary(File outputFile) throws IOException {
 
-        return matrix;
+        List<String> lines = new ArrayList<>();
+
+        // Add the data
+        for(AssemblyStats stats : this) {
+            lines.add(stats.toString() + "\n");
+        }
+
+        // Write data to disk
+        FileUtils.writeLines(outputFile, lines);
+    }
+
+    public void addGroupScores(double[] contiguity, double[] problems, double[] conservation) {
+
+        int i = 0;
+        for(AssemblyStats stats : this) {
+            stats.getContiguity().setScore(contiguity[i]);
+            stats.getProblems().setScore(problems[i]);
+            stats.getConservation().setScore(conservation[i]);
+            i++;
+        }
     }
 
     public void addScores(double[] scores) {
 
         int i = 0;
         for(AssemblyStats stats : this) {
-            stats.setScore(scores[i++]);
+            stats.setFinalScore(scores[i++]);
         }
     }
 
     public AssemblyStats getBest() {
 
-        double max = 0.0;
+        double max = -1.0;
         AssemblyStats best = null;
 
         for(AssemblyStats stats : this) {
 
-            if (stats.getScore() > max) {
+            if (stats.getFinalScore() > max) {
                 best = stats;
-                max = stats.getScore();
+                max = stats.getFinalScore();
             }
         }
 
@@ -159,4 +177,5 @@ public class AssemblyStatsTable extends ArrayList<AssemblyStats> {
 
         return null;
     }
+
 }

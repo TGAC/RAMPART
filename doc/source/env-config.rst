@@ -37,11 +37,13 @@ External process configuration
 ------------------------------
 
 RAMPART can utilise a number of dependencies, each of which may require modification of environment variables in order
-for it to run successfully.  This can be problematic if multiple versions of the same piece of software need ot be
-available on the same environment.  At TGAC we execute python scripts for configure the environment for a tool, other
-sites may use a system like "modules".  Instead of configuring all the tools in one go, RAMPART can execute commands
-specific to each dependency just prior to it's execution.  Currently known process keys are as follows (note that these
-keys are hard coded, please keep the exact wording as below, even if you are using a different version of the software).
+for it to run successfully.  This can be problematic if multiple versions of the same piece of software need to be
+available on the same environment.  At TGAC we execute python scripts for configure the environment for a tool, although other
+institutes may use an alternative system like "modules".  Instead of configuring all the tools in one go, RAMPART can execute commands
+specific to each dependency just prior to it's execution.  Currently known process keys are described below.  In
+general the versions indicated have been tested and will work with RAMPART, however other versions may work if their
+command line interface has not changed significantly from the listed versions.  Note that these keys are hard coded, please keep
+the exact wording as below, even if you are using a different version of the software.
 The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Valid keys::
 
    # Assemblers
@@ -55,6 +57,7 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
    # Dataset improving tools
    Sickle_V1.2
    Quake_V0.3
+   Musket_V1.0
 
    # Assembly improving tools
    Platanus_Gapclose_V1.2

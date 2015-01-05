@@ -15,34 +15,54 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package uk.ac.tgac.rampart.stage;
+package uk.ac.tgac.rampart.stage.analyse.asm.selector;
 
 import org.junit.Test;
-import uk.ac.tgac.conan.process.asmIO.AssemblyEnhancer;
-import uk.ac.tgac.rampart.MockedConanProcess;
+import uk.ac.tgac.rampart.stage.analyse.asm.stats.Scaling;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 
 /**
- * Created with IntelliJ IDEA.
  * User: maplesod
- * Date: 17/10/13
- * Time: 11:57
- * To change this template use File | Settings | File Templates.
+ * Date: 26/04/13
+ * Time: 10:57
  */
-public class AmpStageTest extends MockedConanProcess {
+public class ScalingTest {
 
     @Test
-    public void testMakeStage() throws IOException {
+    public void testStandardNormalise() throws IOException {
 
-        AmpStage.Args args = new AmpStage.Args();
-        args.setTool("SSPACE_Basic_V2.0");
+        double[] a = new double[] {
+                851620,
+                746981,
+                637136,
+                581571,
+                521126,
+                485352
+        };
 
-        AssemblyEnhancer process = new AmpStage(this.conanExecutorService, args).makeStage(args, null);
+        Scaling.standardScale(a, true);
 
-        assertTrue(process != null);
+        assertTrue(a[0] == 0.0);
     }
+
+    @Test
+    public void testDeviationNormalise0() throws IOException {
+
+        double[] a = new double[] {
+                399155917,
+                400283582,
+                402925744,
+                404793555,
+                408730927,
+                411925857
+        };
+
+        Scaling.deviationScale(a, 352155917.0);
+
+        assertTrue(a[0] == 0.7863484554275946);
+    }
+
 }

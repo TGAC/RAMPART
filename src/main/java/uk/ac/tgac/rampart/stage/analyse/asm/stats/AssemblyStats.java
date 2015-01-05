@@ -1,6 +1,6 @@
-/**
+/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
- * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,9 +14,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 package uk.ac.tgac.rampart.stage.analyse.asm.stats;
 
+import org.apache.commons.lang.ArrayUtils;
 import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 
 import java.util.Comparator;
@@ -33,18 +34,12 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     private String dataset;
     private String filePath;
     private String bubblePath;
-    private long nbSeqs;
-    private long nbSeqsGt1K;
-    private long nbBases;
-    private long nbBasesGt1K;
-    private long maxLen;
-    private long n50;
-    private long l50;
-    private double gcPercentage;
-    private double nPercentage;
-    private int nbGenes;
-    private double completenessPercentage;
-    private double score;
+
+    private ContiguityMetrics contiguity;
+    private ProblemMetrics problems;
+    private ConservationMetrics conservation;
+
+    private double finalScore;
 
     public AssemblyStats()
     {
@@ -53,39 +48,25 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.dataset = "";
         this.filePath = "";
         this.bubblePath = "";
-        this.nbSeqs = 0;
-        this.nbSeqsGt1K = 0;
-        this.nbBases = 0L;
-        this.nbBasesGt1K = 0L;
-        this.maxLen = 0L;
-        this.n50 = 0L;
-        this.l50 = 0L;
-        this.gcPercentage = 0.0;
-        this.nPercentage = 0.0;
-        this.nbGenes = 0;
-        this.completenessPercentage = 0.0;
-        this.score = 0.0;
+        this.contiguity = new ContiguityMetrics();
+        this.problems = new ProblemMetrics();
+        this.conservation = new ConservationMetrics();
+        this.finalScore = 0.0;
     }
 
     public AssemblyStats(String[] stats) {
+        this();
+
         int i = 0;
         this.index = Integer.parseInt(stats[i++]);
         this.desc = stats[i++];
         this.dataset = stats[i++];
         this.filePath = stats[i++];
         this.bubblePath = stats[i++];
-        this.nbSeqs = Long.parseLong(stats[i++]);
-        this.nbSeqsGt1K = Long.parseLong(stats[i++]);
-        this.nbBases = Long.parseLong(stats[i++]);
-        this.nbBasesGt1K = Long.parseLong(stats[i++]);
-        this.maxLen = Long.parseLong(stats[i++]);
-        this.n50 = Long.parseLong(stats[i++]);
-        this.l50 = Long.parseLong(stats[i++]);
-        this.gcPercentage = Double.parseDouble(stats[i++]);
-        this.nPercentage = Double.parseDouble(stats[i++]);
-        this.nbGenes = Integer.parseInt(stats[i++]);
-        this.completenessPercentage = Double.parseDouble(stats[i++]);
-        this.score = Double.parseDouble(stats[i++]);
+        this.contiguity.parseStrings((String[])ArrayUtils.subarray(stats, i, i + this.contiguity.getNbMetrics()));      i += this.contiguity.getNbMetrics();
+        this.problems.parseStrings((String[])ArrayUtils.subarray(stats, i, i + this.problems.getNbMetrics()));          i += this.problems.getNbMetrics();
+        this.conservation.parseStrings((String[])ArrayUtils.subarray(stats, i, i + this.conservation.getNbMetrics()));  i += this.conservation.getNbMetrics();
+        this.finalScore = Double.parseDouble(stats[i++]);
     }
 
 
@@ -129,129 +110,78 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
         this.bubblePath = bubblePath;
     }
 
-    public long getNbSeqs() {
-        return nbSeqs;
+    public ContiguityMetrics getContiguity() {
+        return contiguity;
     }
 
-    public void setNbSeqs(long nbSeqs) {
-        this.nbSeqs = nbSeqs;
+    public void setContiguity(ContiguityMetrics contiguity) {
+        this.contiguity = contiguity;
     }
 
-    public long getNbBases() {
-        return nbBases;
+    public ProblemMetrics getProblems() {
+        return problems;
     }
 
-    public void setNbBases(long nbBases) {
-        this.nbBases = nbBases;
+    public void setProblems(ProblemMetrics problems) {
+        this.problems = problems;
     }
 
-    public long getNbSeqsGt1K() {
-        return nbSeqsGt1K;
+    public ConservationMetrics getConservation() {
+        return conservation;
     }
 
-    public void setNbSeqsGt1K(long nbSeqsGt1K) {
-        this.nbSeqsGt1K = nbSeqsGt1K;
+    public void setConservation(ConservationMetrics conservation) {
+        this.conservation = conservation;
     }
 
-    public long getNbBasesGt1K() {
-        return nbBasesGt1K;
+    public double getFinalScore() {
+        return finalScore;
     }
 
-    public void setNbBasesGt1K(long nbBasesGt1K) {
-        this.nbBasesGt1K = nbBasesGt1K;
+    public void setFinalScore(double finalScore) {
+        this.finalScore = finalScore;
     }
 
-    public double getNPercentage() {
-        return nPercentage;
-    }
-
-    public void setNPercentage(double nPercentage) {
-        this.nPercentage = nPercentage;
-    }
-
-    public int getNbGenes() {
-        return nbGenes;
-    }
-
-    public void setNbGenes(int nbGenes) {
-        this.nbGenes = nbGenes;
-    }
-
-    public long getMaxLen() {
-        return maxLen;
-    }
-
-    public void setMaxLen(long maxLen) {
-        this.maxLen = maxLen;
-    }
-
-    public long getN50() {
-        return n50;
-    }
-
-    public void setN50(long n50) {
-        this.n50 = n50;
-    }
-
-    public long getL50() {
-        return l50;
-    }
-
-    public void setL50(long l50) {
-        this.l50 = l50;
-    }
-
-    public double getGcPercentage() {
-        return gcPercentage;
-    }
-
-    public void setGcPercentage(double gcPercentage) {
-        this.gcPercentage = gcPercentage;
-    }
-
-    public double getCompletenessPercentage() {
-        return completenessPercentage;
-    }
-
-    public void setCompletenessPercentage(double completenessPercentage) {
-        this.completenessPercentage = completenessPercentage;
-    }
-
-    public double getScore() {
-        return score;
-    }
-
-    public void setScore(double score) {
-        this.score = score;
-    }
-
-    public static String getStatsFileHeader() {
-        return "index|desc|dataset|asm_path|bubble_path|nb_seqs|nb_seqs_gt_1k|nb_bases|nb_bases_gt_1k|max_len|n50|l50|gc%|n%|nb_genes|completeness|score";
+    public String getStatsFileHeader() {
+        return "index\tdesc\tdataset\tasm_path\tbubble_path\t" +
+                this.contiguity.getTabHeader() + "\t" +
+                this.problems.getTabHeader() + "\t" +
+                this.conservation.getTabHeader() + "\t" +
+                "final_score";
     }
 
 
-    @Override
-    public String toString() {
+    public String toTabString() {
 
-        StringJoiner sj = new StringJoiner("|");
+        StringJoiner sj = new StringJoiner("\t");
 
         sj.add(this.getIndex());
         sj.add(this.getDesc());
         sj.add(this.getDataset());
         sj.add(this.getFilePath());
         sj.add(this.getBubblePath() == null || this.getBubblePath().trim().isEmpty() ? "NA" : this.getBubblePath());
-        sj.add(this.getNbSeqs());
-        sj.add(this.getNbSeqsGt1K());
-        sj.add(this.getNbBases());
-        sj.add(this.getNbBasesGt1K());
-        sj.add(this.getMaxLen());
-        sj.add(this.getN50());
-        sj.add(this.getL50());
-        sj.add(this.getGcPercentage());
-        sj.add(this.getNPercentage());
-        sj.add(this.getNbGenes());
-        sj.add(this.getCompletenessPercentage());
-        sj.add(this.getScore());
+        sj.add(this.contiguity.toTabString());
+        sj.add(this.problems.toTabString());
+        sj.add(this.conservation.toTabString());
+        sj.add(this.getFinalScore());
+
+        return sj.toString();
+    }
+
+    @Override
+    public String toString() {
+
+        StringJoiner sj = new StringJoiner("\n");
+        sj.add("Assembly #: " + this.index);
+        sj.add("Description: " + this.desc);
+        sj.add("Dataset: " + this.dataset);
+        sj.add("Path to Assembly: " + this.filePath);
+        sj.add("Path to Bubble file (if present): " + (this.getBubblePath() == null || this.getBubblePath().trim().isEmpty() ? "NA" : this.getBubblePath()));
+        sj.add(this.contiguity.toString());
+        sj.add(this.problems.toString());
+        sj.add(this.conservation.toString());
+        sj.add("--------------");
+        sj.add("Final Score: " + this.getFinalScore());
 
         return sj.toString();
     }
@@ -259,8 +189,8 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
     @Override
     public int compareTo(AssemblyStats o) {
 
-        Double thisScore = this.score;
-        Double thatScore = o.getScore();
+        Double thisScore = this.finalScore;
+        Double thatScore = o.getFinalScore();
 
         return thisScore.compareTo(thatScore);
     }
@@ -272,4 +202,5 @@ public class AssemblyStats implements Comparable<AssemblyStats> {
             return o1.getIndex() < o2.getIndex() ? -1 : o1.getIndex() == o2.getIndex() ? 0 : 1;
         }
     }
+
 }

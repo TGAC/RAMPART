@@ -1,3 +1,21 @@
+/*
+ * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package uk.ac.tgac.rampart.stage.analyse.asm.analysers;
 
 import org.apache.commons.io.FileUtils;
@@ -12,8 +30,7 @@ import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.process.asm.stats.QuastV23;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAssembliesArgs;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
+import uk.ac.tgac.rampart.stage.analyse.asm.stats.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,12 +89,17 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         // Add quast job id to list
         List<ExecutionResult> jobResults = new ArrayList<>();
 
+        File reference = args.getOrganism().getReference() != null ? args.getOrganism().getReference().getPath() : null;
+
+        long estGenomeSize = reference != null ? 0 : args.getOrganism().getGenomeSize();
+
 
         QuastV23 quastProcess = this.makeQuast(
                 assemblies,
                 outputDir,
-                args.getOrganism().getEstGenomeSize(),
+                estGenomeSize,
                 args.getOrganism().getPloidy() > 1,
+                reference,
                 args.getThreads(),
                 false // Assume all sequences are not scaffolds... I don't like this options much in Quast.
         );
@@ -114,16 +136,24 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                     }
 
                     // Override attributes
-                    stats.setN50(qStats.getN50());
-                    stats.setL50(qStats.getL50());
-                    stats.setMaxLen(qStats.getLargestContig());
-                    stats.setGcPercentage(qStats.getGcPc());
-                    stats.setNbSeqs(qStats.getNbContigsGt0());
-                    stats.setNbSeqsGt1K(qStats.getNbContigsGt1k());
-                    stats.setNbBases(qStats.getTotalLengthGt0());
-                    stats.setNbBasesGt1K(qStats.getTotalLengthGt1k());
-                    stats.setNPercentage(qStats.getNsPer100k() / 1000.0);
-                    stats.setNbGenes(qStats.getNbGenes());
+                    ContiguityMetrics contiguity = stats.getContiguity();
+
+                    contiguity.setN50(qStats.getN50());
+                    contiguity.setL50(qStats.getL50());
+                    contiguity.setMaxLen(qStats.getLargestContig());
+                    contiguity.setNbSeqs(qStats.getNbContigsGt0());
+                    contiguity.setNbSeqsGt1K(qStats.getNbContigsGt1k());
+                    contiguity.setNA50(qStats.getNA50());
+
+                    ProblemMetrics problems = stats.getProblems();
+                    problems.setnPercentage(qStats.getNsPer100k() / 1000.0);
+                    problems.setNbMisassembliesFromRef(qStats.getNbMisassemblies());
+
+                    ConservationMetrics conservation = stats.getConservation();
+                    conservation.setGcPercentage(qStats.getGcPc());
+                    conservation.setNbBases(qStats.getTotalLengthGt0());
+                    conservation.setNbBasesGt1K(qStats.getTotalLengthGt1k());
+                    conservation.setNbGenes(qStats.getNbGenes());
                 }
             }
         }
@@ -148,11 +178,13 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
 
-    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, int threads, boolean scaffolds) {
+    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, File reference, int threads, boolean scaffolds) {
+
         QuastV23.Args quastArgs = new QuastV23.Args();
         quastArgs.setInputFiles(assemblies);
         quastArgs.setOutputDir(outputDir);   // No need to create this directory first... quast will take care of that
         quastArgs.setEstimatedGenomeSize(genomeSize);
+        quastArgs.setReference(reference);
         quastArgs.setFindGenes(true);
         quastArgs.setEukaryote(eukaryote);
         quastArgs.setThreads(threads);

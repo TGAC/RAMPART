@@ -21,13 +21,16 @@ http://rampart.readthedocs.org/en/latest/index.html
 Installation
 ============
 
-There are two ways to install RAMPART, the easiest and quickest way is from a distributable tarball.  The other is from
-source.
+There are three ways to install RAMPART: using homebrew, from tarball, and from source code.  All installation methods
+require you to have JRE V1.7+ installed.  For more detailed installation instructions please consult the RAMPART manual.
 
-To acquire the tarball please go to the releases section of the RAMPART github page: ``https://github.com/TGAC/RAMPART/releases``   
+To install from homebrew, please first ensure you have homebrew or linuxbrew installed and the homebrew science repo tapped.
+Then simply type: ``brew install rampart``.
+
+To install from tarball please go to the releases section of the RAMPART github page: ``https://github.com/TGAC/RAMPART/releases``   
 Then extract to a directory of your choice: ``tar -xvf <name_of_tarball>``.
 
-From source, you will first need the following dependencies installed:
+Alternatively, from source, you will first need the following dependencies installed:
 
 * GIT
 * Maven 3
@@ -47,8 +50,11 @@ specific URLs.
 Assuming there were no compilation errors. The build can be found in ./build/rampart-<version>. There should also be a
 dist sub directory which will contain a tarball suitable for installing RAMPART on other systems.
 
-Next RAMPART's dependencies must be installed. To save time finding all these tools on the internet RAMPART provides two options.  The first and recommended approach is
-to download a compressed tarball of all supported versions of the tools, which is available on the github releases page:
+Dependencies
+------------
+
+Next RAMPART's dependencies must be installed. To save time finding all these tools on the internet RAMPART provides two options.  
+The first and recommended approach is to download a compressed tarball of all supported versions of the tools, which is available on the github releases page:
 ``https://github.com/TGAC/RAMPART/releases``.  The second option is to download them all to a directory of your
 choice.  The one exception to this is SSPACE, which requires you to fill out a form prior to download.  RAMPART can help
 with this.  After the core RAMPART pipeline is compiled, type: ``rampart-download-deps <dir>``.  The tool will place all
@@ -129,14 +135,18 @@ Email: daniel.mapleson@tgac.ac.uk
 Acknowledgements
 ================
 
-* Nizar Drou (Formerly TGAC)
-* David Swarbreck (TGAC)
-* Bernardo Clavijo (TGAC)
-* Robert Davey (TGAC)
-* Sarah Bastkowski (TGAC)
-* Tony Burdett (EBI)
-* Ricardo Ramirez (TGAC)
-* Purnima Pachori (TGAC)
-* Mark McCullen (TGAC)
+* Nizar Drou
+* David Swarbreck
+* Bernardo Clavijo
+* Robert Davey
+* Sarah Bastkowski
+* Tony Burdett
+* Ricardo Ramirez
+* Purnima Pachori
+* Mark McCullen
+* Hugo Taveres
 * Ram Krishna Shrestha
+* Darren Waite
+* Tim Stitt
+* Shaun Jackman
 * And everyone who contributed to making the tools RAMPART depends on!

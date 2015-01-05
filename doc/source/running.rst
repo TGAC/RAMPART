@@ -26,17 +26,37 @@ working example configuration file once you download the raw reads from: ``http:
 The genome to assemble
 ----------------------
 
-We recommend the user enters these properties for the genome if known:
+Different genomes have different properties.  The more information provided the better the analysis of the assembly and
+the more features are enabled in the RAMPART pipeline.  As a minimum the user must enter the name of the genome to assemble
+this is used for reporting and logging purposes and if a prefix for name standardisation isn't provided initials taken
+from the name are used in the filename and headers of the final assembly.  In addition it is recommended that the user
+provides the genome ploidy as this is required if you choose to run the ALLPATHS-LG assembler.  It is also useful for
+calculating kmer counting hash sizes, analysing the assemblies.  If you set to "2", i.e. diploid, then assembly
+enhancement tools may make use of bubble files if they are available and if the tools are capable.  If you plan to assemble
+polyploid genomes please check that the third-party tools also support this.  ALLPATHs-LG for example cannot currently
+assembly polyploid genomes for example.  An example XML snippet containing this basic information is shown below::
 
-* Organism name - this is used for reporting and logging purposes and if a prefix for name standardisation isn't provided initials taken from the name are used in the filename and headers of the final assembly.
-* Genome ploidy - this is required if you choose to run the ALLPATHS-LG assembler, and is useful for calculating kmer counting hash sizes.  If you set to "2", i.e. diploid, then assembly enhancement tools may make use of bubble files if they are available and if the tools are capable.
-* Estimated Genome Size - has many purposes: 1. Can be used to compare how close the assembly size is the genome size and used as an assembly metric for assembly comparison.  2. If Kmer counting, can be used to automatically determine size of the hash table to use.  3. If requested, this can be used to calculate coverage levels for subsampling reads.
-* Estimated GC percentage - Used as an assembly metric to compare assembly GC with the expected GC.
+   <organism name="Escherichia coli" ploidy="1"/>
 
-Any example XML snippet containing this information is shown below::
+If you plan to assemble a variant of an organism that already has a good quality assembly then the user should also provide
+the fasta file for that assembly.  This allows RAMPART to make better assessments of assemblies produced as part of the
+pipeline and enables input read subsampling (coverage reduction).  It also is used to make better estimates of required
+memory usage for various tools.  An example XML snippet containing a genome reference is shown below::
 
-   <organism name="Escherichia coli" ploidy="1" est_genome_size="4600000" 
-             est_gc_percentage="50.0"/>
+   <organism name="Escherichia coli" ploidy="1">
+      <reference name="EcoliK12" path="EcoliK12.fasta"/>
+   </organism>
+
+
+If you are assembling a non-model organism an suitable existing reference may not be available.  In this case it is
+beneficial if you have any expecations of genomic properties that you provide them in order to make better assembly assessments
+and enable input read subsampling an memory requirement estimation.  Estimated input values can be entered as follows.  Note
+that these are optional, so the user can specify any or all of the properties as known, although the estimated genome size
+is particularly useful::
+
+   <organism name="Escherichia coli" ploidy="1">
+      <estimated genome_size="4600000" gc="50.8" genes="4300"/>
+   </organism>
 
 
 Defining datasets

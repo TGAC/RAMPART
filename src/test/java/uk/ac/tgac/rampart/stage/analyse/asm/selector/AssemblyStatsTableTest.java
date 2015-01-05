@@ -1,6 +1,6 @@
-/**
+/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
- * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 package uk.ac.tgac.rampart.stage.analyse.asm.selector;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
-import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsMatrix;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
 
 import java.io.File;
@@ -51,10 +50,8 @@ public class AssemblyStatsTableTest {
 
         AssemblyStatsTable table = new AssemblyStatsTable(statsFile1);
 
-        AssemblyStatsMatrix matrix = table.generateStatsMatrix();
-
         AssemblyStats bestStats = table.getBest();
 
-        assertTrue(bestStats.getScore() == 94.5);
+        assertTrue(bestStats.getFinalScore() == 94.5);
     }
 }

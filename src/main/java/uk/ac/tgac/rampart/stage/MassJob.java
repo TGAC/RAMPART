@@ -1,6 +1,6 @@
-/**
+/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
- * Copyright (C) 2013  Daniel Mapleson - TGAC
+ * Copyright (C) 2015  Daniel Mapleson - TGAC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.cli.CommandLine;
@@ -232,6 +232,8 @@ public class MassJob extends AbstractConanProcess {
 
             subsampledLib.setName(lib.getName() + "-" + coverage + "x");
 
+            final long genomeSize = args.getOrganism().getGenomeSize();
+
             if (subsampledLib.isPairedEnd()) {
 
                 // This calculation is much quicker if library is uniform, in this case we just calculate from the number
@@ -242,10 +244,10 @@ public class MassJob extends AbstractConanProcess {
                                 this.getNbBases(lib.getFile2(), subsamplingDir, jobPrefix + "-file2-base_count");
 
                 // Calculate the probability of keeping an entry
-                double probability = (double)sequencedBases / (double)args.getOrganism().getEstGenomeSize() / 2.0;
+                double probability = (double)sequencedBases / (double)genomeSize / 2.0;
 
                 log.debug("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
-                        "Estimated genome size is: " + args.getOrganism().getEstGenomeSize() + "; so we plan only to keep " +
+                        "Estimated genome size is: " + genomeSize + "; so we plan only to keep " +
                         probability + "% of the reads to achieve approximately " + coverage + "X coverage");
 
 
@@ -272,10 +274,10 @@ public class MassJob extends AbstractConanProcess {
                         this.getNbBases(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-base_count");
 
                 // Calculate the probability of keeping an entry
-                double probability = (double)sequencedBases / (double)args.getOrganism().getEstGenomeSize();
+                double probability = (double)sequencedBases / (double)genomeSize;
 
                 log.debug("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
-                        "Estimated genome size is: " + args.getOrganism().getEstGenomeSize() + "; so we plan only to keep " +
+                        "Estimated genome size is: " + genomeSize + "; so we plan only to keep " +
                         probability + "% of the reads to achieve approximately " + coverage + "X coverage");
 
                 subsampledLib.setFiles(
@@ -786,9 +788,9 @@ public class MassJob extends AbstractConanProcess {
                 CoverageRange defaultCoverageRange = new CoverageRange();
                 log.info("No coverage range specified for \"" + this.name + "\" running assembler with default range: " + defaultCoverageRange.toString());
             }
-            else if (organism == null || organism.getEstGenomeSize() <= 0) {
+            else if (organism == null || !organism.isGenomeSizeAvailable()) {
                 CoverageRange defaultCoverageRange = new CoverageRange();
-                log.info("No estimated genome size specified.  Not possible to subsample to desired range without a genome " +
+                log.info("No genome size is available or specified.  Not possible to subsample to desired range without a genome " +
                         "size estimate. Running assembler with default coverage range: " + defaultCoverageRange.toString());
             }
             else if (coverageRange.validate()) {
