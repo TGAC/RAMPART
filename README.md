@@ -113,6 +113,25 @@ RAMPART and start running jobs.  This manual can be found in the ``doc`` subdire
    http://rampart.readthedocs.org/en/latest/index.html
 
 
+Additional links::
+
+   Github page: https://github.com/TGAC/RAMPART
+   Project page: http://www.tgac.ac.uk/rampart/
+
+
+
+Citing
+======
+
+To cite RAMPART please use the following reference::
+
+   RAMPART: a workflow management system for de novo genome assembly
+   Daniel Mapleson; Nizar Drou; David Swarbreck
+   Bioinformatics 2015;
+   doi: 10.1093/bioinformatics/btv056
+
+
+
 License
 =======
 

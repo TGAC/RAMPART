@@ -3,7 +3,18 @@
 Citing RAMPART
 ==============
 
-The paper for RAMPART is currently being prepared.  If you use RAMPART in your work and wish to publish in the meantime
-please refer the project's web page: http://www.tgac.ac.uk/RAMPART/
+To cite RAMPART please use the following reference:
 
+RAMPART: a workflow management system for de novo genome assembly
+Daniel Mapleson; Nizar Drou; David Swarbreck
+Bioinformatics 2015;
+doi: 10.1093/bioinformatics/btv056
+
+
+Additional information:
+
+PMID: 25637556
+Github page: https://github.com/TGAC/RAMPART
+Project page: http://www.tgac.ac.uk/rampart/
+Latest manual: http://rampart.readthedocs.org/en/latest/index.html
 

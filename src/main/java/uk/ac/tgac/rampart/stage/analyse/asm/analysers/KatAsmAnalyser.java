@@ -110,7 +110,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             JellyfishCountV11.Args jellyfishArgs = new JellyfishCountV11.Args();
             jellyfishArgs.setOutputPrefix(outputPrefix);
             jellyfishArgs.setLowerCount(0);  // Count everything!
-            jellyfishArgs.setHashSize(args.getOrganism().getGenomeSize() * args.getOrganism().getPloidy() * 10);
+            jellyfishArgs.setHashSize(f.length() * 2);      // Use file length * 2.  Should be an adequate proxy for the hash size of an assembly.
             jellyfishArgs.setMerLength(31);       // 31 should be more than sufficient for all organisms (even wheat)
             jellyfishArgs.setBothStrands(true);
             jellyfishArgs.setThreads(args.getThreads());
@@ -151,6 +151,8 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         jobResults.clear();
 
         Collection<File> readCounts = FileUtils.listFiles(args.getReadsAnalysisDir(), new String[] {"jf31_0"}, true);
+
+        log.info("Running KAT comp on " + readCounts.size() + " read hashes and " + jellyfishHashes.size() + " assembly hashes.");
 
         // Loop through jellyfish hashes
         i = 1;
