@@ -20,7 +20,9 @@
 <!-- This is an example job configuration file assembling the Ecoli genome.  To acquire the raw reads please go to
      http://www.ebi.ac.uk/ena/data/view/DRR015910 -->
 <rampart author="dan" collaborator="someone" institution="tgac" title="EColi assembly of simulated reads">
-    	<organism name="ecoli" ploidy="1" est_genome_size="4600000"/>
+    	<organism name="ecoli" ploidy="1">
+            <estimated genome_size="4600000" gc="50.8" genes="4300"/>
+        </organism>
 
     	<libraries>
         	<library name="ecoli" read_length="95" type="PE" avg_insert_size="600" insert_err_tolerance="0.3" orientation="FR"  phred="PHRED_33">

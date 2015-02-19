@@ -39,6 +39,8 @@ import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.util.*;
+import uk.ac.ebi.fgpt.conan.util.StringJoiner;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
@@ -312,7 +314,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         // Start jellyfish
         final ExecutionResult id = this.conanExecutorService.executeProcess(
                 jellyfishProcess,
-                args.getOutputDir(),
+                new File(outputDir, ecqName),
                 jobName,
                 args.getThreadsPerProcess(),
                 args.getMemoryPerProcess(),
@@ -361,10 +363,10 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
         long hashSize = organism.getGenomeSize() * organism.getPloidy() * 10;
 
-        // Check to make sure we don't have anything weird... if we do use a default of 5 billion (this should be enough
+        // Check to make sure we don't have anything weird... if we do use a default of 100 million (this should be enough
         // for most organisms running through RAMPART, although it might still fail on low mem systems.  Need to think
         // this through...
-        return hashSize < 0 ? 5000000000L : hashSize;
+        return hashSize <= 0 ? 100000000L : hashSize;
     }
 
     protected JellyfishCountV11 makeJellyfishCount(String inputFilesStr, String outputPrefix, Organism organism, int threads) throws ProcessExecutionException, IOException {
@@ -395,7 +397,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
     }
 
     protected String makeInputStringFromLib(Library lib) throws ProcessExecutionException {
-        String inputFilesStr = "";
+        uk.ac.ebi.fgpt.conan.util.StringJoiner sj = new StringJoiner(" ");
 
         for (File file : lib.getFiles()) {
 
@@ -403,10 +405,10 @@ public class KmerAnalysisReads extends AbstractConanProcess {
                 throw new ProcessExecutionException(2, "Couldn't locate: " + file.getAbsolutePath() + "; for kmer counting.");
             }
 
-            inputFilesStr = StringUtils.join(file.getAbsolutePath(), " ");
+            sj.add(file.getAbsolutePath());
         }
 
-        inputFilesStr = inputFilesStr.trim();
+        String inputFilesStr = sj.toString();
 
         // Check we have something plausible to work with
         if (inputFilesStr.isEmpty())
