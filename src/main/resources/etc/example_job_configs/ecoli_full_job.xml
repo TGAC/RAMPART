@@ -21,45 +21,46 @@
      http://www.ebi.ac.uk/ena/data/view/DRR015910 -->
 <rampart author="dan" collaborator="someone" institution="tgac" title="EColi assembly of simulated reads">
     	<organism name="ecoli" ploidy="1">
-            <estimated genome_size="4600000" gc="50.8" genes="4300"/>
+            <estimated est_genome_size="4600000" est_gc_percentage="50.8" est_nb_genes="4300"/>
         </organism>
 
     	<libraries>
         	<library name="ecoli" read_length="95" type="PE" avg_insert_size="600" insert_err_tolerance="0.3" orientation="FR"  phred="PHRED_33">
             		<files>
-                		<path><!-- path to ... -->DRR015910_1.fastq</path>
-                		<path><!-- path to ... -->DRR015910_2.fastq</path>
+                        <!--TODO include full path below, or make sure these files are in your working dir -->
+                		<path>DRR015910_1.fastq</path>
+                		<path>DRR015910_2.fastq</path>
             		</files>
         	</library>        
     	</libraries>
     	<pipeline>
         	<mecq parallel="false">
-            		<ecq name="quake" tool="Quake_V0.3" libs="ecoli" threads="32" memory="60000" parallel="false"/>
+            		<ecq name="quake" tool="Quake_V0.3" libs="ecoli" threads="8" memory="30000" parallel="false"/>
         	</mecq>
-        	<analyse_reads kmer="true" parallel="true" threads="32" memory="60000"/>
-        	<kmer_calc threads="32" memory="20000"/>
+        	<analyse_reads kmer="true" parallel="true" threads="8" memory="30000"/>
+        	<kmer_calc threads="8" memory="20000"/>
         	<mass parallel="true">
-            		<job name="abyss-raw" tool="ABYSS_V1.5" threads="32" memory="60000" parallel="true">
+            		<job name="abyss-raw" tool="ABYSS_V1.5" threads="8" memory="30000" parallel="true">
                 		<inputs>
                     			<input ecq="raw" lib="ecoli"/>
                 		</inputs>
             		</job>
-            		<job name="abyss-quake" tool="ABYSS_V1.5" threads="32" memory="60000" parallel="true">
+            		<job name="abyss-quake" tool="ABYSS_V1.5" threads="8" memory="30000" parallel="true">
                 		<inputs>
                     			<input ecq="quake" lib="ecoli"/>
                 		</inputs>
             		</job>
-            		<job name="velvet-raw" tool="Velvet_V1.2" threads="32" memory="60000" parallel="true">
+            		<job name="velvet-raw" tool="Velvet_V1.2" threads="8" memory="30000" parallel="true">
                 		<inputs>
                     			<input ecq="raw" lib="ecoli"/>
                 		</inputs>
             		</job>
-            		<job name="velvet-quake" tool="Velvet_V1.2" threads="32" memory="60000" parallel="true">
+            		<job name="velvet-quake" tool="Velvet_V1.2" threads="8" memory="30000" parallel="true">
                 		<inputs>
                     			<input ecq="quake" lib="ecoli"/>
                 		</inputs>
             		</job>
-            		<job name="spades" tool="SPAdes_V3.1" threads="32" memory="60000" parallel="true">
+            		<job name="spades" tool="SPAdes_V3.1" threads="8" memory="30000" parallel="true">
                 		<inputs>
                     			<input ecq="raw" lib="ecoli"/>
                 		</inputs>
@@ -67,25 +68,25 @@
             		
         	</mass>
         	<analyse_mass parallel="true">
-        		<tool name="QUAST" threads="32" memory="10000"/>
-        		<tool name="KAT" threads="32" memory="100000"/>
+        		<tool name="QUAST" threads="8" memory="10000"/>
+        		<tool name="KAT" threads="8" memory="30000"/>
         	</analyse_mass>
         	<select_mass/>
         	<amp>
-		        <stage tool="SOAP_Scaffold_V2.4" threads="32" memory="60000">
+		        <stage tool="SOAP_Scaffold_V2.4" threads="8" memory="30000">
                         	<inputs>
                                 	<input ecq="quake" lib="ecoli"/>
                                 </inputs>
                         </stage>
 
-		        <stage tool="SOAP_GapCloser_V1.12" threads="32" memory="60000">
+		        <stage tool="SOAP_GapCloser_V1.12" threads="8" memory="30000">
                         	<inputs>
                                 	<input ecq="quake" lib="ecoli"/>
                                 </inputs>
                         </stage>
         	</amp>
         	<analyse_amp>
-        		<tool name="QUAST" threads="32" memory="10000"/>
+        		<tool name="QUAST" threads="8" memory="10000"/>
         	</analyse_amp>
         	<finalise prefix="EcoliK12_V1"/>
     	</pipeline>

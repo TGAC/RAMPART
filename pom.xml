@@ -23,7 +23,7 @@
 
 	<groupId>uk.ac.tgac.rampart</groupId>
 	<artifactId>rampart</artifactId>
-	<version>0.11.1</version>
+	<version>0.11.2</version>
 	<packaging>jar</packaging>
 
     <name>RAMPART</name>
@@ -217,8 +217,12 @@
                             <id>rampart-clean</id>
                         </program>
                         <program>
-                            <mainClass>uk.ac.tgac.rampart.jellyswarm.JellyswarmCLI</mainClass>
+                            <mainClass>uk.ac.tgac.jellyswarm.JellyswarmCLI</mainClass>
                             <id>jellyswarm</id>
+                        </program>
+                        <program>
+                            <mainClass>uk.ac.tgac.citadel.CitadelCLI</mainClass>
+                            <id>citadel</id>
                         </program>
                     </programs>
                 </configuration>
@@ -473,7 +477,7 @@
         <dependency>
             <groupId>uk.ac.tgac.conan</groupId>
             <artifactId>tgac-conan-process-wrappers</artifactId>
-            <version>0.11.1</version>
+            <version>0.11.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-cli</groupId>

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.tgac.rampart.jellyswarm;
+package uk.ac.tgac.jellyswarm;
 
 import org.apache.commons.io.FileUtils;
 
@@ -31,7 +31,7 @@ public class FileFinder {
 
     public static List<FilePair> find(File inputDir, boolean recursive, boolean paired) throws IOException {
 
-        Collection<File> files = FileUtils.listFiles(inputDir, new String[]{"fastq", "fq"}, recursive);
+        Collection<File> files = FileUtils.listFiles(inputDir, new String[]{"fastq", "fq", "fastq.gz", "fq.gz"}, recursive);
 
         java.util.List<File> fileList = new ArrayList<>(files);
 
@@ -42,7 +42,7 @@ public class FileFinder {
             }
         });
 
-        List<uk.ac.tgac.rampart.jellyswarm.FilePair> pairedFiles = new ArrayList<>();
+        List<uk.ac.tgac.jellyswarm.FilePair> pairedFiles = new ArrayList<>();
 
         if (paired) {
 
@@ -54,13 +54,13 @@ public class FileFinder {
                 File f1 = fileList.get(i);
                 File f2 = fileList.get(i+1);
 
-                pairedFiles.add(new uk.ac.tgac.rampart.jellyswarm.FilePair(f1, f2));
+                pairedFiles.add(new uk.ac.tgac.jellyswarm.FilePair(f1, f2));
             }
         }
         else {
 
             for(File f1 : fileList) {
-                pairedFiles.add(new uk.ac.tgac.rampart.jellyswarm.FilePair(f1, null));
+                pairedFiles.add(new uk.ac.tgac.jellyswarm.FilePair(f1, null));
             }
         }
 

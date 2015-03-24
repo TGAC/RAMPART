@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.tgac.rampart.jellyswarm;
+package uk.ac.tgac.citadel.stage;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.time.StopWatch;
@@ -27,13 +27,24 @@ import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.*;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
+import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
+import uk.ac.ebi.fgpt.conan.factory.DefaultTaskFactory;
+import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.ConanUser;
 import uk.ac.ebi.fgpt.conan.model.context.*;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
+import uk.ac.ebi.fgpt.conan.service.DefaultExecutorService;
+import uk.ac.ebi.fgpt.conan.service.DefaultProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.ebi.fgpt.conan.service.exception.TaskExecutionException;
+import uk.ac.tgac.conan.core.util.PathUtils;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
+import uk.ac.tgac.jellyswarm.FileFinder;
+import uk.ac.tgac.jellyswarm.FilePair;
+import uk.ac.tgac.jellyswarm.JellyswarmCLI;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,19 +58,19 @@ import java.util.List;
  * Time: 14:41
  * To change this template use File | Settings | File Templates.
  */
-public class CounterProcess extends AbstractConanProcess {
+public class Jellyswarm extends AbstractConanProcess {
 
-    private static Logger log = LoggerFactory.getLogger(CounterProcess.class);
+    private static Logger log = LoggerFactory.getLogger(Jellyswarm.class);
 
-    public CounterProcess() {
+    public Jellyswarm() {
         this(null);
     }
 
-    public CounterProcess(ConanExecutorService ces) {
+    public Jellyswarm(ConanExecutorService ces) {
        this(ces, new Args());
     }
 
-    public CounterProcess(ConanExecutorService ces, Args args) {
+    public Jellyswarm(ConanExecutorService ces, Args args) {
         super("", args, new Params(), ces);
     }
 
@@ -74,72 +85,53 @@ public class CounterProcess extends AbstractConanProcess {
             // Make a shortcut to the args
             Args args = (Args) this.getProcessArgs();
 
-            // Gets grouped files
-            List<FilePair> files = FileFinder.find(args.getInputDir(), args.isRecursive(), args.isPaired());
-
-            log.info("Found " + files.size() + " samples to process.");
-
-            List<ExecutionResult> jobResults = new ArrayList<>();
-
             // Make the output directory for this child job (delete the directory if it already exists)
-            args.getOutputDir().mkdirs();
+            PathUtils.cleanDirectory(args.getOutputDir());
 
-            int i =0;
-            for(FilePair filePair : files) {
+            uk.ac.tgac.jellyswarm.Jellyswarm.Args jellyswarmArgs = new uk.ac.tgac.jellyswarm.Jellyswarm.Args();
+            jellyswarmArgs.setInputDir(args.getInputDir());
+            jellyswarmArgs.setOutputDir(args.getOutputDir());
+            jellyswarmArgs.setPaired(args.isPaired());
+            jellyswarmArgs.setThreads(args.getThreads());
+            jellyswarmArgs.setJobPrefix(args.getJobPrefix());
+            jellyswarmArgs.setHashSize(4000000000L);
+            jellyswarmArgs.setThreads(args.getThreads());
+            jellyswarmArgs.setRecursive(false);
+            jellyswarmArgs.setLowerCount(args.getLowerCount());
 
-                JellyfishCountV11.Args jArgs = new JellyfishCountV11.Args();
-                jArgs.setInputFile(args.isPaired() ?
-                        filePair.getGlobedFile().getAbsolutePath() :
-                        filePair.getLeft().getAbsolutePath());
-                jArgs.setOutputPrefix(args.getOutputDir().getAbsolutePath() + "/" + filePair.getNamePrefix() + "_count.jf31");
-                jArgs.setMerLength(31);
-                jArgs.setHashSize(4000000000L);
-                jArgs.setThreads(args.getThreads());
-                jArgs.setBothStrands(true);
-                jArgs.setLowerCount(args.getLowerCount());
-                jArgs.setCounterLength(32);
+            uk.ac.tgac.jellyswarm.Jellyswarm.Pipeline jellyswarm = new uk.ac.tgac.jellyswarm.Jellyswarm.Pipeline(jellyswarmArgs, this.conanExecutorService);
 
-                JellyfishCountV11 jProc = new JellyfishCountV11(this.conanExecutorService, jArgs);
+            // Create a guest user
+            ConanUser user = new GuestUser("citadel@tgac.ac.uk");
 
-                // Execute the assembler
-                ExecutionResult result = this.conanExecutorService.executeProcess(
-                        jProc,
-                        args.getOutputDir(),
-                        args.getJobPrefix() + "-" + i,
-                        args.getThreads(),
-                        args.getMemory(),
-                        args.isRunParallel());
+            // Create the AMP task
+            ConanTask<uk.ac.tgac.jellyswarm.Jellyswarm.Pipeline> jellyswarmTask = new DefaultTaskFactory().createTask(
+                    jellyswarm,
+                    0,
+                    jellyswarm.getArgs().getArgMap(),
+                    ConanTask.Priority.HIGHEST,
+                    user);
 
-                // Add assembler id to list
-                jobResults.add(result);
+            jellyswarmTask.setId("Jellyswarm");
+            jellyswarmTask.submit();
 
-                i++;
-            }
-
-            // Wait for all assembly jobs to finish if they are running in parallel.
-            if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Jellyfish counter jobs were executed in parallel, waiting for all to complete");
-                this.conanExecutorService.executeScheduledWait(
-                        jobResults,
-                        args.getJobPrefix() + "-group*",
-                        ExitStatus.Type.COMPLETED_ANY,
-                        args.getJobPrefix() + "-wait",
-                        args.getOutputDir());
-
-                jobResults.clear();
+            // Run the AMP pipeline
+            TaskResult result;
+            try {
+                result = jellyswarmTask.execute(executionContext);
+            } catch (TaskExecutionException e) {
+                throw new ProcessExecutionException(-1, e);
             }
 
             stopWatch.stop();
 
-            TaskResult taskResult = new DefaultTaskResult("citadel-jellyswarm-count", true, jobResults, stopWatch.getTime() / 1000L);
-
             return new DefaultExecutionResult(
-                    taskResult.getTaskName(),
+                    result.getTaskName(),
                     0,
                     new String[] {},
                     null,
                     -1,
-                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
+                    new ResourceUsage(result.getMaxMemUsage(), result.getActualTotalRuntime(), result.getTotalExternalCputime()));
         }
         catch(IOException e) {
             throw new ProcessExecutionException(-1, e);
@@ -154,20 +146,28 @@ public class CounterProcess extends AbstractConanProcess {
 
     @Override
     public String getName() {
-        return "Counter";
+        return "Jellyswarm";
     }
 
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        JellyfishCountV11 count = new JellyfishCountV11(this.conanExecutorService);
+        uk.ac.tgac.jellyswarm.Jellyswarm.Pipeline js = null;
 
-        if (!count.isOperational(executionContext)) {
-            log.warn("Jellyfish count is NOT operational.");
+        try {
+            js = new uk.ac.tgac.jellyswarm.Jellyswarm.Pipeline(null, this.conanExecutorService);
+        }
+        catch (IOException e) {
+            log.warn("Jellyswarm is NOT operational.");
             return false;
         }
 
-        log.info("Jellyfish count is operational.");
+        if (!js.isOperational(executionContext)) {
+            log.warn("Jellyswarm is NOT operational.");
+            return false;
+        }
+
+        log.info("Jellyswarm is operational.");
 
         return true;
     }

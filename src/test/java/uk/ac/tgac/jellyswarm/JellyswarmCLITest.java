@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.tgac.rampart.jellyswarm;/*
+package uk.ac.tgac.jellyswarm;/*
  * RAMPART - Robust Automatic MultiPle AssembleR Toolkit
  * Copyright (C) 2013  Daniel Mapleson - TGAC
  *

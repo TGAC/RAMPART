@@ -16,13 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.tgac.rampart.jellyswarm;
+package uk.ac.tgac.citadel;
 
 import org.apache.commons.lang.StringUtils;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
+import uk.ac.tgac.citadel.stage.*;
+import uk.ac.tgac.jellyswarm.CounterProcess;
+import uk.ac.tgac.jellyswarm.StatsProcess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,32 +37,82 @@ import java.util.List;
  * Time: 09:44
  * To change this template use File | Settings | File Templates.
  */
-public enum JellyswarmStage {
+public enum CitadelStage {
 
-    COUNTER {
+    DECOMPRESS {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new CounterProcess.Params().getConanParameters();
+            return new Decompress.Params().getConanParameters();
         }
 
         @Override
         public AbstractConanProcess create(ConanExecutorService ces, ProcessArgs processArgs) {
-            return new CounterProcess(ces, (CounterProcess.Args)processArgs);
+            return new Decompress(ces, (Decompress.Args)processArgs);
         }
     },
-    STATS {
+    JELLYSWARM {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new StatsProcess.Params().getConanParameters();
+            return new Jellyswarm.Params().getConanParameters();
         }
 
         @Override
         public AbstractConanProcess create(ConanExecutorService ces, ProcessArgs processArgs) {
-            return new StatsProcess(ces, (StatsProcess.Args)processArgs);
+            return new Jellyswarm(ces, (Jellyswarm.Args)processArgs);
         }
-    };
+    },
+    RAMPART {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new Rampart.Params().getConanParameters();
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces, ProcessArgs processArgs) {
+            return new Rampart(ces, (Rampart.Args)processArgs);
+        }
+    },
+    ASSEMBLE {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new Assemble.Params().getConanParameters();
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces, ProcessArgs processArgs) {
+            return new Assemble(ces, (Assemble.Args)processArgs);
+        }
+    },
+    ANNOTATE {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new Annotate.Params().getConanParameters();
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces, ProcessArgs processArgs) {
+            return new Annotate(ces, (Annotate.Args)processArgs);
+        }
+    },
+    PACKAGE {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new Annotate.Params().getConanParameters();
+        }
+
+        @Override
+        public AbstractConanProcess create(ConanExecutorService ces, ProcessArgs processArgs) {
+            return new Annotate(ces, (Annotate.Args)processArgs);
+        }
+    },
+
+    ;
 
     public abstract List<ConanParameter> getParameters();
 
@@ -69,14 +122,14 @@ public enum JellyswarmStage {
 
         List<String> stageNames = new ArrayList<>();
 
-        for(JellyswarmStage stage : JellyswarmStage.values()) {
+        for(CitadelStage stage : CitadelStage.values()) {
             stageNames.add(stage.toString());
         }
 
         return StringUtils.join(stageNames, ",");
     }
 
-    public static List<JellyswarmStage> parse(String stages) {
+    public static List<CitadelStage> parse(String stages) {
 
         if (stages.trim().equalsIgnoreCase("ALL")) {
             stages = getFullListAsString();
@@ -84,18 +137,18 @@ public enum JellyswarmStage {
 
         String[] stageArray = stages.split(",");
 
-        List<JellyswarmStage> stageList = new ArrayList<>();
+        List<CitadelStage> stageList = new ArrayList<>();
 
         if (stageArray != null && stageArray.length != 0) {
             for(String stage : stageArray) {
-                stageList.add(JellyswarmStage.valueOf(stage.trim().toUpperCase()));
+                stageList.add(CitadelStage.valueOf(stage.trim().toUpperCase()));
             }
         }
 
         return stageList;
     }
 
-    public static String toString(List<JellyswarmStage> rampartStages) {
+    public static String toString(List<CitadelStage> rampartStages) {
 
         return StringUtils.join(rampartStages, ",");
     }

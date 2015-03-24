@@ -49,13 +49,13 @@ memory usage for various tools.  An example XML snippet containing a genome refe
 
 
 If you are assembling a non-model organism an suitable existing reference may not be available.  In this case it is
-beneficial if you have any expecations of genomic properties that you provide them in order to make better assembly assessments
+beneficial if you have any expectations of genomic properties that you provide them in order to make better assembly assessments
 and enable input read subsampling an memory requirement estimation.  Estimated input values can be entered as follows.  Note
 that these are optional, so the user can specify any or all of the properties as known, although the estimated genome size
 is particularly useful::
 
    <organism name="Escherichia coli" ploidy="1">
-      <estimated genome_size="4600000" gc="50.8" genes="4300"/>
+      <estimated est_genome_size="4600000" est_gc_percentage="50.8" est_nb_genes="4300"/>
    </organism>
 
 
