@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.tgac.rampart.jellyswarm;
+package uk.ac.tgac.jellyswarm;
 
 import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
@@ -103,6 +103,10 @@ public class Jellyswarm {
             if (this.args.getStages().contains(stage) && stageArgs != null) {
                 this.addProcess(stage.create(this.conanExecutorService, stageArgs));
             }
+        }
+
+        public Args getArgs() {
+            return this.args;
         }
 
 

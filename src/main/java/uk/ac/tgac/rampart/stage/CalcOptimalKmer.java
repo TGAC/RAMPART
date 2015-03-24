@@ -105,6 +105,12 @@ public class CalcOptimalKmer extends AbstractConanProcess {
 
             Args args = this.getArgs();
 
+            // Force run parallel to false if not using a scheduler
+            if (!executionContext.usingScheduler() && args.isRunParallel()) {
+                log.warn("Forcing linear execution due to lack of job scheduler");
+                args.setRunParallel(false);
+            }
+
             List<ExecutionResult> results = new ArrayList<>();
 
             Map<String, File> kg2FileMap = new HashMap<>();
@@ -230,6 +236,7 @@ public class CalcOptimalKmer extends AbstractConanProcess {
         kgArgs.setOutputDir(outputDir);
         kgArgs.setOutputPrefix("kmergenie_" + outputDir.getName());
         kgArgs.setOutputFile(outputFile);
+        kgArgs.setLogFile(new File(outputFile.getAbsolutePath() + ".log"));
 
         KmerGenieV16 kg = new KmerGenieV16(this.conanExecutorService, kgArgs);
 

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.ac.tgac.rampart;
+package uk.ac.tgac.citadel;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.user.GuestUser;
 import uk.ac.ebi.fgpt.conan.model.ConanPipeline;
 import uk.ac.ebi.fgpt.conan.model.ConanTask;
+import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.properties.ConanProperties;
@@ -58,6 +59,7 @@ import uk.ac.tgac.conan.process.re.tools.MusketV10;
 import uk.ac.tgac.conan.process.re.tools.QuakeV03;
 import uk.ac.tgac.conan.process.re.tools.SickleV12;
 import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
+import uk.ac.tgac.rampart.RampartConfig;
 import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
 import uk.ac.tgac.rampart.util.CommandLineHelper;
@@ -73,9 +75,9 @@ import java.util.Properties;
 /**
  * This class handles execution of Rampart in run mode.
  */
-public class RampartCLI extends AbstractConanCLI {
+public class CitadelCLI extends AbstractConanCLI {
 
-    private static Logger log = LoggerFactory.getLogger(RampartCLI.class);
+    private static Logger log = LoggerFactory.getLogger(CitadelCLI.class);
 
     public static final File CWD = currentWorkingDir();
 
@@ -87,8 +89,8 @@ public class RampartCLI extends AbstractConanCLI {
     /**
      * Gets the application config directory.  This is really messy way to do it... try to think of a better way later
      */
-    public static final File APP_DIR = JarUtils.jarForClass(RampartCLI.class, null) == null ? new File(".") :
-            new File(RampartCLI.class.getProtectionDomain().getCodeSource().getLocation().getPath())
+    public static final File APP_DIR = JarUtils.jarForClass(CitadelCLI.class, null) == null ? new File(".") :
+            new File(CitadelCLI.class.getProtectionDomain().getCodeSource().getLocation().getPath())
                     .getParentFile()
                     .getParentFile()
                     .getParentFile()
@@ -98,18 +100,13 @@ public class RampartCLI extends AbstractConanCLI {
                     .getParentFile()
                     .getParentFile();
 
-    public static final String APP_NAME = "RAMPART";
+    public static final String APP_NAME = "CITADEL";
 
     public static final File ETC_DIR = new File(APP_DIR, "etc");
     //public static final File REPORT_DIR = new File(DATA_DIR, "report");
 
     // **** Option parameter names ****
     public static final String OPT_STAGES = "stages";
-    public static final String OPT_START_FROM = "start_from";
-    public static final String OPT_RUN_FIRST_HALF = "run_first_half";
-    public static final String OPT_RUN_SECOND_HALF = "run_second_half";
-    public static final String OPT_AMP_INPUT = "amp_input";
-    public static final String OPT_AMP_BUBBLE_INPUT = "amp_bubble";
     public static final String OPT_SKIP_CHECKS = "skip_checks";
     public static final String OPT_VERSION = "version";
 
@@ -131,30 +128,6 @@ public class RampartCLI extends AbstractConanCLI {
     public static final RampartStageList  DEFAULT_STAGES = RampartStageList.parse("ALL");
 
     private static String[] externalProcNames = new String[] {
-            new MusketV10().getName(),
-            new SickleV12().getName(),
-            new QuakeV03().getName(),
-            new JellyfishCountV11().getName(),
-            new KatCompV1().getName(),
-            new KatGcpV1().getName(),
-            new KmerGenieV16().getName(),
-            new AbyssV15().getName(),
-            new VelvetV12().getName(),
-            new SpadesV31().getName(),
-            new AllpathsLgV50().getName(),
-            new DiscovarV51XXX().getName(),
-            new PlatanusAssembleV12().getName(),
-            new PlatanusScaffoldV12().getName(),
-            new PlatanusGapCloseV12().getName(),
-            new SoapAssemblerV24().getName(),
-            new SoapScaffolderV24().getName(),
-            new SoapGapCloserV112().getName(),
-            new SSpaceBasicV2().getName(),
-            new TgacSubsamplerV1().getName(),
-            new ReaprV1().getName(),
-            new FastXRC_V0013().getName(),
-            new QuastV23().getName(),
-            new CegmaV24().getName(),
             new KatPlotDensityV1().getName(),
             new KatPlotSpectraCnV1().getName(),
             new JellyfishCountV11().getName(),
@@ -165,39 +138,39 @@ public class RampartCLI extends AbstractConanCLI {
 
     // **** Options ****
     private RampartStageList stages;
-    private File ampInput;
-    private File ampBubble;
     private File jobConfig;
+    private File inputDir;
     private boolean skipChecks;
     private boolean version;
 
-    private RampartConfig args;
+    private CitadelPipeline.Args args;
+    private ExecutionContext executionContext;
 
     /**
-     * Creates a new RAMPART instance with default arguments
-     * @throws IOException Thrown if there is an error initialising this RAMPART instance.
+     * Creates a new Citadel instance with default arguments
+     * @throws java.io.IOException Thrown if there is an error initialising this RAMPART instance.
      */
-    public RampartCLI() throws IOException {
+    public CitadelCLI() throws IOException {
         super(APP_NAME, ETC_DIR, DEFAULT_CONAN_FILE, DEFAULT_LOG_FILE, currentWorkingDir(),
                 APP_NAME + createTimestamp(),
                 false,
                 false);
 
         this.stages             = DEFAULT_STAGES;
-        this.ampInput           = null;
-        this.ampBubble          = null;
         this.jobConfig          = null;
+        this.inputDir           = null;
         this.args               = null;
         this.version            = false;
+        this.executionContext   = null;
     }
 
     /**
-     * Creates a new RAMPART instance based on command line arguments
-     * @param args List of command line arguments containing information to setup RAMPART
-     * @throws ParseException Thrown if an invalid command line was encountered
-     * @throws IOException Thrown if there is an error initialising this RAMPART instance.
+     * Creates a new Citadel instance based on command line arguments
+     * @param args List of command line arguments containing information to setup Citadel
+     * @throws org.apache.commons.cli.ParseException Thrown if an invalid command line was encountered
+     * @throws java.io.IOException Thrown if there is an error initialising this Citadel instance.
      */
-    public RampartCLI(String[] args) throws ParseException, IOException {
+    public CitadelCLI(String[] args) throws ParseException, IOException {
 
         // Creates the instance and sets core variables
         this();
@@ -216,20 +189,17 @@ public class RampartCLI extends AbstractConanCLI {
         this.init();
 
         // Create RnaSeqEvalArgs based on reads from the command line
-        this.args = new RampartConfig(
-                this.jobConfig,
-                this.getOutputDir(),
-                this.getJobPrefix().replaceAll("TIMESTAMP", createTimestamp()),
-                this.stages,
-                this.ampInput,
-                this.ampBubble,
-                !this.skipChecks);
+        this.args = new CitadelPipeline.Args();
+        this.args.setOutputDir(this.getOutputDir());
+        this.args.setJobPrefix(this.getJobPrefix());
+
+        //TODO Add more setup here
 
         // Override log level to debug if the verbose flag is set
         if (this.isVerbose()) {
             LogManager.getRootLogger().setLevel(Level.DEBUG);
         }
-        log.info("RAMPART Version: " + loadVersion());
+        log.info("Citadel (RAMPART) Version: " + loadVersion());
         log.info("Output dir: " + this.getOutputDir().getAbsolutePath());
         log.info("Environment configuration file: " + this.getEnvironmentConfig().getAbsolutePath());
         log.info("Logging properties file: " + this.getLogConfig().getAbsolutePath());
@@ -246,10 +216,10 @@ public class RampartCLI extends AbstractConanCLI {
 
         // Parse the job config file and set internal variables in RampartArgs
         log.info("Parsing configuration file: " + this.jobConfig.getAbsolutePath());
-        this.args.parseXml();
+        //this.args.parseXml();
 
         // Create an execution context based on environment information detected or provide by the user
-        this.args.setExecutionContext(this.buildExecutionContext());
+        this.executionContext = this.buildExecutionContext();
     }
 
 
@@ -276,7 +246,7 @@ public class RampartCLI extends AbstractConanCLI {
         this.skipChecks = skipChecks;
     }
 
-    public RampartConfig getArgs() {
+    public CitadelPipeline.Args getArgs() {
         return args;
     }
 
@@ -294,54 +264,6 @@ public class RampartCLI extends AbstractConanCLI {
                 RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
                 DEFAULT_STAGES;
 
-        if (commandLine.hasOption(OPT_START_FROM)) {
-            RampartStage startStage = RampartStage.valueOf(commandLine.getOptionValue(OPT_START_FROM).toUpperCase());
-
-            boolean found = false;
-            while(!found) {
-                if (this.stages.get(0) != startStage) {
-                    this.stages.remove(0);
-                }
-                else {
-                    found = true;
-                }
-            }
-        }
-
-        // If the user hasn't modified the stages then check to see if they've requested any predefined profiles
-        if (stages == DEFAULT_STAGES) {
-
-            if (commandLine.hasOption(OPT_RUN_FIRST_HALF)) {
-
-                RampartStageList firstHalf = new RampartStageList();
-                firstHalf.add(RampartStage.MECQ);
-                firstHalf.add(RampartStage.ANALYSE_READS);
-                firstHalf.add(RampartStage.KMER_CALC);
-                firstHalf.add(RampartStage.MASS);
-                firstHalf.add(RampartStage.ANALYSE_MASS);
-                firstHalf.add(RampartStage.SELECT_MASS);
-                this.stages = firstHalf;
-
-                log.info("Running first half of the RAMPART pipeline only");
-            }
-            else if (commandLine.hasOption(OPT_RUN_SECOND_HALF)) {
-                RampartStageList secondHalf = new RampartStageList();
-                secondHalf.add(RampartStage.AMP);
-                secondHalf.add(RampartStage.ANALYSE_AMP);
-                secondHalf.add(RampartStage.FINALISE);
-                this.stages = secondHalf;
-
-                log.info("Running second half of the RAMPART pipeline only");
-
-                if (commandLine.hasOption(OPT_AMP_INPUT)) {
-                    this.ampInput = new File(commandLine.getOptionValue(OPT_AMP_INPUT)).getAbsoluteFile();
-                }
-
-                if (commandLine.hasOption(OPT_AMP_BUBBLE_INPUT)) {
-                    this.ampBubble = new File(commandLine.getOptionValue(OPT_AMP_BUBBLE_INPUT)).getAbsoluteFile();
-                }
-            }
-        }
 
         // Check for a single arg left on the command line
         if (commandLine.getArgs().length != 1)
@@ -352,17 +274,15 @@ public class RampartCLI extends AbstractConanCLI {
         this.jobConfig = new File(commandLine.getArgs()[0]);
     }
 
-
-
     @Override
     public void printHelp() {
         CommandLineHelper.printHelp(
                 System.err,
-                "rampart [options] <job_config_file>\nOptions: ",
-                "RAMPART is a de novo assembly workflow creation tool.  It allows you to construct assembly " +
-                "workflows (or recipes) built using third party-tools and High Performance Computing resources.  It can be " +
-                "used as a single interface to several popular assemblers, and can perform automated comparison " +
-                "and analysis of any generated assemblies.\n\nOptions:\n",
+                "citadel [options] <job_config_file>\nOptions: ",
+                "Citadel is an en mass de novo prokaryote genome assembly and annotation tool.  It allows you to process cohorts " +
+                "of same species bacterial samples from raw sequence reads, produce high-quality draft genome assemblies and then annotates " +
+                "those genomes before packaging the relevant resources up for distribution.  It also analyses your samples at each step to " +
+                "identify outliers and potential problem samples.\n\nOptions:\n",
                 createOptions()
         );
     }
@@ -374,23 +294,7 @@ public class RampartCLI extends AbstractConanCLI {
         List<Option> options = new ArrayList<>();
 
         options.add(OptionBuilder.withArgName("string").withLongOpt(OPT_STAGES).hasArg()
-                .withDescription("The RAMPART stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));
-
-        options.add(OptionBuilder.withLongOpt(OPT_RUN_FIRST_HALF)
-                .withDescription("Run the first half of the RAMPART pipeline.  This involves running MECQ and MASS and doing any requested analyses.")
-                .create("1"));
-
-        options.add(OptionBuilder.withLongOpt(OPT_RUN_SECOND_HALF)
-                .withDescription("Run the second half of the RAMPART pipeline.  This involves enhancing the selected assembly and doing any requested analyses on the final assembly and finalising the assembly so that it's suitable for distribution.")
-                .create("2"));
-
-        options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_AMP_INPUT).hasArg()
-                .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate assembly to process.  By default the automatically selected assembly is used.")
-                .create("a"));
-
-        options.add(OptionBuilder.withArgName("file").withLongOpt(OPT_AMP_BUBBLE_INPUT).hasArg()
-                .withDescription("If only running the second half of the RAMPART pipeline, this option allows you to specify an alternate bubble to process.  By default the automatically selected assembly is used, if the best assembly generates a bubble file (not all assemblers do).")
-                .create("b"));
+                .withDescription("The Citadel stages to execute: " + RampartStage.getFullListAsString() + ", ALL.  Default: ALL.").create("s"));
 
         options.add(OptionBuilder.withLongOpt(OPT_SKIP_CHECKS)
                 .withDescription("Skips initial checks to see if all requested tools can be found.")
@@ -403,22 +307,22 @@ public class RampartCLI extends AbstractConanCLI {
 
     @Override
     protected ParamMap createArgMap() {
-        return this.args.getPipelineArgs().getArgMap();
+        return this.args.getArgMap();
     }
 
     @Override
     protected ConanPipeline createPipeline() throws IOException {
 
-        return new RampartPipeline(this.args.getPipelineArgs(),
+        return new CitadelPipeline(this.args,
                 new DefaultExecutorService(
                     new DefaultProcessService(),
-                    this.args.getExecutionContext()));
+                    this.executionContext));
     }
 
     public void execute() throws InterruptedException, TaskExecutionException, IOException {
 
         // Run the pipeline as described by the user
-        TaskResult result = super.execute(new GuestUser("rampart@tgac.ac.uk"), ConanTask.Priority.HIGH, this.args.getExecutionContext());
+        TaskResult result = super.execute(new GuestUser("citadel@tgac.ac.uk"), ConanTask.Priority.HIGH, this.executionContext);
 
         // Output the resource usage to file
         FileUtils.writeLines(new File(this.args.getOutputDir(), this.args.getJobPrefix() + ".summary"), result.getOutput());
@@ -426,31 +330,30 @@ public class RampartCLI extends AbstractConanCLI {
 
 
     /**
-     * The main entry point for RAMPART.  Looks at the first argument to decide which mode to run in.  Execution of each
-     * mode is handled by RampartMode.
+     * The main entry point for Citadel.
      * @param args Command line arguments
-     * @throws IOException Thrown if there was an error printing the help message
+     * @throws java.io.IOException Thrown if there was an error printing the help message
      */
     public static void main(String[] args) throws IOException {
 
         try {
 
-            RampartCLI rampartCLI = new RampartCLI(args);
+            CitadelCLI citadelCLI = new CitadelCLI(args);
             StopWatch stopwatch = new StopWatch();
             stopwatch.start();
 
-            if (rampartCLI == null)
-                throw new IllegalArgumentException("Invalid arguments, could not create a valid rampart object.");
+            if (citadelCLI == null)
+                throw new IllegalArgumentException("Invalid arguments, could not create a valid citadel object.");
 
-            if (rampartCLI.isHelp()) {
-                rampartCLI.printHelp();
+            if (citadelCLI.isHelp()) {
+                citadelCLI.printHelp();
             }
-            else if (rampartCLI.version) {
+            else if (citadelCLI.version) {
                 System.out.println("Version: " + loadVersion());
             }
             else {
-                rampartCLI.initialise();
-                rampartCLI.execute();
+                citadelCLI.initialise();
+                citadelCLI.execute();
 
                 stopwatch.stop();
                 System.out.println("Total runtime (wall clock): " + stopwatch.toString());
@@ -458,7 +361,7 @@ public class RampartCLI extends AbstractConanCLI {
         }
         catch (ParseException e) {
             System.err.println("\n" + e.getMessage() + "\n");
-            new RampartCLI().printHelp();
+            new CitadelCLI().printHelp();
             System.exit(1);
         }
         catch (Exception e) {

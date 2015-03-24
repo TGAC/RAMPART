@@ -123,6 +123,12 @@ public class Mass extends AbstractConanProcess {
             // Get shortcut to the args
             Args args = (Args) this.getProcessArgs();
 
+            // Force run parallel to false if not using a scheduler
+            if (!executionContext.usingScheduler() && args.isRunParallel()) {
+                log.warn("Forcing linear execution due to lack of job scheduler");
+                args.setRunParallel(false);
+            }
+
             List<ExecutionResult> results = new ArrayList<>();
             List<ExecutionResult> allResults = new ArrayList<>();
             List<TaskResult> massJobResults = new ArrayList<>();

@@ -16,10 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.tgac.rampart.jellyswarm;
+package uk.ac.tgac.citadel.stage;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,37 +33,36 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishStatsV11;
+import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
+import uk.ac.tgac.jellyswarm.FileFinder;
+import uk.ac.tgac.jellyswarm.FilePair;
+import uk.ac.tgac.jellyswarm.JellyswarmCLI;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
  * User: maplesod
  * Date: 11/11/13
- * Time: 17:40
+ * Time: 14:41
  * To change this template use File | Settings | File Templates.
  */
-public class StatsProcess extends AbstractConanProcess {
-    private static Logger log = LoggerFactory.getLogger(StatsProcess.class);
+public class Package extends AbstractConanProcess {
 
-    private static final int[] lowerCounts = new int[]{2, 5, 10, 20};
+    private static Logger log = LoggerFactory.getLogger(Package.class);
 
-
-    public StatsProcess() {
+    public Package() {
         this(null);
     }
 
-    public StatsProcess(ConanExecutorService ces) {
-        this(ces, new Args());
+    public Package(ConanExecutorService ces) {
+       this(ces, new Args());
     }
 
-    public StatsProcess(ConanExecutorService ces, Args args) {
+    public Package(ConanExecutorService ces, Args args) {
         super("", args, new Params(), ces);
     }
 
@@ -77,54 +75,53 @@ public class StatsProcess extends AbstractConanProcess {
             stopWatch.start();
 
             // Make a shortcut to the args
-            Args args = (Args)this.getProcessArgs();
+            Args args = (Args) this.getProcessArgs();
 
-            // Gets jellyfish count files
-            List<File> countFiles = this.findFiles(args.getInputDir(), "_0");
+            // Gets grouped files
+            List<FilePair> files = FileFinder.find(args.getInputDir(), args.isRecursive(), args.isPaired());
+
+            log.info("Found " + files.size() + " samples to process.");
 
             List<ExecutionResult> jobResults = new ArrayList<>();
-            List<ExecutionResult> allJobResults = new ArrayList<>();
-
-            log.debug("Found " + countFiles.size() + " jellyfish stats files to process");
 
             // Make the output directory for this child job (delete the directory if it already exists)
             args.getOutputDir().mkdirs();
 
             int i =0;
-            for(File file : countFiles) {
+            for(FilePair filePair : files) {
 
+                JellyfishCountV11.Args jArgs = new JellyfishCountV11.Args();
+                jArgs.setInputFile(args.isPaired() ?
+                        filePair.getGlobedFile().getAbsolutePath() :
+                        filePair.getLeft().getAbsolutePath());
+                jArgs.setOutputPrefix(args.getOutputDir().getAbsolutePath() + "/" + filePair.getNamePrefix() + "_count.jf31");
+                jArgs.setMerLength(31);
+                jArgs.setHashSize(4000000000L);
+                jArgs.setThreads(args.getThreads());
+                jArgs.setBothStrands(true);
+                jArgs.setLowerCount(args.getLowerCount());
+                jArgs.setCounterLength(32);
 
-                for(int j = 0; j < lowerCounts.length; j++) {
+                JellyfishCountV11 jProc = new JellyfishCountV11(this.conanExecutorService, jArgs);
 
-                    int lc = lowerCounts[j];
+                // Execute the assembler
+                ExecutionResult result = this.conanExecutorService.executeProcess(
+                        jProc,
+                        args.getOutputDir(),
+                        args.getJobPrefix() + "-" + i,
+                        args.getThreads(),
+                        args.getMemory(),
+                        args.isRunParallel());
 
-                    JellyfishStatsV11.Args jArgs = new JellyfishStatsV11.Args();
-                    jArgs.setInput(file);
-                    jArgs.setOutput(new File(args.getOutputDir(), file.getName() + ".lc" + lc + ".stats"));
-                    jArgs.setLowerCount(lc);
+                // Add assembler id to list
+                jobResults.add(result);
 
-                    JellyfishStatsV11 jProc = new JellyfishStatsV11(this.conanExecutorService, jArgs);
-
-                    // Execute the assembler
-                    ExecutionResult result = this.conanExecutorService.executeProcess(
-                            jProc,
-                            args.getOutputDir(),
-                            args.getJobPrefix() + "-" + i,
-                            1,
-                            0,
-                            args.isRunParallel());
-
-                    // Add assembler id to list
-                    jobResults.add(result);
-                    allJobResults.add(result);
-
-                    i++;
-                }
+                i++;
             }
 
             // Wait for all assembly jobs to finish if they are running in parallel.
             if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.debug("Jellyfish stats jobs were executed in parallel, waiting for all to complete");
+                log.debug("Jellyfish counter jobs were executed in parallel, waiting for all to complete");
                 this.conanExecutorService.executeScheduledWait(
                         jobResults,
                         args.getJobPrefix() + "-group*",
@@ -135,24 +132,9 @@ public class StatsProcess extends AbstractConanProcess {
                 jobResults.clear();
             }
 
-            // Aggregates stats files
-            List<File> statsFiles = new ArrayList<>();
-
-            for(int j = 0; j < lowerCounts.length; j++) {
-
-                int lc = lowerCounts[j];
-
-                File statsFile = new File(args.getOutputDir(), "summary.lc" + lc + ".tab");
-                statsFiles.add(statsFile);
-
-                this.createStatsFile(this.findFiles(args.getOutputDir(), "lc" + lc + ".stats"), statsFile);
-            }
-
-            this.createDistinctStatsFile(statsFiles, new File(args.getOutputDir(), "summary.tab"));
-
             stopWatch.stop();
 
-            TaskResult taskResult = new DefaultTaskResult("citadel-jellyswarm-stats", true, allJobResults, stopWatch.getTime() / 1000L);
+            TaskResult taskResult = new DefaultTaskResult("citadel-jellyswarm-count", true, jobResults, stopWatch.getTime() / 1000L);
 
             return new DefaultExecutionResult(
                     taskResult.getTaskName(),
@@ -175,143 +157,22 @@ public class StatsProcess extends AbstractConanProcess {
 
     @Override
     public String getName() {
-        return "Stats";
+        return "Counter";
     }
 
     @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
-        JellyfishStatsV11 stats = new JellyfishStatsV11(this.conanExecutorService);
+        JellyfishCountV11 count = new JellyfishCountV11(this.conanExecutorService);
 
-        if (!stats.isOperational(executionContext)) {
-            log.warn("Jellyfish stats is NOT operational.");
+        if (!count.isOperational(executionContext)) {
+            log.warn("Jellyfish count is NOT operational.");
             return false;
         }
 
-        log.info("Jellyfish stats is operational.");
+        log.info("Jellyfish count is operational.");
 
         return true;
-    }
-
-
-
-    protected List<File> findFiles(File inputDir, String ext) throws IOException {
-
-        File[] allFiles = inputDir.listFiles();
-
-        List<File> fileList = new ArrayList<>();
-
-        for(File f : allFiles) {
-            if (f.getName().endsWith(ext)) {
-                fileList.add(f);
-            }
-        }
-
-        Collections.sort(fileList, new Comparator<File>() {
-            @Override
-            public int compare(File o1, File o2) {
-                return o1.getAbsolutePath().compareTo(o2.getAbsolutePath());
-            }
-        });
-
-        return fileList;
-    }
-
-    protected void createStatsFile(List<File> statsFiles, File outputFile) throws IOException {
-
-
-
-        List<String> outputLines = new ArrayList<>();
-
-        // Add header
-        outputLines.add("filename\tunique\tdistinct\ttotal\tmax_count");
-
-        for(File file : statsFiles) {
-
-            List<String> statsLines = FileUtils.readLines(file);
-
-            long unique = 0;
-            long distinct = 0;
-            long total = 0;
-            long maxCount = 0;
-
-            for(String line : statsLines) {
-                if (line.startsWith("Unique")) {
-                    String[] parts = line.split("\\s+");
-                    unique = Long.parseLong(parts[1]);
-                }
-                if (line.startsWith("Distinct")) {
-                    String[] parts = line.split("\\s+");
-                    distinct = Long.parseLong(parts[1]);
-                }
-                if (line.startsWith("Total")) {
-                    String[] parts = line.split("\\s+");
-                    total = Long.parseLong(parts[1]);
-                }
-                if (line.startsWith("Max_count")) {
-                    String[] parts = line.split("\\s+");
-                    maxCount = Long.parseLong(parts[1]);
-                }
-            }
-
-            StringBuilder sb = new StringBuilder();
-
-            sb.append(file.getName())
-                    .append("\t")
-                    .append(unique)
-                    .append("\t")
-                    .append(distinct)
-                    .append("\t")
-                    .append(total)
-                    .append("\t")
-                    .append(maxCount);
-
-            outputLines.add(sb.toString());
-        }
-
-        FileUtils.writeLines(outputFile, outputLines);
-    }
-
-
-    private void createDistinctStatsFile(List<File> statsFiles, File outputFile) throws IOException {
-
-        List<String> lines = new ArrayList<>();
-
-        lines.add("filename\tmin\tmax\tmean\tvariance\tstddev");
-
-        for(File file : statsFiles) {
-
-            long min = Long.MAX_VALUE;
-            long max = 0;
-            long sum = 0;
-            long sum2 = 0;
-
-            List<String> statsLines = FileUtils.readLines(file);
-
-            for(int i = 1; i < statsLines.size(); i++) {
-
-                String line = statsLines.get(i);
-
-                String[] parts = line.split("\t");
-
-                long distinctVal = Long.parseLong(parts[2]);
-
-                min = distinctVal < min ? distinctVal : min;
-                max = distinctVal > max ? distinctVal : max;
-
-                sum += distinctVal;
-                sum2 += distinctVal * distinctVal;
-            }
-
-            int entries = statsLines.size() - 1;
-            double mean = (double)sum / (double)entries;
-            double var = ((sum*sum) - sum2)/(double)entries;
-            double stddev = Math.sqrt(var);
-
-            lines.add(file.getName() + "\t" + min + "\t" + max + "\t" + mean + "\t" + var + "\t" + stddev);
-        }
-
-        FileUtils.writeLines(outputFile, lines);
     }
 
 
@@ -319,9 +180,14 @@ public class StatsProcess extends AbstractConanProcess {
 
         private File inputDir;
         private File outputDir;
+        private int threads;
         private boolean runParallel;
+        private int memory;
         private String jobPrefix;
         private long lowerCount;
+        private long hashSize;
+        private boolean recursive;
+        private boolean paired;
 
         public Args() {
 
@@ -329,9 +195,14 @@ public class StatsProcess extends AbstractConanProcess {
 
             this.inputDir = JellyswarmCLI.CWD;
             this.outputDir = JellyswarmCLI.CWD;
+            this.threads = 1;
             this.runParallel = false;
-            this.jobPrefix = "stats";
+            this.memory = 0;
+            this.jobPrefix = "counter";
             this.lowerCount = 0;
+            this.hashSize = 4000000000L;
+            this.recursive = false;
+            this.paired = true;
         }
 
         public Params getParams() {
@@ -354,12 +225,28 @@ public class StatsProcess extends AbstractConanProcess {
             this.outputDir = outputDir;
         }
 
+        public int getThreads() {
+            return threads;
+        }
+
+        public void setThreads(int threads) {
+            this.threads = threads;
+        }
+
         public boolean isRunParallel() {
             return runParallel;
         }
 
         public void setRunParallel(boolean runParallel) {
             this.runParallel = runParallel;
+        }
+
+        public int getMemory() {
+            return memory;
+        }
+
+        public void setMemory(int memory) {
+            this.memory = memory;
         }
 
         public String getJobPrefix() {
@@ -376,6 +263,30 @@ public class StatsProcess extends AbstractConanProcess {
 
         public void setLowerCount(long lowerCount) {
             this.lowerCount = lowerCount;
+        }
+
+        public long getHashSize() {
+            return hashSize;
+        }
+
+        public void setHashSize(long hashSize) {
+            this.hashSize = hashSize;
+        }
+
+        public boolean isRecursive() {
+            return recursive;
+        }
+
+        public void setRecursive(boolean recursive) {
+            this.recursive = recursive;
+        }
+
+        public boolean isPaired() {
+            return paired;
+        }
+
+        public void setPaired(boolean paired) {
+            this.paired = paired;
         }
 
         @Override
@@ -404,10 +315,16 @@ public class StatsProcess extends AbstractConanProcess {
             }
 
             pvp.put(params.getLowerCount(), Long.toString(this.lowerCount));
+            pvp.put(params.getHashSize(), Long.toString(this.hashSize));
+            pvp.put(params.getThreads(), Integer.toString(this.threads));
+            pvp.put(params.getMemory(), Integer.toString(this.memory));
             pvp.put(params.getRunParallel(), Boolean.toString(this.runParallel));
+            pvp.put(params.getRecursive(), Boolean.toString(this.recursive));
+            pvp.put(params.getPaired(), Boolean.toString(this.paired));
 
             return pvp;
         }
+
 
         @Override
         protected void setOptionFromMapEntry(ConanParameter param, String value) {
@@ -426,8 +343,23 @@ public class StatsProcess extends AbstractConanProcess {
             else if (param.equals(params.getLowerCount())) {
                 this.lowerCount = Long.parseLong(value);
             }
+            else if (param.equals(params.getHashSize())) {
+                this.hashSize = Long.parseLong(value);
+            }
+            else if (param.equals(params.getThreads())) {
+                this.threads = Integer.parseInt(value);
+            }
+            else if (param.equals(params.getMemory())) {
+                this.memory = Integer.parseInt(value);
+            }
             else if (param.equals(params.getRunParallel())) {
                 this.runParallel = Boolean.parseBoolean(value);
+            }
+            else if (param.equals(params.getRecursive())) {
+                this.recursive = Boolean.parseBoolean(value);
+            }
+            else if (param.equals(params.getPaired())) {
+                this.paired = Boolean.parseBoolean(value);
             }
             else {
                 throw new IllegalArgumentException("Unknown param found: " + param);
@@ -440,13 +372,20 @@ public class StatsProcess extends AbstractConanProcess {
         }
     }
 
+
+
     public static class Params extends AbstractProcessParams {
 
         private ConanParameter inputDir;
         private ConanParameter outputDir;
         private ConanParameter jobPrefix;
         private ConanParameter lowerCount;
+        private ConanParameter hashSize;
+        private ConanParameter threads;
+        private ConanParameter memory;
         private ConanParameter runParallel;
+        private ConanParameter recursive;
+        private ConanParameter paired;
 
         public Params() {
 
@@ -471,9 +410,34 @@ public class StatsProcess extends AbstractConanProcess {
                     "Don't output k-mer with count < lower-count",
                     true);
 
+            this.hashSize = new ParameterBuilder()
+                    .shortName("h")
+                    .longName("hash")
+                    .description("The hash size to pass to each jellyfish count instance")
+                    .argValidator(ArgValidator.DIGITS)
+                    .create();
+
+            this.threads = new NumericParameter(
+                    "threads",
+                    "The number of threads to use for each process.  Default: 1",
+                    true);
+
+            this.memory = new NumericParameter(
+                    "memory",
+                    "The estimated amount of memory in MB that each process is likely to use.  Default: 0",
+                    true);
+
             this.runParallel = new FlagParameter(
                     "parallel",
                     "Whether to run each process in parallel or not");
+
+            this.recursive = new FlagParameter(
+                    "recursive",
+                    "Whether or not to recurse through directories in the input directory to search for files");
+
+            this.paired = new FlagParameter(
+                    "paired",
+                    "Whether or not to you are processing paired end data or not.  Default: true");
         }
 
         public ConanParameter getInputDir() {
@@ -492,8 +456,28 @@ public class StatsProcess extends AbstractConanProcess {
             return lowerCount;
         }
 
+        public ConanParameter getHashSize() {
+            return hashSize;
+        }
+
+        public ConanParameter getThreads() {
+            return threads;
+        }
+
+        public ConanParameter getMemory() {
+            return memory;
+        }
+
         public ConanParameter getRunParallel() {
             return runParallel;
+        }
+
+        public ConanParameter getRecursive() {
+            return recursive;
+        }
+
+        public ConanParameter getPaired() {
+            return paired;
         }
 
         @Override
@@ -502,8 +486,13 @@ public class StatsProcess extends AbstractConanProcess {
                     this.inputDir,
                     this.outputDir,
                     this.lowerCount,
+                    this.hashSize,
                     this.jobPrefix,
-                    this.runParallel
+                    this.threads,
+                    this.memory,
+                    this.runParallel,
+                    this.recursive,
+                    this.paired
             };
         }
     }

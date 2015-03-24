@@ -110,6 +110,12 @@ public class AnalyseReads extends AbstractConanProcess {
         // Create shortcut to args for convenience
         Args args = this.getArgs();
 
+        // Force run parallel to false if not using a scheduler
+        if (!executionContext.usingScheduler() && args.isRunParallel()) {
+            log.warn("Forcing linear execution due to lack of job scheduler");
+            args.setRunParallel(false);
+        }
+
         ExecutionResult executionResult = null;
 
         // Check what analyses are requested and check if those are operational

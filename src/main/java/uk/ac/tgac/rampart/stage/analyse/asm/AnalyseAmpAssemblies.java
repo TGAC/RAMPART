@@ -123,9 +123,15 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        log.info("Starting Analysis of AMP assemblies");
-
         Args args = this.getArgs();
+
+        // Force run parallel to false if not using a scheduler
+        if (!executionContext.usingScheduler() && args.isRunParallel()) {
+            log.warn("Forcing linear execution due to lack of job scheduler");
+            args.setRunParallel(false);
+        }
+
+        log.info("Starting Analysis of AMP assemblies");
 
         if (!args.getOutputDir().exists()) {
             args.getOutputDir().mkdirs();
