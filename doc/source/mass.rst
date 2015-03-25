@@ -271,3 +271,22 @@ The directory structure is created as the assemblers run.  So the full file stru
 MASS starts.  Also, we create the symbolic links to unitigs, contigs and scaffolds on an as needed basis.  Some assemblers
 may not produce certain types of assembled sequences and in those cases we do not create the associated links directory.
 
+
+Troubleshooting
+---------------
+
+Here are some issues that you might run into during the MASS stage:
+
+1. ABySS installed but without MPI support. RAMPART requires ABySS to be configured with openmpi in order to use
+parallelisation in ABySS.  If you encounter the following error message lease reinstall ABySS and specify the --with-mpi
+option during configuration::
+
+  mpirun was unable to find the specified executable file, and therefore did not launch the job.  This error was first
+  reported for process rank 0; it may have occurred for other processes as well.
+
+  NOTE: A common cause for this error is misspelling a mpirun command
+      line parameter option (remember that mpirun interprets the first
+      unrecognized command line token as the executable).
+
+
+
