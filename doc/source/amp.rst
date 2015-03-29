@@ -65,3 +65,8 @@ correctly, then please raise a ticket on the RAMPART github page: https://github
 and we will try to fix the issue in a future version.
 
 In the future we plan to make the AMP stage more flexible so that it can handle parameter optimisation like the MASS stage.
+
+Troubleshooting
+---------------
+
+If you encounter a error message relating to "finalFusion" not being available during inital checks it is likely that you nneed to find the "finalFusion" executable and install this along with SOAP scaffolder.  This can be difficult to find, and note this is not the same as SOAPFusion.  If you can not find this online, please contact daniel.mapleson@tgac.ac.uk.
