@@ -5,14 +5,15 @@ MASS - Multiple Assembly Creation
 =================================
 
 This tool enables the user to try different assemblers with different settings.  Currently, the following assemblers are
-supported by RAMPART:
+supported by RAMPART (brackets below indicate tool name to use if config file - case insensitive):
 
-* Abyss V1.5
-* ALLPATHS-LG V44837
-* Platanus V1.2
-* SOAP denovo V2.04
-* SPAdes V3.1
-* Velvet V1.2
+* Abyss V1.5 (ABYSS_V1.5)
+* ALLPATHS-LG V50xxx (ALLPATHSLG_V50)
+* Platanus V1.2 (Platanus_Assemble_V1.2)
+* SOAP denovo V2.04 (SOAP_Assemble_V2.4)
+* SPAdes V3.1 (Spades_V3.1)
+* Velvet V1.2 (Velvet_V1.2)
+* Discovar V51xxx (Discovar_V51XXX)
 
 
 A simple MASS job might be configured as follows::
@@ -160,7 +161,7 @@ and single end reads longer than 500BP as long libraries.
 An simple example of ALLPATHS-LG run, using a single fragment and jumping library is shown below::
 
    <mass>
-      <job name="allpaths-raw" tool="ALLPATHS-LG_V44837" threads="16" memory="16000">
+      <job name="allpaths-raw" tool="ALLPATHSLG_V50" threads="16" memory="16000">
          <inputs>
             <input ecq="raw" lib="ope1"/>
             <input ecq="raw" lib="mp1"/>
@@ -180,14 +181,14 @@ be to compare different assemblers, another reason might be to vary the input da
 The example below shows how to run a spread of Abyss assemblies and a single ALLPATHS assembly on the same data::
 
    <mass parallel="true">
-      <job name="abyss-raw-kmer" tool="ABYSS_V1.3" threads="16" memory="4000">
+      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
          <kmer min="65" max="85" step="MEDIUM"/>
          <inputs>
             <input ecq="raw" lib="ope1"/>
             <input ecq="raw" lib="mp1"/>
          </inputs>
       </job>
-      <job name="allpaths-raw" tool="ALLPATHS-LG_V44837" threads="16" memory="16000">
+      <job name="allpaths-raw" tool="ALLPATHSLG_V50" threads="16" memory="16000">
          <inputs>
             <input ecq="raw" lib="ope1"/>
             <input ecq="raw" lib="mp1"/>

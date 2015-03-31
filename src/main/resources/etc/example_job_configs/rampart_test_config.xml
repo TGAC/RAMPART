@@ -103,7 +103,7 @@
                  says run abyss with a Kmer value of 81 (overriding the optimal value calculated by kmer genie), but run
                  two assemblies, one where the sickle trimmed input has been subsampled to an approximate coverage level
                  of 75X, and another using all sickle trimmed input -->
-            <job name="abyss-sickle_agressive-cvg" tool="ABYSS_V1_3_4" threads="16" memory="4000" parallel="true">
+            <job name="abyss-sickle_agressive-cvg" tool="ABYSS_V1.5" threads="16" memory="4000" parallel="true">
                 <kmer list="81"/>
                 <coverage list="75,ALL"/>
                 <inputs>

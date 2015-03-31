@@ -74,7 +74,10 @@ not a file that you should for your own projects as many of the options are redu
                 </inputs>
             </job>
         </mass>
-        <analyse_mass types="QUAST,KAT" threads="8" parallel="true"/>
+        <analyse_mass threads="8" parallel="true" >
+            <tool name="QUAST" threads="8" memory="4000"/>
+            <tool name="KAT" threads="16" memory="20000"/>
+        </analyse_mass>
         <amp>
             <stage tool="SSPACE_Basic_v2.0" threads="16" memory="16000" checked_args="-m 50 -z 500">
                 <inputs>
@@ -87,7 +90,10 @@ not a file that you should for your own projects as many of the options are redu
                 </inputs>
             </stage>
         </amp>
-        <analyse_amp types="QUAST,KAT" threads="8" parallel="true"/>
+        <analyse_amp>
+            <tool name="QUAST" threads="8" memory="10000"/>
+            <tool name="KAT" threads="8" memory="20000"/>
+        </analyse_amp>
         <finalise prefix="Bamax_V1" min_n="20" compress="true"/>
     </pipeline>
 
