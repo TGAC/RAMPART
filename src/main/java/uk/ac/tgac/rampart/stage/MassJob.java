@@ -204,14 +204,14 @@ public class MassJob extends AbstractConanProcess {
     }
 
 
-    private List<Integer> doSubsampling(boolean assemblerDoesSubsampling, int coverage,
+    private List<Integer> doSubsampling(boolean assemblerDoesSubsampling, int desiredCoverage,
                                         List<Library> libraries, boolean runParallel)
             throws IOException, InterruptedException, ProcessExecutionException, ConanParameterException {
 
         Args args = this.getArgs();
 
         // Check to see if we even need to do subsampling.  If not just return the current libraries.
-        if (assemblerDoesSubsampling || coverage == CoverageRange.ALL) {
+        if (assemblerDoesSubsampling || desiredCoverage == CoverageRange.ALL) {
             return new ArrayList<Integer>();
         }
 
@@ -233,10 +233,10 @@ public class MassJob extends AbstractConanProcess {
 
             // Subsample to this coverage level if required
             long timestamp = System.currentTimeMillis();
-            String fileSuffix = "_cvg-" + coverage + ".fastq";
-            String jobPrefix = args.getJobPrefix() + "-subsample-" + lib.getName() + "-" + coverage + "x";
+            String fileSuffix = "_cvg-" + desiredCoverage + ".fastq";
+            String jobPrefix = args.getJobPrefix() + "-subsample-" + lib.getName() + "-" + desiredCoverage + "x";
 
-            subsampledLib.setName(lib.getName() + "-" + coverage + "x");
+            subsampledLib.setName(lib.getName() + "-" + desiredCoverage + "x");
 
             final long genomeSize = args.getOrganism().getGenomeSize();
 
@@ -250,11 +250,14 @@ public class MassJob extends AbstractConanProcess {
                                 this.getNbBases(lib.getFile2(), subsamplingDir, jobPrefix + "-file2-base_count");
 
                 // Calculate the probability of keeping an entry
-                double probability = (double)sequencedBases / (double)genomeSize / 2.0;
+                double actualCoverage = (double)sequencedBases / (double)genomeSize / 2.0;
 
-                log.debug("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
-                        "Estimated genome size is: " + genomeSize + "; so we plan only to keep " +
-                        probability + "% of the reads to achieve approximately " + coverage + "X coverage");
+                double probability = desiredCoverage / actualCoverage;
+
+
+                log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
+                        "Estimated genome size is: " + genomeSize + "; so actual coverage is approximately: " + actualCoverage +
+                        "; we will only keep " + probability + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
 
 
                 subsampledLib.setFiles(
@@ -280,11 +283,12 @@ public class MassJob extends AbstractConanProcess {
                         this.getNbBases(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-base_count");
 
                 // Calculate the probability of keeping an entry
-                double probability = (double)sequencedBases / (double)genomeSize;
+                double actualCoverage = (double)sequencedBases / (double)genomeSize;
+                double probability = desiredCoverage / actualCoverage;
 
-                log.debug("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
-                        "Estimated genome size is: " + genomeSize + "; so we plan only to keep " +
-                        probability + "% of the reads to achieve approximately " + coverage + "X coverage");
+                log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
+                        "Estimated genome size is: " + genomeSize + "; so actual coverage is approximately: " + actualCoverage +
+                        "; we will only keep " + probability + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
 
                 subsampledLib.setFiles(
                         new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
