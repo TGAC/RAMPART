@@ -48,7 +48,7 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
 
    # Assemblers
    Abyss_V1.5
-   AllpathsLg_V44837
+   AllpathsLg_V50
    Platanus_Assemble_V1.2
    SOAP_Assemble_V2.4
    Spades_V3.1
@@ -69,7 +69,7 @@ The format for each entry is as follows: ``<key>=<command_to_load_tool>``.  Vali
    FastXRC_V0013
 
    # Assembly analysis tools
-   Quast_V2.2
+   Quast_V2.3
    Cegma_V2.4
    KAT_Comp_V1.0
    KAT_GCP_V1.0

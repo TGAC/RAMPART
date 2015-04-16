@@ -10,11 +10,12 @@ In order to do useful work RAMPART can call out to a number of third party tools
 Assemblers (RAMPART is not an assembler itself so you should have at least one of these installed to do useful work):
 
 * Abyss V1.5
-* ALLPATHS-LG V44837
+* ALLPATHS-LG V50xxx
 * Platanus V1.2
 * SPAdes 3.1
 * SOAPdenovo V2
 * Velvet V1.2
+* Discovar V51xxx
 
 Dataset improvement tools:
 
@@ -32,7 +33,7 @@ Assembly improvement tools:
 
 Assembly Analysis Tools:
 
-* Quast V2.2 - for contiguity analysis
+* Quast V2.3 - for contiguity analysis
 * CEGMA V2.4 - for assembly completeness analysis
 * KAT V1.0 - for kmer analysis
 
@@ -61,6 +62,7 @@ Project URLs:
 * Abyss           - http://www.bcgsc.ca/platform/bioinfo/software/abyss
 * ALLPATHS-LG     - http://www.broadinstitute.org/software/allpaths-lg/blog/?page_id=12
 * Cegma           - http://korflab.ucdavis.edu/datasets/cegma/
+* Discovar        - http://www.broadinstitute.org/software/discovar/blog/
 * KAT             - http://www.tgac.ac.uk/kat/
 * Kmer Genie      - http://kmergenie.bx.psu.edu/
 * Jellyfish       - http://www.cbcb.umd.edu/software/jellyfish/

@@ -294,20 +294,6 @@ public class RampartCLI extends AbstractConanCLI {
                 RampartStageList.parse(commandLine.getOptionValue(OPT_STAGES)) :
                 DEFAULT_STAGES;
 
-        if (commandLine.hasOption(OPT_START_FROM)) {
-            RampartStage startStage = RampartStage.valueOf(commandLine.getOptionValue(OPT_START_FROM).toUpperCase());
-
-            boolean found = false;
-            while(!found) {
-                if (this.stages.get(0) != startStage) {
-                    this.stages.remove(0);
-                }
-                else {
-                    found = true;
-                }
-            }
-        }
-
         // If the user hasn't modified the stages then check to see if they've requested any predefined profiles
         if (stages == DEFAULT_STAGES) {
 
@@ -342,6 +328,21 @@ public class RampartCLI extends AbstractConanCLI {
                 }
             }
         }
+
+        if (commandLine.hasOption(OPT_START_FROM)) {
+            RampartStage startStage = RampartStage.valueOf(commandLine.getOptionValue(OPT_START_FROM).trim().toUpperCase());
+
+            boolean found = false;
+            while(!found) {
+                if (this.stages.get(0) != startStage) {
+                    this.stages.remove(0);
+                }
+                else {
+                    found = true;
+                }
+            }
+        }
+
 
         // Check for a single arg left on the command line
         if (commandLine.getArgs().length != 1)
@@ -395,6 +396,10 @@ public class RampartCLI extends AbstractConanCLI {
         options.add(OptionBuilder.withLongOpt(OPT_SKIP_CHECKS)
                 .withDescription("Skips initial checks to see if all requested tools can be found.")
                 .create("sc"));
+
+        options.add(OptionBuilder.withLongOpt(OPT_START_FROM).hasArg()
+                .withDescription("Starts the RAMPART pipeline from this stage.  Can be combined with \"--stages\", \"-1\" and \"-2\" options with this option being applied after.")
+                .create("sf"));
 
         options.add(new Option("V", OPT_VERSION, false, "Current version"));
 
