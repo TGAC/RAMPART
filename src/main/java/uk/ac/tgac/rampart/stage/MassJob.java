@@ -433,7 +433,7 @@ public class MassJob extends AbstractConanProcess {
         String wcOption = linesOnly ? "-l" : "-m";
         String command = "awk '/^@/{getline; print}' " + seqFile.getAbsolutePath() + " | wc " + wcOption + " > " + outputFile.getAbsolutePath();
 
-        this.conanExecutorService.executeProcess(command, outputDir, jobName, 1, 1, false);
+        this.conanExecutorService.executeProcess(command, outputDir, jobName, 1, 0, 0, false);
 
         List<String> lines = FileUtils.readLines(outputFile);
 
@@ -458,6 +458,7 @@ public class MassJob extends AbstractConanProcess {
                 jobName,
                 args.getThreads(),
                 args.getMemory(),
+                args.getExpWallTimeMins(),
                 args.isMassParallel() || args.isRunParallel(),
                 jobIds,
                 assembler.usesOpenMpi());
@@ -530,6 +531,7 @@ public class MassJob extends AbstractConanProcess {
         private static final String KEY_ATTR_TOOL = "tool";
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
+        private static final String KEY_ATTR_EXPWALLTIME = "exp_walltime";
         private static final String KEY_ATTR_PARALLEL = "parallel";
         private static final String KEY_ATTR_CHECKED_ARGS = "checked_args";
         private static final String KEY_ATTR_UNCHECKED_ARGS = "unchecked_args";
@@ -564,6 +566,7 @@ public class MassJob extends AbstractConanProcess {
         // System settings
         private int threads;
         private int memory;
+        private int expWallTimeMins;
         private boolean runParallel;
         private boolean massParallel;
         private List<Library> selectedLibs;
@@ -598,6 +601,7 @@ public class MassJob extends AbstractConanProcess {
 
             this.threads = 1;
             this.memory = 0;
+            this.expWallTimeMins = 0;
             this.runParallel = DEFAULT_RUN_PARALLEL;
             this.massParallel = DEFAULT_MASS_PARALLEL;
 
@@ -668,6 +672,10 @@ public class MassJob extends AbstractConanProcess {
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ?
                     XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) :
                     DEFAULT_MEMORY;
+
+            this.expWallTimeMins = ele.hasAttribute(KEY_ATTR_EXPWALLTIME) ?
+                    XmlHelper.getIntValue(ele, KEY_ATTR_EXPWALLTIME) :
+                    0;
 
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
@@ -996,6 +1004,7 @@ public class MassJob extends AbstractConanProcess {
                     asmArgs.setLibraries(libs);
                     asmArgs.setThreads(this.threads);
                     asmArgs.setMemory(this.memory);
+                    asmArgs.setEstimatedWalltimeMins(this.expWallTimeMins);
                     asmArgs.setOrganism(this.organism);
                     asmArgs.setDesiredCoverage(jv.cvg);
 
@@ -1188,6 +1197,14 @@ public class MassJob extends AbstractConanProcess {
 
         public void setMemory(int memory) {
             this.memory = memory;
+        }
+
+        public int getExpWallTimeMins() {
+            return expWallTimeMins;
+        }
+
+        public void setExpWallTimeMins(int expWallTimeMins) {
+            this.expWallTimeMins = expWallTimeMins;
         }
 
         public Organism getOrganism() {

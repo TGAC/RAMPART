@@ -46,11 +46,8 @@ import uk.ac.tgac.conan.process.asmIO.gapclose.SoapGapCloserV112;
 import uk.ac.tgac.conan.process.asmIO.scaffold.PlatanusScaffoldV12;
 import uk.ac.tgac.conan.process.asmIO.scaffold.SSpaceBasicV2;
 import uk.ac.tgac.conan.process.asmIO.scaffold.SoapScaffolderV24;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishStatsV11;
-import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
-import uk.ac.tgac.conan.process.kmer.kat.KatGcpV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV2;
+import uk.ac.tgac.conan.process.kmer.kat.KatGcpV2;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotDensityV1;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
 import uk.ac.tgac.conan.process.misc.FastXRC_V0013;
@@ -134,9 +131,8 @@ public class RampartCLI extends AbstractConanCLI {
             new MusketV10().getName(),
             new SickleV12().getName(),
             new QuakeV03().getName(),
-            new JellyfishCountV11().getName(),
-            new KatCompV1().getName(),
-            new KatGcpV1().getName(),
+            new KatCompV2().getName(),
+            new KatGcpV2().getName(),
             new KmerGenieV16().getName(),
             new AbyssV15().getName(),
             new VelvetV12().getName(),
@@ -156,10 +152,7 @@ public class RampartCLI extends AbstractConanCLI {
             new QuastV23().getName(),
             new CegmaV24().getName(),
             new KatPlotDensityV1().getName(),
-            new KatPlotSpectraCnV1().getName(),
-            new JellyfishCountV11().getName(),
-            new JellyfishMergeV11().getName(),
-            new JellyfishStatsV11().getName()
+            new KatPlotSpectraCnV1().getName()
     };
 
 

@@ -196,7 +196,7 @@ public class Finalise extends AbstractConanProcess {
                     args.getTranslationFile().getName() + "; " +
                     "cd " + pwd;
 
-            result = this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, false);
+            result = this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, 0, false);
 
             log.info("Output compressed to: " + args.getCompressedFile().getAbsolutePath());
         }

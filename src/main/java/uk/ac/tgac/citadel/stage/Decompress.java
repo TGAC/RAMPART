@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
-import uk.ac.ebi.fgpt.conan.core.param.*;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
+import uk.ac.ebi.fgpt.conan.core.param.FlagParameter;
+import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
 import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.core.process.TypicalProcessArgs;
 import uk.ac.ebi.fgpt.conan.core.process.TypicalProcessParams;
@@ -101,7 +103,8 @@ public class Decompress extends AbstractConanProcess {
                             args.getOutputDir(),
                             args.getJobPrefix() + leftLinkFile.getName(),
                             1,
-                            1000,
+                            0,
+                            0,
                             args.isRunParallel()));
                 }
 
@@ -120,7 +123,8 @@ public class Decompress extends AbstractConanProcess {
                                 args.getOutputDir(),
                                 args.getJobPrefix() + rightLinkFile.getName(),
                                 1,
-                                1000,
+                                0,
+                                0,
                                 args.isRunParallel()));
                     }
                 }

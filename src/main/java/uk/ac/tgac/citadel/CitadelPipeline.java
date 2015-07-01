@@ -19,7 +19,6 @@
 package uk.ac.tgac.citadel;
 
 import org.apache.commons.cli.CommandLine;
-import org.w3c.dom.Element;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
@@ -39,17 +38,12 @@ import uk.ac.tgac.citadel.stage.*;
 import uk.ac.tgac.citadel.stage.Package;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
-import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.RampartJobFileSystem;
-import uk.ac.tgac.rampart.RampartPipeline;
-import uk.ac.tgac.rampart.stage.*;
-import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAmpAssemblies;
-import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseMassAssemblies;
-import uk.ac.tgac.rampart.stage.analyse.reads.AnalyseReads;
+import uk.ac.tgac.rampart.stage.RampartStage;
+import uk.ac.tgac.rampart.stage.RampartStageList;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

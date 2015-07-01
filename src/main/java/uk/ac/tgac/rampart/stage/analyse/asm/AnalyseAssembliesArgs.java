@@ -25,8 +25,10 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
+import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
+import uk.ac.tgac.rampart.stage.Mecq;
 import uk.ac.tgac.rampart.stage.RampartStageArgs;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.util.SpiFactory;
@@ -53,33 +55,36 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
     private Set<AssemblyAnalyser> assemblyAnalysers;
 
     private List<ToolArgs> tools;
-    private File analyseReadsDir;
     private File outputDir;
     private Organism organism;
     private int threadsPerProcess;
     private int memory;
     private boolean runParallel;
     private String jobPrefix;
+    private List<Library> allLibraries;
+    private List<Mecq.EcqArgs> allMecqs;
 
     public AnalyseAssembliesArgs(AnalyseAssembliesParams params) {
 
         super(params);
 
         this.tools = new ArrayList<>();
-        this.analyseReadsDir = null;
         this.outputDir = null;
         this.organism = null;
         this.threadsPerProcess = 1;
         this.memory = 0;
         this.runParallel = false;
         this.jobPrefix = "assembly-analyses";
+        this.allLibraries = new ArrayList<>();
+        this.allMecqs = new ArrayList<>();
 
         this.assemblyAnalyserFactory = new SpiFactory<>(AssemblyAnalyser.class);
         this.assemblyAnalysers = new HashSet<>();
     }
 
-    public AnalyseAssembliesArgs(AnalyseAssembliesParams params, Element element, File analyseReadsDir, File outputDir,
-                                 Organism organism, String jobPrefix, boolean doingReadKmerAnalysis) throws IOException {
+    public AnalyseAssembliesArgs(AnalyseAssembliesParams params, Element element, File outputDir,
+                                 Organism organism, String jobPrefix, List<Library> allLibraries,
+                                 List<Mecq.EcqArgs> allMecqs) throws IOException {
 
         this(params);
 
@@ -97,7 +102,8 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             throw new IOException("Found unrecognised element or attribute in \"analyse_mass\"");
         }
 
-        this.analyseReadsDir = analyseReadsDir;
+        this.allLibraries = allLibraries;
+        this.allMecqs = allMecqs;
         this.outputDir = outputDir;
         this.organism = organism;
         this.jobPrefix = jobPrefix;
@@ -109,7 +115,7 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         // All libraries
         NodeList nodes = element.getElementsByTagName(KEY_ELEM_TOOL);
         for (int i = 0; i < nodes.getLength(); i++) {
-            this.tools.add(new ToolArgs((Element) nodes.item(i), outputDir, analyseReadsDir, organism, jobPrefix, this.runParallel, doingReadKmerAnalysis));
+            this.tools.add(new ToolArgs((Element) nodes.item(i), outputDir, allLibraries, allMecqs, organism, jobPrefix, this.runParallel));
         }
 
         for(AnalyseAssembliesArgs.ToolArgs requestedService : this.tools) {
@@ -143,12 +149,20 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         this.memory = memory;
     }
 
-    public File getAnalyseReadsDir() {
-        return analyseReadsDir;
+    public List<Library> getAllLibraries() {
+        return allLibraries;
     }
 
-    public void setAnalyseReadsDir(File analyseReadsDir) {
-        this.analyseReadsDir = analyseReadsDir;
+    public void setAllLibraries(List<Library> allLibraries) {
+        this.allLibraries = allLibraries;
+    }
+
+    public List<Mecq.EcqArgs> getAllMecqs() {
+        return allMecqs;
+    }
+
+    public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
+        this.allMecqs = allMecqs;
     }
 
     public File getOutputDir() {
@@ -241,7 +255,8 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         private String jobPrefix;
         private Organism organism;
         private File outputDir;
-        private File readsAnalysisDir;
+        private List<Library> allLibraries;
+        private List<Mecq.EcqArgs> allMecqs;
 
         public ToolArgs() {
             this.name = "";
@@ -250,12 +265,13 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             this.runParallel = DEFAULT_RUN_PARALLEL;
             this.jobPrefix = "analyse_mass_tool";
             this.outputDir = null;
-            this.readsAnalysisDir = null;
+            this.allLibraries = new ArrayList<>();
+            this.allMecqs = new ArrayList<>();
         }
 
 
-        public ToolArgs(Element ele, File outputDir, File readsAnalysisDir, Organism organism, String jobPrefix, boolean forceParallel,
-                        boolean doingReadKmerAnalysis)
+        public ToolArgs(Element ele, File outputDir, List<Library> allLibraries,
+                        List<Mecq.EcqArgs> allMecqs, Organism organism, String jobPrefix, boolean forceParallel)
                 throws IOException {
 
             // Set defaults
@@ -282,20 +298,17 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
 
             this.name = XmlHelper.getTextValue(ele, KEY_ATTR_NAME);
 
-            if (this.name.equalsIgnoreCase("KAT") && !doingReadKmerAnalysis) {
-                throw new IOException("You have requested to do a KAT analysis of your assemblies but have not requested a kmer analysis of your reads.  Either remove the KAT assembly analysis request or add a read kmer analysis request to your configuration file.");
-            }
-
             // Optional
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ? XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) : DEFAULT_THREADS;
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
             this.runParallel = forceParallel ||
                     (ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL);
 
+            this.allLibraries = allLibraries;
+            this.allMecqs = allMecqs;
             this.jobPrefix = jobPrefix;
             this.organism = organism;
             this.outputDir = outputDir;
-            this.readsAnalysisDir = readsAnalysisDir;
         }
 
         public String getName() {
@@ -354,12 +367,20 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             this.outputDir = outputDir;
         }
 
-        public File getReadsAnalysisDir() {
-            return readsAnalysisDir;
+        public List<Library> getAllLibraries() {
+            return allLibraries;
         }
 
-        public void setReadsAnalysisDir(File readsAnalysisDir) {
-            this.readsAnalysisDir = readsAnalysisDir;
+        public void setAllLibraries(List<Library> allLibraries) {
+            this.allLibraries = allLibraries;
+        }
+
+        public List<Mecq.EcqArgs> getAllMecqs() {
+            return allMecqs;
+        }
+
+        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
+            this.allMecqs = allMecqs;
         }
     }
 }

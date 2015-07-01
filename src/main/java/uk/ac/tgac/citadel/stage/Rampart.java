@@ -37,12 +37,10 @@ import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.PathUtils;
 import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
-import uk.ac.tgac.jellyswarm.FileFinder;
 import uk.ac.tgac.jellyswarm.FilePair;
 import uk.ac.tgac.jellyswarm.JellyswarmCLI;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,6 +70,7 @@ public class Rampart extends AbstractConanProcess {
 
     protected enum AssemblyCode {
         ABYSS,
+        DISCOVAR,
         SPADES,
         VELVET
     }

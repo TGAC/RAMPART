@@ -262,13 +262,13 @@ public class RampartPipeline extends AbstractConanPipeline {
                     new AnalyseMassAssemblies.Args(
                             analyseMassElement,
                             this.rampartJobFileSystem.getMassDir(),
-                            this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
                             this.rampartJobFileSystem.getAnalyseMassDir(),
                             this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
+                            this.libs,
+                            this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
                             this.organism,
                             this.jobPrefix + "-analyse_mass",
-                            this.kmerCalcArgs == null ? null : this.kmerCalcArgs.getResultFile(),
-                            this.analyseReadsArgs == null ? false : this.analyseReadsArgs.isKmerAnalysis());
+                            this.kmerCalcArgs == null ? null : this.kmerCalcArgs.getResultFile());
 
             this.stages.setArgsIfPresent(RampartStage.ANALYSE_MASS, this.analyseMassArgs);
 
@@ -313,12 +313,12 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.analyseAmpArgs = analyseAmpElement == null ? null :
                     new AnalyseAmpAssemblies.Args(
                             analyseAmpElement,
-                            this.analyseReadsArgs != null ? this.rampartJobFileSystem.getAnalyseReadsDir() : null,
                             this.rampartJobFileSystem.getAnalyseAmpDir(),
+                            this.libs,
+                            this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getEqcArgList(),
                             this.ampArgs == null ? null : this.ampArgs.getStageArgsList(),
                             this.organism,
-                            this.jobPrefix + "-analyse_amp",
-                            this.analyseReadsArgs != null ? this.analyseReadsArgs.isKmerAnalysis() : false);
+                            this.jobPrefix + "-analyse_amp");
 
             this.stages.setArgsIfPresent(RampartStage.ANALYSE_AMP, this.analyseAmpArgs);
 

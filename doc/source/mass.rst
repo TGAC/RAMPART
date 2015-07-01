@@ -20,16 +20,30 @@ A simple MASS job might be configured as follows::
 
    <kmer_calc threads="32" memory="20000"/>
    <mass>
-      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000">
+      <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000" exp_walltime="60">
          <inputs>
             <input ecq="raw" lib="pe1"/>
          </inputs>
       </job>
    </mass>
 
-This instructs RAMPART to run a single Abyss assembly using 16 threads, requesting 4GB RAM, using the optimal kmer value
-determined by kmer genie on the raw pe1 dataset.  The kmer_calc stage looks ahead to run on dataset configurations for
-each MASS job.
+This instructs RAMPART to run a single Abyss assembly using 16 threads, requesting 4GB RAM, expecting to run for 60mins,
+using the optimal kmer value determined by kmer genie on the raw pe1 dataset.  The kmer_calc stage looks ahead to run on
+dataset configurations for each MASS job.
+
+In the job element there are two required attributes: "name" and "tool".  The name attribute is primarily used as the name
+of the output directory for this job, but it also provides a way of referring to this job from other parts of the pipeline.
+The tool attribute must represent one of the supported assemblers, and take one of the assemblers values defined at the
+start of this chapter, or in the environment config section of the documentation.
+
+There are also several optional attributes: "threads", "memory", "exp_walltime", "checked_args", "unchecked_args".  The
+value entered to threads will be passed to the tool and the scheduler to define the number of threads required for this
+job.  memory may get passed to the tool, depending on whether the tool requires it, but will get passed to the scheduler.
+exp_walltime, will just go to the scheduler.  It's important to understand how your scheduler works before entering these
+values.  The intention is that these figures will represent guidelines to help the scheduler organise it's workload fairly,
+such as LSF.  However other schedulers may define these as hardlimits.  For example on PBS there is no notion of "expected"
+walltime, only a hard limited walltime, so we double the value entered here in order to create a conservative hard limit
+instead.  checked and unchecked args are described later in this section.
 
 
 Varying kmers for De Bruijn Graph assemblers
@@ -96,8 +110,8 @@ Varying coverage
 
 In the past, sequencing was expensive and slow, which led to sequencing coverage of a genome to be relatively low.  In
 those days, you typically would use all the data you could get in your assembly.  These days, sequencing is relatively
-cheap and it is often possible to over sequence data, to the point where the gains in terms of separting signal from
-noise become irrelevant.  Typically, a sequencing depth of 100X is sufficient for most purposes.  Furthermore, over
+cheap and it is often possible to over sequence data, to the point where the gains in terms of separating signal from
+noise become irrelevant.  Typically, a sequencing depth of 100X is more than sufficient for most purposes.  Furthermore, over
 sequencing doesn't just present problems in terms of data storage, RAM usage and runtime, it also can degrade the
 quality of some assemblies.  One common reason for failed assemblies with high coverage can occur if trying to assemble
 DNA sequenced from populations rather than a single individual.  The natural variation in the data can make it impossible

@@ -24,8 +24,6 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ProcessArgs;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.tgac.citadel.stage.*;
-import uk.ac.tgac.jellyswarm.CounterProcess;
-import uk.ac.tgac.jellyswarm.StatsProcess;
 
 import java.util.ArrayList;
 import java.util.List;

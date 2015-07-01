@@ -37,9 +37,11 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.stage.AmpStage;
+import uk.ac.tgac.rampart.stage.Mecq;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
@@ -306,16 +308,17 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
             this.setJobPrefix("amp-analyses");
         }
 
-        public Args(Element element, File analyseReadsDir, File outputDir, List<AmpStage.Args> ampStages,
-                               Organism organism, String jobPrefix, boolean doingReadKmerAnalysis) throws IOException {
+        public Args(Element element, File outputDir, List<Library> allLibraries,
+                    List<Mecq.EcqArgs> allMecqs, List<AmpStage.Args> ampStages,
+                               Organism organism, String jobPrefix) throws IOException {
 
             super(  new Params(),
                     element,
-                    analyseReadsDir,
                     outputDir,
                     organism,
                     jobPrefix,
-                    doingReadKmerAnalysis
+                    allLibraries,
+                    allMecqs
                     );
 
             this.analyseAll = element.hasAttribute(KEY_ATTR_ALL) ?
