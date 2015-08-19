@@ -18,6 +18,7 @@
 
 package uk.ac.tgac.rampart;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -44,13 +45,17 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
     public static final String KEY_ATTR_INSTITUTION     = "institution";
     public static final String KEY_ATTR_TITLE           = "title";
     public static final String KEY_ELEM_LIBRARIES       = "libraries";
+    public static final String KEY_ELEM_SAMPLES         = "samples";
     public static final String KEY_ELEM_ORGANISM        = "organism";
     public static final String KEY_ELEM_LIBRARY         = "library";
     public static final String KEY_ELEM_PIPELINE        = "pipeline";
+    public static final String KEY_ATTR_SAMPLES_FILE    = "file";
 
     private RampartStageList stages;
     private List<Library> libs;
-    private RampartJobFileSystem rampartJobFileSystem;
+    private List<Library> samples;
+    private File outputDir;
+    private boolean multiSampleMode;
     private ExecutionContext executionContext;
     private boolean doInitialChecks;
     private RampartPipeline.Args pipelineArgs;
@@ -66,10 +71,12 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
 
         this.stages = stages;
         this.libs = new ArrayList<>();
-        this.rampartJobFileSystem = new RampartJobFileSystem(outputDir.getAbsoluteFile());
+        this.samples = new ArrayList<>();
+        this.outputDir = outputDir;
         this.doInitialChecks = doInitialChecks;
         this.ampInput = ampInput;
         this.ampBubble = ampBubble;
+        this.multiSampleMode = false;
     }
 
 
@@ -97,34 +104,86 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
 
         // All libraries
         Element librariesElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_LIBRARIES);
-        NodeList libraries = librariesElement.getElementsByTagName(KEY_ELEM_LIBRARY);
-        this.libs = new ArrayList<>();
-        for(int i = 0; i < libraries.getLength(); i++) {
-            this.libs.add(new Library((Element)libraries.item(i), this.getOutputDir().getAbsoluteFile()));
-        }
+        Element samplesElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_SAMPLES);
 
-        // Check all library files exist on the file system
-        for(Library lib : this.libs) {
-            if (!lib.getFile1().exists()) {
-                throw new IOException("Could not locate file 1 from library: " + lib.getName() + "; " + lib.getFile1().getAbsolutePath());
+
+        // Check to see if we run in single sample or multi-sample mode
+        if (librariesElement != null) {
+            NodeList libraries = librariesElement.getElementsByTagName(KEY_ELEM_LIBRARY);
+            this.libs = new ArrayList<>();
+            for (int i = 0; i < libraries.getLength(); i++) {
+                this.libs.add(new Library((Element) libraries.item(i), this.getOutputDir().getAbsoluteFile()));
             }
 
-            if (lib.isPairedEnd() && !lib.getFile2().exists()) {
-                throw new IOException("Could not locate file 2 from library: " + lib.getName() + "; " + lib.getFile2().getAbsolutePath());
+            // Check all library files exist on the file system
+            for (Library lib : this.libs) {
+                if (!lib.getFile1().exists()) {
+                    throw new IOException("Could not locate file 1 from library: " + lib.getName() + "; " + lib.getFile1().getAbsolutePath());
+                }
+
+                if (lib.isPairedEnd() && !lib.getFile2().exists()) {
+                    throw new IOException("Could not locate file 2 from library: " + lib.getName() + "; " + lib.getFile2().getAbsolutePath());
+                }
             }
+            this.multiSampleMode = false;
         }
+        else if (samplesElement != null) {
+            String samplesFile = samplesElement.getAttribute(KEY_ATTR_SAMPLES_FILE);
+            this.samples = parseSamplesFile(new File(samplesFile));
+            this.multiSampleMode = true;
+        }
+        else {
+            throw new IOException("Could not locate either a 'libraries' element or a 'samples' element in the config file.");
+        }
+
 
         this.pipelineArgs = new RampartPipeline.Args(
                 XmlHelper.getDistinctElementByName(element, KEY_ELEM_PIPELINE),
-                this.libs,
+                this.multiSampleMode ? this.samples : this.libs,
+                this.multiSampleMode,
                 this.getOrganism(),
-                this.rampartJobFileSystem,
+                this.outputDir,
                 this.getJobPrefix(),
                 this.getInstitution(),
                 this.stages,
                 this.doInitialChecks,
                 this.ampInput,
                 this.ampBubble);
+    }
+
+    protected List<Library> parseSamplesFile(File input) throws IOException {
+
+        List<String> lines = FileUtils.readLines(input);
+        List<Library> libs = new ArrayList<>();
+
+        for(String line : lines) {
+            String l = line.trim();
+
+            if (l.isEmpty()) {
+                continue;
+            }
+
+            String[] parts = l.split("\t");
+
+            if (parts.length < 3 || parts.length > 4) {
+                throw new IOException("Expected samples file to contain either 2 or 3 columns");
+            }
+
+            String sampleName = parts[0];
+            String phred = parts[1];
+
+            String file1 = parts[2];
+            String file2 = (parts.length == 4) ? parts[3] : null;
+
+            Library lib = new Library();
+            lib.setName(sampleName);
+            lib.setFiles(file1, file2);
+            lib.setPhred(Library.Phred.valueOf(phred));
+
+            libs.add(lib);
+        }
+
+        return libs;
     }
 
     public RampartStageList getStages() {
@@ -160,6 +219,22 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
 
     public void setLibs(List<Library> libs) {
         this.libs = libs;
+    }
+
+    public List<Library> getSamples() {
+        return samples;
+    }
+
+    public void setSamples(List<Library> samples) {
+        this.samples = samples;
+    }
+
+    public boolean isMultiSampleMode() {
+        return multiSampleMode;
+    }
+
+    public void setMultiSampleMode(boolean multiSampleMode) {
+        this.multiSampleMode = multiSampleMode;
     }
 
     public List<ConanProcess> getRequestedTools() {

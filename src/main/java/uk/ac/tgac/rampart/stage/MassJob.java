@@ -557,11 +557,11 @@ public class MassJob extends AbstractConanProcess {
         private String uncheckedArgs;
         private boolean kmerCalc;
 
+
         // Inputs
-        private File mecqDir;
         private List<ReadsInput> inputs;
         private List<Library> allLibraries;
-        private List<Mecq.EcqArgs> allMecqs;
+        private Mecq.Sample sample;
 
         // System settings
         private int threads;
@@ -582,7 +582,6 @@ public class MassJob extends AbstractConanProcess {
 
             super(new Params());
 
-            this.outputDir = null;
             this.jobPrefix = "";
 
             this.tool = AbyssV15.NAME;
@@ -594,10 +593,9 @@ public class MassJob extends AbstractConanProcess {
             this.uncheckedArgs = null;
             this.kmerCalc = false;
 
-            this.mecqDir = null;
             this.inputs = new ArrayList<>();
             this.allLibraries = new ArrayList<>();
-            this.allMecqs = new ArrayList<>();
+            this.sample = null;
 
             this.threads = 1;
             this.memory = 0;
@@ -612,8 +610,9 @@ public class MassJob extends AbstractConanProcess {
 
 
 
-        public Args(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index, boolean kmerCalc) {
+        public Args(Element ele, File massDir, String parentJobPrefix,
+                                Mecq.Sample sample, Organism organism,
+                                boolean massParallel, int index, boolean kmerCalc) {
 
             // Set defaults
             this();
@@ -692,16 +691,15 @@ public class MassJob extends AbstractConanProcess {
 
             // Other args
             this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
-            this.outputDir = new File(parentOutputDir, name);
+            this.sample = sample;
+            this.outputDir = new File(massDir, name);
             this.jobPrefix = parentJobPrefix + "-" + name;
             this.organism = organism;
-            this.mecqDir = mecqDir;
             this.massParallel = massParallel;
 
             // Setup input and generic assembler
             this.genericAssembler = this.createGenericAssembler();
-            this.selectedLibs = this.selectInputs();
+            this.selectedLibs = this.selectInputs(this.sample);
             this.genericAssembler.setLibraries(this.selectedLibs);
 
             Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
@@ -729,7 +727,7 @@ public class MassJob extends AbstractConanProcess {
             if (createGenericAssembler) {
                 // Setup input and generic assembler
                 this.genericAssembler = this.createGenericAssembler();
-                this.selectedLibs = this.selectInputs();
+                this.selectedLibs = this.selectInputs(this.sample);
                 this.genericAssembler.setLibraries(this.selectedLibs);
             }
 
@@ -750,13 +748,13 @@ public class MassJob extends AbstractConanProcess {
             return genericAssembler;
         }
 
-        public final List<Library> selectInputs() {
+        public final List<Library> selectInputs(Mecq.Sample sample) {
 
             List<Library> selectedLibs = new ArrayList<>();
 
             for(ReadsInput mi : inputs) {
                 Library lib = mi.findLibrary(allLibraries);
-                Mecq.EcqArgs ecqArgs = mi.findMecq(allMecqs);
+                Mecq.EcqArgs ecqArgs = mi.findMecq(sample);
 
                 if (lib == null) {
                     throw new IllegalArgumentException("Unrecognised library: " + mi.getLib() + "; not processing MASS run: " + name);
@@ -768,7 +766,7 @@ public class MassJob extends AbstractConanProcess {
                     throw new IllegalArgumentException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + name);
                 }
                 else {
-                    selectedLibs.add(ecqArgs.getOutputLibrary(lib));
+                    selectedLibs.add(ecqArgs.getOutputLibrary(sample, lib));
                 }
 
                 log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq() + "; Job name: " + name);
@@ -1223,20 +1221,12 @@ public class MassJob extends AbstractConanProcess {
             this.allLibraries = allLibraries;
         }
 
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
+        public Mecq.Sample getSample() {
+            return sample;
         }
 
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
-        }
-
-        public File getMecqDir() {
-            return mecqDir;
-        }
-
-        public void setMecqDir(File mecqDir) {
-            this.mecqDir = mecqDir;
+        public void setSample(Mecq.Sample sample) {
+            this.sample = sample;
         }
 
         public File getUnitigsDir() {
@@ -1265,19 +1255,6 @@ public class MassJob extends AbstractConanProcess {
 
         public void setAssemblers(List<Assembler> assemblers) {
             this.assemblers = assemblers;
-        }
-
-        public List<File> getInputKmers() {
-
-            RampartJobFileSystem fs = new RampartJobFileSystem(this.getMecqDir().getParentFile());
-
-            List<File> inputKmers = new ArrayList<>();
-
-            for(ReadsInput ri : this.inputs) {
-                inputKmers.add(new File(fs.getAnalyseReadsDir(), "jellyfish_" + ri.getEcq() + "_" + ri.getLib() + "_0"));
-            }
-
-            return inputKmers;
         }
 
         public File getStatsFile(Mass.OutputLevel outputLevel) {

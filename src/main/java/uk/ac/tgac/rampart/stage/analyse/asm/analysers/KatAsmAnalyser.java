@@ -123,11 +123,11 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         File katOutDir = new File(outputDir, prefix);
         katOutDir.mkdirs();
 
-        File combinedFile = lib.isPairedEnd() ? new File(katOutDir, "combined_input.fastq") : lib.getFile1();
+        String input = lib.isPairedEnd() ? "'" + lib.getFile1().getAbsolutePath() + " " + lib.getFile2().getAbsolutePath() + "'" : lib.getFile1().getAbsolutePath();
 
         // Setup kat comp
         KatCompV2.Args katCompArgs = new KatCompV2.Args();
-        katCompArgs.setInput1(combinedFile);
+        katCompArgs.setInput1(input);
         katCompArgs.setInput2(assembly);
         katCompArgs.setCanonical1(true);
         katCompArgs.setCanonical2(true);
@@ -138,12 +138,6 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         katCompArgs.setThreads(args.getThreads());
 
         KatCompV2 katCompProcess = new KatCompV2(this.conanExecutorService, katCompArgs);
-
-        // This is a hack until we sort out the kat comp input handling
-        if (lib.isPairedEnd()) {
-            katCompProcess.addPreCommand("cat " + lib.getFile1().getAbsolutePath() + " " + lib.getFile2().getAbsolutePath() + " > " + combinedFile.getAbsolutePath());
-            katCompProcess.addPostCommand("rm " + combinedFile.getAbsolutePath());
-        }
 
         return this.conanExecutorService.executeProcess(
                 katCompProcess,

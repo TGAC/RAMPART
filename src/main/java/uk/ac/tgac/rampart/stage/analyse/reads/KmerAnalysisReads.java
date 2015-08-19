@@ -97,45 +97,49 @@ public class KmerAnalysisReads extends AbstractConanProcess {
                 args.setRunParallel(false);
             }
 
-            // Create the output directory
-            args.getOutputDir().mkdirs();
-
             List<ExecutionResult> jobResults = new ArrayList<>();
 
-            // Create the output directory for the RAW datasets
-            File rawOutputDir = new File(args.getOutputDir(), "raw");
+            for(Mecq.Sample sample : args.getAllMecqs()) {
 
-            if (!rawOutputDir.exists()) {
-                rawOutputDir.mkdirs();
-            }
+                File sampleOutDir = new File(args.getOutputDir(), sample.name);
+                File raOutDir = new File(sampleOutDir, "2-reads-analyses");
 
-            // Start jellyfish on all RAW datasets
-            for(Library lib : args.getAllLibraries()) {
+                // Create the output directory for the RAW datasets
+                File rawOutputDir = new File(raOutDir, "raw");
 
-                // Execute jellyfish and add id to list of job ids
-                ExecutionResult res = this.executeKatGcp(args, "raw", args.getOutputDir(), lib);
-                jobResults.add(res);
-            }
+                if (!rawOutputDir.exists()) {
+                    rawOutputDir.mkdirs();
+                }
 
-            // Also start jellyfish on all the pre-processed libraries from MECQ
-            if (args.getAllMecqs() != null) {
-                for(Mecq.EcqArgs ecqArgs : args.getAllMecqs()) {
+
+                // Start kat on all RAW datasets
+                for (Library lib : sample.libraries) {
+
+                    // Execute jellyfish and add id to list of job ids
+                    File katOutDir = new File(rawOutputDir, lib.getName());
+                    ExecutionResult res = this.executeKatGcp(args, "raw", katOutDir, lib);
+                    jobResults.add(res);
+                }
+
+                // Also start kat on all the pre-processed libraries from MECQ
+                for (Mecq.EcqArgs ecqArgs : sample.ecqArgList) {
 
                     // Create the output directory for the non-RAW datasets
-                    File ecqOutputDir = new File(args.getOutputDir(), ecqArgs.getName());
+                    File ecqOutputDir = new File(raOutDir, ecqArgs.getName());
 
                     if (!ecqOutputDir.exists()) {
                         ecqOutputDir.mkdirs();
                     }
 
-                    for(Library lib : ecqArgs.getOutputLibraries()) {
+                    for (Library lib : ecqArgs.getOutputLibraries(sample)) {
 
                         // Add jellyfish id to list of job ids
-                        ExecutionResult res = this.executeKatGcp(args, ecqArgs.getName(), args.getOutputDir(), lib);
-
+                        File katOutDir = new File(ecqOutputDir, lib.getName());
+                        ExecutionResult res = this.executeKatGcp(args, ecqArgs.getName(), katOutDir, lib);
                         jobResults.add(res);
                     }
                 }
+
             }
 
             // If we're using a scheduler and we have been asked to run each job
@@ -268,7 +272,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
 
 
         private List<Library> allLibraries;             // All allLibraries available in this job
-        private List<Mecq.EcqArgs> allMecqs;                 // All mecq configurations
+        private List<Mecq.Sample> allMecqs;                 // All mecq configurations
         private String jobPrefix;
         private File mecqDir;                           // Where all the output lives
         private boolean runParallel;                    // Whether to run MASS groups in parallel
@@ -292,7 +296,7 @@ public class KmerAnalysisReads extends AbstractConanProcess {
         }
 
 
-        public Args(Element element, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, String jobPrefix, File mecqDir,
+        public Args(Element element, List<Library> allLibraries, List<Mecq.Sample> allMecqs, String jobPrefix, File mecqDir,
                                      File outputDir, Organism organism) {
 
             super(new Params());
@@ -326,11 +330,11 @@ public class KmerAnalysisReads extends AbstractConanProcess {
             this.allLibraries = allLibraries;
         }
 
-        public List<Mecq.EcqArgs> getAllMecqs() {
+        public List<Mecq.Sample> getAllMecqs() {
             return allMecqs;
         }
 
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
+        public void setAllMecqs(List<Mecq.Sample> allMecqs) {
             this.allMecqs = allMecqs;
         }
 

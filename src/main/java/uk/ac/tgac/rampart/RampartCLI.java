@@ -54,6 +54,7 @@ import uk.ac.tgac.conan.process.misc.FastXRC_V0013;
 import uk.ac.tgac.conan.process.re.tools.MusketV10;
 import uk.ac.tgac.conan.process.re.tools.QuakeV03;
 import uk.ac.tgac.conan.process.re.tools.SickleV12;
+import uk.ac.tgac.conan.process.re.tools.TrimGaloreV04;
 import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
 import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
@@ -131,6 +132,7 @@ public class RampartCLI extends AbstractConanCLI {
             new MusketV10().getName(),
             new SickleV12().getName(),
             new QuakeV03().getName(),
+            new TrimGaloreV04().getName(),
             new KatCompV2().getName(),
             new KatGcpV2().getName(),
             new KmerGenieV16().getName(),

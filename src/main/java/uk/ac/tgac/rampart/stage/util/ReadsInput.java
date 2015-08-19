@@ -70,12 +70,12 @@ public class ReadsInput {
         this.lib = lib;
     }
 
-    public Mecq.EcqArgs findMecq(List<Mecq.EcqArgs> allMecqs) {
+    public Mecq.EcqArgs findMecq(Mecq.Sample sample) {
 
-        if (allMecqs == null)
+        if (sample.ecqArgList == null)
             return null;
 
-        for(Mecq.EcqArgs currentMecq : allMecqs) {
+        for(Mecq.EcqArgs currentMecq : sample.ecqArgList) {
             if (currentMecq.getName().equalsIgnoreCase(this.ecq.trim())) {
                 return currentMecq;
             }

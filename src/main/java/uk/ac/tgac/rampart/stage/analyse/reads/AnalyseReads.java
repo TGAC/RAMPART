@@ -125,7 +125,7 @@ public class AnalyseReads extends AbstractConanProcess {
             kmerArgs.setAllLibraries(args.getAllLibraries());
             kmerArgs.setAllMecqs(args.getAllMecqs());
             kmerArgs.setOrganism(args.getOrganism());
-            kmerArgs.setOutputDir(new File(args.getOutputDir(), "kmer"));
+            kmerArgs.setOutputDir(args.getOutputDir());
             kmerArgs.setJobPrefix(args.getJobPrefix() + "-kmer");
             kmerArgs.setMecqDir(args.getMecqDir());
             kmerArgs.setThreadsPerProcess(args.getThreadsPerProcess());
@@ -168,7 +168,7 @@ public class AnalyseReads extends AbstractConanProcess {
         private boolean kmerAnalysis;
 
         private List<Library> allLibraries;             // All allLibraries available in this job
-        private List<Mecq.EcqArgs> allMecqs;                 // All mecq configurations
+        private List<Mecq.Sample> allMecqs;             // All mecq configurations
         private String jobPrefix;
         private File mecqDir;                           // Where all the output lives
         private boolean runParallel;                    // Whether to run MASS groups in parallel
@@ -193,7 +193,7 @@ public class AnalyseReads extends AbstractConanProcess {
         }
 
 
-        public Args(Element element, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, String jobPrefix, File mecqDir,
+        public Args(Element element, List<Library> allLibraries, List<Mecq.Sample> allMecqs, String jobPrefix,
                                 File outputDir, Organism organism) {
 
             super(new Params());
@@ -201,7 +201,6 @@ public class AnalyseReads extends AbstractConanProcess {
             this.allLibraries = allLibraries;
             this.allMecqs = allMecqs;
             this.jobPrefix = jobPrefix;
-            this.mecqDir = mecqDir;
             this.outputDir = outputDir;
             this.organism = organism;
 
@@ -239,11 +238,11 @@ public class AnalyseReads extends AbstractConanProcess {
             this.allLibraries = allLibraries;
         }
 
-        public List<Mecq.EcqArgs> getAllMecqs() {
+        public List<Mecq.Sample> getAllMecqs() {
             return allMecqs;
         }
 
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
+        public void setAllMecqs(List<Mecq.Sample> allMecqs) {
             this.allMecqs = allMecqs;
         }
 
@@ -336,7 +335,6 @@ public class AnalyseReads extends AbstractConanProcess {
         private ConanParameter allLibraries;
         private ConanParameter allMecqs;
         private ConanParameter jobPrefix;
-        private ConanParameter mecqDir;
         private ConanParameter runParallel;
         private ConanParameter outputDir;
         private ConanParameter organism;
@@ -372,11 +370,6 @@ public class AnalyseReads extends AbstractConanProcess {
                     .description("The job prefix to apply to all child jobs")
                     .argValidator(ArgValidator.DEFAULT)
                     .create();
-
-            this.mecqDir = new PathParameter(
-                    "mecq_dir",
-                    "Path to mecq directory",
-                    false);
 
             this.runParallel = new FlagParameter(
                     "parallel",
@@ -423,10 +416,6 @@ public class AnalyseReads extends AbstractConanProcess {
             return jobPrefix;
         }
 
-        public ConanParameter getMecqDir() {
-            return mecqDir;
-        }
-
         public ConanParameter getRunParallel() {
             return runParallel;
         }
@@ -454,7 +443,6 @@ public class AnalyseReads extends AbstractConanProcess {
                     this.allLibraries,
                     this.allMecqs,
                     this.jobPrefix,
-                    this.mecqDir,
                     this.runParallel,
                     this.outputDir,
                     this.organism,

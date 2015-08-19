@@ -301,9 +301,7 @@ public class Mass extends AbstractConanProcess {
         private File outputDir;
         private CalcOptimalKmer.Args kmerCalcArgs;
         private List<MassJob.Args> massJobArgList;    // List of MASS groups to run separately
-        private List<Library> allLibraries;           // All allLibraries available in this job
-        private List<Mecq.EcqArgs> allMecqs;          // All mecq configurations
-        private File mecqDir;
+        private List<Mecq.Sample> samples;          // All mecq configurations
         private boolean runParallel;                  // Whether to run MASS groups in parallel
         private Organism organism;
 
@@ -320,9 +318,7 @@ public class Mass extends AbstractConanProcess {
             this.jobPrefix = "";
             this.outputDir = null;
 
-            this.allLibraries = new ArrayList<>();
-            this.allMecqs = new ArrayList<>();
-            this.mecqDir = null;
+            this.samples = new ArrayList<>();
 
             this.outputLevel = DEFAULT_OUTPUT_LEVEL;
 
@@ -332,7 +328,7 @@ public class Mass extends AbstractConanProcess {
             this.massJobArgList = new ArrayList<>();
         }
 
-        public Args(Element ele, File outputDir, File mecqDir, String jobPrefix, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, Organism organism)
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism)
                 throws IOException {
 
             // Set defaults first
@@ -354,11 +350,8 @@ public class Mass extends AbstractConanProcess {
             // Set from parameters
             this.outputDir = outputDir;
             this.jobPrefix = jobPrefix;
-            this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
+            this.samples = samples;
             this.organism = organism;
-            this.mecqDir = mecqDir;
-
 
             // From Xml (optional)
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
@@ -367,17 +360,19 @@ public class Mass extends AbstractConanProcess {
 
             // All single mass args
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_MASS_JOB);
-            for(int i = 0; i < nodes.getLength(); i++) {
-                this.massJobArgList.add(
-                        new MassJob.Args(
-                                (Element) nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1, this.kmerCalcArgs != null)
-                );
+            for(Mecq.Sample sample : samples) {
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    this.massJobArgList.add(
+                            new MassJob.Args(
+                                    (Element) nodes.item(i), outputDir, jobPrefix + "-group",
+                                    sample, this.organism, this.runParallel, i + 1, this.kmerCalcArgs != null)
+                    );
+                }
             }
         }
 
         public void initialise() {
-            for(MassJob.Args jobArgs : this.massJobArgList) {
+            for (MassJob.Args jobArgs : this.massJobArgList) {
                 jobArgs.initialise(false);
             }
         }
@@ -427,14 +422,6 @@ public class Mass extends AbstractConanProcess {
             this.organism = organism;
         }
 
-        public List<Library> getAllLibraries() {
-            return allLibraries;
-        }
-
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
-        }
-
         public List<MassJob.Args> getMassJobArgList() {
             return massJobArgList;
         }
@@ -451,20 +438,12 @@ public class Mass extends AbstractConanProcess {
             this.kmerCalcArgs = kmerCalcArgs;
         }
 
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
+        public List<Mecq.Sample> getAllMecqs() {
+            return samples;
         }
 
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
-        }
-
-        public File getMecqDir() {
-            return mecqDir;
-        }
-
-        public void setMecqDir(File mecqDir) {
-            this.mecqDir = mecqDir;
+        public void setAllMecqs(List<Mecq.Sample> allMecqs) {
+            this.samples = allMecqs;
         }
 
         @Override
