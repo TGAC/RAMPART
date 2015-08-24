@@ -17,27 +17,23 @@
  */
 package uk.ac.tgac.rampart.stage;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
-import uk.ac.ebi.fgpt.conan.core.param.*;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
+import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.*;
-import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.ConanProcessService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
 import uk.ac.tgac.conan.core.data.Library;
+import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.re.GenericReadEnhancerArgs;
 import uk.ac.tgac.conan.process.re.ReadEnhancer;
@@ -45,10 +41,7 @@ import uk.ac.tgac.conan.process.re.ReadEnhancerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -58,21 +51,16 @@ import java.util.List;
  * Time: 10:54
  * To change this template use File | Settings | File Templates.
  */
-public class Mecq extends AbstractConanProcess {
+public class Mecq extends RampartProcess {
 
     private static Logger log = LoggerFactory.getLogger(Mecq.class);
-    private TaskResult taskResult;
-
-    public Mecq() {
-        this(null);
-    }
 
     public Mecq(ConanExecutorService ces) {
         this(ces, new Args());
     }
 
     public Mecq(ConanExecutorService ces, Args args) {
-        super("", args, new Params(), ces);
+        super(ces, args);
     }
 
 
@@ -81,176 +69,120 @@ public class Mecq extends AbstractConanProcess {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
-        try {
+        Args args = this.getArgs();
 
-            Args args = this.getArgs();
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
+        List<ReadEnhancer> readEnhancers = new ArrayList<>();
+        List<ExecutionResult> results = new ArrayList<>();
 
-            log.info("Starting MECQ Process");
+        // Passthrough links for raw libraries to output
+        for (Library lib : sample.libraries) {
+            this.createOutputLinks(new File(stageOutputDir, "raw"), null, null, lib);
+        }
 
-            // Force run parallel to false if not using a scheduler
-            if (!executionContext.usingScheduler() && args.isRunParallel()) {
-                log.warn("Forcing linear execution due to lack of job scheduler");
-                args.setRunParallel(false);
-            }
+        // For each ecq process all libraries
+        for (EcqArgs ecqArgs : sample.ecqArgList) {
 
-            // Ensure main rampart output directory exists
-            if (!args.outputDir.exists()) {
-                args.outputDir.mkdirs();
-            }
+            // Process each lib
+            for (Library lib : ecqArgs.getLibraries()) {
 
-            List<ReadEnhancer> readEnhancers = new ArrayList<>();
-            List<ExecutionResult> finalResults = new ArrayList<>();
-            List<ExecutionResult> results = new ArrayList<>();
+                // Create the output directory
+                File ecqLibDir = new File(ecqArgs.getOutputDir(), lib.getName());
 
-            // Loop through all samples to process
-            for (Sample sample : args.getSampleList()) {
-
-                File sampleOutDir = new File(args.outputDir, sample.name);
-                File mecqOutDir = new File(sampleOutDir, "1-mecq");
-
-                // Ensure sample output mecq directory exists
-                if (!mecqOutDir.exists()) {
-                    mecqOutDir.mkdirs();
-                }
-
-                // Passthrough links for raw libraries to output
-                for (Library lib : sample.libraries) {
-                    this.createOutputLinks(new File(mecqOutDir, "raw"), null, null, lib);
-                }
-
-                // For each ecq process all libraries
-                for (EcqArgs ecqArgs : sample.ecqArgList) {
-
-                    // Process each lib
-                    for (Library lib : ecqArgs.getLibraries()) {
-
-                        // Create the output directory
-                        File ecqLibDir = new File(ecqArgs.getOutputDir(), lib.getName());
-
-                        if (ecqLibDir.exists()) {
-                            try {
-                                FileUtils.deleteDirectory(ecqLibDir);
-                            } catch (IOException e) {
-                                throw new ProcessExecutionException(2, "Could not delete ecqDir: " + ecqLibDir.getAbsolutePath(), e);
-                            }
-                        }
-                        ecqLibDir.mkdirs();
-
-                        // Create a job name
-                        String title = ecqArgs.getName() + "_" + lib.getName();
-                        String jobName = ecqArgs.getJobPrefix() + "_" + title;
-
-                        GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
-                        genericArgs.setInput(lib);
-                        genericArgs.setOutputDir(ecqLibDir);
-                        genericArgs.setThreads(ecqArgs.getThreads());
-                        genericArgs.setMemoryGb(ecqArgs.getMemory());
-
-                        // Create the actual error corrector from the user provided EcqArgs
-                        ReadEnhancer readEnhancer = ReadEnhancerFactory.create(
-                                ecqArgs.getTool(),
-                                genericArgs,
-                                this.conanExecutorService);
-
-                        // Configure read enhancer
-                        if (ecqArgs.getCheckedArgs() != null && !ecqArgs.getCheckedArgs().trim().isEmpty()) {
-                            readEnhancer.getReadEnchancerArgs().parse(ecqArgs.getCheckedArgs());
-                        }
-                        readEnhancer.getReadEnchancerArgs().setUncheckedArgs(ecqArgs.getUncheckedArgs());
-                        readEnhancer.setup();
-
-                        // Add this to the list in case we need it later
-                        readEnhancers.add(readEnhancer);
-
-                        // Execute this error corrector
-                        ExecutionResult result = this.conanExecutorService.executeProcess(
-                                readEnhancer.toConanProcess(),
-                                ecqLibDir,
-                                jobName,
-                                ecqArgs.getThreads(),
-                                ecqArgs.getMemory(),
-                                ecqArgs.isRunParallel() || args.isRunParallel());
-
-                        result.setName(title);
-                        results.add(result);
-                        finalResults.add(result);
-
-                        // Create links for outputs from this assembler to known locations
-                        this.createOutputLinks(new File(args.getMecqOutputDir(), ecqArgs.getName()), readEnhancer, ecqArgs, lib);
-                    }
-
-                    // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
-                    // each library processed by this ECQ, then wait here.
-                    if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
-                        log.info("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
-                        MultiWaitResult mrw = this.conanExecutorService.executeScheduledWait(
-                                results,
-                                ecqArgs.getJobPrefix() + "*",
-                                ExitStatus.Type.COMPLETED_SUCCESS,
-                                args.getJobPrefix() + "-wait",
-                                ecqArgs.getOutputDir());
-
-                        results.clear();
+                if (ecqLibDir.exists()) {
+                    try {
+                        FileUtils.deleteDirectory(ecqLibDir);
+                    } catch (IOException e) {
+                        throw new ProcessExecutionException(2, "Could not delete ecqDir: " + ecqLibDir.getAbsolutePath(), e);
                     }
                 }
+                ecqLibDir.mkdirs();
+
+                // Create a job name
+                String title = ecqArgs.getName() + "_" + lib.getName();
+                String jobName = ecqArgs.getJobPrefix() + "_" + title;
+
+                GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
+                genericArgs.setInput(lib);
+                genericArgs.setOutputDir(ecqLibDir);
+                genericArgs.setThreads(ecqArgs.getThreads());
+                genericArgs.setMemoryGb(ecqArgs.getMemory());
+
+                // Create the actual error corrector from the user provided EcqArgs
+                ReadEnhancer readEnhancer = ReadEnhancerFactory.create(
+                        ecqArgs.getTool(),
+                        genericArgs,
+                        this.conanExecutorService);
+
+                // Configure read enhancer
+                if (ecqArgs.getCheckedArgs() != null && !ecqArgs.getCheckedArgs().trim().isEmpty()) {
+                    readEnhancer.getReadEnchancerArgs().parse(ecqArgs.getCheckedArgs());
+                }
+                readEnhancer.getReadEnchancerArgs().setUncheckedArgs(ecqArgs.getUncheckedArgs());
+                readEnhancer.setup();
+
+                // Add this to the list in case we need it later
+                readEnhancers.add(readEnhancer);
+
+                // Execute this error corrector
+                ExecutionResult result = this.conanExecutorService.executeProcess(
+                        readEnhancer.toConanProcess(),
+                        ecqLibDir,
+                        jobName,
+                        ecqArgs.getThreads(),
+                        ecqArgs.getMemory(),
+                        ecqArgs.isRunParallel() || args.isRunParallel());
+
+                result.setName(title);
+                results.add(result);
+
+                // Create links for outputs from this assembler to known locations
+                File finishedDir = new File(stageOutputDir, "output");
+                this.createOutputLinks(new File(finishedDir, ecqArgs.getName()), readEnhancer, ecqArgs, lib);
             }
 
-            // If we're using a scheduler and we have been asked to run each MECQ group for each library
-            // in parallel, then we should wait for all those to complete before continueing.
-            if (executionContext.usingScheduler() && args.isRunParallel() && !args.getSampleList().isEmpty()) {
-                log.info("Running all ECQ groups in parallel, waiting for completion");
+            // If we're using a scheduler, and we don't want to run separate ECQ in parallel, and we want to parallelise
+            // each library processed by this ECQ, then wait here.
+            if (executionContext.usingScheduler() && ecqArgs.isRunParallel() && !args.isRunParallel()) {
+                log.info("Waiting for completion of: " + ecqArgs.getName() + "; for all requested libraries");
                 MultiWaitResult mrw = this.conanExecutorService.executeScheduledWait(
                         results,
-                        args.getJobPrefix() + "-ecq*",
+                        ecqArgs.getJobPrefix() + "*",
                         ExitStatus.Type.COMPLETED_SUCCESS,
                         args.getJobPrefix() + "-wait",
-                        args.getMecqDir());
+                        ecqArgs.getOutputDir());
+
+                results.clear();
             }
+        }
 
+        stopWatch.stop();
 
-            // For each ecq check all output files exist
-            for(Sample sample : args.getSampleList())  {
-                for(EcqArgs ecqArgs : sample.ecqArgList) {
-                    for (Library lib : ecqArgs.getOutputLibraries(sample)) {
-                        for (File file : lib.getFiles()) {
-                            if (!file.exists()) {
-                                throw new ProcessExecutionException(2, "MECQ job \"" + ecqArgs.name + "\" did not produce the expected output file: " + file.getAbsolutePath());
-                            }
-                        }
+        return new DefaultTaskResult(sample.name + "-" + args.stage.getOutputDirName(), true, results, stopWatch.getTime() / 1000L);
+    }
+
+    /**
+     * For each ecq check all output files exist
+     * @throws IOException
+     */
+    @Override
+    public void validateOutput(Mecq.Sample sample) throws IOException {
+
+        for(EcqArgs ecqArgs : sample.ecqArgList) {
+            for (Library lib : ecqArgs.getOutputLibraries(sample)) {
+                for (File file : lib.getFiles()) {
+                    if (!file.exists()) {
+                        throw new IOException("MECQ job \"" + ecqArgs.name + "\" for sample \"" + sample.name + "\" did not produce the expected output file: " + file.getAbsolutePath());
                     }
                 }
             }
-
-            log.info("MECQ Finished");
-
-            if (args.multiSampleMode)
-                log.info("Processed " + args.sampleList.size() + " samples");
-
-            stopWatch.stop();
-
-            this.taskResult = new DefaultTaskResult("rampart-mecq", true, finalResults, stopWatch.getTime() / 1000L);
-
-            // Output the resource usage to file
-            FileUtils.writeLines(new File(args.getMecqDir(), args.getJobPrefix() + ".summary"), this.taskResult.getOutput());
-
-            return new DefaultExecutionResult(
-                    this.taskResult.getTaskName(),
-                    0,
-                    new String[] {},
-                    null,
-                    -1,
-                    new ResourceUsage(this.taskResult.getMaxMemUsage(), this.taskResult.getActualTotalRuntime(), this.taskResult.getTotalExternalCputime()));
-
-        }
-        catch(IOException e) {
-            throw new ProcessExecutionException(2, e);
         }
     }
+
 
     public static class Sample {
 
@@ -275,7 +207,7 @@ public class Mecq extends AbstractConanProcess {
 
         Args args = this.getArgs();
 
-        for(EcqArgs ecqArgs : args.getSampleList().get(0).ecqArgList) {
+        for(EcqArgs ecqArgs : args.samples.get(0).ecqArgList) {
 
             ReadEnhancer ec = ReadEnhancerFactory.create(ecqArgs.getTool(), this.conanExecutorService);
 
@@ -325,44 +257,23 @@ public class Mecq extends AbstractConanProcess {
     }
 
 
-    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
+    public static class Args extends RampartProcessArgs {
 
         // Xml Config Keys
-        public static final String KEY_ATTR_PARALLEL    = "parallel";
         public static final String KEY_ELEM_ECQ         = "ecq";
-
-
-        public static final boolean DEFAULT_RUN_PARALLEL = false;
-
-        private File outputDir;
-        private String jobPrefix;
-        private List<Library> libraries;
-        private boolean runParallel;
-        private List<Sample> sampleList;
-        private boolean multiSampleMode;
 
 
         /**
          * Set defaults
          */
         public Args() {
-
-            super(new Params());
-
-            this.outputDir = new File("");
-            this.sampleList = new ArrayList<>();
-            this.libraries = new ArrayList<>();
-            this.runParallel = DEFAULT_RUN_PARALLEL;
-
-            Format formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
-            String dateTime = formatter.format(new Date());
-            this.jobPrefix = "qt-" + dateTime;
+            super(RampartStage.MECQ);
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, List<Library> libraries, boolean multiSampleMode) throws IOException {
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
 
             // Set defaults first
-            this();
+            super(RampartStage.MECQ, outputDir, jobPrefix, samples, organism);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,
@@ -377,96 +288,27 @@ public class Mecq extends AbstractConanProcess {
                 throw new IOException("Found unrecognised element or attribute in MECQ");
             }
 
-            // Set from parameters
-            this.outputDir = outputDir;
-            this.jobPrefix = jobPrefix;
-            this.libraries = libraries;
-            this.multiSampleMode = multiSampleMode;
-
             // Set from Xml
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL;
 
             // All libraries
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
 
-            if (!multiSampleMode) {
+            // Add ECQ information into samples list
+            for(int i = 0; i < this.samples.size(); i++) {
+                Mecq.Sample sample = this.samples.get(i);
                 List<EcqArgs> ecqs = new ArrayList<>();
 
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    ecqs.add(new EcqArgs((Element) nodes.item(i), libraries, this.getMecqDir(), jobPrefix + "-ecq", this.runParallel, i + 1));
+                for (int j = 0; j < nodes.getLength(); j++) {
+                    File sampleDir = new File(this.outputDir, sample.name);
+                    File stageDir = new File(sampleDir, this.stage.getOutputDirName());
+                    String mecqJobPrefix = this.jobPrefix + "-" + sample.name + "-" + this.stage.getOutputDirName();
+                    ecqs.add(new EcqArgs((Element) nodes.item(j), sample.libraries, stageDir, mecqJobPrefix, this.runParallel, j + 1));
                 }
-
-                this.sampleList.add(new Sample(ecqs, libraries, "rampart_out"));
-            }
-            else {
-                for(Library sample : libraries) {
-                    List<EcqArgs> ecqs = new ArrayList<>();
-
-                    List<Library> libs = new ArrayList<>();
-                    libs.add(sample);
-
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                        File outDir = new File(this.outputDir, sample.getName() + "/1-mecq");
-                        ecqs.add(new EcqArgs((Element) nodes.item(i), libs, outDir, jobPrefix + "-" + sample.getName() + "-ecq", this.runParallel, i + 1));
-                    }
-                    this.sampleList.add(new Sample(ecqs, libs, sample.getName()));
-                }
+                sample.ecqArgList = ecqs;
             }
         }
 
-        protected Params getParams() {
-            return (Params)this.params;
-        }
-
-        public File getMecqOutputDir() {
-            return new File(getMecqDir(), "output");
-        }
-
-        public File getMecqDir() {
-            return new File(this.outputDir, "1-mecq");
-        }
-
-        public List<Library> getLibraries() {
-            return libraries;
-        }
-
-        public void setLibraries(List<Library> libraries) {
-            this.libraries = libraries;
-        }
-
-        public String getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public void setJobPrefix(String jobPrefix) {
-            this.jobPrefix = jobPrefix;
-        }
-
-        public boolean isRunParallel() {
-            return runParallel;
-        }
-
-        public void setRunParallel(boolean runParallel) {
-            this.runParallel = runParallel;
-        }
-
-        public List<Sample> getSampleList() {
-            return sampleList;
-        }
-
-        public boolean isMultiSampleMode() {
-            return multiSampleMode;
-        }
-
-        public void setMultiSampleMode(boolean multiSampleMode) {
-            this.multiSampleMode = multiSampleMode;
-        }
-
-        @Override
-        public void parseCommandLine(CommandLine cmdLine) {
-
-            Params params = this.getParams();
-        }
 
         @Override
         public ParamMap getArgMap() {
@@ -763,168 +605,6 @@ public class Mecq extends AbstractConanProcess {
             }
 
             return modLibs;
-        }
-
-    }
-
-
-    public static class Params extends AbstractProcessParams {
-
-        private ConanParameter rampartConfig;
-        private ConanParameter tool;
-        private ConanParameter libs;
-        private ConanParameter outputDir;
-        private ConanParameter minLength;
-        private ConanParameter minQuality;
-        private ConanParameter kmer;
-        private ConanParameter threads;
-        private ConanParameter memoryGb;
-        private ConanParameter createConfigs;
-        private ConanParameter jobPrefix;
-        private ConanParameter runParallel;
-        private ConanParameter noQT;
-
-        public Params() {
-
-            this.rampartConfig = new PathParameter(
-                    "qtConfig",
-                    "The rampart configuration file describing the libraries to quality trim",
-                    true);
-
-            this.tool = new ParameterBuilder()
-                    .longName("tool")
-                    .description("The quality trimming tool to be used")
-                    .isOptional(false)
-                    .create();
-
-            this.libs = new ParameterBuilder()
-                    .longName("libs")
-                    .description("The libraries to be quality trimmed")
-                    .isOptional(false)
-                    .argValidator(ArgValidator.OFF)
-                    .create();
-
-            this.outputDir = new PathParameter(
-                    "qtOutput",
-                    "The directory to place the quality trimmed libraries",
-                    false);
-
-            this.minLength = new NumericParameter(
-                    "minLength",
-                    "The minimum length for trimmed reads.  Any reads shorter than this value after trimming are discarded",
-                    true);
-
-            this.minQuality = new NumericParameter(
-                    "minQuality",
-                    "The minimum quality for trimmed reads.  Any reads with quality scores lower than this value will be trimmed.",
-                    true);
-
-            this.kmer = new NumericParameter(
-                    "kmer",
-                    "The kmer value to use for Kmer Frequency Spectrum based correction.  This is often a different value to that used in genome assembly.  See individual correction tool for details.  Default: 17",
-                    true);
-
-            this.threads = new NumericParameter(
-                    "threads",
-                    "The number of threads to use to process data.  Default: 8",
-                    true);
-
-            this.memoryGb = new NumericParameter(
-                    "memory_gb",
-                    "A figure used as a guide to run process in an efficient manner.  Normally it is sensible to slightly overestimate requirements if resources allow it.  Default: 20GB",
-                    true);
-
-            this.createConfigs = new FlagParameter(
-                    "createConfigs",
-                    "Whether or not to create separate RAMPART configuration files for RAW and QT datasets in the output directory");
-
-            this.jobPrefix = new ParameterBuilder()
-                    .longName("jobPrefix")
-                    .description("If using a scheduler this prefix is applied to the job names of all child QT processes")
-                    .create();
-
-            this.runParallel = new FlagParameter(
-                    "runParallel",
-                    "If set to true, and we want to run QT in a scheduled execution context, then each library provided to this " +
-                            "QT process will be executed in parallel.  A wait job will be executed in the foreground which will " +
-                            "complete after all libraries have been quality trimmed");
-
-            this.noQT = new FlagParameter(
-                    "noQT",
-                    "If set to true then we don't actually do any Quality trimming.  We still do everything else though, which " +
-                            "includes creating the output directory and the RAW configuration file and symbolic links");
-        }
-
-        public ConanParameter getRampartConfig() {
-            return rampartConfig;
-        }
-
-        public ConanParameter getTool() {
-            return tool;
-        }
-
-        public ConanParameter getLibs() {
-            return libs;
-        }
-
-        public ConanParameter getMinLength() {
-            return minLength;
-        }
-
-        public ConanParameter getMinQuality() {
-            return minQuality;
-        }
-
-        public ConanParameter getKmer() {
-            return kmer;
-        }
-
-        public ConanParameter getThreads() {
-            return threads;
-        }
-
-        public ConanParameter getMemoryGb() {
-            return memoryGb;
-        }
-
-        public ConanParameter getNoQT() {
-            return noQT;
-        }
-
-        public ConanParameter getOutputDir() {
-            return outputDir;
-        }
-
-        public ConanParameter getCreateConfigs() {
-            return createConfigs;
-        }
-
-        public ConanParameter getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public ConanParameter getRunParallel() {
-            return runParallel;
-        }
-
-
-        @Override
-        public ConanParameter[] getConanParametersAsArray() {
-            return new ConanParameter[]{
-                    this.rampartConfig,
-                    this.tool,
-                    this.libs,
-                    this.minLength,
-                    this.minQuality,
-                    this.kmer,
-                    this.threads,
-                    this.memoryGb,
-                    this.noQT,
-                    this.outputDir,
-                    this.createConfigs,
-                    this.jobPrefix,
-                    this.runParallel
-            };
         }
 
     }

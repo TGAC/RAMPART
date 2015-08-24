@@ -25,10 +25,11 @@ import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
-import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.stage.Mecq;
+import uk.ac.tgac.rampart.stage.RampartProcess;
+import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageArgs;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.util.SpiFactory;
@@ -43,9 +44,7 @@ import java.util.Set;
 /**
  * Created by maplesod on 15/06/14.
  */
-public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implements RampartStageArgs {
-
-    private static final String KEY_ATTR_PARALLEL = "parallel";
+public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProcessArgs {
 
     private static final String KEY_ELEM_TOOL = "tool";
 
@@ -55,38 +54,22 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
     private Set<AssemblyAnalyser> assemblyAnalysers;
 
     private List<ToolArgs> tools;
-    private File outputDir;
     private Organism organism;
-    private int threadsPerProcess;
-    private int memory;
-    private boolean runParallel;
-    private String jobPrefix;
-    private List<Library> allLibraries;
-    private List<Mecq.EcqArgs> allMecqs;
 
-    public AnalyseAssembliesArgs(AnalyseAssembliesParams params) {
+    public AnalyseAssembliesArgs(RampartStage stage) {
 
-        super(params);
+        super(stage);
 
         this.tools = new ArrayList<>();
-        this.outputDir = null;
-        this.organism = null;
-        this.threadsPerProcess = 1;
-        this.memory = 0;
-        this.runParallel = false;
-        this.jobPrefix = "assembly-analyses";
-        this.allLibraries = new ArrayList<>();
-        this.allMecqs = new ArrayList<>();
 
         this.assemblyAnalyserFactory = new SpiFactory<>(AssemblyAnalyser.class);
         this.assemblyAnalysers = new HashSet<>();
     }
 
-    public AnalyseAssembliesArgs(AnalyseAssembliesParams params, Element element, File outputDir,
-                                 Organism organism, String jobPrefix, List<Library> allLibraries,
-                                 List<Mecq.EcqArgs> allMecqs) throws IOException {
+    public AnalyseAssembliesArgs(RampartStage stage, Element element, File outputDir,
+                                 String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
 
-        this(params);
+        super(stage, outputDir, jobPrefix, samples, organism);
 
         // Check there's nothing
         if (!XmlHelper.validate(element,
@@ -102,20 +85,16 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             throw new IOException("Found unrecognised element or attribute in \"analyse_mass\"");
         }
 
-        this.allLibraries = allLibraries;
-        this.allMecqs = allMecqs;
-        this.outputDir = outputDir;
-        this.organism = organism;
-        this.jobPrefix = jobPrefix;
-
         this.runParallel = element.hasAttribute(KEY_ATTR_PARALLEL) ?
                 XmlHelper.getBooleanValue(element, KEY_ATTR_PARALLEL) :
                 DEFAULT_RUN_PARALLEL;
 
-        // All libraries
-        NodeList nodes = element.getElementsByTagName(KEY_ELEM_TOOL);
-        for (int i = 0; i < nodes.getLength(); i++) {
-            this.tools.add(new ToolArgs((Element) nodes.item(i), outputDir, allLibraries, allMecqs, organism, jobPrefix, this.runParallel));
+        for (Mecq.Sample sample : this.samples) {
+            // All libraries
+            NodeList nodes = element.getElementsByTagName(KEY_ELEM_TOOL);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                this.tools.add(new ToolArgs((Element) nodes.item(i), outputDir, sample, organism, jobPrefix, this.runParallel));
+            }
         }
 
         for(AnalyseAssembliesArgs.ToolArgs requestedService : this.tools) {
@@ -141,69 +120,10 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         this.tools = tools;
     }
 
-    public int getMemory() {
-        return memory;
+    public List<Mecq.Sample> getSamples() {
+        return this.samples;
     }
 
-    public void setMemory(int memory) {
-        this.memory = memory;
-    }
-
-    public List<Library> getAllLibraries() {
-        return allLibraries;
-    }
-
-    public void setAllLibraries(List<Library> allLibraries) {
-        this.allLibraries = allLibraries;
-    }
-
-    public List<Mecq.EcqArgs> getAllMecqs() {
-        return allMecqs;
-    }
-
-    public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-        this.allMecqs = allMecqs;
-    }
-
-    public File getOutputDir() {
-        return outputDir;
-    }
-
-    public void setOutputDir(File outputDir) {
-        this.outputDir = outputDir;
-    }
-
-    public Organism getOrganism() {
-        return organism;
-    }
-
-    public void setOrganism(Organism organism) {
-        this.organism = organism;
-    }
-
-    public int getThreadsPerProcess() {
-        return threadsPerProcess;
-    }
-
-    public void setThreadsPerProcess(int threadsPerProcess) {
-        this.threadsPerProcess = threadsPerProcess;
-    }
-
-    public boolean isRunParallel() {
-        return runParallel;
-    }
-
-    public void setRunParallel(boolean runParallel) {
-        this.runParallel = runParallel;
-    }
-
-    public String getJobPrefix() {
-        return jobPrefix;
-    }
-
-    public void setJobPrefix(String jobPrefix) {
-        this.jobPrefix = jobPrefix;
-    }
 
     @Override
     protected void setOptionFromMapEntry(ConanParameter param, String value) {
@@ -255,8 +175,7 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
         private String jobPrefix;
         private Organism organism;
         private File outputDir;
-        private List<Library> allLibraries;
-        private List<Mecq.EcqArgs> allMecqs;
+        private Mecq.Sample sample;
 
         public ToolArgs() {
             this.name = "";
@@ -265,13 +184,12 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             this.runParallel = DEFAULT_RUN_PARALLEL;
             this.jobPrefix = "analyse_mass_tool";
             this.outputDir = null;
-            this.allLibraries = new ArrayList<>();
-            this.allMecqs = new ArrayList<>();
+            this.sample = null;
         }
 
 
-        public ToolArgs(Element ele, File outputDir, List<Library> allLibraries,
-                        List<Mecq.EcqArgs> allMecqs, Organism organism, String jobPrefix, boolean forceParallel)
+        public ToolArgs(Element ele, File outputDir, Mecq.Sample sample,
+                        Organism organism, String jobPrefix, boolean forceParallel)
                 throws IOException {
 
             // Set defaults
@@ -304,8 +222,7 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             this.runParallel = forceParallel ||
                     (ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL);
 
-            this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
+            this.sample = sample;
             this.jobPrefix = jobPrefix;
             this.organism = organism;
             this.outputDir = outputDir;
@@ -367,20 +284,8 @@ public abstract class AnalyseAssembliesArgs extends AbstractProcessArgs implemen
             this.outputDir = outputDir;
         }
 
-        public List<Library> getAllLibraries() {
-            return allLibraries;
-        }
-
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
-        }
-
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
-        }
-
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
+        public Mecq.Sample getSample() {
+            return sample;
         }
     }
 }

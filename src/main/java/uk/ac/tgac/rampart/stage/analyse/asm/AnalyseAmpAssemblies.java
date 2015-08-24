@@ -42,6 +42,8 @@ import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.stage.AmpStage;
 import uk.ac.tgac.rampart.stage.Mecq;
+import uk.ac.tgac.rampart.stage.RampartProcess;
+import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.analyse.asm.analysers.AssemblyAnalyser;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStats;
 import uk.ac.tgac.rampart.stage.analyse.asm.stats.AssemblyStatsTable;
@@ -58,7 +60,7 @@ import java.util.*;
  * Time: 10:45
  * To change this template use File | Settings | File Templates.
  */
-public class AnalyseAmpAssemblies extends AbstractConanProcess {
+public class AnalyseAmpAssemblies extends RampartProcess {
 
     private static Logger log = LoggerFactory.getLogger(AnalyseAmpAssemblies.class);
 
@@ -73,7 +75,7 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
     }
 
     public AnalyseAmpAssemblies(ConanExecutorService ces, Args args) {
-        super("", args, new Params(), ces);
+        super(ces, args);
 
         this.assemblyAnalyserFactory = new SpiFactory<AssemblyAnalyser>(AssemblyAnalyser.class);
     }
@@ -120,24 +122,12 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
         Args args = this.getArgs();
-
-        // Force run parallel to false if not using a scheduler
-        if (!executionContext.usingScheduler() && args.isRunParallel()) {
-            log.warn("Forcing linear execution due to lack of job scheduler");
-            args.setRunParallel(false);
-        }
-
-        log.info("Starting Analysis of AMP assemblies");
-
-        if (!args.getOutputDir().exists()) {
-            args.getOutputDir().mkdirs();
-        }
 
         // Create requested services
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
@@ -151,64 +141,51 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
         // Just loop through all requested stats levels and execute each.
         // Each stage is processed linearly
-        try {
-            for(AssemblyAnalyser analyser : requestedServices) {
+        for(AssemblyAnalyser analyser : requestedServices) {
 
-                List<File> assemblies = this.findAssemblies(analyser);
-                File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
-                String jobPrefix = this.getArgs().getJobPrefix() + "-" + analyser.getName().toLowerCase();
+            List<File> assemblies = this.findAssemblies(sample, analyser);
+            File outputDir = new File(args.getStageDir(sample), analyser.getName().toLowerCase());
+            String jobPrefix = this.getArgs().getJobPrefix() + "-" + analyser.getName().toLowerCase();
 
+            try {
                 jobResults.addAll(analyser.execute(assemblies, outputDir, jobPrefix, this.conanExecutorService));
+            } catch (ConanParameterException e) {
+                throw new ProcessExecutionException(2, "Error parsing params for amp analyser", e);
             }
-
-            // Create the stats table with information derived from the configuration file.
-            AssemblyStatsTable table = this.createTable();
-
-            // Merge all the results
-            for(AssemblyAnalyser analyser : requestedServices) {
-
-                List<File> assemblies = this.findAssemblies(analyser);
-                File outputDir = new File(args.getOutputDir(), analyser.getName().toLowerCase());
-
-                Map<String, String> asm2GroupMap = new HashMap<>();
-                for(File b : assemblies) {
-                    asm2GroupMap.put(b.getName(), "amp");
-                }
-
-                analyser.updateTable(table, outputDir);
-            }
-
-            // Save table to disk
-            File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
-            table.saveTsv(finalTSVFile);
-            log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
-
-            File finalSummaryFile = new File(args.getOutputDir(), "scores.tsv");
-            table.saveSummary(finalSummaryFile);
-            log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
-
-            stopWatch.stop();
-
-            TaskResult taskResult = new DefaultTaskResult("rampart-amp_analysis", true, jobResults, stopWatch.getTime() / 1000L);
-
-            // Output the resource usage to file
-            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), taskResult.getOutput());
-
-            return new DefaultExecutionResult(
-                    taskResult.getTaskName(),
-                    0,
-                    new String[] {},
-                    null,
-                    -1,
-                    new ResourceUsage(taskResult.getMaxMemUsage(), taskResult.getActualTotalRuntime(), taskResult.getTotalExternalCputime()));
-        }
-        catch(ConanParameterException | IOException ioe) {
-            throw new ProcessExecutionException(5, ioe);
         }
 
+        // Create the stats table with information derived from the configuration file.
+        AssemblyStatsTable table = this.createTable(sample);
+
+        // Merge all the results
+        for(AssemblyAnalyser analyser : requestedServices) {
+
+            List<File> assemblies = this.findAssemblies(sample, analyser);
+            File outputDir = new File(args.getStageDir(sample), analyser.getName().toLowerCase());
+
+            Map<String, String> asm2GroupMap = new HashMap<>();
+            for(File b : assemblies) {
+                asm2GroupMap.put(b.getName(), "amp");
+            }
+
+            analyser.updateTable(table, outputDir);
+        }
+
+        // Save table to disk
+        File finalTSVFile = new File(args.getStageDir(sample), "scores.tsv");
+        table.saveTsv(finalTSVFile);
+        log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
+
+        File finalSummaryFile = new File(args.getStageDir(sample), "scores.tsv");
+        table.saveSummary(finalSummaryFile);
+        log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
+
+        stopWatch.stop();
+
+        return new DefaultTaskResult("rampart-amp_analysis", true, jobResults, stopWatch.getTime() / 1000L);
     }
 
-    protected AssemblyStatsTable createTable() {
+    protected AssemblyStatsTable createTable(Mecq.Sample sample) {
 
         Args args = this.getArgs();
 
@@ -218,12 +195,12 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         stats.setIndex(0);
         stats.setDataset("amp");
         stats.setDesc("stage-0");
-        stats.setFilePath(args.getAmpStages().get(0).getInputAssembly().getAbsolutePath());
+        stats.setFilePath(args.getAmpStages().get(sample).get(0).getInputAssembly().getAbsolutePath());
         stats.setBubblePath("");//assembler.getBubbleFile() != null ? assembler.getBubbleFile().getAbsolutePath() : "");
         table.add(stats);
 
         int index = 1;
-        for(AmpStage.Args asArgs : args.getAmpStages()) {
+        for(AmpStage.Args asArgs : args.getAmpStages().get(sample)) {
 
             stats = new AssemblyStats();
             stats.setIndex(index);
@@ -238,7 +215,7 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
         return table;
     }
 
-    protected List<File> findAssemblies(AssemblyAnalyser analyser) throws ProcessExecutionException {
+    protected List<File> findAssemblies(Mecq.Sample sample, AssemblyAnalyser analyser) throws ProcessExecutionException {
 
         Args args = this.getArgs();
 
@@ -247,13 +224,13 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
             return null;
         }
 
-        File asmDir = args.getAmpStages().get(0).getAssembliesDir();
+        File asmDir = args.getAmpStages().get(sample).get(0).getAssembliesDir();
 
         if (analyser.isFast() || args.isAnalyseAll()) {
             return assembliesFromDir(asmDir);
         }
         else {
-            AmpStage.Args finalStage = args.getAmpStages().get(args.getAmpStages().size() - 1);
+            AmpStage.Args finalStage = args.getAmpStages().get(sample).get(args.getAmpStages().size() - 1);
 
             File assembly = finalStage.getOutputFile();
 
@@ -296,11 +273,11 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
         public static final boolean DEFAULT_ANALYSE_ALL = false;
 
-        private List<AmpStage.Args> ampStages;
+        private Map<Mecq.Sample, List<AmpStage.Args>> ampStages;
         private boolean analyseAll;
 
         public Args() {
-            super(new Params());
+            super(RampartStage.AMP_ANALYSIS);
 
             this.ampStages = null;
             this.analyseAll = false;
@@ -308,18 +285,15 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
             this.setJobPrefix("amp-analyses");
         }
 
-        public Args(Element element, File outputDir, List<Library> allLibraries,
-                    List<Mecq.EcqArgs> allMecqs, List<AmpStage.Args> ampStages,
-                               Organism organism, String jobPrefix) throws IOException {
+        public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism,
+                    Map<Mecq.Sample, List<AmpStage.Args>> ampStages) throws IOException {
 
-            super(  new Params(),
+            super(  RampartStage.AMP_ANALYSIS,
                     element,
                     outputDir,
-                    organism,
                     jobPrefix,
-                    allLibraries,
-                    allMecqs
-                    );
+                    samples,
+                    organism);
 
             this.analyseAll = element.hasAttribute(KEY_ATTR_ALL) ?
                     XmlHelper.getBooleanValue(element, KEY_ATTR_ALL) :
@@ -329,15 +303,11 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
         }
 
-        public Params getParams() {
-            return (Params)this.params;
-        }
-
-        public List<AmpStage.Args> getAmpStages() {
+        public Map<Mecq.Sample, List<AmpStage.Args>> getAmpStages() {
             return ampStages;
         }
 
-        public void setAmpStages(List<AmpStage.Args> ampStages) {
+        public void setAmpStages(Map<Mecq.Sample, List<AmpStage.Args>> ampStages) {
             this.ampStages = ampStages;
         }
 
@@ -347,48 +317,6 @@ public class AnalyseAmpAssemblies extends AbstractConanProcess {
 
         public void setAnalyseAll(boolean analyseAll) {
             this.analyseAll = analyseAll;
-        }
-    }
-
-
-
-    public static class Params extends AnalyseAssembliesParams {
-
-        private ConanParameter ampStages;
-        private ConanParameter analyseAll;
-
-        public Params() {
-
-            this.ampStages = new ParameterBuilder()
-                    .longName("ampStages")
-                    .description("A comma separated list of the amp stages that should be analysed")
-                    .argValidator(ArgValidator.OFF)
-                    .create();
-
-            this.analyseAll = new ParameterBuilder()
-                    .longName("analyseAll")
-                    .description("Whether or not to run a complete analysis on all assemblies.  If set to false, then we only conduct long analyses on the final assembly.")
-                    .argValidator(ArgValidator.OFF)
-                    .isFlag(true)
-                    .create();
-        }
-
-        public ConanParameter getAmpsStages() {
-            return ampStages;
-        }
-
-        public ConanParameter getAnalyseAll() {
-            return analyseAll;
-        }
-
-        @Override
-        public ConanParameter[] getConanParametersAsArray() {
-            return ArrayUtils.addAll(
-                    super.getConanParametersAsArray(),
-                    new ConanParameter[] {
-                        this.ampStages,
-                        this.analyseAll
-                    });
         }
     }
 

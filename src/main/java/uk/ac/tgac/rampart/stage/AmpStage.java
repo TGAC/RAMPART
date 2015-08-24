@@ -57,17 +57,19 @@ public class AmpStage extends AbstractConanProcess {
 
 
     private static Logger log = LoggerFactory.getLogger(AmpStage.class);
+    private Mecq.Sample sample;
 
     public AmpStage() {
         this(null);
     }
 
     public AmpStage(ConanExecutorService ces) {
-        this(ces, new Args());
+        this(ces, new Args(), null);
     }
 
-    public AmpStage(ConanExecutorService ces, Args args) {
+    public AmpStage(ConanExecutorService ces, Args args, Mecq.Sample sample) {
         super("", args, new Params(), ces);
+        this.sample = sample;
     }
 
     public Args getArgs() {
@@ -101,8 +103,7 @@ public class AmpStage extends AbstractConanProcess {
             }
 
             // Make sure the inputs are reasonable
-            List<Library> selectedLibs = this.validateInputs(args.getIndex(), args.getInputs(), args.getAllLibraries(),
-                    args.getAllMecqs());
+            List<Library> selectedLibs = this.validateInputs(args.getIndex(), args.getInputs(), args.getSample());
 
             // Create output directory
             if (!args.getOutputDir().exists()) {
@@ -211,13 +212,13 @@ public class AmpStage extends AbstractConanProcess {
         return proc.isOperational(executionContext);
     }
 
-    protected List<Library> validateInputs(int ampIndex, List<ReadsInput> inputs, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs) throws IOException {
+    protected List<Library> validateInputs(int ampIndex, List<ReadsInput> inputs, Mecq.Sample sample) throws IOException {
 
         List<Library> selectedLibs = new ArrayList<>();
 
         for(ReadsInput mi : inputs) {
-            Library lib = mi.findLibrary(allLibraries);
-            Mecq.EcqArgs ecqArgs = mi.findMecq(allMecqs);
+            Library lib = mi.findLibrary(sample.libraries);
+            Mecq.EcqArgs ecqArgs = mi.findMecq(sample);
 
             if (lib == null) {
                 throw new IOException("Unrecognised library: " + mi.getLib() + "; not processing AMP stage: " + ampIndex);
@@ -232,7 +233,7 @@ public class AmpStage extends AbstractConanProcess {
                 }
             }
             else {
-                selectedLibs.add(ecqArgs.getOutputLibrary(lib));
+                selectedLibs.add(ecqArgs.getOutputLibrary(sample, lib));
             }
 
             log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq());
@@ -261,8 +262,7 @@ public class AmpStage extends AbstractConanProcess {
         private File outputDir;
         private File assembliesDir;
         private String jobPrefix;
-        private List<Library> allLibraries;
-        private List<Mecq.EcqArgs> allMecqs;
+        private Mecq.Sample sample;
         private Organism organism;
 
         // Specifics
@@ -293,13 +293,12 @@ public class AmpStage extends AbstractConanProcess {
             this.outputDir = new File("");
             this.jobPrefix = "AMP-" + this.index;
             this.inputs = new ArrayList<>();
-            this.allLibraries = null;
-            this.allMecqs = null;
+            this.sample = null;
             this.organism = null;
         }
 
-        public Args(Element ele, File outputDir, File assembliesDir, String jobPrefix, List<Library> allLibraries,
-                            List<Mecq.EcqArgs> allMecqs, Organism organism, File inputAssembly, File bubbleFile, int index) throws IOException {
+        public Args(Element ele, File outputDir, File assembliesDir, String jobPrefix, Mecq.Sample sample, Organism organism,
+                    File inputAssembly, File bubbleFile, int index) throws IOException {
 
             // Set defaults
             this();
@@ -329,6 +328,7 @@ public class AmpStage extends AbstractConanProcess {
             this.tool = XmlHelper.getTextValue(ele, KEY_ATTR_TOOL);
             this.inputAssembly = inputAssembly;
             this.bubbleFile = bubbleFile;
+            this.sample = sample;
 
             // Required Elements
             Element inputElements = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_INPUTS);
@@ -336,11 +336,11 @@ public class AmpStage extends AbstractConanProcess {
             for(int i = 0; i < actualInputs.getLength(); i++) {
                 ReadsInput ri = new ReadsInput((Element) actualInputs.item(i));
 
-                if (!foundInLibs(ri.getLib(), allLibraries)) {
+                if (!foundInLibs(ri.getLib(), sample.libraries)) {
                     throw new IOException("Could not find library \"" + ri.getLib() + "\" in defined libraries");
                 }
 
-                if (!foundInMecq(ri.getEcq(), allMecqs)) {
+                if (!foundInMecq(ri.getEcq(), sample.ecqArgList)) {
                     throw new IOException("Could not find ECQ \"" + ri.getEcq() + "\" in defined set of ECQs");
                 }
 
@@ -357,8 +357,6 @@ public class AmpStage extends AbstractConanProcess {
             this.outputDir = outputDir;
             this.assembliesDir = assembliesDir;
             this.jobPrefix = jobPrefix;
-            this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
             this.organism = organism;
             this.index = index;
         }
@@ -409,20 +407,12 @@ public class AmpStage extends AbstractConanProcess {
             this.jobPrefix = jobPrefix;
         }
 
-        public List<Library> getAllLibraries() {
-            return allLibraries;
+        public Mecq.Sample getSample() {
+            return sample;
         }
 
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
-        }
-
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
-        }
-
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
+        public void setSample(Mecq.Sample sample) {
+            this.sample = sample;
         }
 
         public Organism getOrganism() {

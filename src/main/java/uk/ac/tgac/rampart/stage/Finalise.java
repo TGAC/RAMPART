@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.NumericParameter;
 import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
@@ -35,6 +36,7 @@ import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
 import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
+import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
 import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
@@ -46,6 +48,7 @@ import uk.ac.tgac.rampart.RampartCLI;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -53,7 +56,7 @@ import java.util.List;
  * This is derived from Richard's FastA-to-AGP script in TGAC tools, which is in turn derived form Shaun Jackman's
  * FastA-to-AGP script in Abyss.
  */
-public class Finalise extends AbstractConanProcess {
+public class Finalise extends RampartProcess {
 
     private static Logger log = LoggerFactory.getLogger(Finalise.class);
 
@@ -77,7 +80,7 @@ public class Finalise extends AbstractConanProcess {
     }
 
     public Finalise(ConanExecutorService ces, Args args) {
-        super("", args, new Params(), ces);
+        super(ces, args);
 
         this.reader = null;
         this.contigWriter = null;
@@ -111,7 +114,8 @@ public class Finalise extends AbstractConanProcess {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException, IOException {
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -123,19 +127,18 @@ public class Finalise extends AbstractConanProcess {
 
         try {
 
-            log.info("Starting finalising process to standardise assembly names.");
+            File selectMassDir = new File(args.getSampleDir(sample), RampartStage.MASS_SELECT.getOutputDirName());
+            File ampDir = new File(args.getSampleDir(sample), RampartStage.AMP.getOutputDirName());
 
-            // Create the output directory
-            if (args.getOutputDir().exists()) {
-                FileUtils.deleteDirectory(args.getOutputDir());
-            }
-            args.getOutputDir().mkdir();
+            File input = args.inputFromMass ?
+                    new File(selectMassDir, "best.fa") :
+                    new File(ampDir, "final.fa");
 
-            this.reader = new BufferedReader(new FileReader(args.getInputFile()));
-            this.contigWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getContigsFile())));
-            this.scaffoldWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getScaffoldsFile())));
-            this.agpWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getAGPFile())));
-            this.translationWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getTranslationFile())));
+            this.reader = new BufferedReader(new FileReader(input));
+            this.contigWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getContigsFile(sample))));
+            this.scaffoldWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getScaffoldsFile(sample))));
+            this.agpWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getAGPFile(sample))));
+            this.translationWriter = new PrintWriter(new BufferedWriter(new FileWriter(args.getTranslationFile(sample))));
 
             String currentId = "";
             StringBuilder currentContig = new StringBuilder();
@@ -188,31 +191,26 @@ public class Finalise extends AbstractConanProcess {
             String pwdFull = new File(".").getAbsolutePath();
             String pwd = pwdFull.substring(0, pwdFull.length() - 2);
 
-            String command = "cd " + args.getOutputDir().getAbsolutePath() + "; " +
-                    "tar -cvzf " + args.getCompressedFile().getName() + " " +
-                    args.getContigsFile().getName() + " " +
-                    args.getScaffoldsFile().getName() + " " +
-                    args.getAGPFile().getName() + " " +
-                    args.getTranslationFile().getName() + "; " +
+            String command = "cd " + args.getStageDir(sample).getAbsolutePath() + "; " +
+                    "tar -cvzf " + args.getCompressedFile(sample).getName() + " " +
+                    args.getContigsFile(sample).getName() + " " +
+                    args.getScaffoldsFile(sample).getName() + " " +
+                    args.getAGPFile(sample).getName() + " " +
+                    args.getTranslationFile(sample).getName() + "; " +
                     "cd " + pwd;
 
             result = this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, 0, false);
 
-            log.info("Output compressed to: " + args.getCompressedFile().getAbsolutePath());
+            log.info("Output compressed to: " + args.getCompressedFile(sample).getAbsolutePath());
         }
 
         stopWatch.stop();
 
-        return new DefaultExecutionResult(
-                "rampart-finalise",
-                0,
-                new String[] {},
-                null,
-                -1,
-                new ResourceUsage(
-                        result != null && result.getResourceUsage() != null ? result.getResourceUsage().getMaxMem() : 0,
-                        stopWatch.getTime() / 1000,
-                        result != null && result.getResourceUsage() != null ? result.getResourceUsage().getCpuTime() : 0));
+        return new DefaultTaskResult(
+                sample.name + "-" + args.stage.getOutputDirName(),
+                true,
+                new ArrayList<ExecutionResult>(),
+                stopWatch.getTime() / 1000L);
     }
 
     private void processObject(String currentHeader, String currentContig) {
@@ -256,8 +254,7 @@ public class Finalise extends AbstractConanProcess {
 
     }
 
-    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
-
+    public static class Args extends RampartProcessArgs {
 
         public static final String KEY_ATTR_PREFIX = "prefix";
         public static final String KEY_ATTR_MIN_N = "min_n";
@@ -266,27 +263,24 @@ public class Finalise extends AbstractConanProcess {
         public static final int DEFAULT_MIN_N = 10;
 
         private String outputPrefix;
-        private String jobPrefix;
-        private File inputFile;
-        private File outputDir;
+        private boolean inputFromMass;
         private int minN;
         private boolean compress;
 
 
         public Args() {
 
-            super(new Params());
+            super(RampartStage.FINALISE);
             this.jobPrefix = "";
             this.outputPrefix = "rampart";
-            this.inputFile = null;
             this.outputDir = RampartCLI.CWD;
             this.minN = DEFAULT_MIN_N;
             this.compress = true;
         }
 
-        public Args(Element element, File inputFile, File outputDir, String jobPrefix, Organism organism, String institution) {
+        public Args(Element element, File outputDir, String jobPrefix, Organism organism, String institution, boolean inputFromMass) throws IOException {
 
-            this();
+            super(RampartStage.FINALISE, outputDir, jobPrefix, null, organism);
 
             // Check there's nothing unexpected in this element
             if (!XmlHelper.validate(element,
@@ -301,6 +295,8 @@ public class Finalise extends AbstractConanProcess {
                 throw new IllegalArgumentException("Found unrecognised element or attribute in Finaliser");
             }
 
+            this.inputFromMass = inputFromMass;
+
             String shortInstitute = this.getInitials(institution, "_");
             String shortOrg = this.getInitials(organism.getName(), "_");
 
@@ -308,10 +304,6 @@ public class Finalise extends AbstractConanProcess {
             String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
             String derivedPrefix = start + today;
-
-            this.inputFile = inputFile;
-            this.outputDir = outputDir;
-            this.jobPrefix = jobPrefix;
 
             this.outputPrefix = element.hasAttribute(KEY_ATTR_PREFIX) ?
                     XmlHelper.getTextValue(element, KEY_ATTR_PREFIX) :
@@ -358,28 +350,12 @@ public class Finalise extends AbstractConanProcess {
             this.outputPrefix = outputPrefix;
         }
 
-        public String getJobPrefix() {
-            return jobPrefix;
+        public boolean isInputFromMass() {
+            return inputFromMass;
         }
 
-        public void setJobPrefix(String jobPrefix) {
-            this.jobPrefix = jobPrefix;
-        }
-
-        public File getInputFile() {
-            return inputFile;
-        }
-
-        public void setInputFile(File inputFile) {
-            this.inputFile = inputFile;
-        }
-
-        public File getOutputDir() {
-            return outputDir;
-        }
-
-        public void setOutputDir(File outputDir) {
-            this.outputDir = outputDir;
+        public void setInputFromMass(boolean inputFromMass) {
+            this.inputFromMass = inputFromMass;
         }
 
         public int getMinN() {
@@ -399,24 +375,24 @@ public class Finalise extends AbstractConanProcess {
         }
 
 
-        public File getContigsFile() {
-            return new File(this.outputDir, this.outputPrefix + ".contigs.fa");
+        public File getContigsFile(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), this.outputPrefix + ".contigs.fa");
         }
 
-        public File getScaffoldsFile() {
-            return new File(this.outputDir, this.outputPrefix + ".scaffolds.fa");
+        public File getScaffoldsFile(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), this.outputPrefix + ".scaffolds.fa");
         }
 
-        public File getAGPFile() {
-            return new File(this.outputDir, this.outputPrefix + ".agp");
+        public File getAGPFile(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), this.outputPrefix + ".agp");
         }
 
-        public File getTranslationFile() {
-            return new File(this.outputDir, this.outputPrefix + ".translation");
+        public File getTranslationFile(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), this.outputPrefix + ".translation");
         }
 
-        public File getCompressedFile() {
-            return new File(this.outputDir, this.outputPrefix + ".tar.gz");
+        public File getCompressedFile(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), this.outputPrefix + ".tar.gz");
         }
 
         @Override
@@ -444,79 +420,6 @@ public class Finalise extends AbstractConanProcess {
         public List<ConanProcess> getExternalProcesses() {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
-    }
-
-
-    public static class Params extends AbstractProcessParams {
-
-        private ConanParameter jobPrefix;
-        private ConanParameter inputFile;
-        private ConanParameter outputDir;
-        private ConanParameter minN;
-        private ConanParameter compress;
-
-        public Params() {
-
-            this.inputFile = new PathParameter(
-                    "input",
-                    "The input assembly in fasta format which will have its name's standardised",
-                    false);
-
-
-            this.outputDir = new PathParameter(
-                    "output",
-                    "The output directory",
-                    false);
-
-            this.jobPrefix = new ParameterBuilder()
-                    .longName("job_prefix")
-                    .description("The job prefix to apply to all child jobs")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-
-            this.minN = new NumericParameter(
-                    "min_n",
-                    "The minimum number of contiguous 'N's, which are necessary to distinguish a contig from a scaffold",
-                    true);
-
-            this.compress = new ParameterBuilder()
-                    .longName("compress")
-                    .description("Whether or not to compress the final output for distribution")
-                    .isFlag(true)
-                    .create();
-        }
-
-        public ConanParameter getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public ConanParameter getInputFile() {
-            return inputFile;
-        }
-
-        public ConanParameter getOutputDir() {
-            return outputDir;
-        }
-
-        public ConanParameter getMinN() {
-            return minN;
-        }
-
-        public ConanParameter getCompress() {
-            return compress;
-        }
-
-        @Override
-        public ConanParameter[] getConanParametersAsArray() {
-            return new ConanParameter[]{
-                    this.jobPrefix,
-                    this.minN,
-                    this.outputDir,
-                    this.inputFile,
-                    this.compress
-            };
-        }
-
     }
 
 }

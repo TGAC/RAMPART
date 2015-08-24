@@ -59,7 +59,6 @@ public class AnalyseMassAssembliesTest extends MockedConanProcess {
 
         AnalyseMassAssemblies.Args args = new AnalyseMassAssemblies.Args();
         args.setMassJobs(massJobs);
-        args.setMassDir(massDir);
 
         //AnalyseMassAssemblies ama = new AnalyseMassAssemblies(this.conanExecutorService, args);
 

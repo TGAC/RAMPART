@@ -51,7 +51,6 @@ public class FinaliseTest {
         File test1File = FileUtils.toFile(this.getClass().getResource("/tools/finalise/test1.fa"));
 
         Finalise.Args args = new Finalise.Args();
-        args.setInputFile(test1File);
         args.setOutputDir(outputDir);
         args.setMinN(5);
         args.setOutputPrefix("TGAC_TS_V1");

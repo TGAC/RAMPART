@@ -63,7 +63,7 @@ public class MecqTest extends MockedConanProcess {
         File cfgFile = FileUtils.toFile(this.getClass().getResource("/tools/test_rampart_1.cfg"));
 
         Mecq.Args mecqArgs = new Mecq.Args();
-        mecqArgs.setMecqDir(outputDir);
+        mecqArgs.setOutputDir(outputDir);
 
         Mecq mecq = new Mecq(this.conanExecutorService, mecqArgs);
 

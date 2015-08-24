@@ -40,7 +40,6 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.stage.*;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAmpAssemblies;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseMassAssemblies;
-import uk.ac.tgac.rampart.stage.analyse.reads.AnalyseReads;
 
 import java.io.File;
 import java.io.IOException;
@@ -119,7 +118,7 @@ public class RampartPipeline extends AbstractConanPipeline {
         private boolean doInitialChecks;
 
         private Mecq.Args mecqArgs;
-        private AnalyseReads.Args analyseReadsArgs;
+        private MecqAnalysis.Args mecqAnalysisArgs;
         private CalcOptimalKmer.Args kmerCalcArgs;
         private Mass.Args massArgs;
         private AnalyseMassAssemblies.Args analyseMassArgs;
@@ -143,7 +142,7 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.doInitialChecks = true;
 
             this.mecqArgs = null;
-            this.analyseReadsArgs = null;
+            this.mecqAnalysisArgs = null;
             this.kmerCalcArgs = null;
             this.massArgs = null;
             this.analyseMassArgs = null;
@@ -193,31 +192,34 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.ampInput = ampInput;
             this.ampBubble = ampBubble;
 
+            // Create sample list TODO
+            List<Mecq.Sample> samples = new ArrayList<>();
+            samples.add(new Mecq.Sample(new ArrayList<Mecq.EcqArgs>(), this.libs, ""));
+
             // MECQ
             Element mecqElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_MECQ);
             this.mecqArgs = mecqElement == null ? null :
                     new Mecq.Args(
                             mecqElement,
                             this.outputDir,
-                            this.jobPrefix + "-mecq",
-                            this.libs,
-                            this.multiSampleMode);
+                            this.jobPrefix,
+                            samples,
+                            this.organism);
 
             this.stages.setArgsIfPresent(RampartStage.MECQ, this.mecqArgs);
 
 
             // Analyse reads
-            Element analyseReadsElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_ANALYSE_READS);
-            this.analyseReadsArgs = analyseReadsElement == null ? null :
-                    new AnalyseReads.Args(
-                            analyseReadsElement,
-                            this.libs,
-                            this.mecqArgs.getSampleList(),
-                            this.jobPrefix + "-analyse_reads",
+            Element mecqAnalysisElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_ANALYSE_READS);
+            this.mecqAnalysisArgs = mecqAnalysisElement == null ? null :
+                    new MecqAnalysis.Args(
+                            mecqAnalysisElement,
                             this.outputDir,
+                            this.jobPrefix,
+                            this.mecqArgs.getSamples(),
                             this.organism);
 
-            this.stages.setArgsIfPresent(RampartStage.ANALYSE_READS, this.analyseReadsArgs);
+            this.stages.setArgsIfPresent(RampartStage.MECQ_ANALYSIS, this.mecqAnalysisArgs);
 
             // Kmer calc
             Element kmerCalcElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_KMER_CALC);
@@ -225,9 +227,9 @@ public class RampartPipeline extends AbstractConanPipeline {
                     new CalcOptimalKmer.Args(
                             kmerCalcElement,
                             this.outputDir,
-                            this.mecqArgs.getSampleList(),
-                            this.jobPrefix + "-kmer_calc",
-                            this.organism.getPloidy());
+                            this.jobPrefix,
+                            this.mecqArgs.getSamples(),
+                            this.organism);
 
             this.stages.setArgsIfPresent(RampartStage.KMER_CALC, this.kmerCalcArgs);
 
@@ -237,8 +239,8 @@ public class RampartPipeline extends AbstractConanPipeline {
                     new Mass.Args(
                             massElement,
                             this.outputDir,
-                            this.jobPrefix + "-mass",
-                            this.mecqArgs.getSampleList(),
+                            this.jobPrefix,
+                            this.mecqArgs.getSamples(),
                             this.organism);
 
             this.stages.setArgsIfPresent(RampartStage.MASS, this.massArgs);
@@ -263,32 +265,30 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.analyseMassArgs = analyseMassElement == null ? null :
                     new AnalyseMassAssemblies.Args(
                             analyseMassElement,
-                            this.rampartJobFileSystem.getMassDir(),
-                            this.rampartJobFileSystem.getAnalyseMassDir(),
+                            this.outputDir,
                             this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
-                            this.libs,
-                            this.multiSampleMode,
-                            this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getSampleList(),
+                            this.mecqArgs.getSamples(),
                             this.organism,
-                            this.jobPrefix + "-analyse_mass",
-                            this.kmerCalcArgs == null ? null : this.kmerCalcArgs.getResultFile());
+                            this.jobPrefix,
+                            this.kmerCalcArgs);
 
-            this.stages.setArgsIfPresent(RampartStage.ANALYSE_MASS, this.analyseMassArgs);
+            this.stages.setArgsIfPresent(RampartStage.MASS_ANALYSIS, this.analyseMassArgs);
 
             // Select MASS assembly
             Element selectMassElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_SELECT_MASS);
             this.selectMassArgs = selectMassElement == null ? null :
                     new Select.Args(
                             selectMassElement,
-                            this.rampartJobFileSystem.getAnalyseMassDir(),
-                            this.analyseMassArgs.getAssemblyLinkageFile(),
-                            this.rampartJobFileSystem.getSelectMassDir(),
-                            this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
-                            new ArrayList<>(this.analyseMassArgs.getAssemblyAnalysers()),
+                            this.outputDir,
+                            this.jobPrefix,
+                            this.mecqArgs.getSamples(),
                             this.organism,
-                            this.jobPrefix + "-select_mass");
+                            this.analyseMassArgs.getAssemblyLinkageFile(),
+                            this.massArgs == null ? null : this.massArgs.getMassJobArgList(),
+                            new ArrayList<>(this.analyseMassArgs.getAssemblyAnalysers())
+                            );
 
-            this.stages.setArgsIfPresent(RampartStage.SELECT_MASS, this.selectMassArgs);
+            this.stages.setArgsIfPresent(RampartStage.MASS_SELECT, this.selectMassArgs);
 
             if (!multiSampleMode) {
 
@@ -297,19 +297,19 @@ public class RampartPipeline extends AbstractConanPipeline {
                 this.ampArgs = ampElement == null ? null :
                         new Amp.Args(
                                 ampElement,
-                                this.rampartJobFileSystem.getAmpDir(),
-                                this.jobPrefix + "-amp",
-                                this.ampInput != null ?
+                                this.outputDir,
+                                this.jobPrefix,
+                                this.mecqArgs.getSamples(),
+                                this.organism,
+                                this.ampInput != null && this.mecqArgs.getSamples().size() == 1 ?
                                         this.ampInput :
-                                        this.rampartJobFileSystem.getSelectedAssemblyFile(),
-                                this.organism.getPloidy() > 1 ?
-                                        this.ampBubble != null ?
-                                                this.ampBubble :
-                                                this.rampartJobFileSystem.getSelectedBubbleFile() :
                                         null,
-                                this.libs,
-                                this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getSampleList(),
-                                this.organism);
+                                this.organism.getPloidy() > 1 ?
+                                        this.ampBubble != null && this.mecqArgs.getSamples().size() == 1 ?
+                                                this.ampBubble :
+                                                null :
+                                        null
+                        );
 
                 this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
 
@@ -318,28 +318,28 @@ public class RampartPipeline extends AbstractConanPipeline {
                 this.analyseAmpArgs = analyseAmpElement == null ? null :
                         new AnalyseAmpAssemblies.Args(
                                 analyseAmpElement,
-                                this.rampartJobFileSystem.getAnalyseAmpDir(),
-                                this.libs,
-                                this.mecqArgs == null ? new ArrayList<Mecq.EcqArgs>() : this.mecqArgs.getSampleList(),
-                                this.ampArgs == null ? null : this.ampArgs.getStageArgsList(),
+                                this.outputDir,
+                                this.jobPrefix,
+                                this.mecqArgs.getSamples(),
                                 this.organism,
-                                this.jobPrefix + "-analyse_amp");
+                                this.ampArgs == null ? null : this.ampArgs.getStageArgsList()
+                        );
 
-                this.stages.setArgsIfPresent(RampartStage.ANALYSE_AMP, this.analyseAmpArgs);
+                this.stages.setArgsIfPresent(RampartStage.AMP_ANALYSIS, this.analyseAmpArgs);
             }
 
 
-            File finalAssembly = this.ampArgs == null ? this.rampartJobFileSystem.getSelectedAssemblyFile(): this.ampArgs.getFinalAssembly();
+            boolean inputFromMass = this.ampArgs == null;
 
             Element finaliseElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_FINALISE);
             this.finaliseArgs = finaliseElement == null ? null :
                     new Finalise.Args(
                             finaliseElement,
-                            finalAssembly,
-                            this.rampartJobFileSystem.getFinalDir(),
-                            this.jobPrefix + "-finalise",
+                            this.outputDir,
+                            this.jobPrefix,
                             this.organism,
-                            this.institution);
+                            this.institution,
+                            inputFromMass);
 
             this.stages.setArgsIfPresent(RampartStage.FINALISE, this.finaliseArgs);
 
@@ -365,12 +365,12 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.mecqArgs = mecqArgs;
         }
 
-        public AnalyseReads.Args getAnalyseReadsArgs() {
-            return analyseReadsArgs;
+        public MecqAnalysis.Args getMecqAnalysisArgs() {
+            return mecqAnalysisArgs;
         }
 
-        public void setAnalyseReadsArgs(AnalyseReads.Args analyseReadsArgs) {
-            this.analyseReadsArgs = analyseReadsArgs;
+        public void setMecqAnalysisArgs(MecqAnalysis.Args mecqAnalysisArgs) {
+            this.mecqAnalysisArgs = mecqAnalysisArgs;
         }
 
         public CalcOptimalKmer.Args getKmerCalcArgs() {

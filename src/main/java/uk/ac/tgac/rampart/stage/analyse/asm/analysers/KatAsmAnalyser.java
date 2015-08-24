@@ -83,15 +83,15 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         for(File asm : assemblies) {
 
             // Loop through each library and modified library
-            for(Library lib : args.getAllLibraries()) {
+            for(Library lib : args.getSample().libraries) {
                 // Execute jellyfish and add id to list of job ids
                 ExecutionResult res = this.executeKatComp("raw", outputDir, lib, asm);
                 jobResults.add(res);
             }
 
-            if (args.getAllMecqs() != null) {
-                for(Mecq.EcqArgs ecqArgs : args.getAllMecqs()) {
-                    for(Library lib : ecqArgs.getOutputLibraries()) {
+            if (args.getSample().ecqArgList != null) {
+                for(Mecq.EcqArgs ecqArgs : args.getSample().ecqArgList) {
+                    for(Library lib : ecqArgs.getOutputLibraries(args.getSample())) {
                         // Execute jellyfish and add id to list of job ids
                         ExecutionResult res = this.executeKatComp(ecqArgs.getName(), outputDir, lib, asm);
                         jobResults.add(res);
@@ -128,7 +128,7 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
         // Setup kat comp
         KatCompV2.Args katCompArgs = new KatCompV2.Args();
         katCompArgs.setInput1(input);
-        katCompArgs.setInput2(assembly);
+        katCompArgs.setInput2(assembly.getAbsolutePath());
         katCompArgs.setCanonical1(true);
         katCompArgs.setCanonical2(true);
         katCompArgs.setHashSize1(assembly.length() * 10);

@@ -58,6 +58,16 @@ public class RampartJobFileSystem {
     private File reportTemplateFile;
     private File reportMergedFile;
 
+    public static final String DIR_MECQ = "1-mecq";
+    public static final String DIR_READS_ANALYSIS = "2-reads-analyses";
+    public static final String DIR_KMER_CALC = "3-kmer-calc";
+    public static final String DIR_MASS = "4-mass";
+    public static final String DIR_MASS_ANALYSIS = "5-mass-analyses";
+    public static final String DIR_MASS_SELECT = "6-mass-select";
+    public static final String DIR_AMP = "7-amp";
+    public static final String DIR_AMP_ANALYSIS = "8-amp-analyses";
+    public static final String DIR_FINAL = "9-final";
+
     public RampartJobFileSystem(File jobDir) {
         this.setupFileStructure(jobDir);
     }

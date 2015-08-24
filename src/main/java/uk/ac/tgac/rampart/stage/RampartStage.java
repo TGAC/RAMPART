@@ -18,12 +18,10 @@
 package uk.ac.tgac.rampart.stage;
 
 import org.apache.commons.lang.StringUtils;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseAmpAssemblies;
 import uk.ac.tgac.rampart.stage.analyse.asm.AnalyseMassAssemblies;
-import uk.ac.tgac.rampart.stage.analyse.reads.AnalyseReads;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,27 +45,28 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new Mecq(ces, (Mecq.Args)this.getArgs());
         }
 
     },
-    ANALYSE_READS {
+    MECQ_ANALYSIS {
 
         @Override
         public List<ConanParameter> getParameters() {
-            return new AnalyseReads.Params().getConanParameters();
+            return new MecqAnalysis.Params().getConanParameters();
         }
 
         @Override
         public boolean checkArgs(RampartStageArgs args) {
-            return classContains(args.getClass(), AnalyseReads.Args.class);
+            return classContains(args.getClass(), MecqAnalysis.Args.class);
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
-            return new AnalyseReads(ces, (AnalyseReads.Args)this.getArgs());
+        public RampartProcess create(ConanExecutorService ces) {
+            return new MecqAnalysis(ces, (MecqAnalysis.Args)this.getArgs());
         }
+
     },
     KMER_CALC {
 
@@ -82,9 +81,10 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new CalcOptimalKmer(ces, (CalcOptimalKmer.Args)this.getArgs());
         }
+
     },
     MASS {
 
@@ -99,11 +99,12 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new Mass(ces, (Mass.Args)this.getArgs());
         }
+
     },
-    ANALYSE_MASS {
+    MASS_ANALYSIS {
 
         @Override
         public List<ConanParameter> getParameters() {
@@ -116,11 +117,12 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new AnalyseMassAssemblies(ces, (AnalyseMassAssemblies.Args)this.getArgs());
         }
+
     },
-    SELECT_MASS {
+    MASS_SELECT {
         @Override
         public List<ConanParameter> getParameters() {
             return new Select.Params().getConanParameters();
@@ -132,9 +134,10 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new Select(ces, (Select.Args)this.getArgs());
         }
+
     },
     AMP {
 
@@ -149,11 +152,12 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new Amp(ces, (Amp.Args)this.getArgs());
         }
+
     },
-    ANALYSE_AMP {
+    AMP_ANALYSIS {
 
         @Override
         public List<ConanParameter> getParameters() {
@@ -166,9 +170,10 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new AnalyseAmpAssemblies(ces, (AnalyseAmpAssemblies.Args)this.getArgs());
         }
+
     },
     FINALISE {
 
@@ -183,7 +188,7 @@ public enum RampartStage {
         }
 
         @Override
-        public AbstractConanProcess create(ConanExecutorService ces) {
+        public RampartProcess create(ConanExecutorService ces) {
             return new Finalise(ces, (Finalise.Args)this.getArgs());
         }
     },
@@ -210,8 +215,7 @@ public enum RampartStage {
 
     public abstract boolean checkArgs(RampartStageArgs args);
 
-    public abstract AbstractConanProcess create(ConanExecutorService ces);
-
+    public abstract RampartProcess create(ConanExecutorService ces);
 
     private RampartStageArgs args;
 
@@ -234,6 +238,10 @@ public enum RampartStage {
             throw new IllegalArgumentException("Cannot assign args to this stage.  Invalid args type: " + args.getClass().getSimpleName());
 
         this.args = args;
+    }
+
+    public String getOutputDirName() {
+        return this.ordinal() + "_" + this.name().toLowerCase();
     }
 
 

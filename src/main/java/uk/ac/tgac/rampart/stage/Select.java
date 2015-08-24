@@ -42,6 +42,7 @@ import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
+import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.stats.QuastV23;
@@ -60,7 +61,7 @@ import java.util.List;
 /**
  * Created by maplesod on 24/10/14.
  */
-public class Select extends AbstractConanProcess {
+public class Select extends RampartProcess {
 
     private static Logger log = LoggerFactory.getLogger(Amp.class);
 
@@ -73,7 +74,7 @@ public class Select extends AbstractConanProcess {
     }
 
     public Select(ConanExecutorService ces, Args args) {
-        super("", args, new Params(), ces);
+        super(ces, args);
     }
 
     public Args getArgs() {
@@ -98,121 +99,110 @@ public class Select extends AbstractConanProcess {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
-
-        try {
-
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-
-            log.info("Starting Selection of MASS assemblies");
-
-            Args args = this.getArgs();
-
-            if (!args.getOutputDir().exists()) {
-                args.getOutputDir().mkdirs();
-            }
-
-            // Create the stats table with information derived from the configuration file.
-            AssemblyStatsTable table = this.createTable();
-
-            boolean cegmaSelected = false;
-
-            QuastV23.AssemblyStats refStats = null;
-
-            // If we have a reference run quast on it to get some stats
-            if (args.getOrganism().getReference() != null && args.getOrganism().getReference().getPath() != null) {
-
-                File refOutDir = new File(args.getOutputDir(), "ref_quast");
-                List<File> inputFiles = new ArrayList<>();
-                inputFiles.add(args.getOrganism().getReference().getPath());
-                QuastV23.Args refArgs = new QuastV23.Args();
-                refArgs.setInputFiles(inputFiles);
-                refArgs.setFindGenes(true);
-                refArgs.setThreads(1);
-                refArgs.setEukaryote(args.getOrganism().getPloidy() > 1);
-                refArgs.setOutputDir(refOutDir);
-
-                QuastV23 refQuast = new QuastV23(this.conanExecutorService, refArgs);
-
-                ExecutionResult res = this.conanExecutorService.executeProcess(refQuast, refOutDir, args.jobPrefix + "-refquast", 1, 2000, false);
-
-                QuastV23.Report report = new QuastV23.Report(new File(refOutDir, "report.txt"));
-                refStats = report.getAssemblyStats(0);
-
-                log.info("Reference genome size: " + refStats.getTotalLengthGt0());
-                log.info("Reference GC%: " + refStats.getGcPc());
-                log.info("Reference # Genes: " + refStats.getNbGenes());
-            }
-
-            for(AssemblyAnalyser analyser : args.analysers) {
-
-                File reportDir = new File(args.getMassAnalysisDir(), analyser.getName().toLowerCase());
-
-                analyser.updateTable(
-                        table,
-                        analyser.isFast() ? new File(reportDir, "longest") : reportDir
-                );
-
-                if (analyser.getName().equalsIgnoreCase("CEGMA")) {
-                    cegmaSelected = true;
-                }
-            }
-
-            // Select the assembly
-            AssemblySelector assemblySelector = new DefaultAssemblySelector(args.getWeightingsFile());
-            AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
-                    table,
-                    args.getOrganism(),
-                    refStats,
-                    cegmaSelected
-                    );
-
-            File bestAssembly = new File(selectedAssembly.getFilePath());
-
-            String bubblePath = selectedAssembly.getBubblePath();
-            File bubbles = bubblePath.equalsIgnoreCase("NA") || bubblePath.isEmpty() ?
-                    null :
-                    new File(selectedAssembly.getBubblePath());
-
-            File bestAssemblyLink = new File(args.getOutputDir(), "best.fa");
-            File bubblesLink = new File(args.getOutputDir(), "best_bubbles.fa");
-
-            log.info("Best assembly path: " + bestAssembly.getAbsolutePath());
-
-            // Create link to "best" assembly in stats dir
-            this.getConanProcessService().createLocalSymbolicLink(bestAssembly, bestAssemblyLink);
-            if (bubbles != null && bubbles.exists()) {
-                this.getConanProcessService().createLocalSymbolicLink(bubbles, bubblesLink);
-            }
-
-            // Save table to disk
-            File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
-            table.saveTsv(finalTSVFile);
-            log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
-
-            File finalSummaryFile = new File(args.getOutputDir(), "scores.txt");
-            table.saveSummary(finalSummaryFile);
-            log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
+    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
 
-            stopWatch.stop();
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
-            long runtime = stopWatch.getTime() / 1000L;
+        Args args = this.getArgs();
 
-            TaskResult taskResult = new DefaultTaskResult("rampart-mass_select", true, null, runtime);
 
-            return new DefaultExecutionResult(
-                    taskResult.getTaskName(),
-                    0,
-                    new String[] {},
-                    null,
-                    -1,
-                    new ResourceUsage(0, runtime, runtime));
+        List<ExecutionResult> results = new ArrayList<>();
 
-        } catch (IOException e) {
-            throw new ProcessExecutionException(4, e);
+        // If we have a reference run quast on it to get some stats
+        if (args.getOrganism().getReference() != null && args.getOrganism().getReference().getPath() != null) {
+
+            List<File> inputFiles = new ArrayList<>();
+            inputFiles.add(args.getOrganism().getReference().getPath());
+            QuastV23.Args refArgs = new QuastV23.Args();
+            refArgs.setInputFiles(inputFiles);
+            refArgs.setFindGenes(true);
+            refArgs.setThreads(1);
+            refArgs.setEukaryote(args.getOrganism().getPloidy() > 1);
+            refArgs.setOutputDir(args.getRefOutDir(sample));
+
+            QuastV23 refQuast = new QuastV23(this.conanExecutorService, refArgs);
+
+            results.add(this.conanExecutorService.executeProcess(refQuast, args.getRefOutDir(sample), args.jobPrefix + "-refquast", 1, 2000, args.runParallel));
         }
+
+        stopWatch.stop();
+
+        return new DefaultTaskResult(sample.name + "-" + args.stage.getOutputDirName(), true, results, stopWatch.getTime() / 1000L);
+    }
+
+    @Override
+    public void validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException {
+
+        // Create the stats table with information derived from the configuration file.
+        AssemblyStatsTable table = this.createTable();
+        boolean cegmaSelected = false;
+        QuastV23.AssemblyStats refStats = null;
+
+        Args args = this.getArgs();
+
+        // If we have a reference run quast on it to get some stats
+        if (args.getOrganism().getReference() != null && args.getOrganism().getReference().getPath() != null) {
+
+            QuastV23.Report report = new QuastV23.Report(new File(args.getRefOutDir(sample), "report.txt"));
+            refStats = report.getAssemblyStats(0);
+
+            log.info("Reference genome size: " + refStats.getTotalLengthGt0());
+            log.info("Reference GC%: " + refStats.getGcPc());
+            log.info("Reference # Genes: " + refStats.getNbGenes());
+        }
+
+        for (AssemblyAnalyser analyser : args.analysers) {
+
+            File massAnalysisDir = new File(args.getSampleDir(sample), "5-mass-analyses");
+            File reportDir = new File(massAnalysisDir, analyser.getName().toLowerCase());
+
+            analyser.updateTable(
+                    table,
+                    analyser.isFast() ? new File(reportDir, "longest") : reportDir
+            );
+
+            if (analyser.getName().equalsIgnoreCase("CEGMA")) {
+                cegmaSelected = true;
+            }
+        }
+
+        // Select the assembly
+        AssemblySelector assemblySelector = new DefaultAssemblySelector(args.getWeightingsFile());
+        AssemblyStats selectedAssembly = assemblySelector.selectAssembly(
+                table,
+                args.getOrganism(),
+                refStats,
+                cegmaSelected
+        );
+
+        File bestAssembly = new File(selectedAssembly.getFilePath());
+
+        String bubblePath = selectedAssembly.getBubblePath();
+        File bubbles = bubblePath.equalsIgnoreCase("NA") || bubblePath.isEmpty() ?
+                null :
+                new File(selectedAssembly.getBubblePath());
+
+        File bestAssemblyLink = new File(args.getOutputDir(), "best.fa");
+        File bubblesLink = new File(args.getOutputDir(), "best_bubbles.fa");
+
+        log.info("Best assembly path: " + bestAssembly.getAbsolutePath());
+
+        // Create link to "best" assembly in stats dir
+        this.getConanProcessService().createLocalSymbolicLink(bestAssembly, bestAssemblyLink);
+        if (bubbles != null && bubbles.exists()) {
+            this.getConanProcessService().createLocalSymbolicLink(bubbles, bubblesLink);
+        }
+
+        // Save table to disk
+        File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
+        table.saveTsv(finalTSVFile);
+        log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
+
+        File finalSummaryFile = new File(args.getOutputDir(), "scores.txt");
+        table.saveSummary(finalSummaryFile);
+        log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
     }
 
 
@@ -244,7 +234,7 @@ public class Select extends AbstractConanProcess {
         return table;
     }
 
-    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
+    public static class Args extends RampartProcessArgs {
 
         private static final String KEY_ATTR_WEIGHTINGS = "weightings_file";
 
@@ -253,32 +243,25 @@ public class Select extends AbstractConanProcess {
         public static final File    DEFAULT_WEIGHTINGS_FILE = DEFAULT_USER_WEIGHTINGS_FILE.exists() ?
                 DEFAULT_USER_WEIGHTINGS_FILE : DEFAULT_SYSTEM_WEIGHTINGS_FILE;
 
-        private File massAnalysisDir;
         private File assemblyLinkageFile;
-        private File outputDir;
-        private Organism organism;
         private File weightingsFile;
-        private String jobPrefix;
         private List<MassJob.Args> massJobs;
         private List<AssemblyAnalyser> analysers;
 
         public Args() {
-            super(new Params());
+            super(RampartStage.MASS_SELECT);
 
-            this.massAnalysisDir = null;
             this.assemblyLinkageFile = null;
-            this.organism = null;
             this.weightingsFile = DEFAULT_WEIGHTINGS_FILE;
-            this.jobPrefix = "select-assembly";
             this.massJobs = null;
             this.analysers = null;
         }
 
-        public Args(Element element, File massAnalysisDir, File assemblyLinkageFile, File outputDir,
-                    List<MassJob.Args> massJobs, List<AssemblyAnalyser> analysers,
-                    Organism organism, String jobPrefix) throws IOException {
+        public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism,
+                    File assemblyLinkageFile, List<MassJob.Args> massJobs, List<AssemblyAnalyser> analysers)
+                throws IOException {
 
-            this();
+            super(RampartStage.MASS_SELECT, outputDir, jobPrefix, samples, organism);
 
             // Check there's nothing
             if (!XmlHelper.validate(element,
@@ -292,30 +275,13 @@ public class Select extends AbstractConanProcess {
                 throw new IOException("Found unrecognised element or attribute in \"analyse_mass\"");
             }
 
-            this.massAnalysisDir = massAnalysisDir;
             this.assemblyLinkageFile = assemblyLinkageFile;
-            this.outputDir = outputDir;
-            this.organism = organism;
-            this.jobPrefix = jobPrefix;
             this.massJobs = massJobs;
             this.analysers = analysers;
 
             this.weightingsFile = element.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
                     new File(XmlHelper.getTextValue(element, KEY_ATTR_WEIGHTINGS)) :
                     DEFAULT_WEIGHTINGS_FILE;
-
-        }
-
-        protected Params getParams() {
-            return (Params)this.params;
-        }
-
-        public File getMassAnalysisDir() {
-            return massAnalysisDir;
-        }
-
-        public void setMassAnalysisDir(File massAnalysisDir) {
-            this.massAnalysisDir = massAnalysisDir;
         }
 
         public File getAssemblyLinkageFile() {
@@ -326,36 +292,12 @@ public class Select extends AbstractConanProcess {
             this.assemblyLinkageFile = assemblyLinkageFile;
         }
 
-        public File getOutputDir() {
-            return outputDir;
-        }
-
-        public void setOutputDir(File outputDir) {
-            this.outputDir = outputDir;
-        }
-
-        public Organism getOrganism() {
-            return organism;
-        }
-
-        public void setOrganism(Organism organism) {
-            this.organism = organism;
-        }
-
         public File getWeightingsFile() {
             return weightingsFile;
         }
 
         public void setWeightingsFile(File weightingsFile) {
             this.weightingsFile = weightingsFile;
-        }
-
-        public String getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public void setJobPrefix(String jobPrefix) {
-            this.jobPrefix = jobPrefix;
         }
 
         public List<MassJob.Args> getMassJobs() {
@@ -374,26 +316,17 @@ public class Select extends AbstractConanProcess {
             this.analysers = analysers;
         }
 
+        public File getRefOutDir(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), "ref_quast");
+        }
+
         @Override
         protected void setOptionFromMapEntry(ConanParameter param, String value) {
-            Params params = this.getParams();
 
-            if (param.equals(params.getOutputDir())) {
-                this.outputDir = new File(value);
-            } else if (param.equals(params.getJobPrefix())) {
-                this.jobPrefix = value;
-            } else {
-                throw new IllegalArgumentException("Unknown param found: " + param);
-            }
         }
 
         @Override
         protected void setArgFromMapEntry(ConanParameter param, String value) {
-
-        }
-
-        @Override
-        protected void parseCommandLine(CommandLine commandLine) {
 
         }
 
@@ -404,54 +337,8 @@ public class Select extends AbstractConanProcess {
 
         @Override
         public ParamMap getArgMap() {
-            Params params = this.getParams();
             ParamMap pvp = new DefaultParamMap();
-
-            if (this.outputDir != null)
-                pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
-
-            if (this.jobPrefix != null) {
-                pvp.put(params.getJobPrefix(), this.jobPrefix);
-            }
-
             return pvp;
-        }
-    }
-
-    public static class Params extends AbstractProcessParams {
-
-        private ConanParameter outputDir;
-        private ConanParameter jobPrefix;
-
-        public Params() {
-
-            this.outputDir = new PathParameter(
-                    "output",
-                    "The output directory",
-                    true);
-
-            this.jobPrefix = new ParameterBuilder()
-                    .longName("job_prefix")
-                    .description("The job_prefix to be assigned to any subprocesses.  Useful if executing with a scheduler.")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-        }
-
-        public ConanParameter getOutputDir() {
-            return outputDir;
-        }
-
-        public ConanParameter getJobPrefix() {
-            return jobPrefix;
-        }
-
-
-        @Override
-        public ConanParameter[] getConanParametersAsArray() {
-            return new ConanParameter[] {
-                    this.outputDir,
-                    this.jobPrefix
-            };
         }
     }
 }

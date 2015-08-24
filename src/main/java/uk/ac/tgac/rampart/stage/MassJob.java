@@ -48,7 +48,6 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.*;
 import uk.ac.tgac.conan.process.asm.tools.AbyssV15;
 import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
-import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.stage.util.CoverageRange;
 import uk.ac.tgac.rampart.stage.util.ReadsInput;
 import uk.ac.tgac.rampart.stage.util.VariableRange;
