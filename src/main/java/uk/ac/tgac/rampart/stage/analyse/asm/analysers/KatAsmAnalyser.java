@@ -100,19 +100,6 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
             }
         }
 
-
-        // If we're using a scheduler and we have been asked to run each MECQ group for each library
-        // in parallel, then we should wait for all those to complete before continueing.
-        if (ces.usingScheduler() && args.isRunParallel()) {
-            log.debug("Analysing assemblies using kmers in parallel, waiting for completion");
-            ces.executeScheduledWait(
-                    jobResults,
-                    args.getJobPrefix() + "-kat_comp*",
-                    ExitStatus.Type.COMPLETED_ANY,
-                    args.getJobPrefix() + "-kmer_asm-wait",
-                    args.getOutputDir());
-        }
-
         return jobResults;
     }
 

@@ -21,15 +21,19 @@ package uk.ac.tgac.rampart.stage.analyse.asm;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.process.asm.KmerRange;
 import uk.ac.tgac.rampart.MockedConanProcess;
 import uk.ac.tgac.rampart.stage.MassJob;
+import uk.ac.tgac.rampart.stage.Mecq;
 import uk.ac.tgac.rampart.stage.util.CoverageRange;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
@@ -41,7 +45,7 @@ public class AnalyseMassAssembliesTest extends MockedConanProcess {
     @Test
     public void createTableTest() throws IOException {
 
-        /// Fake the output directories
+        // Fake the output directories
         File massDir = temp.newFolder("mass");
         File scaffoldsDir = new File(massDir, "mj1/scaffolds");
         scaffoldsDir.mkdirs();
@@ -57,8 +61,13 @@ public class AnalyseMassAssembliesTest extends MockedConanProcess {
         List<MassJob.Args> massJobs = new ArrayList<>();
         massJobs.add(mjArgs);
 
+        Mecq.Sample sample = new Mecq.Sample(new ArrayList<Mecq.EcqArgs>(), new ArrayList<Library>(), "default");
+
+        Map<Mecq.Sample, List<MassJob.Args>> massMap = new HashMap<>();
+        massMap.put(sample, massJobs);
+
         AnalyseMassAssemblies.Args args = new AnalyseMassAssemblies.Args();
-        args.setMassJobs(massJobs);
+        args.setMassJobs(massMap);
 
         //AnalyseMassAssemblies ama = new AnalyseMassAssemblies(this.conanExecutorService, args);
 

@@ -85,6 +85,10 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
             throw new IOException("Found unrecognised element or attribute in \"analyse_mass\"");
         }
 
+        this.tools = new ArrayList<>();
+        this.assemblyAnalyserFactory = new SpiFactory<>(AssemblyAnalyser.class);
+        this.assemblyAnalysers = new HashSet<>();
+
         this.runParallel = element.hasAttribute(KEY_ATTR_PARALLEL) ?
                 XmlHelper.getBooleanValue(element, KEY_ATTR_PARALLEL) :
                 DEFAULT_RUN_PARALLEL;

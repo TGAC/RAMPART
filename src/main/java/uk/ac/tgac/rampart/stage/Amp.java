@@ -73,10 +73,6 @@ public class Amp extends RampartProcess {
 
     private Pipeline ampPipeline;
 
-    public Amp() {
-        this(null);
-    }
-
     public Amp(ConanExecutorService ces) {
         this(ces, new Args());
     }
@@ -114,7 +110,7 @@ public class Amp extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, IOException {
 
         // Short cut to arguments
@@ -125,18 +121,13 @@ public class Amp extends RampartProcess {
 
         log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
 
-        // Clear out anything that was here before
-        if (args.getOutputDir().exists()) {
-            FileUtils.deleteDirectory(args.getOutputDir());
-        }
-
         // Make sure the output directory exists
-        args.getAssembliesDir().mkdirs();
+        args.getAssembliesDir(sample).mkdirs();
 
         // Create link for the initial input file
         this.getConanProcessService().createLocalSymbolicLink(
-                args.getInputAssembly(),
-                new File(args.getAssembliesDir(), "amp-stage-0.fa"));
+                args.getInputAssembly(sample),
+                new File(args.getAssembliesDir(sample), "amp-stage-0.fa"));
 
         // Create a guest user
         ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
@@ -162,8 +153,8 @@ public class Amp extends RampartProcess {
 
         // Create a symbolic link for the final assembly from the final stage
         this.getConanProcessService().createLocalSymbolicLink(
-                new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + ".fa"),
-                args.getFinalAssembly());
+                new File(args.getAssembliesDir(sample), "amp-stage-" + ampPipeline.getProcesses().size() + ".fa"),
+                args.getFinalAssembly(sample));
 
 
         return result;
@@ -212,9 +203,13 @@ public class Amp extends RampartProcess {
 
         public void init() {
 
-            for(AmpStage.Args ampStageArgs : this.args.getStageArgsList().get(sample)) {
+            List<AmpStage.Args> ampArgsList = this.sample == null ?
+                    this.args.getStageArgsList().values().iterator().next() :
+                    this.args.getStageArgsList().get(this.sample);
 
-                AmpStage proc = new AmpStage(this.conanExecutorService, ampStageArgs, sample);
+            for(AmpStage.Args ampStageArgs : ampArgsList) {
+
+                AmpStage proc = new AmpStage(this.conanExecutorService, ampStageArgs, this.sample);
                 proc.setConanProcessService(getConanProcessService());
                 this.addProcess(proc);
             }
@@ -269,6 +264,7 @@ public class Amp extends RampartProcess {
             // Set args
             this.inputAssembly = inputAssembly;
             this.bubbleFile = bubbleFile;
+            this.stageArgsList = new HashMap<>();
 
             for(Mecq.Sample sample : samples) {
 
@@ -279,16 +275,16 @@ public class Amp extends RampartProcess {
                 for (int i = 1; i <= nodes.getLength(); i++) {
 
                     String stageName = "amp-" + Integer.toString(i);
-                    File stageOutputDir = new File(this.getStageDir(sample), stageName);
+                    File ampStageOutputDir = new File(this.getStageDir(sample), stageName);
 
                     AmpStage.Args stage = new AmpStage.Args(
                             (Element) nodes.item(i - 1),
-                            stageOutputDir,
-                            this.getAssembliesDir(),
+                            ampStageOutputDir,
+                            this.getAssembliesDir(sample),
                             jobPrefix + "-" + stageName,
                             sample,
                             this.organism,
-                            this.inputAssembly,
+                            this.getInputAssembly(sample),
                             this.bubbleFile,
                             i);
 
@@ -301,8 +297,10 @@ public class Amp extends RampartProcess {
             }
         }
 
-        public File getInputAssembly() {
-            return inputAssembly;
+        public File getInputAssembly(Mecq.Sample sample) {
+            return this.inputAssembly == null ?
+                    new File(new File(this.getSampleDir(sample), RampartStage.MASS_SELECT.getOutputDirName()), "best.fa") :
+                    this.inputAssembly;
         }
 
         public void setInputAssembly(File inputAssembly) {
@@ -317,6 +315,9 @@ public class Amp extends RampartProcess {
             this.bubbleFile = bubbleFile;
         }
 
+        public File getAssembliesDir(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), "assemblies");
+        }
 
         public Map<Mecq.Sample, List<AmpStage.Args>> getStageArgsList() {
             return stageArgsList;
@@ -324,11 +325,6 @@ public class Amp extends RampartProcess {
 
         public void setStageArgsList(Map<Mecq.Sample, List<AmpStage.Args>> stageArgsList) {
             this.stageArgsList = stageArgsList;
-        }
-
-
-        public File getAssembliesDir() {
-            return new File(this.getOutputDir(), "assemblies");
         }
 
         public ExecutionContext getExecutionContext() {
@@ -360,8 +356,8 @@ public class Amp extends RampartProcess {
 
         }
 
-        public File getFinalAssembly() {
-            return new File(this.getOutputDir(), "final.fa");
+        public File getFinalAssembly(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), "final.fa");
         }
 
         @Override

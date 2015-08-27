@@ -69,7 +69,7 @@ public class Mecq extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
         Args args = this.getArgs();
 
@@ -78,6 +78,8 @@ public class Mecq extends RampartProcess {
 
         List<ReadEnhancer> readEnhancers = new ArrayList<>();
         List<ExecutionResult> results = new ArrayList<>();
+
+        File stageOutputDir = args.getStageDir(sample);
 
         // Passthrough links for raw libraries to output
         for (Library lib : sample.libraries) {
@@ -167,7 +169,7 @@ public class Mecq extends RampartProcess {
 
     /**
      * For each ecq check all output files exist
-     * @throws IOException
+     * @throws IOException Thrown if expected output files do not exist
      */
     @Override
     public void validateOutput(Mecq.Sample sample) throws IOException {
@@ -563,9 +565,8 @@ public class Mecq extends RampartProcess {
         public Library getOutputLibrary(Sample sample, Library lib) {
 
             GenericReadEnhancerArgs genericArgs = new GenericReadEnhancerArgs();
-            File sampleMecqDir = new File(outputDir, sample.name + "/1-mecq");
             genericArgs.setInput(lib);
-            genericArgs.setOutputDir(new File(sampleMecqDir, lib.getName()));
+            genericArgs.setOutputDir(new File(this.outputDir, lib.getName()));
             genericArgs.setThreads(this.threads);
             genericArgs.setMemoryGb(this.memory);
 

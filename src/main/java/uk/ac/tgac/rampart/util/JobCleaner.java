@@ -21,7 +21,6 @@ package uk.ac.tgac.rampart.util;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import uk.ac.tgac.rampart.RampartJobFileSystem;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,18 +113,8 @@ public class JobCleaner {
             System.out.print("Cleaning RAMPART job directory: " + jobDir.getAbsolutePath() + " ...");
         }
 
-        RampartJobFileSystem jobFs = new RampartJobFileSystem(jobDir);
-
-        FileUtils.deleteDirectory(jobFs.getMeqcDir());
-        FileUtils.deleteDirectory(jobFs.getAnalyseReadsDir());
-        FileUtils.deleteDirectory(jobFs.getKmerCalcDir());
-        FileUtils.deleteDirectory(jobFs.getMassDir());
-        FileUtils.deleteDirectory(jobFs.getAnalyseMassDir());
-        FileUtils.deleteDirectory(jobFs.getSelectMassDir());
-        FileUtils.deleteDirectory(jobFs.getAmpDir());
-        FileUtils.deleteDirectory(jobFs.getAnalyseAmpDir());
-        FileUtils.deleteDirectory(jobFs.getReportDir());
-        FileUtils.deleteDirectory(jobFs.getFinalDir());
+        FileUtils.deleteDirectory(new File(jobDir, "rampart_out"));
+        FileUtils.deleteDirectory(new File(jobDir, "wait_logs"));
 
         if (this.verbose) {
             System.out.println(" done.");

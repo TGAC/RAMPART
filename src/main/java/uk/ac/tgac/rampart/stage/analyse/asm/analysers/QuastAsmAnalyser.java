@@ -73,11 +73,9 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     public List<ExecutionResult> execute(List<File> assemblies, File outputDir, String jobPrefix, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 
-        if (outputDir.exists()) {
-            FileUtils.deleteDirectory(outputDir);
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
         }
-
-        outputDir.mkdirs();
 
         // Create mapping between quast assembly name and actual file path
         this.assemblies = new HashMap<>();
@@ -101,7 +99,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 args.getOrganism().getPloidy() > 1,
                 reference,
                 args.getThreads(),
-                false // Assume all sequences are not scaffolds... I don't like this options much in Quast.
+                false // Assume all sequences are not scaffolds.
         );
 
         ExecutionResult result = ces.executeProcess(
@@ -110,7 +108,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 jobPrefix,
                 args.getThreads(),
                 args.getMemory(),
-                false);
+                args.isRunParallel());
 
         jobResults.add(result);
 

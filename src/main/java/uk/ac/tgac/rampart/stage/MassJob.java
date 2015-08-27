@@ -556,10 +556,8 @@ public class MassJob extends AbstractConanProcess {
         private String uncheckedArgs;
         private boolean kmerCalc;
 
-
         // Inputs
         private List<ReadsInput> inputs;
-        private List<Library> allLibraries;
         private Mecq.Sample sample;
 
         // System settings
@@ -593,7 +591,6 @@ public class MassJob extends AbstractConanProcess {
             this.kmerCalc = false;
 
             this.inputs = new ArrayList<>();
-            this.allLibraries = new ArrayList<>();
             this.sample = null;
 
             this.threads = 1;
@@ -689,7 +686,6 @@ public class MassJob extends AbstractConanProcess {
 
 
             // Other args
-            this.allLibraries = allLibraries;
             this.sample = sample;
             this.outputDir = new File(massDir, name);
             this.jobPrefix = parentJobPrefix + "-" + name;
@@ -752,7 +748,7 @@ public class MassJob extends AbstractConanProcess {
             List<Library> selectedLibs = new ArrayList<>();
 
             for(ReadsInput mi : inputs) {
-                Library lib = mi.findLibrary(allLibraries);
+                Library lib = mi.findLibrary(sample.libraries);
                 Mecq.EcqArgs ecqArgs = mi.findMecq(sample);
 
                 if (lib == null) {
@@ -1035,9 +1031,9 @@ public class MassJob extends AbstractConanProcess {
                             " -" + jv.varName + " " + jv.varValue;
 
                     // Record that we've done some command line parsing
-                    if (!newCheckedArgs.isEmpty()) {
+                    /*if (!newCheckedArgs.isEmpty()) {
                         log.debug("Parsing: " + newCheckedArgs);
-                    }
+                    }*/
 
                     // Parse checked args
                     asm.getAssemblerArgs().parse(newCheckedArgs);
@@ -1210,14 +1206,6 @@ public class MassJob extends AbstractConanProcess {
 
         public void setOrganism(Organism organism) {
             this.organism = organism;
-        }
-
-        public List<Library> getAllLibraries() {
-            return allLibraries;
-        }
-
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
         }
 
         public Mecq.Sample getSample() {

@@ -114,7 +114,7 @@ public class Finalise extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, IOException {
 
         StopWatch stopWatch = new StopWatch();
@@ -278,9 +278,9 @@ public class Finalise extends RampartProcess {
             this.compress = true;
         }
 
-        public Args(Element element, File outputDir, String jobPrefix, Organism organism, String institution, boolean inputFromMass) throws IOException {
+        public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, String institution, boolean inputFromMass) throws IOException {
 
-            super(RampartStage.FINALISE, outputDir, jobPrefix, null, organism);
+            super(RampartStage.FINALISE, outputDir, jobPrefix, samples, organism);
 
             // Check there's nothing unexpected in this element
             if (!XmlHelper.validate(element,

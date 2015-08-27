@@ -241,7 +241,7 @@ public enum RampartStage {
     }
 
     public String getOutputDirName() {
-        return this.ordinal() + "_" + this.name().toLowerCase();
+        return (this.ordinal() + 1) + "_" + this.name().toLowerCase();
     }
 
 

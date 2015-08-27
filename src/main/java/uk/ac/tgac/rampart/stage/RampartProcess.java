@@ -68,14 +68,14 @@ public abstract class RampartProcess extends AbstractConanProcess {
 
 
     /**
-     * Must be overridden by child process
-     * @param executionContext
-     * @return
-     * @throws ProcessExecutionException
-     * @throws InterruptedException
-     * @throws IOException
+     * The child class must override this method to specify how the given sample should be processed
+     * @param executionContext The environment in which to execute this process
+     * @return The result of executing this process
+     * @throws ProcessExecutionException Occurs if an unexpected error occurs during process execution
+     * @throws InterruptedException Occurs if the process was interrupted (generally by the user)
+     * @throws IOException Occurs if there is an issue accessing files required for IO by this process
      */
-    public abstract TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+    public abstract TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
         throws ProcessExecutionException, InterruptedException, IOException;
 
     public void validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException {}
@@ -96,6 +96,7 @@ public abstract class RampartProcess extends AbstractConanProcess {
             }
 
             log.info("Starting " + this.getName() + " Process");
+            this.results = new ArrayList<>();
 
             // Loop through all samples to process
             for (Mecq.Sample sample : args.samples) {
@@ -108,7 +109,7 @@ public abstract class RampartProcess extends AbstractConanProcess {
                 }
 
                 // Do samples specific work
-                TaskResult sampleResults = this.executeSample(sample, stageDir, executionContext);
+                TaskResult sampleResults = this.executeSample(sample, executionContext);
 
                 // Collect results
                 for(ExecutionResult res : sampleResults.getProcessResults()) {
@@ -189,9 +190,6 @@ public abstract class RampartProcess extends AbstractConanProcess {
         protected Organism organism;
 
 
-        /**
-         * Set defaults
-         */
         public RampartProcessArgs(RampartStage stage) {
 
             super(new Params());

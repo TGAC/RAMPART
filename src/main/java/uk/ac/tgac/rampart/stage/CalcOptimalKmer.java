@@ -96,7 +96,7 @@ public class CalcOptimalKmer extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, IOException {
 
 
@@ -134,8 +134,8 @@ public class CalcOptimalKmer extends RampartProcess {
     }
 
     /**
-     * For each ecq check all output files exist
-     * @throws IOException
+     * Calculates the best kmer to use for each dataset
+     * @throws IOException Thrown if output files do not exist
      */
     @Override
     public void validateOutput(Mecq.Sample sample) throws IOException {
@@ -143,7 +143,7 @@ public class CalcOptimalKmer extends RampartProcess {
         Args args = this.getArgs();
 
         // Retrieve kmer genie results
-        for (MassJob.Args massJobArgs : args.massJobArgList) {
+        for (MassJob.Args massJobArgs : args.massJobArgMap.get(sample)) {
             String massJobName = massJobArgs.getName();
             String kgName = args.mass2kgMap.get(massJobName);
 
@@ -226,7 +226,7 @@ public class CalcOptimalKmer extends RampartProcess {
     public static class Args extends RampartProcessArgs {
 
         // From user
-        private List<MassJob.Args> massJobArgList;
+        private Map<Mecq.Sample, List<MassJob.Args>> massJobArgMap;
 
         // Internal
         private Map<String, String> mass2kgMap;
@@ -236,7 +236,7 @@ public class CalcOptimalKmer extends RampartProcess {
         public Args() {
 
             super(RampartStage.KMER_CALC);
-            this.massJobArgList = new ArrayList<>();
+            this.massJobArgMap = new HashMap<>();
 
             this.mass2kgMap = new HashMap<>();
             this.kg2massMap = new HashMap<>();
@@ -253,13 +253,19 @@ public class CalcOptimalKmer extends RampartProcess {
                     new String[0],
                     new String[]{
                         KEY_ATTR_THREADS,
-                        KEY_ATTR_MEMORY
+                        KEY_ATTR_MEMORY,
+                        KEY_ATTR_PARALLEL
                     },
                     new String[0],
                     new String[0]
                     )) {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
+
+            this.massJobArgMap = new HashMap<>();
+            this.mass2kgMap = new HashMap<>();
+            this.kg2massMap = new HashMap<>();
+            this.kg2inputsMap = new HashMap<>();
 
             // Check ploidy level
             if (this.organism.getPloidy() > 2) {
@@ -276,7 +282,7 @@ public class CalcOptimalKmer extends RampartProcess {
                     XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) :
                     DEFAULT_MEMORY;
 
-            // From Xml (optional) default to value of MASS element if not specified
+            // From Xml (optional)
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                     runParallel;
@@ -284,32 +290,34 @@ public class CalcOptimalKmer extends RampartProcess {
 
         public void initialise() {
 
-            if (this.massJobArgList != null) {
+            if (this.massJobArgMap != null) {
                 // Setup mass job to kmergenie config maps
-                for (MassJob.Args singleMassArgs : this.massJobArgList) {
+                for (List<MassJob.Args> allMassArgs : this.massJobArgMap.values()) {
+                    for (MassJob.Args singleMassArgs : allMassArgs) {
 
-                    if ((singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN ||
-                            singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN_OPTIMISER) &&
-                            singleMassArgs.getKmerRange() == null) {
+                        if ((singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN ||
+                                singleMassArgs.getGenericAssembler().getType() == Assembler.Type.DE_BRUIJN_OPTIMISER) &&
+                                singleMassArgs.getKmerRange() == null) {
 
-                        StringBuilder sb = new StringBuilder();
-                        int i = 0;
-                        for (ReadsInput input : singleMassArgs.getInputs()) {
+                            StringBuilder sb = new StringBuilder();
+                            int i = 0;
+                            for (ReadsInput input : singleMassArgs.getInputs()) {
 
-                            if (i > 0) {
-                                sb.append("_");
+                                if (i > 0) {
+                                    sb.append("_");
+                                }
+                                sb.append(input.getEcq()).append("-").append(input.getLib());
+                                i++;
                             }
-                            sb.append(input.getEcq()).append("-").append(input.getLib());
-                            i++;
-                        }
 
-                        String kgSetName = sb.toString();
+                            String kgSetName = sb.toString();
 
-                        mass2kgMap.put(singleMassArgs.getName(), kgSetName);
-                        kg2massMap.put(kgSetName, singleMassArgs.getName());
+                            mass2kgMap.put(singleMassArgs.getName(), kgSetName);
+                            kg2massMap.put(kgSetName, singleMassArgs.getName());
 
-                        if (!kg2inputsMap.containsKey(kgSetName)) {
-                            kg2inputsMap.put(kgSetName, singleMassArgs.getSelectedLibs());
+                            if (!kg2inputsMap.containsKey(kgSetName)) {
+                                kg2inputsMap.put(kgSetName, singleMassArgs.getSelectedLibs());
+                            }
                         }
                     }
                 }
@@ -323,12 +331,12 @@ public class CalcOptimalKmer extends RampartProcess {
             return new File(this.getStageDir(sample), "kmermap.tsv");
         }
 
-        public List<MassJob.Args> getMassJobArgList() {
-            return massJobArgList;
+        public Map<Mecq.Sample, List<MassJob.Args>> getMassJobArgMap() {
+            return massJobArgMap;
         }
 
-        public void setMassJobArgList(List<MassJob.Args> massJobArgList) {
-            this.massJobArgList = massJobArgList;
+        public void setMassJobArgMap(Map<Mecq.Sample, List<MassJob.Args>> massJobArgMap) {
+            this.massJobArgMap = massJobArgMap;
         }
 
         public String getKmerGenieConfig(String massJobName) {

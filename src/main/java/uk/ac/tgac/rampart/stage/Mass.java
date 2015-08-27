@@ -45,10 +45,7 @@ import uk.ac.tgac.conan.process.asm.KmerRange;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * User: maplesod
@@ -87,7 +84,7 @@ public class Mass extends RampartProcess {
 
         Args args = (Args) this.getProcessArgs();
 
-        for(MassJob.Args massJobArgs : args.getMassJobArgList()) {
+        for(MassJob.Args massJobArgs : args.getMassJobArgMap().values().iterator().next()) {
             if (!new MassJob(this.conanExecutorService, massJobArgs).isOperational(executionContext)) {
                 log.warn("A MASS job is NOT operational.");
                 return false;
@@ -100,7 +97,7 @@ public class Mass extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, IOException {
 
         StopWatch stopWatch = new StopWatch();
@@ -116,13 +113,13 @@ public class Mass extends RampartProcess {
 
         // Work out kmer genie configs and how they relate to mass jobs
         if (args.kmerCalcArgs != null) {
-            setKmerValues(args.kmerCalcArgs.getResultFile(sample), args.getMassJobArgList());
+            setKmerValues(args.kmerCalcArgs.getResultFile(sample), args.getMassJobArgMap().get(sample));
             log.info("Loaded optimal kmer values");
         }
 
         log.info("Starting MASS jobs");
 
-        for (MassJob.Args massJobArgs : args.getMassJobArgList()) {
+        for (MassJob.Args massJobArgs : args.getMassJobArgMap().get(sample)) {
 
             // Ensure output directory for this MASS run exists
             if (!massJobArgs.getOutputDir().exists() && !massJobArgs.getOutputDir().mkdirs()) {
@@ -150,7 +147,7 @@ public class Mass extends RampartProcess {
         Args args = (Args) this.getRampartArgs();
 
         // For each MASS job to check an output file exist
-        for(MassJob.Args singleMassArgs : args.getMassJobArgList())  {
+        for(MassJob.Args singleMassArgs : args.getMassJobArgMap().get(sample))  {
             for(Assembler asm : singleMassArgs.getAssemblers()) {
 
                 if (    (asm.makesScaffolds() && !asm.getScaffoldsFile().exists()) ||
@@ -249,7 +246,7 @@ public class Mass extends RampartProcess {
         public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
 
         private CalcOptimalKmer.Args kmerCalcArgs;
-        private List<MassJob.Args> massJobArgList;    // List of MASS groups to run separately
+        private Map<Mecq.Sample, List<MassJob.Args>> massJobArgMap;    // List of MASS groups to run separately
         private Organism organism;
         private OutputLevel outputLevel;
 
@@ -264,14 +261,14 @@ public class Mass extends RampartProcess {
             this.outputLevel = DEFAULT_OUTPUT_LEVEL;
             this.organism = null;
             this.kmerCalcArgs = null;
-            this.massJobArgList = new ArrayList<>();
+            this.massJobArgMap = new HashMap<>();
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism)
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, CalcOptimalKmer.Args kmerCalcArgs)
                 throws IOException {
 
             // Set defaults first
-            this();
+            super(RampartStage.MASS, outputDir, jobPrefix, samples, organism);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,
@@ -286,11 +283,8 @@ public class Mass extends RampartProcess {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
 
-            // Set from parameters
-            this.outputDir = outputDir;
-            this.jobPrefix = jobPrefix;
-            this.samples = samples;
-            this.organism = organism;
+            this.massJobArgMap = new HashMap<>();
+            this.kmerCalcArgs = kmerCalcArgs;
 
             // From Xml (optional)
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
@@ -300,19 +294,24 @@ public class Mass extends RampartProcess {
             // All single mass args
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_MASS_JOB);
             for(Mecq.Sample sample : samples) {
+                List<MassJob.Args> massJobArgs = new ArrayList<>();
                 for (int i = 0; i < nodes.getLength(); i++) {
-                    this.massJobArgList.add(
+                    massJobArgs.add(
                             new MassJob.Args(
-                                    (Element) nodes.item(i), outputDir, jobPrefix + "-group",
+                                    (Element) nodes.item(i), this.getStageDir(sample), jobPrefix + "-group",
                                     sample, this.organism, this.runParallel, i + 1, this.kmerCalcArgs != null)
                     );
                 }
+
+                this.massJobArgMap.put(sample, massJobArgs);
             }
         }
 
         public void initialise() {
-            for (MassJob.Args jobArgs : this.massJobArgList) {
-                jobArgs.initialise(false);
+            for(List<MassJob.Args> jobArgList : this.massJobArgMap.values()) {
+                for (MassJob.Args jobArgs : jobArgList) {
+                    jobArgs.initialise(false);
+                }
             }
         }
 
@@ -332,12 +331,12 @@ public class Mass extends RampartProcess {
             this.organism = organism;
         }
 
-        public List<MassJob.Args> getMassJobArgList() {
-            return massJobArgList;
+        public Map<Mecq.Sample, List<MassJob.Args>> getMassJobArgMap() {
+            return massJobArgMap;
         }
 
-        public void setMassJobArgList(List<MassJob.Args> massJobArgList) {
-            this.massJobArgList = massJobArgList;
+        public void setMassJobArgMap(Map<Mecq.Sample, List<MassJob.Args>> massJobArgMap) {
+            this.massJobArgMap = massJobArgMap;
         }
 
         public CalcOptimalKmer.Args getKmerCalcArgs() {

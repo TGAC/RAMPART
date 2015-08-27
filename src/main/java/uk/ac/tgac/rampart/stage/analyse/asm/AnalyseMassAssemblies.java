@@ -100,7 +100,7 @@ public class AnalyseMassAssemblies extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext)
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
             throws ProcessExecutionException, InterruptedException, IOException {
 
         try {
@@ -131,40 +131,38 @@ public class AnalyseMassAssemblies extends RampartProcess {
             // Update mass job values with kmer genie info if required
             File kmerCalcFile = args.kmerCalcResults.getResultFile(sample);
             if (kmerCalcFile != null && kmerCalcFile.exists()) {
-                Mass.setKmerValues(kmerCalcFile, args.getMassJobs());
+                Mass.setKmerValues(kmerCalcFile, args.getMassJobs().get(sample));
             }
 
             // Loop through MASS groups to get assemblies
-            for (MassJob.Args jobArgs : args.getMassJobs()) {
+            for (MassJob.Args jobArgs : args.getMassJobs().get(sample)) {
 
                 jobArgs.initialise();
 
                 String massGroup = jobArgs.getName();
 
-                File inputDir = new File(args.getStageDir(sample), massGroup);
-
-                if (!inputDir.exists()) {
-                    throw new ProcessExecutionException(-1, "Could not find output from mass group: " + massGroup + "; at: " + inputDir.getAbsolutePath());
+                if (!jobArgs.getOutputDir().exists()) {
+                    throw new ProcessExecutionException(-1, "Could not find output from mass group: " + massGroup + "; at: " + jobArgs.getOutputDir().getAbsolutePath());
                 }
 
-                final File unitigsDir = jobArgs.getUnitigsDir();
-                final File contigsDir = jobArgs.getContigsDir();
-                final File scaffoldsDir = jobArgs.getScaffoldsDir();
-                final File longestDir = jobArgs.getLongestDir();
+                final File unitigsInDir = jobArgs.getUnitigsDir();
+                final File contigsInDir = jobArgs.getContigsDir();
+                final File scaffoldsInDir = jobArgs.getScaffoldsDir();
+                final File longestInDir = jobArgs.getLongestDir();
 
-                if (unitigsDir.exists()) {
-                    unitigAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(unitigsDir));
+                if (unitigsInDir.exists()) {
+                    unitigAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(unitigsInDir));
                 }
 
-                if (contigsDir.exists()) {
-                    contigAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(contigsDir));
+                if (contigsInDir.exists()) {
+                    contigAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(contigsInDir));
                 }
 
-                if (scaffoldsDir.exists()) {
-                    scaffoldAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(scaffoldsDir));
+                if (scaffoldsInDir.exists()) {
+                    scaffoldAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(scaffoldsInDir));
                 }
 
-                bestAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(longestDir));
+                bestAssemblies.addAll(AnalyseMassAssemblies.assembliesFromDir(longestInDir));
 
 
                 for (Assembler assembler : jobArgs.getAssemblers()) {
@@ -186,17 +184,17 @@ public class AnalyseMassAssemblies extends RampartProcess {
                 }
 
                 // Make symbolic links for easy access
-                File bestDir = new File(args.getAssembliesDir(), "longest");
+                /*File bestDir = new File(args.getAssembliesDir(), "longest");
                 File bubblesDir = new File(args.getAssembliesDir(), "bubbles");
 
                 this.makeLinks(unitigAssemblies, unitigsDir);
                 this.makeLinks(contigAssemblies, contigsDir);
                 this.makeLinks(scaffoldAssemblies, scaffoldsDir);
                 this.makeLinks(bestAssemblies, bestDir);
-                this.makeLinks(bubbles, bubblesDir);
+                this.makeLinks(bubbles, bubblesDir);*/
 
                 // Write out linkage file
-                FileUtils.writeLines(args.getAssemblyLinkageFile(), mappings);
+                FileUtils.writeLines(args.getAssemblyLinkageFile(sample), mappings);
 
                 for (AssemblyAnalyser analyser : requestedServices) {
 
@@ -254,19 +252,6 @@ public class AnalyseMassAssemblies extends RampartProcess {
         }
     }
 
-    protected void makeLinks(List<File> assemblies, File dir) throws InterruptedException, ProcessExecutionException {
-
-        if (dir.exists()) {
-            dir.delete();
-        }
-        dir.mkdirs();
-
-        for(File asm : assemblies) {
-            this.conanExecutorService.getConanProcessService().createLocalSymbolicLink(asm.getAbsoluteFile(), new File(dir, asm.getName()));
-        }
-    }
-
-
     /**
      * Gets all the FastA files in the directory specified by the user.
      * @param inputDir The input directory containing assemblies
@@ -293,7 +278,7 @@ public class AnalyseMassAssemblies extends RampartProcess {
 
     public static class Args extends AnalyseAssembliesArgs {
 
-        private List<MassJob.Args> massJobs;
+        private Map<Mecq.Sample, List<MassJob.Args>> massJobs;
         private CalcOptimalKmer.Args kmerCalcResults;
 
 
@@ -306,14 +291,14 @@ public class AnalyseMassAssemblies extends RampartProcess {
             this.setJobPrefix("analyse_mass");
         }
 
-        public Args(Element element, File outputDir, List<MassJob.Args> massJobs, List<Mecq.Sample> samples,
+        public Args(Element element, File outputDir, Map<Mecq.Sample, List<MassJob.Args>> massJobs,
                     Organism organism, String jobPrefix, CalcOptimalKmer.Args kmerCalcResults) throws IOException {
 
             super(  RampartStage.MASS_ANALYSIS,
                     element,
                     outputDir,
                     jobPrefix,
-                    samples,
+                    new ArrayList<>(massJobs.keySet()),
                     organism
                     );
 
@@ -325,15 +310,15 @@ public class AnalyseMassAssemblies extends RampartProcess {
             return (Params)this.params;
         }
 
-        public File getAssemblyLinkageFile() {
-            return new File(this.getOutputDir(), "assembly_linkage.txt");
+        public File getAssemblyLinkageFile(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), "assembly_linkage.txt");
         }
 
-        public List<MassJob.Args> getMassJobs() {
+        public Map<Mecq.Sample, List<MassJob.Args>> getMassJobs() {
             return massJobs;
         }
 
-        public void setMassJobs(List<MassJob.Args> massJobs) {
+        public void setMassJobs(Map<Mecq.Sample, List<MassJob.Args>> massJobs) {
             this.massJobs = massJobs;
         }
 

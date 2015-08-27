@@ -18,31 +18,21 @@
 
 package uk.ac.tgac.rampart.stage;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
-import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
-import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
-import uk.ac.ebi.fgpt.conan.core.param.ParameterBuilder;
-import uk.ac.ebi.fgpt.conan.core.param.PathParameter;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractConanProcess;
-import uk.ac.ebi.fgpt.conan.core.process.AbstractProcessArgs;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionContext;
 import uk.ac.ebi.fgpt.conan.model.context.ExecutionResult;
-import uk.ac.ebi.fgpt.conan.model.context.ResourceUsage;
 import uk.ac.ebi.fgpt.conan.model.context.TaskResult;
-import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.stats.QuastV23;
@@ -57,6 +47,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by maplesod on 24/10/14.
@@ -99,7 +90,7 @@ public class Select extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
 
         StopWatch stopWatch = new StopWatch();
@@ -136,11 +127,13 @@ public class Select extends RampartProcess {
     public void validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException {
 
         // Create the stats table with information derived from the configuration file.
-        AssemblyStatsTable table = this.createTable();
+        AssemblyStatsTable table = this.createTable(sample);
         boolean cegmaSelected = false;
         QuastV23.AssemblyStats refStats = null;
 
         Args args = this.getArgs();
+
+        File stageOutputDir = args.getStageDir(sample);
 
         // If we have a reference run quast on it to get some stats
         if (args.getOrganism().getReference() != null && args.getOrganism().getReference().getPath() != null) {
@@ -155,7 +148,7 @@ public class Select extends RampartProcess {
 
         for (AssemblyAnalyser analyser : args.analysers) {
 
-            File massAnalysisDir = new File(args.getSampleDir(sample), "5-mass-analyses");
+            File massAnalysisDir = new File(args.getSampleDir(sample), RampartStage.MASS_ANALYSIS.getOutputDirName());
             File reportDir = new File(massAnalysisDir, analyser.getName().toLowerCase());
 
             analyser.updateTable(
@@ -184,8 +177,8 @@ public class Select extends RampartProcess {
                 null :
                 new File(selectedAssembly.getBubblePath());
 
-        File bestAssemblyLink = new File(args.getOutputDir(), "best.fa");
-        File bubblesLink = new File(args.getOutputDir(), "best_bubbles.fa");
+        File bestAssemblyLink = new File(stageOutputDir, "best.fa");
+        File bubblesLink = new File(stageOutputDir, "best_bubbles.fa");
 
         log.info("Best assembly path: " + bestAssembly.getAbsolutePath());
 
@@ -196,23 +189,25 @@ public class Select extends RampartProcess {
         }
 
         // Save table to disk
-        File finalTSVFile = new File(args.getOutputDir(), "scores.tsv");
+        File finalTSVFile = new File(stageOutputDir, "scores.tsv");
         table.saveTsv(finalTSVFile);
         log.debug("Saved final results in TSV format to: " + finalTSVFile.getAbsolutePath());
 
-        File finalSummaryFile = new File(args.getOutputDir(), "scores.txt");
+        File finalSummaryFile = new File(stageOutputDir, "scores.txt");
         table.saveSummary(finalSummaryFile);
         log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
     }
 
 
-    protected AssemblyStatsTable createTable() throws IOException {
+    protected AssemblyStatsTable createTable(Mecq.Sample sample) throws IOException {
 
         Args args = this.getArgs();
 
         AssemblyStatsTable table = new AssemblyStatsTable();
 
-        List<String> lines = FileUtils.readLines(args.assemblyLinkageFile);
+        File assemblyLinkageFile = new File(new File(args.getSampleDir(sample), RampartStage.MASS_ANALYSIS.getOutputDirName()), "assembly_linkage.txt");
+
+        List<String> lines = FileUtils.readLines(assemblyLinkageFile);
 
         for(String line : lines) {
 
@@ -243,25 +238,23 @@ public class Select extends RampartProcess {
         public static final File    DEFAULT_WEIGHTINGS_FILE = DEFAULT_USER_WEIGHTINGS_FILE.exists() ?
                 DEFAULT_USER_WEIGHTINGS_FILE : DEFAULT_SYSTEM_WEIGHTINGS_FILE;
 
-        private File assemblyLinkageFile;
         private File weightingsFile;
-        private List<MassJob.Args> massJobs;
+        private Map<Mecq.Sample, List<MassJob.Args>> massJobs;
         private List<AssemblyAnalyser> analysers;
 
         public Args() {
             super(RampartStage.MASS_SELECT);
 
-            this.assemblyLinkageFile = null;
             this.weightingsFile = DEFAULT_WEIGHTINGS_FILE;
             this.massJobs = null;
             this.analysers = null;
         }
 
-        public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism,
-                    File assemblyLinkageFile, List<MassJob.Args> massJobs, List<AssemblyAnalyser> analysers)
+        public Args(Element element, File outputDir, String jobPrefix, Map<Mecq.Sample, List<MassJob.Args>> massJobs, Organism organism,
+                    List<AssemblyAnalyser> analysers)
                 throws IOException {
 
-            super(RampartStage.MASS_SELECT, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.MASS_SELECT, outputDir, jobPrefix, new ArrayList<>(massJobs.keySet()), organism);
 
             // Check there's nothing
             if (!XmlHelper.validate(element,
@@ -275,21 +268,12 @@ public class Select extends RampartProcess {
                 throw new IOException("Found unrecognised element or attribute in \"analyse_mass\"");
             }
 
-            this.assemblyLinkageFile = assemblyLinkageFile;
             this.massJobs = massJobs;
             this.analysers = analysers;
 
             this.weightingsFile = element.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
                     new File(XmlHelper.getTextValue(element, KEY_ATTR_WEIGHTINGS)) :
                     DEFAULT_WEIGHTINGS_FILE;
-        }
-
-        public File getAssemblyLinkageFile() {
-            return assemblyLinkageFile;
-        }
-
-        public void setAssemblyLinkageFile(File assemblyLinkageFile) {
-            this.assemblyLinkageFile = assemblyLinkageFile;
         }
 
         public File getWeightingsFile() {
@@ -300,11 +284,11 @@ public class Select extends RampartProcess {
             this.weightingsFile = weightingsFile;
         }
 
-        public List<MassJob.Args> getMassJobs() {
+        public Map<Mecq.Sample, List<MassJob.Args>> getMassJobs() {
             return massJobs;
         }
 
-        public void setMassJobs(List<MassJob.Args> massJobs) {
+        public void setMassJobs(Map<Mecq.Sample, List<MassJob.Args>> massJobs) {
             this.massJobs = massJobs;
         }
 

@@ -122,7 +122,7 @@ public class AnalyseAmpAssemblies extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();

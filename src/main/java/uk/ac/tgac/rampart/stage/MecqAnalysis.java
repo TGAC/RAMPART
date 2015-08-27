@@ -75,16 +75,20 @@ public class MecqAnalysis extends RampartProcess {
     }
 
     @Override
-    public TaskResult executeSample(Mecq.Sample sample, File stageOutputDir, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException, IOException {
 
         Args args = this.getArgs();
 
         TaskResult executionResult = null;
 
+        if (args.organism == null) {
+            throw new IOException("Organism not defined");
+        }
+
         // Check what analyses are requested and check if those are operational
         if (args.isKmerAnalysis()) {
 
-            File kmerOutputDir = new File(stageOutputDir, "kmer");
+            File kmerOutputDir = new File(args.getStageDir(sample), "kmer");
             executionResult = this.kmerAnalysis(sample, kmerOutputDir);
         }
 
@@ -187,9 +191,7 @@ public class MecqAnalysis extends RampartProcess {
         // Create the process
         KatGcpV2 kat = this.makeKatGcp(
                 lib.getFiles().toArray(new File[lib.getFiles().size()]),
-                new File(katGcpEcqOutDir, suffix).getAbsolutePath(),
-                args.getOrganism(),
-                args.threads);
+                new File(katGcpEcqOutDir, suffix).getAbsolutePath());
 
         // Create a job name
         String jobName = args.getJobPrefix() + "-" + suffix;
@@ -209,8 +211,8 @@ public class MecqAnalysis extends RampartProcess {
      * Hopefully this is a conservative estimate for most projects.  We ignore very low count kmers so hopefully this
      * size just needs to accomodate genuine kmers, and should therefore be roughly equivalent to genomesize * ploidy.
      * We multiply by 10 to be on the safe side and make sure we can handle some sequencing errors.
-     * @param organism Details about the organism's genome (specifically the genome size and ploidy)
      * @return An overestimate of the expected jellyfish hash size
+     * @throws IOException Thrown if there is an issue calculating genome size from a reference fasta file
      */
     public static long guessJellyfishHashSize(Organism organism) throws IOException {
 
@@ -222,14 +224,16 @@ public class MecqAnalysis extends RampartProcess {
         return hashSize <= 0 ? 100000000L : hashSize;
     }
 
-    protected KatGcpV2 makeKatGcp(File[] inputs, String outputPrefix, Organism organism, int threads) throws ProcessExecutionException, IOException {
+    protected KatGcpV2 makeKatGcp(File[] inputs, String outputPrefix) throws ProcessExecutionException, IOException {
+
+        Args args = this.getArgs();
 
         KatGcpV2.Args katArgs = new KatGcpV2.Args();
         katArgs.setOutputPrefix(outputPrefix);
-        katArgs.setHashSize(guessJellyfishHashSize(organism));
+        katArgs.setHashSize(guessJellyfishHashSize(args.getOrganism()));
         katArgs.setKmer(27);     // 27 should be sufficient for most organisms and datasets
         katArgs.setCanonical(true);
-        katArgs.setThreads(threads);
+        katArgs.setThreads(args.getThreads());
         katArgs.setInputFiles(inputs);
 
         return new KatGcpV2(this.conanExecutorService, katArgs);
@@ -245,13 +249,8 @@ public class MecqAnalysis extends RampartProcess {
 
         private boolean kmerAnalysis;
 
-        private Organism organism;
-
         public Args() {
-
             super(RampartStage.MECQ_ANALYSIS);
-
-            this.organism = null;
         }
 
 
@@ -285,14 +284,6 @@ public class MecqAnalysis extends RampartProcess {
             this.kmerAnalysis = kmerAnalysis;
         }
 
-
-        public Organism getOrganism() {
-            return organism;
-        }
-
-        public void setOrganism(Organism organism) {
-            this.organism = organism;
-        }
 
         @Override
         protected void setOptionFromMapEntry(ConanParameter param, String value) {

@@ -38,7 +38,6 @@ import uk.ac.tgac.citadel.stage.*;
 import uk.ac.tgac.citadel.stage.Package;
 import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
-import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
 
@@ -178,7 +177,6 @@ public class CitadelPipeline extends AbstractConanPipeline {
 
         private List<Library> libs;
         private Organism organism;
-        private RampartJobFileSystem rampartJobFileSystem;
         private String jobPrefix;
         private boolean runParallel;
         private String institution;
@@ -194,7 +192,6 @@ public class CitadelPipeline extends AbstractConanPipeline {
             this.outputDir = null;
             this.libs = null;
             this.organism = null;
-            this.rampartJobFileSystem = null;
             this.jobPrefix = "rampart-pipeline";
             this.institution = "";
             this.stages = null;
@@ -233,14 +230,6 @@ public class CitadelPipeline extends AbstractConanPipeline {
 
         public void setOrganism(Organism organism) {
             this.organism = organism;
-        }
-
-        public RampartJobFileSystem getRampartJobFileSystem() {
-            return rampartJobFileSystem;
-        }
-
-        public void setRampartJobFileSystem(RampartJobFileSystem rampartJobFileSystem) {
-            this.rampartJobFileSystem = rampartJobFileSystem;
         }
 
         public String getJobPrefix() {
@@ -334,9 +323,6 @@ public class CitadelPipeline extends AbstractConanPipeline {
             if (this.jobPrefix != null && !this.jobPrefix.isEmpty())
                 pvp.put(params.getJobPrefix(), this.jobPrefix);
 
-            if (this.rampartJobFileSystem != null) {
-                pvp.put(params.getOutputDir(), this.rampartJobFileSystem.getMeqcDir().getParentFile().getAbsolutePath());
-            }
 
             return pvp;
         }
