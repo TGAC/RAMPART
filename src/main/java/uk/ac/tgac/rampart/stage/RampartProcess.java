@@ -78,7 +78,9 @@ public abstract class RampartProcess extends AbstractConanProcess {
     public abstract TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
         throws ProcessExecutionException, InterruptedException, IOException;
 
-    public void validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException {}
+    public boolean validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException { return true; }
+
+    public void finalise() throws IOException, InterruptedException, ProcessExecutionException {}
 
     @Override
     public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
@@ -101,19 +103,22 @@ public abstract class RampartProcess extends AbstractConanProcess {
             // Loop through all samples to process
             for (Mecq.Sample sample : args.samples) {
 
-                File stageDir = args.getStageDir(sample);
+                if (sample.failedAtStage == -1) {
 
-                // Ensure sample output mecq directory exists
-                if (!stageDir.exists()) {
-                    stageDir.mkdirs();
-                }
+                    File stageDir = args.getStageDir(sample);
 
-                // Do samples specific work
-                TaskResult sampleResults = this.executeSample(sample, executionContext);
+                    // Ensure sample output directory exists
+                    if (!stageDir.exists()) {
+                        stageDir.mkdirs();
+                    }
 
-                // Collect results
-                for(ExecutionResult res : sampleResults.getProcessResults()) {
-                    results.add(res);
+                    // Do samples specific work
+                    TaskResult sampleResults = this.executeSample(sample, executionContext);
+
+                    // Collect results
+                    for (ExecutionResult res : sampleResults.getProcessResults()) {
+                        results.add(res);
+                    }
                 }
             }
 
@@ -131,16 +136,32 @@ public abstract class RampartProcess extends AbstractConanProcess {
                 MultiWaitResult mrw = this.conanExecutorService.executeScheduledWait(
                         results,
                         args.jobPrefix + "-*",
-                        ExitStatus.Type.COMPLETED_SUCCESS,
+                        ExitStatus.Type.COMPLETED_ANY,
                         args.jobPrefix + "-wait",
                         logDir);
             }
 
             // Check all the required output files are in place (delegated to child class)
             // Loop through all samples to process
-            for (Mecq.Sample sample : args.samples) {
-                this.validateOutput(sample);
+            for (int i = 0; i < args.samples.size(); i++) {
+
+                Mecq.Sample sample = args.samples.get(i);
+
+                if (sample.failedAtStage == -1) {
+                    boolean valid = this.validateOutput(sample);
+
+                    if (!valid) {
+                        sample.failedAtStage = args.getStage().ordinal();
+                        if (args.samples.size() == 1) {
+                            throw new IOException("Stage " + args.getStage().name() + " failed to produce valid output.");
+                        } else {
+                            log.error("Sample " + sample.name + " failed to produce valid output for stage " + args.getStage().name() + " discontinuing pipeline for this sample.");
+                        }
+                    }
+                }
             }
+
+            this.finalise();
 
             log.info("Finished " + this.getName() + " Process");
 
@@ -207,7 +228,7 @@ public abstract class RampartProcess extends AbstractConanProcess {
             this.jobPrefix = "rampart-" + stage.getOutputDirName() + "-" + dateTime;
         }
 
-        public RampartProcessArgs(RampartStage stage, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
+        public RampartProcessArgs(RampartStage stage, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, boolean runParallel) throws IOException {
 
             // Set defaults first
             this(stage);
@@ -217,6 +238,7 @@ public abstract class RampartProcess extends AbstractConanProcess {
             this.jobPrefix = jobPrefix + "-" + stage.getOutputDirName();
             this.samples = samples;
             this.organism = organism;
+            this.runParallel = runParallel;
         }
 
         protected Params getParams() {

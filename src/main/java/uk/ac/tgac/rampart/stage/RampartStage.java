@@ -192,6 +192,23 @@ public enum RampartStage {
             return new Finalise(ces, (Finalise.Args)this.getArgs());
         }
     },
+    COLLECT {
+
+        @Override
+        public List<ConanParameter> getParameters() {
+            return new Collect.Params().getConanParameters();
+        }
+
+        @Override
+        public boolean checkArgs(RampartStageArgs args) {
+            return classContains(args.getClass(), Collect.Args.class);
+        }
+
+        @Override
+        public RampartProcess create(ConanExecutorService ces) {
+            return new Collect(ces, (Collect.Args)this.getArgs());
+        }
+    }
     /*REPORT {
 
         @Override

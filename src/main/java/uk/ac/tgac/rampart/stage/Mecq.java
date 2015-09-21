@@ -172,17 +172,20 @@ public class Mecq extends RampartProcess {
      * @throws IOException Thrown if expected output files do not exist
      */
     @Override
-    public void validateOutput(Mecq.Sample sample) throws IOException {
+    public boolean validateOutput(Mecq.Sample sample) throws IOException {
 
         for(EcqArgs ecqArgs : sample.ecqArgList) {
             for (Library lib : ecqArgs.getOutputLibraries(sample)) {
                 for (File file : lib.getFiles()) {
                     if (!file.exists()) {
-                        throw new IOException("MECQ job \"" + ecqArgs.name + "\" for sample \"" + sample.name + "\" did not produce the expected output file: " + file.getAbsolutePath());
+                        log.error("MECQ job \"" + ecqArgs.name + "\" for sample \"" + sample.name + "\" did not produce the expected output file: " + file.getAbsolutePath());
+                        return false;
                     }
                 }
             }
         }
+
+        return true;
     }
 
 
@@ -191,11 +194,13 @@ public class Mecq extends RampartProcess {
         public List<EcqArgs> ecqArgList;
         public List<Library> libraries;
         public String name;
+        public int failedAtStage;
 
         public Sample(List<EcqArgs> ecqArgList, List<Library> libraries, String name) {
             this.ecqArgList = ecqArgList;
             this.libraries = libraries;
             this.name = name;
+            this.failedAtStage = -1;
         }
     }
 
@@ -272,10 +277,10 @@ public class Mecq extends RampartProcess {
             super(RampartStage.MECQ);
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, boolean runParallel) throws IOException {
 
             // Set defaults first
-            super(RampartStage.MECQ, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.MECQ, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,
@@ -291,7 +296,7 @@ public class Mecq extends RampartProcess {
             }
 
             // Set from Xml
-            this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL;
+            this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : runParallel;
 
             // All libraries
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_ECQ);
@@ -414,10 +419,10 @@ public class Mecq extends RampartProcess {
             if (!XmlHelper.validate(ele,
                     new String[] {
                             KEY_ATTR_NAME,
-                            KEY_ATTR_TOOL,
-                            KEY_ATTR_LIBS
+                            KEY_ATTR_TOOL
                     },
                     new String[] {
+                            KEY_ATTR_LIBS,
                             KEY_ATTR_THREADS,
                             KEY_ATTR_MEMORY,
                             KEY_ATTR_PARALLEL,
@@ -460,21 +465,30 @@ public class Mecq extends RampartProcess {
                     null;
 
             // Filter the provided libs
-            String libList = XmlHelper.getTextValue(ele, KEY_ATTR_LIBS);
-            String[] libIds = libList.split(",");
+            if (ele.hasAttribute(KEY_ATTR_LIBS)) {
+                String libList = XmlHelper.getTextValue(ele, KEY_ATTR_LIBS);
+                String[] libIds = libList.split(",");
 
-            for(String libId : libIds) {
-                for(Library lib : allLibraries) {
-                    if (lib.getName().equalsIgnoreCase(libId.trim())) {
-                        this.libraries.add(lib);
-                        break;
+                for (String libId : libIds) {
+                    for (Library lib : allLibraries) {
+                        if (lib.getName().equalsIgnoreCase(libId.trim())) {
+                            this.libraries.add(lib);
+                            break;
+                        }
                     }
                 }
+
+                if (libIds.length != this.libraries.size()) {
+                    throw new IllegalArgumentException("Could not find all the requested libraries for MECQ job: " + this.name);
+                }
+            }
+            else if (allLibraries.size() == 1){    // In multi-sample mode or only one library available
+                this.libraries.addAll(allLibraries);
+            }
+            else {
+                throw new IllegalArgumentException("Didn't find \"libs\" attribute in ecq (required for single sample mode), and found multiple (" + allLibraries.size() + ") libraries (require exactly 1 library per sample for multi-sample mode).");
             }
 
-            if (libIds.length != this.libraries.size()) {
-                throw new IllegalArgumentException("Could not find all the requested libraries for MECQ job: " + this.name);
-            }
 
             // Other args
             this.outputDir = new File(parentOutputDir, name);

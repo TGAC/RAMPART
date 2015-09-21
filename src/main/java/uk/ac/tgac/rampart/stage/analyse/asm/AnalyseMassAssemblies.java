@@ -129,9 +129,11 @@ public class AnalyseMassAssemblies extends RampartProcess {
             int index = 1;
 
             // Update mass job values with kmer genie info if required
-            File kmerCalcFile = args.kmerCalcResults.getResultFile(sample);
-            if (kmerCalcFile != null && kmerCalcFile.exists()) {
-                Mass.setKmerValues(kmerCalcFile, args.getMassJobs().get(sample));
+            if (args.kmerCalcResults != null) {
+                File kmerCalcFile = args.kmerCalcResults.getResultFile(sample);
+                if (kmerCalcFile != null && kmerCalcFile.exists()) {
+                    Mass.setKmerValues(kmerCalcFile, args.getMassJobs().get(sample));
+                }
             }
 
             // Loop through MASS groups to get assemblies
@@ -258,6 +260,15 @@ public class AnalyseMassAssemblies extends RampartProcess {
      * @return A list of fasta files in the user specified directory
      */
     public static List<File> assembliesFromDir(File inputDir) {
+        return assembliesFromDir(inputDir, false);
+    }
+
+    /**
+     * Gets all the FastA files in the directory specified by the user.
+     * @param inputDir The input directory containing assemblies
+     * @return A list of fasta files in the user specified directory
+     */
+    public static List<File> assembliesFromDir(File inputDir, boolean checkFileExists) {
 
         if (inputDir == null || !inputDir.exists())
             return null;
@@ -267,7 +278,10 @@ public class AnalyseMassAssemblies extends RampartProcess {
         Collection<File> fileCollection = FileUtils.listFiles(inputDir, new String[]{"fa", "fasta"}, true);
 
         for(File file : fileCollection) {
-            fileList.add(file);
+
+            if (file.exists()) {
+                fileList.add(file);
+            }
         }
 
         Collections.sort(fileList);
@@ -292,14 +306,15 @@ public class AnalyseMassAssemblies extends RampartProcess {
         }
 
         public Args(Element element, File outputDir, Map<Mecq.Sample, List<MassJob.Args>> massJobs,
-                    Organism organism, String jobPrefix, CalcOptimalKmer.Args kmerCalcResults) throws IOException {
+                    Organism organism, String jobPrefix, CalcOptimalKmer.Args kmerCalcResults, boolean runParallel) throws IOException {
 
             super(  RampartStage.MASS_ANALYSIS,
                     element,
                     outputDir,
                     jobPrefix,
                     new ArrayList<>(massJobs.keySet()),
-                    organism
+                    organism,
+                    runParallel
                     );
 
             this.massJobs = massJobs;

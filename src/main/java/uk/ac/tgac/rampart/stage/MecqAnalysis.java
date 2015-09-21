@@ -254,9 +254,9 @@ public class MecqAnalysis extends RampartProcess {
         }
 
 
-        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, boolean runParallel) throws IOException {
 
-            super(RampartStage.MECQ_ANALYSIS, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.MECQ_ANALYSIS, outputDir, jobPrefix, samples, organism, runParallel);
 
             // From Xml (optional)
             this.kmerAnalysis = ele.hasAttribute(KEY_ATTR_KMER) ?
@@ -265,7 +265,7 @@ public class MecqAnalysis extends RampartProcess {
 
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
-                    DEFAULT_RUN_PARALLEL;
+                    runParallel;
 
             this.threads = ele.hasAttribute(KEY_ATTR_THREADS) ?
                     XmlHelper.getIntValue(ele, KEY_ATTR_THREADS) :

@@ -20,6 +20,8 @@ package uk.ac.tgac.rampart;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.model.ConanProcess;
@@ -40,6 +42,8 @@ import java.util.List;
  * Created by maplesod on 08/07/14.
  */
 public class RampartConfig extends AbstractXmlJobConfiguration {
+
+    private static Logger log = LoggerFactory.getLogger(RampartConfig.class);
 
     public static final String KEY_ATTR_AUTHOR          = "author";
     public static final String KEY_ATTR_COLLABORATOR    = "collaborator";
@@ -127,10 +131,14 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
             }
 
             this.samples.add(new Mecq.Sample(new ArrayList<Mecq.EcqArgs>(), libs, "rampart_out"));
+            log.info("Found libraries element containing " + libs.size() + " libraries.");
+            log.info("Running in single sample mode");
         }
         else if (samplesElement != null) {
-            String samplesFile = samplesElement.getAttribute(KEY_ATTR_SAMPLES_FILE);
-            this.samples = parseSamplesFile(new File(samplesFile));
+            File samplesFile = new File(samplesElement.getAttribute(KEY_ATTR_SAMPLES_FILE));
+            this.samples = parseSamplesFile(samplesFile);
+            log.info("Found " + this.samples.size() + " samples described in file " + samplesFile.getAbsolutePath());
+            log.info("Running in multi-sample mode");
         }
         else {
             throw new IOException("Could not locate either a 'libraries' element or a 'samples' element in the config file.");
@@ -153,7 +161,6 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
     protected List<Mecq.Sample> parseSamplesFile(File input) throws IOException {
 
         List<String> lines = FileUtils.readLines(input);
-        List<Library> libs = new ArrayList<>();
         List<Mecq.Sample> samples = new ArrayList<>();
 
         for(String line : lines) {
@@ -175,11 +182,13 @@ public class RampartConfig extends AbstractXmlJobConfiguration {
             String file1 = parts[2];
             String file2 = (parts.length == 4) ? parts[3] : null;
 
+
             Library lib = new Library();
             lib.setName(sampleName);
             lib.setFiles(file1, file2);
             lib.setPhred(Library.Phred.valueOf(phred));
 
+            List<Library> libs = new ArrayList<>();
             libs.add(lib);
             samples.add(new Mecq.Sample(new ArrayList<Mecq.EcqArgs>(), libs, sampleName));
         }

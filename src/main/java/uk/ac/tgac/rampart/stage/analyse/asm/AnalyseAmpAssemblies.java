@@ -286,14 +286,15 @@ public class AnalyseAmpAssemblies extends RampartProcess {
         }
 
         public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism,
-                    Map<Mecq.Sample, List<AmpStage.Args>> ampStages) throws IOException {
+                    Map<Mecq.Sample, List<AmpStage.Args>> ampStages, boolean runParallel) throws IOException {
 
             super(  RampartStage.AMP_ANALYSIS,
                     element,
                     outputDir,
                     jobPrefix,
                     samples,
-                    organism);
+                    organism,
+                    runParallel);
 
             this.analyseAll = element.hasAttribute(KEY_ATTR_ALL) ?
                     XmlHelper.getBooleanValue(element, KEY_ATTR_ALL) :

@@ -150,7 +150,7 @@ public class Finalise extends RampartProcess {
 
                 if (line.startsWith(">")) {
                     if (currentContig.length() > 0) {
-                        processObject(currentId, currentContig.toString());
+                        processObject(sample, currentId, currentContig.toString());
                     }
                     currentContig = new StringBuilder();
                     currentId = line.substring(1);
@@ -161,10 +161,10 @@ public class Finalise extends RampartProcess {
             }
 
             if (currentContig.length() > 0) {
-                processObject(currentId, currentContig.toString());
+                processObject(sample, currentId, currentContig.toString());
             }
 
-            log.info("Finishing finalising assembly successfully.");
+            log.info("Finalised assembly successfully.");
         }
         catch(IOException ioe) {
             throw new ProcessExecutionException(3, ioe);
@@ -199,7 +199,7 @@ public class Finalise extends RampartProcess {
                     args.getTranslationFile(sample).getName() + "; " +
                     "cd " + pwd;
 
-            result = this.conanExecutorService.executeProcess(command, args.getOutputDir(), args.getJobPrefix() + "-compress", 1, 0, 0, false);
+            result = this.conanExecutorService.executeProcess(command, args.getStageDir(sample), args.getJobPrefix() + "-compress", 1, 0, 0, args.runParallel);
 
             log.info("Output compressed to: " + args.getCompressedFile(sample).getAbsolutePath());
         }
@@ -213,12 +213,12 @@ public class Finalise extends RampartProcess {
                 stopWatch.getTime() / 1000L);
     }
 
-    private void processObject(String currentHeader, String currentContig) {
+    private void processObject(Mecq.Sample sample, String currentHeader, String currentContig) {
 
         Args args = this.getArgs();
 
         int scaffoldLen = currentContig.length();
-        String scaffoldHeader = args.getOutputPrefix() + "_scaffold_" + (++scaffoldId) + "-size_" + scaffoldLen;
+        String scaffoldHeader = args.getOutputPrefix(sample) + "_scaffold_" + (++scaffoldId) + "-size_" + scaffoldLen;
 
         this.scaffoldWriter.println(">" + scaffoldHeader);
         this.scaffoldWriter.println(currentContig);
@@ -241,7 +241,7 @@ public class Finalise extends RampartProcess {
                     this.agpWriter.print("N\t" + contigLen + "\tscaffold\tyes\tpaired-ends\n");
                 }
                 else {
-                    String contigHeader = args.getOutputPrefix() + "_contig_" + (++contigId) + "-size_" + contigLen;
+                    String contigHeader = args.getOutputPrefix(sample) + "_contig_" + (++contigId) + "-size_" + contigLen;
 
                     this.agpWriter.print("W\t" + contigHeader + "\t1\t" + contigLen + "\t+\n");
                     this.contigWriter.print(">" + contigHeader + "\n" + contig + "\n");
@@ -278,9 +278,9 @@ public class Finalise extends RampartProcess {
             this.compress = true;
         }
 
-        public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, String institution, boolean inputFromMass) throws IOException {
+        public Args(Element element, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, String institution, boolean inputFromMass, boolean runParallel) throws IOException {
 
-            super(RampartStage.FINALISE, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.FINALISE, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing unexpected in this element
             if (!XmlHelper.validate(element,
@@ -288,7 +288,8 @@ public class Finalise extends RampartProcess {
                     new String[] {
                         KEY_ATTR_PREFIX,
                         KEY_ATTR_MIN_N,
-                        KEY_ATTR_COMPRESS
+                        KEY_ATTR_COMPRESS,
+                        KEY_ATTR_PARALLEL
                     },
                     new String[0],
                     new String[0])) {
@@ -317,6 +318,9 @@ public class Finalise extends RampartProcess {
                     XmlHelper.getBooleanValue(element, KEY_ATTR_COMPRESS) :
                     true;
 
+            this.runParallel = element.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(element, KEY_ATTR_PARALLEL) : runParallel;
+
+
             if (this.outputPrefix.contains(".") || this.outputPrefix.contains("|")) {
                 throw new IllegalArgumentException("Will not use dots or pipes in the assembly headers because this can cause " +
                         "problems for downstream tools.");
@@ -342,8 +346,8 @@ public class Finalise extends RampartProcess {
             return shortString;
         }
 
-        public String getOutputPrefix() {
-            return outputPrefix;
+        public String getOutputPrefix(Mecq.Sample sample) {
+            return outputPrefix + (sample.name.equals("rampart_out") ? "" : ("_" + sample.name));
         }
 
         public void setOutputPrefix(String outputPrefix) {
@@ -376,23 +380,23 @@ public class Finalise extends RampartProcess {
 
 
         public File getContigsFile(Mecq.Sample sample) {
-            return new File(this.getStageDir(sample), this.outputPrefix + ".contigs.fa");
+            return new File(this.getStageDir(sample), this.getOutputPrefix(sample) + ".contigs.fa");
         }
 
         public File getScaffoldsFile(Mecq.Sample sample) {
-            return new File(this.getStageDir(sample), this.outputPrefix + ".scaffolds.fa");
+            return new File(this.getStageDir(sample), this.getOutputPrefix(sample) + ".scaffolds.fa");
         }
 
         public File getAGPFile(Mecq.Sample sample) {
-            return new File(this.getStageDir(sample), this.outputPrefix + ".agp");
+            return new File(this.getStageDir(sample), this.getOutputPrefix(sample) + ".agp");
         }
 
         public File getTranslationFile(Mecq.Sample sample) {
-            return new File(this.getStageDir(sample), this.outputPrefix + ".translation");
+            return new File(this.getStageDir(sample), this.getOutputPrefix(sample) + ".translation");
         }
 
         public File getCompressedFile(Mecq.Sample sample) {
-            return new File(this.getStageDir(sample), this.outputPrefix + ".tar.gz");
+            return new File(this.getStageDir(sample), this.getOutputPrefix(sample) + ".tar.gz");
         }
 
         @Override

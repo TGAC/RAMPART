@@ -67,9 +67,9 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
     }
 
     public AnalyseAssembliesArgs(RampartStage stage, Element element, File outputDir,
-                                 String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
+                                 String jobPrefix, List<Mecq.Sample> samples, Organism organism, boolean runParallel) throws IOException {
 
-        super(stage, outputDir, jobPrefix, samples, organism);
+        super(stage, outputDir, jobPrefix, samples, organism, runParallel);
 
         // Check there's nothing
         if (!XmlHelper.validate(element,
@@ -91,7 +91,7 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
 
         this.runParallel = element.hasAttribute(KEY_ATTR_PARALLEL) ?
                 XmlHelper.getBooleanValue(element, KEY_ATTR_PARALLEL) :
-                DEFAULT_RUN_PARALLEL;
+                this.runParallel;
 
         for (Mecq.Sample sample : this.samples) {
             // All libraries

@@ -244,11 +244,11 @@ public class Amp extends RampartProcess {
         }
 
         public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism,
-                    File inputAssembly, File bubbleFile)
+                    File inputAssembly, File bubbleFile, boolean runParallel)
                 throws IOException {
 
             // Set defaults
-            super(RampartStage.AMP, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.AMP, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,

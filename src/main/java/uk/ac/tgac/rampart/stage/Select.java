@@ -109,13 +109,13 @@ public class Select extends RampartProcess {
             QuastV23.Args refArgs = new QuastV23.Args();
             refArgs.setInputFiles(inputFiles);
             refArgs.setFindGenes(true);
-            refArgs.setThreads(1);
+            refArgs.setThreads(args.getThreads());
             refArgs.setEukaryote(args.getOrganism().getPloidy() > 1);
             refArgs.setOutputDir(args.getRefOutDir(sample));
 
             QuastV23 refQuast = new QuastV23(this.conanExecutorService, refArgs);
 
-            results.add(this.conanExecutorService.executeProcess(refQuast, args.getRefOutDir(sample), args.jobPrefix + "-refquast", 1, 2000, args.runParallel));
+            results.add(this.conanExecutorService.executeProcess(refQuast, args.getRefOutDir(sample), args.jobPrefix + "-refquast", args.getThreads(), args.getMemoryMb(), args.runParallel));
         }
 
         stopWatch.stop();
@@ -124,7 +124,7 @@ public class Select extends RampartProcess {
     }
 
     @Override
-    public void validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException {
+    public boolean validateOutput(Mecq.Sample sample) throws IOException, InterruptedException, ProcessExecutionException {
 
         // Create the stats table with information derived from the configuration file.
         AssemblyStatsTable table = this.createTable(sample);
@@ -196,6 +196,8 @@ public class Select extends RampartProcess {
         File finalSummaryFile = new File(stageOutputDir, "scores.txt");
         table.saveSummary(finalSummaryFile);
         log.debug("Saved final results in summary format to: " + finalSummaryFile.getAbsolutePath());
+
+        return true;
     }
 
 
@@ -251,16 +253,19 @@ public class Select extends RampartProcess {
         }
 
         public Args(Element element, File outputDir, String jobPrefix, Map<Mecq.Sample, List<MassJob.Args>> massJobs, Organism organism,
-                    List<AssemblyAnalyser> analysers)
+                    List<AssemblyAnalyser> analysers, boolean runParallel)
                 throws IOException {
 
-            super(RampartStage.MASS_SELECT, outputDir, jobPrefix, new ArrayList<>(massJobs.keySet()), organism);
+            super(RampartStage.MASS_SELECT, outputDir, jobPrefix, new ArrayList<>(massJobs.keySet()), organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(element,
                     new String[0],
                     new String[]{
-                            KEY_ATTR_WEIGHTINGS
+                            KEY_ATTR_WEIGHTINGS,
+                            KEY_ATTR_THREADS,
+                            KEY_ATTR_MEMORY,
+                            KEY_ATTR_PARALLEL
                     },
                     new String[0],
                     new String[0]
@@ -274,6 +279,19 @@ public class Select extends RampartProcess {
             this.weightingsFile = element.hasAttribute(KEY_ATTR_WEIGHTINGS) ?
                     new File(XmlHelper.getTextValue(element, KEY_ATTR_WEIGHTINGS)) :
                     DEFAULT_WEIGHTINGS_FILE;
+
+            // Optional
+            this.threads = element.hasAttribute(KEY_ATTR_THREADS) ?
+                    XmlHelper.getIntValue(element, KEY_ATTR_THREADS) :
+                    DEFAULT_THREADS;
+
+            this.memoryMb = element.hasAttribute(KEY_ATTR_MEMORY) ?
+                    XmlHelper.getIntValue(element, KEY_ATTR_MEMORY) :
+                    DEFAULT_MEMORY;
+
+            this.runParallel = element.hasAttribute(KEY_ATTR_PARALLEL) ?
+                    XmlHelper.getBooleanValue(element, KEY_ATTR_PARALLEL) :
+                    runParallel;
         }
 
         public File getWeightingsFile() {

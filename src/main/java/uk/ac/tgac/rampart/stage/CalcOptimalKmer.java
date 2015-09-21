@@ -138,7 +138,7 @@ public class CalcOptimalKmer extends RampartProcess {
      * @throws IOException Thrown if output files do not exist
      */
     @Override
-    public void validateOutput(Mecq.Sample sample) throws IOException {
+    public boolean validateOutput(Mecq.Sample sample) throws IOException {
 
         Args args = this.getArgs();
 
@@ -151,7 +151,8 @@ public class CalcOptimalKmer extends RampartProcess {
                 int bestKmer = KmerGenieV16.Args.getBestKmer(kg2FileMap.get(kgName));
 
                 if (bestKmer <= 0) {
-                    throw new IOException("Best kmer could not be determined by Kmer Genie.  Recommend you restart the MASS stage with manually specified kmer values for this MASS job.  Mass job : " + massJobName + "; kmer config: " + kgName);
+                    log.error("Best kmer could not be determined by Kmer Genie.  Recommend you restart the MASS stage with manually specified kmer values for this MASS job.  Mass job : " + massJobName + "; kmer config: " + kgName);
+                    return false;
                 } else {
                     log.info("Best kmer for " + massJobName + " (" + kgName + ") is " + bestKmer);
                 }
@@ -168,6 +169,8 @@ public class CalcOptimalKmer extends RampartProcess {
 
         FileUtils.writeLines(args.getResultFile(sample), kmerMapLines);
         log.info("Written kmer calculations to: " + args.getResultFile(sample).getAbsolutePath());
+
+        return true;
     }
 
 
@@ -243,10 +246,10 @@ public class CalcOptimalKmer extends RampartProcess {
             this.kg2inputsMap = new HashMap<>();
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism) throws IOException {
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, boolean runParallel) throws IOException {
 
             // Set defaults first
-            super(RampartStage.KMER_CALC, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.KMER_CALC, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,

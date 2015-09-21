@@ -142,7 +142,7 @@ public class Mass extends RampartProcess {
     }
 
     @Override
-    public void validateOutput(Mecq.Sample sample) throws IOException {
+    public boolean validateOutput(Mecq.Sample sample) throws IOException {
 
         Args args = (Args) this.getRampartArgs();
 
@@ -153,10 +153,13 @@ public class Mass extends RampartProcess {
                 if (    (asm.makesScaffolds() && !asm.getScaffoldsFile().exists()) ||
                         (asm.makesContigs() && !asm.getContigsFile().exists()) ||
                         (asm.makesUnitigs() && !asm.getUnitigsFile().exists())) {
-                    throw new IOException("MASS job \"" + singleMassArgs.getName() + "\" for sample \"" + sample.name + "\" did not produce any output files");
+                    log.error("MASS job \"" + singleMassArgs.getName() + "\" for sample \"" + sample.name + "\" did not produce any output files");
+                    return false;
                 }
             }
         }
+
+        return true;
     }
 
     protected static class MassJobResult {
@@ -264,11 +267,11 @@ public class Mass extends RampartProcess {
             this.massJobArgMap = new HashMap<>();
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, CalcOptimalKmer.Args kmerCalcArgs)
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, CalcOptimalKmer.Args kmerCalcArgs, boolean runParallel)
                 throws IOException {
 
             // Set defaults first
-            super(RampartStage.MASS, outputDir, jobPrefix, samples, organism);
+            super(RampartStage.MASS, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,
@@ -289,7 +292,7 @@ public class Mass extends RampartProcess {
             // From Xml (optional)
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
-                    DEFAULT_RUN_PARALLEL;
+                    runParallel;
 
             // All single mass args
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_MASS_JOB);
