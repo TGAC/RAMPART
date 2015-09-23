@@ -288,6 +288,7 @@ public class Mass extends RampartProcess {
 
             this.massJobArgMap = new HashMap<>();
             this.kmerCalcArgs = kmerCalcArgs;
+            this.organism = organism;
 
             // From Xml (optional)
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?

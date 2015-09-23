@@ -800,8 +800,17 @@ public class MassJob extends AbstractConanProcess {
                 log.info("No coverage range specified for \"" + this.name + "\" running assembler with default range: " + defaultCoverageRange.toString());
             }
             else if (organism == null || !organism.isGenomeSizeAvailable()) {
+                if (organism == null) {
+                    log.error("Organism not set");
+                }
+                else if (!organism.isGenomeSizeAvailable()) {
+                   if (organism.getReference() == null) {
+                       log.error("Reference not available");
+                   }
+                }
+
                 CoverageRange defaultCoverageRange = new CoverageRange();
-                log.info("No genome size is available or specified.  Not possible to subsample to desired range without a genome " +
+                log.warn("No genome size is available or specified.  Not possible to subsample to desired range without a genome " +
                         "size estimate. Running assembler with default coverage range: " + defaultCoverageRange.toString());
             }
             else if (coverageRange.validate()) {
