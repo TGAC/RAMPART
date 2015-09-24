@@ -248,15 +248,16 @@ public class MassJob extends AbstractConanProcess {
                         this.getNbBases(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-base_count") +
                                 this.getNbBases(lib.getFile2(), subsamplingDir, jobPrefix + "-file2-base_count");
 
-                // Calculate the probability of keeping an entry
-                double actualCoverage = (double)sequencedBases / (double)genomeSize / 2.0;
+                // Calculate the probability of keeping an entry (assumes equal coverage in each file)
+                double actualCoveragePerFile = (double)sequencedBases / (double)genomeSize / 2.0;
 
-                double probability = desiredCoverage / actualCoverage;
+                double probability = desiredCoverage / 2.0 / actualCoveragePerFile;
+                double probPerc = probability * 100.0;
 
 
-                log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
-                        "Estimated genome size is: " + genomeSize + "; so actual coverage is approximately: " + actualCoverage +
-                        "; we will only keep " + probability + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
+                log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases in both files.  " +
+                        "Estimated genome size is: " + genomeSize + "; so actual coverage (per file) is approximately: " + actualCoveragePerFile +
+                        "; we will only keep " + probPerc + "% of the reads in each file to achieve approximately " + desiredCoverage + "X coverage in both files");
 
 
                 subsampledLib.setFiles(
@@ -284,10 +285,11 @@ public class MassJob extends AbstractConanProcess {
                 // Calculate the probability of keeping an entry
                 double actualCoverage = (double)sequencedBases / (double)genomeSize;
                 double probability = desiredCoverage / actualCoverage;
+                double probPerc = probability * 100.0;
 
                 log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
                         "Estimated genome size is: " + genomeSize + "; so actual coverage is approximately: " + actualCoverage +
-                        "; we will only keep " + probability + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
+                        "; we will only keep " + probPerc + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
 
                 subsampledLib.setFiles(
                         new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),

@@ -1,0 +1,27 @@
+
+<rampart author="dan" collaborator="someone" institution="tgac" title="Set of C.Coli assemblies">
+    <organism name="ccoli_nextera" ploidy="1">
+        <reference name="C.Coli_15-537360" path="Campylobacter_coli_15_537360.GCA_000494775.1.25.dna.genome.fa"/>
+    </organism>
+    <samples file="reads.lst"/>
+    <pipeline parallel="true">
+        <mecq>
+            <ecq name="tg" tool="TrimGalore_V0.4" threads="2" memory="5000"/>
+        </mecq>
+        <mass>
+            <job name="spades_auto" tool="Spades_V3.1" threads="2" memory="10000">
+                <kmer min="71" max="111" step="COARSE"/>
+                <coverage list="50"/>
+                <inputs>
+                    <input ecq="tg"/>
+                </inputs>
+            </job>
+        </mass>
+        <mass_analysis>
+            <tool name="QUAST" threads="2" memory="5000"/>
+        </mass_analysis>
+        <mass_select threads="2" memory="5000"/>
+        <finalise prefix="Ccoli_Nextera"/>
+        <collect threads="2" memory="5000"/>
+    </pipeline>
+</rampart>
