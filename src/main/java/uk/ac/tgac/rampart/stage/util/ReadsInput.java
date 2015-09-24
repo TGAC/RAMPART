@@ -22,6 +22,7 @@ import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.stage.Mecq;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -47,11 +48,11 @@ public class ReadsInput {
         if (!ele.hasAttribute(KEY_ATTR_ECQ))
             throw new IllegalArgumentException("Could not find " + KEY_ATTR_ECQ + " attribute in Input element");
 
-        if (!ele.hasAttribute(KEY_ATTR_LIB))
-            throw new IllegalArgumentException("Could not find " + KEY_ATTR_LIB + " attribute in input element");
-
+        // Required
         this.ecq = XmlHelper.getTextValue(ele, KEY_ATTR_ECQ);
-        this.lib = XmlHelper.getTextValue(ele, KEY_ATTR_LIB);
+
+        // Optional (with constraints)
+        this.lib = ele.hasAttribute(KEY_ATTR_LIB) ? XmlHelper.getTextValue(ele, KEY_ATTR_LIB) : "";
     }
 
     public String getEcq() {
@@ -70,12 +71,12 @@ public class ReadsInput {
         this.lib = lib;
     }
 
-    public Mecq.EcqArgs findMecq(List<Mecq.EcqArgs> allMecqs) {
+    public Mecq.EcqArgs findMecq(Mecq.Sample sample) {
 
-        if (allMecqs == null)
+        if (sample.ecqArgList == null)
             return null;
 
-        for(Mecq.EcqArgs currentMecq : allMecqs) {
+        for(Mecq.EcqArgs currentMecq : sample.ecqArgList) {
             if (currentMecq.getName().equalsIgnoreCase(this.ecq.trim())) {
                 return currentMecq;
             }
@@ -88,6 +89,18 @@ public class ReadsInput {
 
         if (allLibraries == null)
             return null;
+
+        if (this.lib.trim().equalsIgnoreCase("")) {
+            if (allLibraries.size() == 1) {
+                return allLibraries.get(0);
+            }
+            else if (allLibraries.size() > 1) {
+                throw new IllegalStateException("User did not specify library to use but we have multiple available libraries.");
+            }
+            else {
+                throw new IllegalStateException("User did not specify library to use and no available libraries.");
+            }
+        }
 
         for(Library currentLib : allLibraries) {
             if (currentLib.getName().equalsIgnoreCase(this.lib.trim())) {

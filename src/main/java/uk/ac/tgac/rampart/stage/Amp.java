@@ -25,6 +25,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionContext;
 import uk.ac.ebi.fgpt.conan.core.context.DefaultExecutionResult;
+import uk.ac.ebi.fgpt.conan.core.context.DefaultTaskResult;
 import uk.ac.ebi.fgpt.conan.core.context.locality.Local;
 import uk.ac.ebi.fgpt.conan.core.param.ArgValidator;
 import uk.ac.ebi.fgpt.conan.core.param.DefaultParamMap;
@@ -55,7 +56,9 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class wraps a Pipeline to manage each AMP stage
@@ -64,20 +67,19 @@ import java.util.List;
  * Date: 12/02/13
  * Time: 16:30
  */
-public class Amp extends AbstractConanProcess {
+public class Amp extends RampartProcess {
 
     private static Logger log = LoggerFactory.getLogger(Amp.class);
 
-    public Amp() {
-        this(null);
-    }
+    private Pipeline ampPipeline;
 
     public Amp(ConanExecutorService ces) {
         this(ces, new Args());
     }
 
     public Amp(ConanExecutorService ces, Args args) {
-        super("", args, new Params(), ces);
+        super(ces, args);
+        this.ampPipeline = new Pipeline(this.conanExecutorService, this.getArgs());
     }
 
     public Args getArgs() {
@@ -93,8 +95,6 @@ public class Amp extends AbstractConanProcess {
     public boolean isOperational(ExecutionContext executionContext) {
 
         // Create AMP Pipeline
-        Pipeline ampPipeline = new Pipeline(this.conanExecutorService, this.getArgs());
-
         if (!ampPipeline.isOperational(executionContext)) {
             log.warn("AMP stage is NOT operational.");
             return false;
@@ -110,72 +110,55 @@ public class Amp extends AbstractConanProcess {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionContext executionContext) throws InterruptedException, ProcessExecutionException {
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException, IOException {
 
         // Short cut to arguments
         Args args = this.getArgs();
 
+        // Create AMP Pipeline
+        Pipeline ampPipeline = new Pipeline(this.conanExecutorService, args, sample);
+
+        log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
+
+        // Make sure the output directory exists
+        args.getAssembliesDir(sample).mkdirs();
+
+        // Create link for the initial input file
+        this.getConanProcessService().createLocalSymbolicLink(
+                args.getInputAssembly(sample),
+                new File(args.getAssembliesDir(sample), "amp-stage-0.fa"));
+
+        // Create a guest user
+        ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
+
+        // Create the AMP task
+        ConanTask<Pipeline> ampTask = new DefaultTaskFactory().createTask(
+                ampPipeline,
+                0,
+                ampPipeline.getArgs().getArgMap(),
+                ConanTask.Priority.HIGHEST,
+                rampartUser);
+
+        ampTask.setId("AMP");
+        ampTask.submit();
+
+        // Run the AMP pipeline
+        TaskResult result;
         try {
-
-            // Create AMP Pipeline
-            Pipeline ampPipeline = new Pipeline(this.conanExecutorService, args);
-
-            log.debug("Found " + ampPipeline.getProcesses().size() + " AMP stages in pipeline to process");
-
-            // Clear out anything that was here before
-            if (args.getOutputDir().exists()) {
-                FileUtils.deleteDirectory(args.getOutputDir());
-            }
-
-            // Make sure the output directory exists
-            args.getAssembliesDir().mkdirs();
-
-            // Create link for the initial input file
-            this.getConanProcessService().createLocalSymbolicLink(
-                    args.getInputAssembly(),
-                    new File(args.getAssembliesDir(), "amp-stage-0.fa"));
-
-            // Create a guest user
-            ConanUser rampartUser = new GuestUser("daniel.mapleson@tgac.ac.uk");
-
-            // Create the AMP task
-            ConanTask<Pipeline> ampTask = new DefaultTaskFactory().createTask(
-                    ampPipeline,
-                    0,
-                    ampPipeline.getArgs().getArgMap(),
-                    ConanTask.Priority.HIGHEST,
-                    rampartUser);
-
-            ampTask.setId("AMP");
-            ampTask.submit();
-
-            // Run the AMP pipeline
-            TaskResult result;
-            try {
-                result = ampTask.execute(executionContext);
-            } catch (TaskExecutionException e) {
-                throw new ProcessExecutionException(-1, e);
-            }
-
-            // Create a symbolic link for the final assembly from the final stage
-            this.getConanProcessService().createLocalSymbolicLink(
-                    new File(args.getAssembliesDir(), "amp-stage-" + ampPipeline.getProcesses().size() + ".fa"),
-                    args.getFinalAssembly());
-
-            // Output the resource usage to file
-            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), result.getOutput());
-
-            return new DefaultExecutionResult(
-                    "rampart-amp",
-                    0,
-                    result.getOutput().toArray(new String[result.getOutput().size()]),
-                    null,
-                    -1,
-                    new ResourceUsage(result.getMaxMemUsage(), result.getActualTotalRuntime(), result.getTotalExternalCputime()));
-        }
-        catch(IOException e) {
+            result = ampTask.execute(executionContext);
+        } catch (TaskExecutionException e) {
             throw new ProcessExecutionException(-1, e);
         }
+
+        // Create a symbolic link for the final assembly from the final stage
+        this.getConanProcessService().createLocalSymbolicLink(
+                new File(args.getAssembliesDir(sample), "amp-stage-" + ampPipeline.getProcesses().size() + ".fa"),
+                args.getFinalAssembly(sample));
+
+
+        return result;
+
     }
 
     public static class Pipeline extends AbstractConanPipeline {
@@ -186,19 +169,26 @@ public class Amp extends AbstractConanProcess {
 
         private Params params = new Params();
         private ConanExecutorService conanExecutorService;
+        private Mecq.Sample sample;
 
         private Args args;
 
         public Pipeline(ConanExecutorService ces, Args ampArgs) {
+            this(ces, ampArgs, null);
+        }
+
+        public Pipeline(ConanExecutorService ces, Args ampArgs, Mecq.Sample sample) {
 
             super(NAME, USER, false, false, ces.getConanProcessService());
 
             this.conanExecutorService = ces;
             this.args = ampArgs;
             this.args.setExecutionContext(ces.getExecutionContext());
+            this.sample = sample;
 
             this.init();
         }
+
 
         public Args getArgs() {
             return args;
@@ -213,9 +203,13 @@ public class Amp extends AbstractConanProcess {
 
         public void init() {
 
-            for(AmpStage.Args ampStageArgs : this.args.getStageArgsList()) {
+            List<AmpStage.Args> ampArgsList = this.sample == null ?
+                    this.args.getStageArgsList().values().iterator().next() :
+                    this.args.getStageArgsList().get(this.sample);
 
-                AmpStage proc = new AmpStage(this.conanExecutorService, ampStageArgs);
+            for(AmpStage.Args ampStageArgs : ampArgsList) {
+
+                AmpStage proc = new AmpStage(this.conanExecutorService, ampStageArgs, this.sample);
                 proc.setConanProcessService(getConanProcessService());
                 this.addProcess(proc);
             }
@@ -231,39 +225,30 @@ public class Amp extends AbstractConanProcess {
     }
 
 
-    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
+    public static class Args extends RampartProcessArgs {
 
         private static final String INPUT_ASSEMBLY = "input";
         private static final String KEY_ELEM_AMP_STAGE = "stage";
 
         private File inputAssembly;
         private File bubbleFile;
-        private File outputDir;
-        private List<Library> allLibraries;
-        private List<Mecq.EcqArgs> allMecqs;
-        private List<AmpStage.Args> stageArgsList;
-        private String jobPrefix;
-        private Organism organism;
+        private Map<Mecq.Sample, List<AmpStage.Args>> stageArgsList;
         private ExecutionContext executionContext;
 
 
         public Args() {
-            super(new Params());
+            super(RampartStage.AMP);
             this.inputAssembly = null;
             this.bubbleFile = null;
-            this.outputDir = null;
-            this.allLibraries = new ArrayList<>();
-            this.allMecqs = new ArrayList<>();
-            this.stageArgsList = new ArrayList<>();
-            this.jobPrefix = "amp";
+            this.stageArgsList = new HashMap<>();
         }
 
-        public Args(Element ele, File outputDir, String jobPrefix, File inputAssembly, File bubbleFile,
-                       List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, Organism organism)
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism,
+                    File inputAssembly, File bubbleFile, boolean runParallel)
                 throws IOException {
 
             // Set defaults
-            this();
+            super(RampartStage.AMP, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,
@@ -277,35 +262,45 @@ public class Amp extends AbstractConanProcess {
             }
 
             // Set args
-            this.outputDir = outputDir;
-            this.jobPrefix = jobPrefix;
             this.inputAssembly = inputAssembly;
             this.bubbleFile = bubbleFile;
-            this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
-            this.organism = organism;
+            this.stageArgsList = new HashMap<>();
 
-            // Parse Xml for AMP stages
-            // All single mass args
-            NodeList nodes = ele.getElementsByTagName(KEY_ELEM_AMP_STAGE);
-            for(int i = 1; i <= nodes.getLength(); i++) {
+            for(Mecq.Sample sample : samples) {
 
-                String stageName = "amp-" + Integer.toString(i);
-                File stageOutputDir = new File(this.getOutputDir(), stageName);
+                // Parse Xml for AMP stages
+                // All single mass args
+                List<AmpStage.Args> stageList = new ArrayList<>();
+                NodeList nodes = ele.getElementsByTagName(KEY_ELEM_AMP_STAGE);
+                for (int i = 1; i <= nodes.getLength(); i++) {
 
-                AmpStage.Args stage = new AmpStage.Args(
-                        (Element)nodes.item(i-1), stageOutputDir, this.getAssembliesDir(), jobPrefix + "-" + stageName,
-                        this.allLibraries, this.allMecqs, this.organism,
-                        this.inputAssembly, this.bubbleFile, i);
+                    String stageName = "amp-" + Integer.toString(i);
+                    File ampStageOutputDir = new File(this.getStageDir(sample), stageName);
 
-                this.stageArgsList.add(stage);
+                    AmpStage.Args stage = new AmpStage.Args(
+                            (Element) nodes.item(i - 1),
+                            ampStageOutputDir,
+                            this.getAssembliesDir(sample),
+                            jobPrefix + "-" + stageName,
+                            sample,
+                            this.organism,
+                            this.getInputAssembly(sample),
+                            this.bubbleFile,
+                            i);
 
-                this.inputAssembly = stage.getOutputFile();
+                    stageList.add(stage);
+
+                    this.inputAssembly = stage.getOutputFile();
+                }
+
+                this.stageArgsList.put(sample, stageList);
             }
         }
 
-        public File getInputAssembly() {
-            return inputAssembly;
+        public File getInputAssembly(Mecq.Sample sample) {
+            return this.inputAssembly == null ?
+                    new File(new File(this.getSampleDir(sample), RampartStage.MASS_SELECT.getOutputDirName()), "best.fa") :
+                    this.inputAssembly;
         }
 
         public void setInputAssembly(File inputAssembly) {
@@ -320,56 +315,16 @@ public class Amp extends AbstractConanProcess {
             this.bubbleFile = bubbleFile;
         }
 
-        public File getOutputDir() {
-            return outputDir;
+        public File getAssembliesDir(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), "assemblies");
         }
 
-        public void setOutputDir(File outputDir) {
-            this.outputDir = outputDir;
-        }
-
-        public List<Library> getAllLibraries() {
-            return allLibraries;
-        }
-
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
-        }
-
-        public String getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public void setJobPrefix(String jobPrefix) {
-            this.jobPrefix = jobPrefix;
-        }
-
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
-        }
-
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
-        }
-
-        public List<AmpStage.Args> getStageArgsList() {
+        public Map<Mecq.Sample, List<AmpStage.Args>> getStageArgsList() {
             return stageArgsList;
         }
 
-        public void setStageArgsList(List<AmpStage.Args> stageArgsList) {
+        public void setStageArgsList(Map<Mecq.Sample, List<AmpStage.Args>> stageArgsList) {
             this.stageArgsList = stageArgsList;
-        }
-
-        public Organism getOrganism() {
-            return organism;
-        }
-
-        public void setOrganism(Organism organism) {
-            this.organism = organism;
-        }
-
-        public File getAssembliesDir() {
-            return new File(this.getOutputDir(), "assemblies");
         }
 
         public ExecutionContext getExecutionContext() {
@@ -388,38 +343,12 @@ public class Amp extends AbstractConanProcess {
         @Override
         public ParamMap getArgMap() {
 
-            Params params = (Params)this.params;
             ParamMap pvp = new DefaultParamMap();
-
-            if (this.inputAssembly != null)
-                pvp.put(params.getInputAssembly(), this.inputAssembly.getAbsolutePath());
-
-            if (this.bubbleFile != null)
-                pvp.put(params.getBubbleFile(), this.bubbleFile.getAbsolutePath());
-
-            if (this.outputDir != null)
-                pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
-
-            if (this.jobPrefix != null)
-                pvp.put(params.getJobPrefix(), this.jobPrefix);
-
             return pvp;
         }
 
         @Override
         protected void setOptionFromMapEntry(ConanParameter param, String value) {
-
-            Params params = (Params)this.params;
-
-            if (param.equals(params.getInputAssembly())) {
-                this.inputAssembly = new File(value);
-            } else if (param.equals(params.getBubbleFile())) {
-                this.bubbleFile = new File(value);
-            } else if (param.equals(params.getOutputDir())) {
-                this.outputDir = new File(value);
-            } else if (param.equals(params.getJobPrefix())) {
-                this.jobPrefix = value;
-            }
         }
 
         @Override
@@ -427,8 +356,8 @@ public class Amp extends AbstractConanProcess {
 
         }
 
-        public File getFinalAssembly() {
-            return new File(this.getOutputDir(), "final.fa");
+        public File getFinalAssembly(Mecq.Sample sample) {
+            return new File(this.getStageDir(sample), "final.fa");
         }
 
         @Override
@@ -436,81 +365,5 @@ public class Amp extends AbstractConanProcess {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
-
-
-    public static class Params extends AbstractProcessParams {
-
-        private ConanParameter inputAssembly;
-        private ConanParameter bubbleFile;
-        private ConanParameter outputDir;
-        private ConanParameter processes;
-        private ConanParameter jobPrefix;
-
-        public Params() {
-
-            this.inputAssembly = new PathParameter(
-                    "input",
-                    "The input assembly containing the assembly to enhance",
-                    true);
-
-            this.bubbleFile = new PathParameter(
-                    "bubble",
-                    "The assembly bubble file",
-                    true);
-
-            this.outputDir = new PathParameter(
-                    "output",
-                    "The output directory which should contain the enhancement steps",
-                    true);
-
-            this.processes = new ParameterBuilder()
-                    .longName("processes")
-                    .description("The processes to execute to enhance the assembly")
-                    .isOptional(false)
-                    .argValidator(ArgValidator.OFF)
-                    .create();
-
-            this.jobPrefix = new ParameterBuilder()
-                    .longName("jobPrefix")
-                    .description("Describes the jobs that will be executed as part of this pipeline")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-        }
-
-
-
-        public ConanParameter getInputAssembly() {
-            return inputAssembly;
-        }
-
-        public ConanParameter getBubbleFile() {
-            return bubbleFile;
-        }
-
-        public ConanParameter getOutputDir() {
-            return outputDir;
-        }
-
-        public ConanParameter getProcesses() {
-            return processes;
-        }
-
-        public ConanParameter getJobPrefix() {
-            return jobPrefix;
-        }
-
-        @Override
-        public ConanParameter[] getConanParametersAsArray() {
-            return new ConanParameter[]{
-                    this.inputAssembly,
-                    this.bubbleFile,
-                    this.outputDir,
-                    this.processes,
-                    this.jobPrefix
-            };
-        }
-
-    }
-
 
 }

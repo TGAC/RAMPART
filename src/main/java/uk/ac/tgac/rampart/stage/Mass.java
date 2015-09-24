@@ -38,7 +38,6 @@ import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
 import uk.ac.ebi.fgpt.conan.service.exception.ConanParameterException;
 import uk.ac.ebi.fgpt.conan.service.exception.ProcessExecutionException;
-import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.Assembler;
@@ -46,17 +45,14 @@ import uk.ac.tgac.conan.process.asm.KmerRange;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * User: maplesod
  * Date: 01/02/13
  * Time: 11:10
  */
-public class Mass extends AbstractConanProcess {
+public class Mass extends RampartProcess {
 
     private static Logger log = LoggerFactory.getLogger(Mass.class);
 
@@ -71,7 +67,7 @@ public class Mass extends AbstractConanProcess {
     }
 
     public Mass(ConanExecutorService ces, Args args) {
-        super("", args, new Params(), ces);
+        super(ces, args);
     }
 
     public TaskResult getTaskResult() {
@@ -84,16 +80,11 @@ public class Mass extends AbstractConanProcess {
     }
 
     @Override
-    public Collection<ConanParameter> getParameters() {
-        return new Params().getConanParameters();
-    }
-
-    @Override
     public boolean isOperational(ExecutionContext executionContext) {
 
         Args args = (Args) this.getProcessArgs();
 
-        for(MassJob.Args massJobArgs : args.getMassJobArgList()) {
+        for(MassJob.Args massJobArgs : args.getMassJobArgMap().values().iterator().next()) {
             if (!new MassJob(this.conanExecutorService, massJobArgs).isOperational(executionContext)) {
                 log.warn("A MASS job is NOT operational.");
                 return false;
@@ -106,102 +97,69 @@ public class Mass extends AbstractConanProcess {
     }
 
     @Override
-    public String getCommand() throws ConanParameterException {
-        return this.getFullCommand();
+    public TaskResult executeSample(Mecq.Sample sample, ExecutionContext executionContext)
+            throws ProcessExecutionException, InterruptedException, IOException {
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        // Get shortcut to the args
+        Args args = (Args) this.getRampartArgs();
+
+        List<ExecutionResult> results = new ArrayList<>();
+        List<ExecutionResult> allResults = new ArrayList<>();
+        List<TaskResult> massJobResults = new ArrayList<>();
+        Map<String,Integer> optimalKmerMap = null;
+
+        // Work out kmer genie configs and how they relate to mass jobs
+        if (args.kmerCalcArgs != null) {
+            setKmerValues(args.kmerCalcArgs.getResultFile(sample), args.getMassJobArgMap().get(sample));
+            log.info("Loaded optimal kmer values");
+        }
+
+        log.info("Starting MASS jobs");
+
+        for (MassJob.Args massJobArgs : args.getMassJobArgMap().get(sample)) {
+
+            // Ensure output directory for this MASS run exists
+            if (!massJobArgs.getOutputDir().exists() && !massJobArgs.getOutputDir().mkdirs()) {
+                throw new IOException("Couldn't create directory for MASS");
+            }
+
+            // Execute the mass job and record any job ids
+            MassJobResult mjr = this.executeMassJob(massJobArgs, executionContext);
+            massJobResults.add(mjr.getAllResults());
+        }
+
+        for(TaskResult mjr : massJobResults) {
+            results.addAll(mjr.getProcessResults());
+            allResults.addAll(mjr.getProcessResults());
+        }
+
+        stopWatch.stop();
+
+        return new DefaultTaskResult(sample.name + "-" + args.stage.getOutputDirName(), true, allResults, stopWatch.getTime() / 1000L);
     }
 
     @Override
-    public ExecutionResult execute(ExecutionContext executionContext) throws ProcessExecutionException, InterruptedException {
+    public boolean validateOutput(Mecq.Sample sample) throws IOException {
 
-        try {
+        Args args = (Args) this.getRampartArgs();
 
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
+        // For each MASS job to check an output file exist
+        for(MassJob.Args singleMassArgs : args.getMassJobArgMap().get(sample))  {
+            for(Assembler asm : singleMassArgs.getAssemblers()) {
 
-            log.info("Starting MASS");
-
-            // Get shortcut to the args
-            Args args = (Args) this.getProcessArgs();
-
-            // Force run parallel to false if not using a scheduler
-            if (!executionContext.usingScheduler() && args.isRunParallel()) {
-                log.warn("Forcing linear execution due to lack of job scheduler");
-                args.setRunParallel(false);
-            }
-
-            List<ExecutionResult> results = new ArrayList<>();
-            List<ExecutionResult> allResults = new ArrayList<>();
-            List<TaskResult> massJobResults = new ArrayList<>();
-            Map<String,Integer> optimalKmerMap = null;
-
-            // Work out kmer genie configs and how they relate to mass jobs
-            if (args.kmerCalcArgs != null) {
-                setKmerValues(args.kmerCalcArgs.getResultFile(), args.getMassJobArgList());
-                log.info("Loaded optimal kmer values");
-            }
-
-            log.info("Starting MASS jobs");
-
-            for (MassJob.Args massJobArgs : args.getMassJobArgList()) {
-
-                // Ensure output directory for this MASS run exists
-                if (!massJobArgs.getOutputDir().exists() && !massJobArgs.getOutputDir().mkdirs()) {
-                    throw new IOException("Couldn't create directory for MASS");
-                }
-
-                // Execute the mass job and record any job ids
-                MassJobResult mjr = this.executeMassJob(massJobArgs, executionContext);
-                massJobResults.add(mjr.getAllResults());
-            }
-
-            for(TaskResult mjr : massJobResults) {
-                results.addAll(mjr.getProcessResults());
-                allResults.addAll(mjr.getProcessResults());
-            }
-
-            // Wait for all assembly jobs to finish if they are running in parallel.
-            if (executionContext.usingScheduler() && args.isRunParallel()) {
-                log.info("MASS jobs were executed in parallel, waiting for all to complete");
-                this.conanExecutorService.executeScheduledWait(
-                        results,
-                        args.getJobPrefix() + "-mass-*",
-                        ExitStatus.Type.COMPLETED_ANY,
-                        args.getJobPrefix() + "-wait",
-                        args.getOutputDir());
-            }
-
-            // For each MASS job to check an output file exist
-            for(MassJob.Args singleMassArgs : args.getMassJobArgList())  {
-                for(Assembler asm : singleMassArgs.getAssemblers()) {
-
-                    if (    (asm.makesScaffolds() && !asm.getScaffoldsFile().exists()) ||
-                            (asm.makesContigs() && !asm.getContigsFile().exists()) ||
-                            (asm.makesUnitigs() && !asm.getUnitigsFile().exists())) {
-                        throw new ProcessExecutionException(2, "MASS job \"" + singleMassArgs.getName() + "\" did not produce any output files");
-                    }
+                if (    (asm.makesScaffolds() && !asm.getScaffoldsFile().exists()) ||
+                        (asm.makesContigs() && !asm.getContigsFile().exists()) ||
+                        (asm.makesUnitigs() && !asm.getUnitigsFile().exists())) {
+                    log.error("MASS job \"" + singleMassArgs.getName() + "\" for sample \"" + sample.name + "\" did not produce any output files");
+                    return false;
                 }
             }
-
-            log.info("MASS complete");
-
-            stopWatch.stop();
-
-            this.taskResult = new DefaultTaskResult("rampart-mass", true, allResults, stopWatch.getTime() / 1000L);
-
-            // Output the resource usage to file
-            FileUtils.writeLines(new File(args.getOutputDir(), args.getJobPrefix() + ".summary"), this.taskResult.getOutput());
-
-            return new DefaultExecutionResult(
-                    this.taskResult.getTaskName(),
-                    0,
-                    new String[] {},
-                    null,
-                    -1,
-                    new ResourceUsage(this.taskResult.getMaxMemUsage(), this.taskResult.getActualTotalRuntime(), this.taskResult.getTotalExternalCputime()));
-
-        } catch (IOException ioe) {
-            throw new ProcessExecutionException(-1, ioe);
         }
+
+        return true;
     }
 
     protected static class MassJobResult {
@@ -281,32 +239,18 @@ public class Mass extends AbstractConanProcess {
 
 
 
-    public static class Args extends AbstractProcessArgs implements RampartStageArgs {
+    public static class Args extends RampartProcess.RampartProcessArgs {
 
         // Keys for config file
-        private static final String KEY_ATTR_PARALLEL = "parallel";
         private static final String KEY_ELEM_MASS_JOB = "job";
 
         // Constants
         public static final int DEFAULT_CVG_CUTOFF = -1;
         public static final OutputLevel DEFAULT_OUTPUT_LEVEL = OutputLevel.CONTIGS;
-        public static final boolean DEFAULT_RUN_PARALLEL = false;
 
-
-        // Need access to these
-        //private SingleMassParams params = new SingleMassParams();
-
-        // Rampart vars
-        private String jobPrefix;
-        private File outputDir;
         private CalcOptimalKmer.Args kmerCalcArgs;
-        private List<MassJob.Args> massJobArgList;    // List of MASS groups to run separately
-        private List<Library> allLibraries;           // All allLibraries available in this job
-        private List<Mecq.EcqArgs> allMecqs;          // All mecq configurations
-        private File mecqDir;
-        private boolean runParallel;                  // Whether to run MASS groups in parallel
+        private Map<Mecq.Sample, List<MassJob.Args>> massJobArgMap;    // List of MASS groups to run separately
         private Organism organism;
-
         private OutputLevel outputLevel;
 
         @Override
@@ -315,28 +259,19 @@ public class Mass extends AbstractConanProcess {
         }
 
         public Args() {
-            super(new Params());
-
-            this.jobPrefix = "";
-            this.outputDir = null;
-
-            this.allLibraries = new ArrayList<>();
-            this.allMecqs = new ArrayList<>();
-            this.mecqDir = null;
+            super(RampartStage.MASS);
 
             this.outputLevel = DEFAULT_OUTPUT_LEVEL;
-
             this.organism = null;
-            this.runParallel = DEFAULT_RUN_PARALLEL;
             this.kmerCalcArgs = null;
-            this.massJobArgList = new ArrayList<>();
+            this.massJobArgMap = new HashMap<>();
         }
 
-        public Args(Element ele, File outputDir, File mecqDir, String jobPrefix, List<Library> allLibraries, List<Mecq.EcqArgs> allMecqs, Organism organism)
+        public Args(Element ele, File outputDir, String jobPrefix, List<Mecq.Sample> samples, Organism organism, CalcOptimalKmer.Args kmerCalcArgs, boolean runParallel)
                 throws IOException {
 
             // Set defaults first
-            this();
+            super(RampartStage.MASS, outputDir, jobPrefix, samples, organism, runParallel);
 
             // Check there's nothing
             if (!XmlHelper.validate(ele,
@@ -351,56 +286,37 @@ public class Mass extends AbstractConanProcess {
                 throw new IOException("Found unrecognised element or attribute in MASS");
             }
 
-            // Set from parameters
-            this.outputDir = outputDir;
-            this.jobPrefix = jobPrefix;
-            this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
+            this.massJobArgMap = new HashMap<>();
+            this.kmerCalcArgs = kmerCalcArgs;
             this.organism = organism;
-            this.mecqDir = mecqDir;
-
 
             // From Xml (optional)
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
-                    DEFAULT_RUN_PARALLEL;
+                    runParallel;
 
             // All single mass args
             NodeList nodes = ele.getElementsByTagName(KEY_ELEM_MASS_JOB);
-            for(int i = 0; i < nodes.getLength(); i++) {
-                this.massJobArgList.add(
-                        new MassJob.Args(
-                                (Element) nodes.item(i), outputDir, mecqDir, jobPrefix + "-group",
-                                this.allLibraries, this.allMecqs, this.organism, this.runParallel, i+1, this.kmerCalcArgs != null)
-                );
+            for(Mecq.Sample sample : samples) {
+                List<MassJob.Args> massJobArgs = new ArrayList<>();
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    massJobArgs.add(
+                            new MassJob.Args(
+                                    (Element) nodes.item(i), this.getStageDir(sample), jobPrefix + "-group",
+                                    sample, this.organism, this.runParallel, i + 1, this.kmerCalcArgs != null)
+                    );
+                }
+
+                this.massJobArgMap.put(sample, massJobArgs);
             }
         }
 
         public void initialise() {
-            for(MassJob.Args jobArgs : this.massJobArgList) {
-                jobArgs.initialise(false);
+            for(List<MassJob.Args> jobArgList : this.massJobArgMap.values()) {
+                for (MassJob.Args jobArgs : jobArgList) {
+                    jobArgs.initialise(false);
+                }
             }
-        }
-
-        protected Params getParams() {
-            return (Params)this.params;
-        }
-
-
-        public File getOutputDir() {
-            return outputDir;
-        }
-
-        public void setOutputDir(File outputDir) {
-            this.outputDir = outputDir;
-        }
-
-        public String getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public void setJobPrefix(String jobPrefix) {
-            this.jobPrefix = jobPrefix;
         }
 
         public OutputLevel getOutputLevel() {
@@ -411,14 +327,6 @@ public class Mass extends AbstractConanProcess {
             this.outputLevel = outputLevel;
         }
 
-        public boolean isRunParallel() {
-            return runParallel;
-        }
-
-        public void setRunParallel(boolean runParallel) {
-            this.runParallel = runParallel;
-        }
-
         public Organism getOrganism() {
             return organism;
         }
@@ -427,20 +335,12 @@ public class Mass extends AbstractConanProcess {
             this.organism = organism;
         }
 
-        public List<Library> getAllLibraries() {
-            return allLibraries;
+        public Map<Mecq.Sample, List<MassJob.Args>> getMassJobArgMap() {
+            return massJobArgMap;
         }
 
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
-        }
-
-        public List<MassJob.Args> getMassJobArgList() {
-            return massJobArgList;
-        }
-
-        public void setMassJobArgList(List<MassJob.Args> massJobArgList) {
-            this.massJobArgList = massJobArgList;
+        public void setMassJobArgMap(Map<Mecq.Sample, List<MassJob.Args>> massJobArgMap) {
+            this.massJobArgMap = massJobArgMap;
         }
 
         public CalcOptimalKmer.Args getKmerCalcArgs() {
@@ -451,235 +351,19 @@ public class Mass extends AbstractConanProcess {
             this.kmerCalcArgs = kmerCalcArgs;
         }
 
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
-        }
-
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
-        }
-
-        public File getMecqDir() {
-            return mecqDir;
-        }
-
-        public void setMecqDir(File mecqDir) {
-            this.mecqDir = mecqDir;
-        }
-
-        @Override
-        public void parseCommandLine(CommandLine cmdLine) {
-
-            Params params = this.getParams();
-        }
 
         @Override
         public ParamMap getArgMap() {
-
-            Params params = this.getParams();
             ParamMap pvp = new DefaultParamMap();
-
-            if (this.outputLevel != null) {
-                pvp.put(params.getOutputLevel(), this.outputLevel.toString());
-            }
-
-            if (this.outputDir != null)
-                pvp.put(params.getOutputDir(), this.outputDir.getAbsolutePath());
-
-            if (this.jobPrefix != null)
-                pvp.put(params.getJobPrefix(), this.jobPrefix);
-
-
             return pvp;
         }
 
         @Override
         protected void setOptionFromMapEntry(ConanParameter param, String value) {
-
-            Params params = this.getParams();
-
-            if (param.equals(params.getJobPrefix())) {
-                this.jobPrefix = value;
-            } else if (param.equals(params.getOutputDir())) {
-                this.outputDir = new File(value);
-            } else if (param.equals(params.getOutputLevel())) {
-                this.outputLevel = OutputLevel.valueOf(value);
-            }
         }
 
         @Override
         protected void setArgFromMapEntry(ConanParameter param, String value) {
-
-        }
-
-    }
-
-    public static class Params extends AbstractProcessParams {
-
-        private ConanParameter assembler;
-        private ConanParameter kmin;
-        private ConanParameter kmax;
-        private ConanParameter stepSize;
-        private ConanParameter libs;
-        private ConanParameter outputDir;
-        private ConanParameter jobPrefix;
-        private ConanParameter threads;
-        private ConanParameter memory;
-        private ConanParameter parallelismLevel;
-        private ConanParameter coverageCutoff;
-        private ConanParameter outputLevel;
-        private ConanParameter inputSource;
-
-
-        public Params() {
-
-            this.assembler = new ParameterBuilder()
-                    .longName("asm")
-                    .description("De Brujin Assembler to use")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .isOptional(false)
-                    .create();
-
-            this.kmin = new NumericParameter(
-                    "kmin",
-                    "The minimum k-mer value to assemble. (Default: 51)",
-                    true);
-
-            this.kmax = new NumericParameter(
-                    "kmax",
-                    "The maximum k-mer value to assemble. (Default: 85)",
-                    true);
-
-            this.stepSize = new ParameterBuilder()
-                    .longName("step")
-                    .description("The kmer step size between each assembly: [FINE, MEDIUM, COARSE].  (Default: MEDIUM)")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-
-            this.libs = new ParameterBuilder()
-                    .longName("libs")
-                    .description("All libraries to use for this MASS run")
-                    .argValidator(ArgValidator.OFF)
-                    .isOptional(false)
-                    .create();
-
-            this.outputDir = new PathParameter(
-                    "output",
-                    "The output directory",
-                    true);
-
-            this.jobPrefix = new ParameterBuilder()
-                    .longName("job_prefix")
-                    .description("The job_prefix to be assigned to all sub processes in MASS.  Useful if executing with a scheduler.")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-
-            this.threads = new NumericParameter(
-                    "threads",
-                    "The number of threads to use for each assembly process (Default: 8)",
-                    true);
-
-            this.memory = new NumericParameter(
-                    "memory",
-                    "The amount of memory to request for each assembly process (Default: 50000)",
-                    true);
-
-            this.parallelismLevel = new ParameterBuilder()
-                    .longName("parallelismLevel")
-                    .description("The level of parallelism to use when running MASS: [LINEAR, PARALLEL_ASSEMBLIES_ONLY, PARALLEL_MASS_ONLY, PARALLEL].  (Default: LINEAR)")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-
-            this.coverageCutoff = new NumericParameter(
-                    "coverageCutoff",
-                    "The kmer coverage level below which kmers are discarded (Default: -1 i.e. OFF)",
-                    true);
-
-            this.outputLevel = new ParameterBuilder()
-                    .longName("outputLevel")
-                    .description("The output level for the assembler used by MASS: [UNITIGS, CONTIGS, SCAFFOLDS].  (Default: CONTIGS)")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-
-            this.inputSource = new ParameterBuilder()
-                    .longName("inputSource")
-                    .description("The input source to use for MASS: [RAW, BEST, ALL, <NUM>].  (Default: ALL)")
-                    .argValidator(ArgValidator.DEFAULT)
-                    .create();
-
-        }
-
-
-
-        public ConanParameter getAssembler() {
-            return assembler;
-        }
-
-        public ConanParameter getKmin() {
-            return kmin;
-        }
-
-        public ConanParameter getKmax() {
-            return kmax;
-        }
-
-        public ConanParameter getStepSize() {
-            return stepSize;
-        }
-
-        public ConanParameter getLibs() {
-            return libs;
-        }
-
-        public ConanParameter getOutputDir() {
-            return outputDir;
-        }
-
-        public ConanParameter getJobPrefix() {
-            return jobPrefix;
-        }
-
-        public ConanParameter getThreads() {
-            return threads;
-        }
-
-        public ConanParameter getMemory() {
-            return memory;
-        }
-
-        public ConanParameter getParallelismLevel() {
-            return parallelismLevel;
-        }
-
-        public ConanParameter getCoverageCutoff() {
-            return coverageCutoff;
-        }
-
-        public ConanParameter getOutputLevel() {
-            return outputLevel;
-        }
-
-        public ConanParameter getInputSource() {
-            return inputSource;
-        }
-
-        @Override
-        public ConanParameter[] getConanParametersAsArray() {
-            return new ConanParameter[]{
-                    this.assembler,
-                    this.kmin,
-                    this.kmax,
-                    this.stepSize,
-                    this.libs,
-                    this.outputDir,
-                    this.jobPrefix,
-                    this.threads,
-                    this.memory,
-                    this.parallelismLevel,
-                    this.coverageCutoff,
-                    this.outputLevel,
-                    this.inputSource
-            };
         }
 
     }

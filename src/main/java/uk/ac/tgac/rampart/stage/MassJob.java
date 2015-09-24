@@ -48,7 +48,6 @@ import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.conan.process.asm.*;
 import uk.ac.tgac.conan.process.asm.tools.AbyssV15;
 import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
-import uk.ac.tgac.rampart.RampartJobFileSystem;
 import uk.ac.tgac.rampart.stage.util.CoverageRange;
 import uk.ac.tgac.rampart.stage.util.ReadsInput;
 import uk.ac.tgac.rampart.stage.util.VariableRange;
@@ -249,15 +248,16 @@ public class MassJob extends AbstractConanProcess {
                         this.getNbBases(lib.getFile1(), subsamplingDir, jobPrefix + "-file1-base_count") +
                                 this.getNbBases(lib.getFile2(), subsamplingDir, jobPrefix + "-file2-base_count");
 
-                // Calculate the probability of keeping an entry
-                double actualCoverage = (double)sequencedBases / (double)genomeSize / 2.0;
+                // Calculate the probability of keeping an entry (assumes equal coverage in each file)
+                double actualCoveragePerFile = (double)sequencedBases / (double)genomeSize / 2.0;
 
-                double probability = desiredCoverage / actualCoverage;
+                double probability = desiredCoverage / 2.0 / actualCoveragePerFile;
+                double probPerc = probability * 100.0;
 
 
-                log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
-                        "Estimated genome size is: " + genomeSize + "; so actual coverage is approximately: " + actualCoverage +
-                        "; we will only keep " + probability + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
+                log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases in both files.  " +
+                        "Estimated genome size is: " + genomeSize + "; so actual coverage (per file) is approximately: " + actualCoveragePerFile +
+                        "; we will only keep " + probPerc + "% of the reads in each file to achieve approximately " + desiredCoverage + "X coverage in both files");
 
 
                 subsampledLib.setFiles(
@@ -285,10 +285,11 @@ public class MassJob extends AbstractConanProcess {
                 // Calculate the probability of keeping an entry
                 double actualCoverage = (double)sequencedBases / (double)genomeSize;
                 double probability = desiredCoverage / actualCoverage;
+                double probPerc = probability * 100.0;
 
                 log.info("Estimated that library: " + lib.getName() + "; has approximately " + sequencedBases + " bases.  " +
                         "Estimated genome size is: " + genomeSize + "; so actual coverage is approximately: " + actualCoverage +
-                        "; we will only keep " + probability + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
+                        "; we will only keep " + probPerc + "% of the reads to achieve approximately " + desiredCoverage + "X coverage");
 
                 subsampledLib.setFiles(
                         new File(subsamplingDir, lib.getFile1().getName() + fileSuffix),
@@ -433,7 +434,7 @@ public class MassJob extends AbstractConanProcess {
         String wcOption = linesOnly ? "-l" : "-m";
         String command = "awk '/^@/{getline; print}' " + seqFile.getAbsolutePath() + " | wc " + wcOption + " > " + outputFile.getAbsolutePath();
 
-        this.conanExecutorService.executeProcess(command, outputDir, jobName, 1, 1, false);
+        this.conanExecutorService.executeProcess(command, outputDir, jobName, 1, 0, 0, false);
 
         List<String> lines = FileUtils.readLines(outputFile);
 
@@ -458,6 +459,7 @@ public class MassJob extends AbstractConanProcess {
                 jobName,
                 args.getThreads(),
                 args.getMemory(),
+                args.getExpWallTimeMins(),
                 args.isMassParallel() || args.isRunParallel(),
                 jobIds,
                 assembler.usesOpenMpi());
@@ -530,6 +532,7 @@ public class MassJob extends AbstractConanProcess {
         private static final String KEY_ATTR_TOOL = "tool";
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
+        private static final String KEY_ATTR_EXPWALLTIME = "exp_walltime";
         private static final String KEY_ATTR_PARALLEL = "parallel";
         private static final String KEY_ATTR_CHECKED_ARGS = "checked_args";
         private static final String KEY_ATTR_UNCHECKED_ARGS = "unchecked_args";
@@ -556,14 +559,13 @@ public class MassJob extends AbstractConanProcess {
         private boolean kmerCalc;
 
         // Inputs
-        private File mecqDir;
         private List<ReadsInput> inputs;
-        private List<Library> allLibraries;
-        private List<Mecq.EcqArgs> allMecqs;
+        private Mecq.Sample sample;
 
         // System settings
         private int threads;
         private int memory;
+        private int expWallTimeMins;
         private boolean runParallel;
         private boolean massParallel;
         private List<Library> selectedLibs;
@@ -579,7 +581,6 @@ public class MassJob extends AbstractConanProcess {
 
             super(new Params());
 
-            this.outputDir = null;
             this.jobPrefix = "";
 
             this.tool = AbyssV15.NAME;
@@ -591,13 +592,12 @@ public class MassJob extends AbstractConanProcess {
             this.uncheckedArgs = null;
             this.kmerCalc = false;
 
-            this.mecqDir = null;
             this.inputs = new ArrayList<>();
-            this.allLibraries = new ArrayList<>();
-            this.allMecqs = new ArrayList<>();
+            this.sample = null;
 
             this.threads = 1;
             this.memory = 0;
+            this.expWallTimeMins = 0;
             this.runParallel = DEFAULT_RUN_PARALLEL;
             this.massParallel = DEFAULT_MASS_PARALLEL;
 
@@ -608,8 +608,9 @@ public class MassJob extends AbstractConanProcess {
 
 
 
-        public Args(Element ele, File parentOutputDir, File mecqDir, String parentJobPrefix, List<Library> allLibraries,
-                              List<Mecq.EcqArgs> allMecqs, Organism organism, boolean massParallel, int index, boolean kmerCalc) {
+        public Args(Element ele, File massDir, String parentJobPrefix,
+                                Mecq.Sample sample, Organism organism,
+                                boolean massParallel, int index, boolean kmerCalc) {
 
             // Set defaults
             this();
@@ -669,6 +670,10 @@ public class MassJob extends AbstractConanProcess {
                     XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) :
                     DEFAULT_MEMORY;
 
+            this.expWallTimeMins = ele.hasAttribute(KEY_ATTR_EXPWALLTIME) ?
+                    XmlHelper.getIntValue(ele, KEY_ATTR_EXPWALLTIME) :
+                    0;
+
             this.runParallel = ele.hasAttribute(KEY_ATTR_PARALLEL) ?
                     XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) :
                     DEFAULT_RUN_PARALLEL;
@@ -683,17 +688,15 @@ public class MassJob extends AbstractConanProcess {
 
 
             // Other args
-            this.allLibraries = allLibraries;
-            this.allMecqs = allMecqs;
-            this.outputDir = new File(parentOutputDir, name);
+            this.sample = sample;
+            this.outputDir = new File(massDir, name);
             this.jobPrefix = parentJobPrefix + "-" + name;
             this.organism = organism;
-            this.mecqDir = mecqDir;
             this.massParallel = massParallel;
 
             // Setup input and generic assembler
             this.genericAssembler = this.createGenericAssembler();
-            this.selectedLibs = this.selectInputs();
+            this.selectedLibs = this.selectInputs(this.sample);
             this.genericAssembler.setLibraries(this.selectedLibs);
 
             Element kmerElement = XmlHelper.getDistinctElementByName(ele, KEY_ELEM_KMER_RANGE);
@@ -721,7 +724,7 @@ public class MassJob extends AbstractConanProcess {
             if (createGenericAssembler) {
                 // Setup input and generic assembler
                 this.genericAssembler = this.createGenericAssembler();
-                this.selectedLibs = this.selectInputs();
+                this.selectedLibs = this.selectInputs(this.sample);
                 this.genericAssembler.setLibraries(this.selectedLibs);
             }
 
@@ -742,13 +745,13 @@ public class MassJob extends AbstractConanProcess {
             return genericAssembler;
         }
 
-        public final List<Library> selectInputs() {
+        public final List<Library> selectInputs(Mecq.Sample sample) {
 
             List<Library> selectedLibs = new ArrayList<>();
 
             for(ReadsInput mi : inputs) {
-                Library lib = mi.findLibrary(allLibraries);
-                Mecq.EcqArgs ecqArgs = mi.findMecq(allMecqs);
+                Library lib = mi.findLibrary(sample.libraries);
+                Mecq.EcqArgs ecqArgs = mi.findMecq(sample);
 
                 if (lib == null) {
                     throw new IllegalArgumentException("Unrecognised library: " + mi.getLib() + "; not processing MASS run: " + name);
@@ -760,7 +763,7 @@ public class MassJob extends AbstractConanProcess {
                     throw new IllegalArgumentException("Unrecognised MECQ dataset requested: " + mi.getEcq() + "; not processing MASS run: " + name);
                 }
                 else {
-                    selectedLibs.add(ecqArgs.getOutputLibrary(lib));
+                    selectedLibs.add(ecqArgs.getOutputLibrary(sample, lib));
                 }
 
                 log.info("Found library.  Lib name: " + mi.getLib() + "; ECQ name: " + mi.getEcq() + "; Job name: " + name);
@@ -799,8 +802,17 @@ public class MassJob extends AbstractConanProcess {
                 log.info("No coverage range specified for \"" + this.name + "\" running assembler with default range: " + defaultCoverageRange.toString());
             }
             else if (organism == null || !organism.isGenomeSizeAvailable()) {
+                if (organism == null) {
+                    log.error("Organism not set");
+                }
+                else if (!organism.isGenomeSizeAvailable()) {
+                   if (organism.getReference() == null) {
+                       log.error("Reference not available");
+                   }
+                }
+
                 CoverageRange defaultCoverageRange = new CoverageRange();
-                log.info("No genome size is available or specified.  Not possible to subsample to desired range without a genome " +
+                log.warn("No genome size is available or specified.  Not possible to subsample to desired range without a genome " +
                         "size estimate. Running assembler with default coverage range: " + defaultCoverageRange.toString());
             }
             else if (coverageRange.validate()) {
@@ -996,6 +1008,7 @@ public class MassJob extends AbstractConanProcess {
                     asmArgs.setLibraries(libs);
                     asmArgs.setThreads(this.threads);
                     asmArgs.setMemory(this.memory);
+                    asmArgs.setEstimatedWalltimeMins(this.expWallTimeMins);
                     asmArgs.setOrganism(this.organism);
                     asmArgs.setDesiredCoverage(jv.cvg);
 
@@ -1029,9 +1042,9 @@ public class MassJob extends AbstractConanProcess {
                             " -" + jv.varName + " " + jv.varValue;
 
                     // Record that we've done some command line parsing
-                    if (!newCheckedArgs.isEmpty()) {
+                    /*if (!newCheckedArgs.isEmpty()) {
                         log.debug("Parsing: " + newCheckedArgs);
-                    }
+                    }*/
 
                     // Parse checked args
                     asm.getAssemblerArgs().parse(newCheckedArgs);
@@ -1190,6 +1203,14 @@ public class MassJob extends AbstractConanProcess {
             this.memory = memory;
         }
 
+        public int getExpWallTimeMins() {
+            return expWallTimeMins;
+        }
+
+        public void setExpWallTimeMins(int expWallTimeMins) {
+            this.expWallTimeMins = expWallTimeMins;
+        }
+
         public Organism getOrganism() {
             return organism;
         }
@@ -1198,28 +1219,12 @@ public class MassJob extends AbstractConanProcess {
             this.organism = organism;
         }
 
-        public List<Library> getAllLibraries() {
-            return allLibraries;
+        public Mecq.Sample getSample() {
+            return sample;
         }
 
-        public void setAllLibraries(List<Library> allLibraries) {
-            this.allLibraries = allLibraries;
-        }
-
-        public List<Mecq.EcqArgs> getAllMecqs() {
-            return allMecqs;
-        }
-
-        public void setAllMecqs(List<Mecq.EcqArgs> allMecqs) {
-            this.allMecqs = allMecqs;
-        }
-
-        public File getMecqDir() {
-            return mecqDir;
-        }
-
-        public void setMecqDir(File mecqDir) {
-            this.mecqDir = mecqDir;
+        public void setSample(Mecq.Sample sample) {
+            this.sample = sample;
         }
 
         public File getUnitigsDir() {
@@ -1248,19 +1253,6 @@ public class MassJob extends AbstractConanProcess {
 
         public void setAssemblers(List<Assembler> assemblers) {
             this.assemblers = assemblers;
-        }
-
-        public List<File> getInputKmers() {
-
-            RampartJobFileSystem fs = new RampartJobFileSystem(this.getMecqDir().getParentFile());
-
-            List<File> inputKmers = new ArrayList<>();
-
-            for(ReadsInput ri : this.inputs) {
-                inputKmers.add(new File(fs.getAnalyseReadsDir(), "jellyfish_" + ri.getEcq() + "_" + ri.getLib() + "_0"));
-            }
-
-            return inputKmers;
         }
 
         public File getStatsFile(Mass.OutputLevel outputLevel) {

@@ -46,17 +46,15 @@ import uk.ac.tgac.conan.process.asmIO.gapclose.SoapGapCloserV112;
 import uk.ac.tgac.conan.process.asmIO.scaffold.PlatanusScaffoldV12;
 import uk.ac.tgac.conan.process.asmIO.scaffold.SSpaceBasicV2;
 import uk.ac.tgac.conan.process.asmIO.scaffold.SoapScaffolderV24;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishCountV11;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishMergeV11;
-import uk.ac.tgac.conan.process.kmer.jellyfish.JellyfishStatsV11;
-import uk.ac.tgac.conan.process.kmer.kat.KatCompV1;
-import uk.ac.tgac.conan.process.kmer.kat.KatGcpV1;
+import uk.ac.tgac.conan.process.kmer.kat.KatCompV2;
+import uk.ac.tgac.conan.process.kmer.kat.KatGcpV2;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotDensityV1;
 import uk.ac.tgac.conan.process.kmer.kat.KatPlotSpectraCnV1;
 import uk.ac.tgac.conan.process.misc.FastXRC_V0013;
 import uk.ac.tgac.conan.process.re.tools.MusketV10;
 import uk.ac.tgac.conan.process.re.tools.QuakeV03;
 import uk.ac.tgac.conan.process.re.tools.SickleV12;
+import uk.ac.tgac.conan.process.re.tools.TrimGaloreV04;
 import uk.ac.tgac.conan.process.subsampler.TgacSubsamplerV1;
 import uk.ac.tgac.rampart.stage.RampartStage;
 import uk.ac.tgac.rampart.stage.RampartStageList;
@@ -134,9 +132,9 @@ public class RampartCLI extends AbstractConanCLI {
             new MusketV10().getName(),
             new SickleV12().getName(),
             new QuakeV03().getName(),
-            new JellyfishCountV11().getName(),
-            new KatCompV1().getName(),
-            new KatGcpV1().getName(),
+            new TrimGaloreV04().getName(),
+            new KatCompV2().getName(),
+            new KatGcpV2().getName(),
             new KmerGenieV16().getName(),
             new AbyssV15().getName(),
             new VelvetV12().getName(),
@@ -156,10 +154,7 @@ public class RampartCLI extends AbstractConanCLI {
             new QuastV23().getName(),
             new CegmaV24().getName(),
             new KatPlotDensityV1().getName(),
-            new KatPlotSpectraCnV1().getName(),
-            new JellyfishCountV11().getName(),
-            new JellyfishMergeV11().getName(),
-            new JellyfishStatsV11().getName()
+            new KatPlotSpectraCnV1().getName()
     };
 
 
@@ -301,11 +296,11 @@ public class RampartCLI extends AbstractConanCLI {
 
                 RampartStageList firstHalf = new RampartStageList();
                 firstHalf.add(RampartStage.MECQ);
-                firstHalf.add(RampartStage.ANALYSE_READS);
+                firstHalf.add(RampartStage.MECQ_ANALYSIS);
                 firstHalf.add(RampartStage.KMER_CALC);
                 firstHalf.add(RampartStage.MASS);
-                firstHalf.add(RampartStage.ANALYSE_MASS);
-                firstHalf.add(RampartStage.SELECT_MASS);
+                firstHalf.add(RampartStage.MASS_ANALYSIS);
+                firstHalf.add(RampartStage.MASS_SELECT);
                 this.stages = firstHalf;
 
                 log.info("Running first half of the RAMPART pipeline only");
@@ -313,7 +308,7 @@ public class RampartCLI extends AbstractConanCLI {
             else if (commandLine.hasOption(OPT_RUN_SECOND_HALF)) {
                 RampartStageList secondHalf = new RampartStageList();
                 secondHalf.add(RampartStage.AMP);
-                secondHalf.add(RampartStage.ANALYSE_AMP);
+                secondHalf.add(RampartStage.AMP_ANALYSIS);
                 secondHalf.add(RampartStage.FINALISE);
                 this.stages = secondHalf;
 

@@ -41,7 +41,7 @@ public class AmpStageTest extends MockedConanProcess {
         AmpStage.Args args = new AmpStage.Args();
         args.setTool("SSPACE_Basic_V2.0");
 
-        AssemblyEnhancer process = new AmpStage(this.conanExecutorService, args).makeStage(args, null);
+        AssemblyEnhancer process = new AmpStage(this.conanExecutorService).makeStage(args, null);
 
         assertTrue(process != null);
     }

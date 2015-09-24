@@ -27,6 +27,7 @@ Whilst new tools will be added as and when the are needed, currently MECQ suppor
 * Sickle V1.1
 * Quake V0.3
 * Musket V1.0
+* TrimGalore V
 
 An example XML snippet demonstrating how to run two different tools in parallel, one on two datasets, the other on a
 single dataset::
