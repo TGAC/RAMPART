@@ -266,7 +266,13 @@ public class Amp extends RampartProcess {
             this.bubbleFile = bubbleFile;
             this.stageArgsList = new HashMap<>();
 
+            File lastAssembly = null;
+
             for(Mecq.Sample sample : samples) {
+
+                if (lastAssembly == null) {
+                    lastAssembly = new File(new File(this.getSampleDir(sample), RampartStage.MASS_SELECT.getOutputDirName()), "best.fa");
+                }
 
                 // Parse Xml for AMP stages
                 // All single mass args
@@ -284,13 +290,13 @@ public class Amp extends RampartProcess {
                             jobPrefix + "-" + stageName,
                             sample,
                             this.organism,
-                            this.getInputAssembly(sample),
+                            lastAssembly,
                             this.bubbleFile,
                             i);
 
                     stageList.add(stage);
 
-                    this.inputAssembly = stage.getOutputFile();
+                    lastAssembly = stage.getOutputFile();
                 }
 
                 this.stageArgsList.put(sample, stageList);

@@ -69,6 +69,12 @@ public interface AssemblyAnalyser extends Service {
     void setArgs(AnalyseAssembliesArgs.ToolArgs args);
 
     /**
+     * Used to override whether or not this process should run parallel
+     * @param runParallel
+     */
+    void setRunParallel(boolean runParallel);
+
+    /**
      * Updates the provided table with information from this analysis
      * @param table The table to update with new information
      * @param reportDir The location in which reports from this analysis might be located

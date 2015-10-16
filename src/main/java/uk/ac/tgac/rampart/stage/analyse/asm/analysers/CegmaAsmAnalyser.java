@@ -111,6 +111,14 @@ public class CegmaAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         this.args = args;
     }
 
+    /**
+     * Always run linearly for CEGMA
+     */
+    @Override
+    public void setRunParallel(boolean runParallel) {
+        args.setRunParallel(false);
+    }
+
     @Override
     public void updateTable(AssemblyStatsTable table, File reportDir) throws IOException {
 

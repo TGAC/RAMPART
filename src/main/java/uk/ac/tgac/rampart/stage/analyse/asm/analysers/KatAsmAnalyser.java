@@ -66,6 +66,11 @@ public class KatAsmAnalyser extends AbstractConanProcess implements AssemblyAnal
     }
 
     @Override
+    public void setRunParallel(boolean runParallel) {
+        args.setRunParallel(runParallel);
+    }
+
+    @Override
     public List<ExecutionResult> execute(List<File> assemblies, File outputDir, String jobPrefix, ConanExecutorService ces)
             throws InterruptedException, ProcessExecutionException, ConanParameterException, IOException {
 

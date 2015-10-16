@@ -34,7 +34,6 @@ import uk.ac.ebi.fgpt.conan.model.param.AbstractProcessParams;
 import uk.ac.ebi.fgpt.conan.model.param.ConanParameter;
 import uk.ac.ebi.fgpt.conan.model.param.ParamMap;
 import uk.ac.ebi.fgpt.conan.service.ConanExecutorService;
-import uk.ac.tgac.conan.core.data.Library;
 import uk.ac.tgac.conan.core.data.Organism;
 import uk.ac.tgac.conan.core.util.XmlHelper;
 import uk.ac.tgac.rampart.stage.*;
@@ -98,13 +97,13 @@ public class RampartPipeline extends AbstractConanPipeline {
     public static class Args extends AbstractProcessArgs {
 
         public static final String KEY_ELEM_MECQ            = "mecq";
-        public static final String KEY_ELEM_ANALYSE_READS   = "mecq_analysis";
+        public static final String KEY_ELEM_MECQ_ANALYSIS   = "mecq_analysis";
         public static final String KEY_ELEM_KMER_CALC       = "kmer_calc";
         public static final String KEY_ELEM_MASS            = "mass";
-        public static final String KEY_ELEM_ANALYSE_MASS    = "mass_analysis";
-        public static final String KEY_ELEM_SELECT_MASS     = "mass_select";
+        public static final String KEY_ELEM_MASS_ANALYSIS   = "mass_analysis";
+        public static final String KEY_ELEM_MASS_SELECT     = "mass_select";
         public static final String KEY_ELEM_AMP             = "amp";
-        public static final String KEY_ELEM_ANALYSE_AMP     = "amp_analysis";
+        public static final String KEY_ELEM_AMP_ANALYSIS    = "amp_analysis";
         public static final String KEY_ELEM_FINALISE        = "finalise";
         public static final String KEY_ELEM_COLLECT         = "collect";
 
@@ -176,13 +175,13 @@ public class RampartPipeline extends AbstractConanPipeline {
                     new String[0],
                     new String[]{
                             KEY_ELEM_MECQ,
-                            KEY_ELEM_ANALYSE_READS,
+                            KEY_ELEM_MECQ_ANALYSIS,
                             KEY_ELEM_KMER_CALC,
                             KEY_ELEM_MASS,
-                            KEY_ELEM_ANALYSE_MASS,
-                            KEY_ELEM_SELECT_MASS,
+                            KEY_ELEM_MASS_ANALYSIS,
+                            KEY_ELEM_MASS_SELECT,
                             KEY_ELEM_AMP,
-                            KEY_ELEM_ANALYSE_AMP,
+                            KEY_ELEM_AMP_ANALYSIS,
                             KEY_ELEM_FINALISE,
                             KEY_ELEM_COLLECT
                     }
@@ -219,15 +218,22 @@ public class RampartPipeline extends AbstractConanPipeline {
 
             this.stages.setArgsIfPresent(RampartStage.MECQ, this.mecqArgs);
 
+            if (this.mecqArgs == null) {
+                // Add ECQ information into samples list
+                for (int i = 0; i < samples.size(); i++) {
+                    samples.get(i).ecqArgList = new ArrayList<>();
+                }
+            }
+
 
             // Analyse reads
-            Element mecqAnalysisElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_ANALYSE_READS);
+            Element mecqAnalysisElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_MECQ_ANALYSIS);
             this.mecqAnalysisArgs = mecqAnalysisElement == null ? null :
                     new MecqAnalysis.Args(
                             mecqAnalysisElement,
                             this.outputDir,
                             this.jobPrefix,
-                            this.mecqArgs.getSamples(),
+                            samples,
                             this.organism,
                             this.runParallel);
 
@@ -240,7 +246,7 @@ public class RampartPipeline extends AbstractConanPipeline {
                             kmerCalcElement,
                             this.outputDir,
                             this.jobPrefix,
-                            this.mecqArgs.getSamples(),
+                            samples,
                             this.organism,
                             this.runParallel);
 
@@ -253,7 +259,7 @@ public class RampartPipeline extends AbstractConanPipeline {
                             massElement,
                             this.outputDir,
                             this.jobPrefix,
-                            this.mecqArgs.getSamples(),
+                            samples,
                             this.organism,
                             this.kmerCalcArgs,
                             this.runParallel);
@@ -276,7 +282,7 @@ public class RampartPipeline extends AbstractConanPipeline {
             }
 
             // Analyse MASS assemblies
-            Element analyseMassElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_ANALYSE_MASS);
+            Element analyseMassElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_MASS_ANALYSIS);
             this.analyseMassArgs = analyseMassElement == null ? null :
                     new AnalyseMassAssemblies.Args(
                             analyseMassElement,
@@ -290,7 +296,7 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.stages.setArgsIfPresent(RampartStage.MASS_ANALYSIS, this.analyseMassArgs);
 
             // Select MASS assembly
-            Element selectMassElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_SELECT_MASS);
+            Element selectMassElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_MASS_SELECT);
             this.selectMassArgs = selectMassElement == null ? null :
                     new Select.Args(
                             selectMassElement,
@@ -312,13 +318,13 @@ public class RampartPipeline extends AbstractConanPipeline {
                             ampElement,
                             this.outputDir,
                             this.jobPrefix,
-                            this.mecqArgs.getSamples(),
+                            samples,
                             this.organism,
-                            this.ampInput != null && this.mecqArgs.getSamples().size() == 1 ?
+                            this.ampInput != null && samples.size() == 1 ?
                                     this.ampInput :
                                     null,
                             this.organism.getPloidy() > 1 ?
-                                    this.ampBubble != null && this.mecqArgs.getSamples().size() == 1 ?
+                                    this.ampBubble != null && samples.size() == 1 ?
                                             this.ampBubble :
                                             null :
                                     null,
@@ -328,13 +334,13 @@ public class RampartPipeline extends AbstractConanPipeline {
             this.stages.setArgsIfPresent(RampartStage.AMP, this.ampArgs);
 
             // Analyse AMP assemblies
-            Element analyseAmpElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_ANALYSE_AMP);
+            Element analyseAmpElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_AMP_ANALYSIS);
             this.analyseAmpArgs = analyseAmpElement == null ? null :
                     new AnalyseAmpAssemblies.Args(
                             analyseAmpElement,
                             this.outputDir,
                             this.jobPrefix,
-                            this.mecqArgs.getSamples(),
+                            samples,
                             this.organism,
                             this.ampArgs == null ? null : this.ampArgs.getStageArgsList(),
                             this.runParallel
@@ -351,7 +357,7 @@ public class RampartPipeline extends AbstractConanPipeline {
                             finaliseElement,
                             this.outputDir,
                             this.jobPrefix,
-                            this.mecqArgs.getSamples(),
+                            samples,
                             this.organism,
                             this.institution,
                             inputFromMass,
@@ -363,13 +369,13 @@ public class RampartPipeline extends AbstractConanPipeline {
 
             this.stages.setArgsIfPresent(RampartStage.FINALISE, this.finaliseArgs);
 
-            if (this.mecqArgs.getSamples().size() > 1) {
+            if (samples.size() > 1) {
                 Element collectElement = XmlHelper.getDistinctElementByName(element, KEY_ELEM_COLLECT);
                 this.collectArgs = new Collect.Args(
                         collectElement,
                         this.outputDir,
                         this.jobPrefix,
-                        this.mecqArgs.getSamples(),
+                        samples,
                         this.organism,
                         this.finaliseArgs,
                         this.runParallel);
