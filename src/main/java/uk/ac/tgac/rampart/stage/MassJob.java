@@ -150,7 +150,8 @@ public class MassJob extends AbstractConanProcess {
                 ExecutionResult result = this.executeAssembler(
                         assembler,
                         args.getJobPrefix() + "-assembly-" + outputDir.getName(),
-                        ssResults.get(asmArgs.getDesiredCoverage()));
+                        ssResults.get(asmArgs.getDesiredCoverage()),
+                        executionContext.usingScheduler() && (args.isMassParallel() || args.isRunParallel()));
 
                 // Add assembler id to list
                 result.setName(title);
@@ -445,7 +446,7 @@ public class MassJob extends AbstractConanProcess {
         return Long.parseLong(lines.get(0).trim());
     }
 
-    public ExecutionResult executeAssembler(Assembler assembler, String jobName, List<Integer> jobIds)
+    public ExecutionResult executeAssembler(Assembler assembler, String jobName, List<Integer> jobIds, boolean runParallel)
             throws ProcessExecutionException, InterruptedException, IOException, ConanParameterException {
 
         // Important that this happens after directory cleaning.
@@ -460,7 +461,7 @@ public class MassJob extends AbstractConanProcess {
                 args.getThreads(),
                 args.getMemory(),
                 args.getExpWallTimeMins(),
-                args.isMassParallel() || args.isRunParallel(),
+                runParallel,
                 jobIds,
                 assembler.usesOpenMpi());
     }

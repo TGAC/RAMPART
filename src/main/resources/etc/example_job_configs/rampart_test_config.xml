@@ -63,7 +63,7 @@
         <!-- Counts Kmers for each dataset produced, using jellyfish.  Each dataset is counted in parallel, using 16
              threads and requesting 4GB from the scheduler for each process. This step is required if you want to compare
              against kmers found in the assemblies in the MASS step below -->
-        <analyse_reads kmer="true" parallel="true" threads="16" memory="4000"/>
+        <mecq_analysis kmer="true" parallel="true" threads="16" memory="4000"/>
 
         <!-- This element informs RAMPART to run kmer genie, before other assemblers are executed.  For any requested
                  DeBruijn graph assemblers requested, that do NOT have specific kmer values specified then the optimal
@@ -118,17 +118,17 @@
              analysis with Quast and a Kmer Analysis using KAT.  Each analysis process uses 8 threads and will be executed
              in parallel.  The user could also request CEGMA to run on each assembly at this stage, however if this
              is requested please keep in mind that is can take several hours for each assembly. -->
-        <analyse_mass threads="8" parallel="true" >
+        <mass_analysis threads="8" parallel="true" >
             <tool name="QUAST" threads="8" memory="4000"/>
             <tool name="KAT" threads="16" memory="20000"/>
-        </analyse_mass>
+        </mass_analysis>
 
         <!-- This step produces a finalScore for each assembly, which is based on the normalised and weighted
              statistics calculated from the specified types.  RAMPART has its own weighting matrix for weighting each
              statistic but the user can specify a custom set of weights here if they prefer.  RAMPART considers the
              assembly with the highest finalScore the best assembly, and by default this selected assembly is used as input to
              the next step. -->
-        <select_mass weightings_file="path_to_custom_weights" />
+        <mass_select weightings_file="path_to_custom_weights" />
 
         <!-- Stages in this section are applied to the selected assembly from the MASS step, in an attempt to improve
              the selected assembly further.  Each stage specified below will be executed in sequence. -->
@@ -147,11 +147,11 @@
              assemblies produced by AMP.  Again, in this case we do a contiguity analysis with Quast and a Kmer Analysis
              using KAT.  And again, CEGMA could also be used.  For this step Quast will run for each assembly produced by
              AMP, and KAT will run only on the final assembly. -->
-        <analyse_amp threads="8" parallel="true" >
+        <amp_analysis threads="8" parallel="true" >
             <tool name="QUAST" threads="8" memory="4000"/>
             <tool name="KAT" threads="16" memory="20000"/>
             <!--<tool name="CEGMA" threads="16" memory="20000"/>-->
-        </analyse_amp>
+        </amp_analysis>
 
         <!-- Renames the final assembly and fasta headers in that assembly with the prefix below.  It's generally a good
              idea to avoid names with dots and pipes, as these can confuse some downstream applications. -->

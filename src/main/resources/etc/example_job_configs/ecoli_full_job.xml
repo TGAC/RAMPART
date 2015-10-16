@@ -37,7 +37,7 @@
         	<mecq parallel="false">
             		<ecq name="quake" tool="Quake_V0.3" libs="ecoli" threads="8" memory="30000" parallel="false"/>
         	</mecq>
-        	<analyse_reads kmer="true" parallel="true" threads="8" memory="30000"/>
+        	<mecq_analysis kmer="true" parallel="true" threads="8" memory="30000"/>
         	<kmer_calc threads="8" memory="20000"/>
         	<mass parallel="true">
             		<job name="abyss-raw" tool="ABYSS_V1.5" threads="8" memory="30000" parallel="true">
@@ -67,27 +67,27 @@
             		</job>
             		
         	</mass>
-        	<analyse_mass parallel="true">
+			<mass_analysis parallel="true">
         		<tool name="QUAST" threads="8" memory="10000"/>
         		<tool name="KAT" threads="8" memory="30000"/>
-        	</analyse_mass>
-        	<select_mass/>
+			</mass_analysis>
+        	<mass_select/>
         	<amp>
 		        <stage tool="SOAP_Scaffold_V2.4" threads="8" memory="30000">
-                        	<inputs>
-                                	<input ecq="quake" lib="ecoli"/>
-                                </inputs>
-                        </stage>
+					<inputs>
+						<input ecq="quake" lib="ecoli"/>
+					</inputs>
+				</stage>
 
 		        <stage tool="SOAP_GapCloser_V1.12" threads="8" memory="30000">
-                        	<inputs>
-                                	<input ecq="quake" lib="ecoli"/>
-                                </inputs>
-                        </stage>
+					<inputs>
+						<input ecq="quake" lib="ecoli"/>
+					</inputs>
+				</stage>
         	</amp>
-        	<analyse_amp>
+        	<amp_analysis>
         		<tool name="QUAST" threads="8" memory="10000"/>
-        	</analyse_amp>
+        	</amp_analysis>
         	<finalise prefix="EcoliK12_V1"/>
     	</pipeline>
 

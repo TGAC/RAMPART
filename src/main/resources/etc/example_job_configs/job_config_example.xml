@@ -49,7 +49,7 @@ not a file that you should for your own projects as many of the options are redu
             <ecq name="quake" tool="QUAKE_V0_3" libs="pe1" threads="4" memory="2000" checked_args="-k 19 -l 70"/>
             <ecq name="musket" tool="MUSKET_V1.0" libs="pe1" threads="6" memory="16000" checked_args="-k 19 15000000 -maxtrim 30"/>
         </mecq>
-        <analyse_reads kmer="true" parallel="true" threads="4"/>
+        <mecq_analysis kmer="true" parallel="true" threads="4"/>
         <mass parallel="true">
             <job name="abyss-raw-kmer" tool="ABYSS_V1.5" threads="16" memory="4000" parallel="true">
                 <kmer min="61" max="75" step="MEDIUM"/>
@@ -74,10 +74,11 @@ not a file that you should for your own projects as many of the options are redu
                 </inputs>
             </job>
         </mass>
-        <analyse_mass threads="8" parallel="true" >
+        <mass_analysis threads="8" parallel="true">
             <tool name="QUAST" threads="8" memory="4000"/>
             <tool name="KAT" threads="16" memory="20000"/>
-        </analyse_mass>
+        </mass_analysis>
+        <mass_select/>
         <amp>
             <stage tool="SSPACE_Basic_v2.0" threads="16" memory="16000" checked_args="-m 50 -z 500">
                 <inputs>
@@ -90,10 +91,10 @@ not a file that you should for your own projects as many of the options are redu
                 </inputs>
             </stage>
         </amp>
-        <analyse_amp>
+        <amp_analysis>
             <tool name="QUAST" threads="8" memory="10000"/>
             <tool name="KAT" threads="8" memory="20000"/>
-        </analyse_amp>
+        </amp_analysis>
         <finalise prefix="Bamax_V1" min_n="20" compress="true"/>
     </pipeline>
 

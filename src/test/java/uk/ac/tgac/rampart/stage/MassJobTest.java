@@ -40,6 +40,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -76,7 +77,7 @@ public class MassJobTest extends MockedConanProcess {
         when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
         doReturn(new DefaultExecutionResult("test", 0, null, null, -1))
                 .when(spy)
-                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any());
+                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any(), anyBoolean());
 
 
         ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);
@@ -109,7 +110,7 @@ public class MassJobTest extends MockedConanProcess {
         when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
         doReturn(new DefaultExecutionResult("test", 0, null, null, -1))
                 .when(spy)
-                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any());
+                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any(), anyBoolean());
 
 
         ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);
@@ -142,7 +143,7 @@ public class MassJobTest extends MockedConanProcess {
         when(conanProcessService.execute(massJob, ec)).thenReturn(new DefaultExecutionResult("test", 0, null, null, -1));
         doReturn(new DefaultExecutionResult("test", 0, null, null, -1))
                 .when(spy)
-                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any());
+                .executeAssembler((Assembler) any(), anyString(), (List<Integer>) any(), anyBoolean());
 
 
         ReflectionTestUtils.setField(smParent, "conanExecutorService", conanExecutorService);

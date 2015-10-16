@@ -117,6 +117,11 @@ public class AnalyseMassAssemblies extends RampartProcess {
             Set<AssemblyAnalyser> requestedServices = args.getAssemblyAnalysers();
             for (AssemblyAnalyser requestedService : requestedServices) {
                 requestedService.setConanExecutorService(this.conanExecutorService);
+                // Force run parallel to false if not using a scheduler
+                if (!executionContext.usingScheduler() && args.isRunParallel()) {
+                    log.warn("Forcing linear execution due to lack of job scheduler");
+                    requestedService.setRunParallel(false);
+                }
             }
 
             List<File> unitigAssemblies = new ArrayList<>();
