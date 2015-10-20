@@ -106,9 +106,11 @@ public class MassJob extends AbstractConanProcess {
             Args args = this.getArgs();
 
             // Force run parallel to false if not using a scheduler
-            if (!executionContext.usingScheduler() && args.isRunParallel()) {
-                log.warn("Forcing linear execution due to lack of job scheduler");
+            if (!executionContext.usingScheduler()) {
                 args.setRunParallel(false);
+                if (args.isRunParallel()) {
+                    log.warn("Forcing linear execution due to lack of job scheduler");
+                }
             }
 
             log.info("Starting Single MASS run for \"" + args.getName() + "\"");
