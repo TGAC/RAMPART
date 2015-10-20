@@ -133,9 +133,12 @@ public class AnalyseAmpAssemblies extends RampartProcess {
         Set<AssemblyAnalyser> requestedServices = new HashSet<>();
         for(AnalyseAssembliesArgs.ToolArgs requestedService : this.getArgs().getTools()) {
             AssemblyAnalyser aa = this.assemblyAnalyserFactory.create(requestedService.getName(), this.conanExecutorService);
-            if (!executionContext.usingScheduler() && args.isRunParallel()) {
-                log.warn("Forcing linear execution due to lack of job scheduler");
+            // Force run parallel to false if not using a scheduler
+            if (!executionContext.usingScheduler()) {
                 requestedService.setRunParallel(false);
+                if (args.isRunParallel()) {
+                    log.warn("Forcing linear execution due to lack of job scheduler");
+                }
             }
             aa.setArgs(requestedService);
             requestedServices.add(aa);

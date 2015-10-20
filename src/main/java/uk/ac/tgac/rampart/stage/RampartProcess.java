@@ -92,9 +92,11 @@ public abstract class RampartProcess extends AbstractConanProcess {
             RampartProcessArgs args = this.getRampartArgs();
 
             // Force run parallel to false if not using a scheduler
-            if (!executionContext.usingScheduler() && args.runParallel) {
-                log.warn("Forcing linear execution due to lack of job scheduler");
-                args.runParallel = false;
+            if (!executionContext.usingScheduler()) {
+                if (args.isRunParallel()) {
+                    log.warn("Forcing linear execution due to lack of job scheduler");
+                }
+                args.setRunParallel(false);
             }
 
             log.info("Starting " + this.getName() + " Process");
