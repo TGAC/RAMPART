@@ -25,8 +25,8 @@ Conan - scheduler configuration
 RAMPART's execution context is specified by default in a file called "conan.properties".  In this file it is possible to
 describe the type of scheduling system to use and if so, what queue to run on.  Valid properties:
 
-* ``executionContext.scheduler =`` Valid options {"","LSF","PBS"}
-* ``executionContext.scheduler.queue =`` The queue to execute child jobs on.
+* ``executionContext.scheduler =`` Valid options {"","LSF","PBS","SLURM"}
+* ``executionContext.scheduler.queue =`` The queue/partition to execute child jobs on.
 * ``executionContext.locality = LOCAL`` Always use this for now!  In the future it may be possible to execute child jobs at a remote location.
 * ``externalProcessConfigFile = <location to external process loading file>`` See next section for details of how to setup this file.
 
