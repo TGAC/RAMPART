@@ -161,6 +161,7 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
         private static final String KEY_ATTR_THREADS = "threads";
         private static final String KEY_ATTR_MEMORY = "memory";
         private static final String KEY_ATTR_PARALLEL = "parallel";
+        private static final String KEY_ATTR_UNCHECKED_ARGS = "unchecked_args";
 
 
         // **** Default values ****
@@ -180,6 +181,7 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
         private Organism organism;
         private File outputDir;
         private Mecq.Sample sample;
+        private String uncheckedArgs;
 
         public ToolArgs() {
             this.name = "";
@@ -189,6 +191,7 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
             this.jobPrefix = "analyse_mass_tool";
             this.outputDir = null;
             this.sample = null;
+            this.uncheckedArgs = null;
         }
 
 
@@ -207,7 +210,8 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
                     new String[] {
                             KEY_ATTR_THREADS,
                             KEY_ATTR_MEMORY,
-                            KEY_ATTR_PARALLEL
+                            KEY_ATTR_PARALLEL,
+                            KEY_ATTR_UNCHECKED_ARGS
                     },
                     new String[0],
                     new String[0])) {
@@ -225,6 +229,9 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
             this.memory = ele.hasAttribute(KEY_ATTR_MEMORY) ? XmlHelper.getIntValue(ele, KEY_ATTR_MEMORY) : DEFAULT_MEMORY;
             this.runParallel = forceParallel ||
                     (ele.hasAttribute(KEY_ATTR_PARALLEL) ? XmlHelper.getBooleanValue(ele, KEY_ATTR_PARALLEL) : DEFAULT_RUN_PARALLEL);
+            this.uncheckedArgs = ele.hasAttribute(KEY_ATTR_UNCHECKED_ARGS) ?
+                    XmlHelper.getTextValue(ele, KEY_ATTR_UNCHECKED_ARGS) :
+                    null;
 
             this.sample = sample;
             this.jobPrefix = jobPrefix;
@@ -290,6 +297,14 @@ public abstract class AnalyseAssembliesArgs extends RampartProcess.RampartProces
 
         public Mecq.Sample getSample() {
             return sample;
+        }
+
+        public String getUncheckedArgs() {
+            return uncheckedArgs;
+        }
+
+        public void setUncheckedArgs(String uncheckedArgs) {
+            this.uncheckedArgs = uncheckedArgs;
         }
     }
 }

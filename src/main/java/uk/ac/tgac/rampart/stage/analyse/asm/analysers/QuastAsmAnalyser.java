@@ -104,7 +104,8 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
                 args.getOrganism().getPloidy() > 1,
                 reference,
                 args.getThreads(),
-                false // Assume all sequences are not scaffolds.
+                false, // Assume all sequences are not scaffolds.
+                args.getUncheckedArgs()
         );
 
         ExecutionResult result = ces.executeProcess(
@@ -181,7 +182,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
     }
 
 
-    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, File reference, int threads, boolean scaffolds) {
+    protected QuastV23 makeQuast(List<File> assemblies, File outputDir, long genomeSize, boolean eukaryote, File reference, int threads, boolean scaffolds, String uncheckedArgs) {
 
         QuastV23.Args quastArgs = new QuastV23.Args();
         quastArgs.setInputFiles(assemblies);
@@ -192,7 +193,7 @@ public class QuastAsmAnalyser extends AbstractConanProcess implements AssemblyAn
         quastArgs.setEukaryote(eukaryote);
         quastArgs.setThreads(threads);
         quastArgs.setScaffolds(scaffolds);
-
+        quastArgs.setUncheckedArgs(uncheckedArgs);
         return new QuastV23(this.conanExecutorService, quastArgs);
     }
 }
